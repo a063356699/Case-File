@@ -41126,6 +41126,23 @@ ${String(ex)}`);
           const data = JSON.parse(String(reader.result));
           const list = Array.isArray(data) ? data : data.records;
           if (!Array.isArray(list)) throw new Error();
+          const supplement = !Array.isArray(data) && data.importMode === "active-sales-form-supplement";
+          if (supplement) {
+            if (!confirm(`\u5C07\u4F9D\u7269\u4EF6\u7DE8\u865F\u88DC\u5165 ${list.length} \u4EF6\u552E\u5C4B\u8CC7\u6599\u8868\u6B04\u4F4D\uFF1B\u5DF2\u586B\u5BEB\u7684\u6B04\u4F4D\u4E0D\u6703\u88AB\u8986\u84CB\uFF0C\u78BA\u5B9A\u55CE\uFF1F`)) return;
+            const patches = new Map(list.map((item) => [String(item.propertyNo || "").trim(), item]));
+            let changed = 0;
+            const nextRecords = records.map((record) => {
+              const patch = patches.get(String(record.propertyNo || "").trim());
+              if (!patch) return record;
+              const additions = Object.fromEntries(Object.entries(patch).filter(([key, value]) => key !== "propertyNo" && key !== "id" && key !== "photos" && String(value ?? "").trim() && !String(record[key] || "").trim()));
+              if (Object.keys(additions).length) changed += 1;
+              return { ...record, ...additions };
+            });
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(nextRecords));
+            alert(`\u552E\u5C4B\u8CC7\u6599\u8868\u88DC\u9F4A\u5B8C\u6210\uFF1A${changed} \u4EF6\u6709\u65B0\u589E\u6B04\u4F4D\uFF0C\u539F\u672C\u5DF2\u586B\u8CC7\u6599\u5747\u5DF2\u4FDD\u7559\u3002`);
+            location.reload();
+            return;
+          }
           const fullBackup = !Array.isArray(data) && Number(data.version || 0) >= 2 && Array.isArray(data.records);
           const replaceExisting = fullBackup || !Array.isArray(data) && data.replaceExisting === true;
           const message = replaceExisting ? `\u5C07\u4EE5\u5099\u4EFD\u4E2D\u7684 ${list.length} \u7B46\u8CC7\u6599\u53D6\u4EE3 Edge \u76EE\u524D\u7269\u4EF6\uFF0C\u78BA\u5B9A\u55CE\uFF1F` : `\u5C07\u532F\u5165 ${list.length} \u7B46\u8CC7\u6599\uFF0C\u4E26\u8207\u73FE\u6709\u8CC7\u6599\u5408\u4F75\uFF0C\u78BA\u5B9A\u55CE\uFF1F`;

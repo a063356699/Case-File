@@ -529,7 +529,23 @@ export default function Home() {
   const exportJson = () => download(`物件總表_${today()}.json`, new Blob([JSON.stringify({ version: 2, exportedAt: new Date().toISOString(), settings: { personnel: settings.personnel }, records }, null, 2)], { type: "application/json" }));
   const importJson = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]; if (!file) return;
-    const reader = new FileReader(); reader.onload = () => { try { const data = JSON.parse(String(reader.result)); const list = Array.isArray(data) ? data : data.records; if (!Array.isArray(list)) throw new Error(); const fullBackup = !Array.isArray(data) && Number(data.version || 0) >= 2 && Array.isArray(data.records); const replaceExisting = fullBackup || (!Array.isArray(data) && data.replaceExisting === true); const message = replaceExisting ? `將以備份中的 ${list.length} 筆資料取代 Edge 目前物件，確定嗎？` : `將匯入 ${list.length} 筆資料，並與現有資料合併，確定嗎？`; if (confirm(message)) { const normalized = list.map((r: RecordItem) => ({ ...blankRecord(), ...r, id: r.id || newId(), photos: Array.isArray(r.photos) ? r.photos : [] })); let nextRecords = normalized; if (!replaceExisting) { const map = new Map(records.map(r => [r.id, r])); normalized.forEach((r: RecordItem) => map.set(r.id, r)); nextRecords = [...map.values()]; } localStorage.setItem(STORAGE_KEY, JSON.stringify(nextRecords)); if (!Array.isArray(data) && Array.isArray(data.settings?.personnel)) { let savedSettings: any = {}; try { savedSettings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}"); } catch {} localStorage.setItem(SETTINGS_KEY, JSON.stringify({ ...savedSettings, personnel: mergeSuppliedPersonnel(data.settings.personnel) })); } localStorage.setItem("property-desk-official-merge-2026-07-30-v6", "1"); localStorage.setItem("property-desk-app-restore-216-v3", "1"); alert(`JSON 匯入完成，共 ${nextRecords.length} 筆，現在重新載入。`); location.reload(); } } catch { flash("JSON 檔案格式錯誤"); } e.target.value = ""; }; reader.readAsText(file);
+    const reader = new FileReader(); reader.onload = () => { try {
+      const data = JSON.parse(String(reader.result)); const list = Array.isArray(data) ? data : data.records; if (!Array.isArray(list)) throw new Error();
+      const supplement = !Array.isArray(data) && data.importMode === "active-sales-form-supplement";
+      if (supplement) {
+        if (!confirm(`將依物件編號補入 ${list.length} 件售屋資料表欄位；已填寫的欄位不會被覆蓋，確定嗎？`)) return;
+        const patches = new Map(list.map((item: RecordItem) => [String(item.propertyNo || "").trim(), item]));
+        let changed = 0;
+        const nextRecords = records.map(record => {
+          const patch = patches.get(String(record.propertyNo || "").trim()); if (!patch) return record;
+          const additions = Object.fromEntries(Object.entries(patch).filter(([key, value]) => key !== "propertyNo" && key !== "id" && key !== "photos" && String(value ?? "").trim() && !String(record[key] || "").trim()));
+          if (Object.keys(additions).length) changed += 1;
+          return { ...record, ...additions };
+        });
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(nextRecords)); alert(`售屋資料表補齊完成：${changed} 件有新增欄位，原本已填資料均已保留。`); location.reload(); return;
+      }
+      const fullBackup = !Array.isArray(data) && Number(data.version || 0) >= 2 && Array.isArray(data.records); const replaceExisting = fullBackup || (!Array.isArray(data) && data.replaceExisting === true); const message = replaceExisting ? `將以備份中的 ${list.length} 筆資料取代 Edge 目前物件，確定嗎？` : `將匯入 ${list.length} 筆資料，並與現有資料合併，確定嗎？`; if (confirm(message)) { const normalized = list.map((r: RecordItem) => ({ ...blankRecord(), ...r, id: r.id || newId(), photos: Array.isArray(r.photos) ? r.photos : [] })); let nextRecords = normalized; if (!replaceExisting) { const map = new Map(records.map(r => [r.id, r])); normalized.forEach((r: RecordItem) => map.set(r.id, r)); nextRecords = [...map.values()]; } localStorage.setItem(STORAGE_KEY, JSON.stringify(nextRecords)); if (!Array.isArray(data) && Array.isArray(data.settings?.personnel)) { let savedSettings: any = {}; try { savedSettings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}"); } catch {} localStorage.setItem(SETTINGS_KEY, JSON.stringify({ ...savedSettings, personnel: mergeSuppliedPersonnel(data.settings.personnel) })); } localStorage.setItem("property-desk-official-merge-2026-07-30-v6", "1"); localStorage.setItem("property-desk-app-restore-216-v3", "1"); alert(`JSON 匯入完成，共 ${nextRecords.length} 筆，現在重新載入。`); location.reload(); }
+    } catch { flash("JSON 檔案格式錯誤"); } e.target.value = ""; }; reader.readAsText(file);
   };
   const exportExcel = () => {
     const cols = activeColumns.filter(k => k !== "photos");
