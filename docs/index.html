@@ -40114,6 +40114,9 @@ ${String(ex)}`);
   var TOUR_KEY = "property-desk-tour-plan-v1";
   var DAILY_HIDDEN_KEY = "property-desk-daily-hidden-v1";
   var MISSING_REMINDER_DATE_KEY = "property-desk-missing-reminder-date-v1";
+  var CLOUD_SESSION_KEY = "property-desk-supabase-session-v1";
+  var CASE_FILE_SUPABASE_URL = "https://oiywtmjbasoonfuxemtr.supabase.co";
+  var CASE_FILE_SUPABASE_TABLE = "case_file_state";
   var newId = () => globalThis.crypto?.randomUUID?.() || `id-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   var fields = [
     ["propertyNo", "\u7269\u4EF6\u7DE8\u865F"],
@@ -40872,7 +40875,8 @@ ${String(ex)}`);
   };
   function Home() {
     const [records, setRecords] = (0, import_react.useState)([]);
-    const [settings, setSettings] = (0, import_react.useState)({ personnel: [], supabaseUrl: "", supabaseKey: "", supabaseTable: "property_app_state", supabaseRecord: "main" });
+    const [settings, setSettings] = (0, import_react.useState)({ personnel: [], supabaseUrl: CASE_FILE_SUPABASE_URL, supabaseKey: "", supabaseTable: CASE_FILE_SUPABASE_TABLE, supabaseRecord: "main" });
+    const [cloudSession, setCloudSession] = (0, import_react.useState)(null);
     const [tab, setTab] = (0, import_react.useState)("active");
     const [query, setQuery] = (0, import_react.useState)("");
     const [missingDataReminderOpen, setMissingDataReminderOpen] = (0, import_react.useState)(false);
@@ -40899,6 +40903,8 @@ ${String(ex)}`);
     const [tourDate, setTourDate] = (0, import_react.useState)(today());
     const [tourTitle, setTourTitle] = (0, import_react.useState)(`${displayRocDate(today()).replace(/\//g, ".")}\u5718\u770B`);
     const selectedIntakeRef = (0, import_react.useRef)("");
+    const cloudSyncBaselineRef = (0, import_react.useRef)("");
+    const cloudSyncTimerRef = (0, import_react.useRef)(null);
     (0, import_react.useEffect)(() => {
       if (!editing || editing._generalWebsiteDefaultsApplied === "1") return;
       const contract = contractFromNo(editing.propertyNo) || editing.contractType || "";
@@ -40934,8 +40940,10 @@ ${String(ex)}`);
         setSettings((s) => {
           const old = savedSettings ? JSON.parse(savedSettings) : {};
           const personnel = old.personnel || (old.staffName || old.staffId ? [{ id: newId(), name: old.staffName || "", nationalId: old.staffId || "", status: "\u5728\u8077" }] : []);
-          return { ...s, ...old, personnel: mergeSuppliedPersonnel(personnel) };
+          return { ...s, ...old, supabaseUrl: old.supabaseUrl || CASE_FILE_SUPABASE_URL, supabaseTable: old.supabaseTable === "property_app_state" || !old.supabaseTable ? CASE_FILE_SUPABASE_TABLE : old.supabaseTable, supabaseRecord: old.supabaseRecord || "main", personnel: mergeSuppliedPersonnel(personnel) };
         });
+        const savedCloudSession = localStorage.getItem(CLOUD_SESSION_KEY);
+        if (savedCloudSession) setCloudSession(JSON.parse(savedCloudSession));
         const savedIntake = localStorage.getItem(INTAKE_KEY);
         if (savedIntake) {
           const saved2 = JSON.parse(savedIntake);
@@ -41513,34 +41521,108 @@ ${String(ex)}`);
         flash("PPT \u7522\u751F\u5931\u6557\uFF0C\u8ACB\u518D\u8A66\u4E00\u6B21");
       }
     };
-    const supabasePush = async () => {
+    const cloudData = () => ({
+      records: records.map(({ photos, ...record }) => record),
+      settings: { personnel: settings.personnel },
+      intake: { raw: intakeRaw, drafts: intakeDrafts, selectedId: selectedIntakeId },
+      tour: { date: tourDate, title: tourTitle, items: tourItems }
+    });
+    const cloudHeaders = () => ({ apikey: settings.supabaseKey, Authorization: `Bearer ${cloudSession?.accessToken || ""}`, "Content-Type": "application/json" });
+    const supabasePush = async (quiet = false) => {
+      if (!cloudSession?.accessToken) {
+        if (!quiet) flash("\u8ACB\u5148\u767B\u5165\u96F2\u7AEF\u5E33\u865F");
+        return false;
+      }
+      if (!settings.supabaseUrl || !settings.supabaseKey) {
+        if (!quiet) flash("\u8ACB\u5148\u586B\u5165 Supabase Publishable key");
+        return false;
+      }
       try {
         const url = `${settings.supabaseUrl.replace(/\/$/, "")}/rest/v1/${settings.supabaseTable}`;
-        const res = await fetch(url, { method: "POST", headers: { apikey: settings.supabaseKey, Authorization: `Bearer ${settings.supabaseKey}`, "Content-Type": "application/json", Prefer: "resolution=merge-duplicates" }, body: JSON.stringify({ id: settings.supabaseRecord, data: { records }, updated_at: (/* @__PURE__ */ new Date()).toISOString() }) });
+        const res = await fetch(url, { method: "POST", headers: { ...cloudHeaders(), Prefer: "resolution=merge-duplicates,return=minimal" }, body: JSON.stringify({ id: settings.supabaseRecord, data: cloudData(), updated_at: (/* @__PURE__ */ new Date()).toISOString() }) });
         if (!res.ok) throw new Error(await res.text());
-        flash("Supabase \u5099\u4EFD\u5B8C\u6210");
+        if (!quiet) flash("\u96F2\u7AEF\u540C\u6B65\u5B8C\u6210");
+        return true;
       } catch {
-        flash("Supabase \u5099\u4EFD\u5931\u6557\uFF0C\u8ACB\u6AA2\u67E5\u8A2D\u5B9A");
+        if (!quiet) flash("\u96F2\u7AEF\u540C\u6B65\u5931\u6557\uFF0C\u8ACB\u6AA2\u67E5\u767B\u5165\u8207\u8A2D\u5B9A");
+        return false;
       }
     };
     const supabasePull = async () => {
+      if (!cloudSession?.accessToken) return flash("\u8ACB\u5148\u767B\u5165\u96F2\u7AEF\u5E33\u865F");
       try {
         const url = `${settings.supabaseUrl.replace(/\/$/, "")}/rest/v1/${settings.supabaseTable}?id=eq.${encodeURIComponent(settings.supabaseRecord)}&select=data`;
-        const res = await fetch(url, { headers: { apikey: settings.supabaseKey, Authorization: `Bearer ${settings.supabaseKey}` } });
+        const res = await fetch(url, { headers: cloudHeaders() });
         const rows = await res.json();
-        if (!res.ok || !rows[0]?.data?.records) throw new Error();
-        if (confirm("\u96F2\u7AEF\u8CC7\u6599\u5C07\u8207\u672C\u6A5F\u8CC7\u6599\u5408\u4F75\uFF0C\u78BA\u5B9A\u55CE\uFF1F")) {
+        const data = rows[0]?.data;
+        if (!res.ok || !data?.records) throw new Error();
+        if (confirm("\u96F2\u7AEF\u8CC7\u6599\u5C07\u8207\u672C\u6A5F\u8CC7\u6599\u5408\u4F75\uFF0C\u672C\u6A5F\u5DF2\u4FEE\u6539\u4F46\u5C1A\u672A\u540C\u6B65\u7684\u540C\u4E00\u7B46\u8CC7\u6599\u5C07\u4EE5\u96F2\u7AEF\u7248\u672C\u70BA\u6E96\u3002\u78BA\u5B9A\u55CE\uFF1F")) {
           setRecords((prev) => {
             const map = new Map(prev.map((r) => [r.id, r]));
-            rows[0].data.records.forEach((r) => map.set(r.id, r));
+            data.records.forEach((r) => {
+              const local = map.get(r.id);
+              map.set(r.id, { ...local, ...r, photos: r.photos || local?.photos || [] });
+            });
             return [...map.values()];
           });
-          flash("Supabase \u8CC7\u6599\u5DF2\u5408\u4F75");
+          if (data.settings?.personnel) setSettings((previous) => ({ ...previous, personnel: mergeSuppliedPersonnel(data.settings.personnel) }));
+          if (data.intake) {
+            setIntakeRaw(data.intake.raw || "");
+            setIntakeDrafts(data.intake.drafts || []);
+            setSelectedIntakeId(data.intake.selectedId || "");
+          }
+          if (data.tour) {
+            setTourDate(data.tour.date || today());
+            setTourTitle(data.tour.title || "");
+            setTourItems(data.tour.items || []);
+          }
+          flash("\u96F2\u7AEF\u8CC7\u6599\u5DF2\u5408\u4F75\u5230\u672C\u6A5F");
         }
       } catch {
-        flash("Supabase \u8B80\u53D6\u5931\u6557\uFF0C\u8ACB\u6AA2\u67E5\u8A2D\u5B9A");
+        flash("\u96F2\u7AEF\u8B80\u53D6\u5931\u6557\uFF0C\u8ACB\u6AA2\u67E5\u767B\u5165\u8207\u8A2D\u5B9A");
       }
     };
+    const supabaseSignIn = async (email, password2, signUp = false) => {
+      if (!settings.supabaseKey) return flash("\u8ACB\u5148\u8CBC\u4E0A Supabase Publishable key");
+      try {
+        const endpoint = signUp ? "/auth/v1/signup" : "/auth/v1/token?grant_type=password";
+        const res = await fetch(`${settings.supabaseUrl.replace(/\/$/, "")}${endpoint}`, { method: "POST", headers: { apikey: settings.supabaseKey, "Content-Type": "application/json" }, body: JSON.stringify({ email, password: password2 }) });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data?.message || data?.error_description || "");
+        if (!data.access_token) {
+          flash("\u8A3B\u518A\u5B8C\u6210\uFF0C\u8ACB\u5148\u5230 Email \u6536\u4FE1\u5B8C\u6210\u9A57\u8B49\u5F8C\u518D\u767B\u5165");
+          return;
+        }
+        const session = { accessToken: data.access_token, refreshToken: data.refresh_token, email: data.user?.email || email };
+        setCloudSession(session);
+        localStorage.setItem(CLOUD_SESSION_KEY, JSON.stringify(session));
+        flash("\u96F2\u7AEF\u5E33\u865F\u767B\u5165\u5B8C\u6210");
+      } catch {
+        flash(signUp ? "\u8A3B\u518A\u5931\u6557\uFF0C\u8ACB\u6AA2\u67E5 Email \u8207\u5BC6\u78BC" : "\u767B\u5165\u5931\u6557\uFF0C\u8ACB\u6AA2\u67E5 Email \u8207\u5BC6\u78BC");
+      }
+    };
+    const supabaseSignOut = () => {
+      setCloudSession(null);
+      localStorage.removeItem(CLOUD_SESSION_KEY);
+      flash("\u5DF2\u767B\u51FA\u96F2\u7AEF\u5E33\u865F");
+    };
+    const cloudSnapshot = JSON.stringify({ records, personnel: settings.personnel, intakeRaw, intakeDrafts, selectedIntakeId, tourDate, tourTitle, tourItems });
+    (0, import_react.useEffect)(() => {
+      if (!cloudSyncBaselineRef.current) {
+        cloudSyncBaselineRef.current = cloudSnapshot;
+        return;
+      }
+      if (cloudSyncBaselineRef.current === cloudSnapshot) return;
+      cloudSyncBaselineRef.current = cloudSnapshot;
+      if (!cloudSession?.accessToken || !settings.supabaseKey) return;
+      if (cloudSyncTimerRef.current) window.clearTimeout(cloudSyncTimerRef.current);
+      cloudSyncTimerRef.current = window.setTimeout(() => {
+        void supabasePush(true);
+      }, 6e3);
+      return () => {
+        if (cloudSyncTimerRef.current) window.clearTimeout(cloudSyncTimerRef.current);
+      };
+    }, [cloudSnapshot, cloudSession?.accessToken, settings.supabaseKey]);
     const openPublic = () => {
       setTab("public");
       setPublicUnlocked(false);
@@ -41697,7 +41779,7 @@ ${String(ex)}`);
       ] }),
       tab === "active" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PropertyBookReview, { records: active, submit: submitBookReviews }),
       tab === "public" && publicUnlocked && publicScope === "mine" && publicPerson && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(MonthlyPropertyReport, { records: myProperties, person: publicPerson, submit: submitMonthlyPropertyReport }),
-      tab === "settings" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SettingsPanel, { settings, setSettings, supabasePush, supabasePull }) : tab === "intake" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(IntakePanel, { raw: intakeRaw, setRaw: setIntakeRaw, drafts: intakeDrafts, draft: intakeDraft, selectDraft: selectIntakeDraft, deleteDraft: removeIntakeDraft, analyze: analyzeIntake, updateValue: updateIntakeValue, clear: () => setIntakeRaw(""), confirmIntake }) : tab === "tour" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TourPlanner, { records, drafts: intakeDrafts, items: tourItems, setItems: setTourItems, editRecord: setEditing, updateDraftCaseName: updateIntakeDraftCaseName, tourDate, setTourDate, tourTitle, setTourTitle, notify: flash, complete: (date, recordIds, draftIds) => {
+      tab === "settings" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SettingsPanel, { settings, setSettings, supabasePush, supabasePull, cloudSession, supabaseSignIn, supabaseSignOut }) : tab === "intake" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(IntakePanel, { raw: intakeRaw, setRaw: setIntakeRaw, drafts: intakeDrafts, draft: intakeDraft, selectDraft: selectIntakeDraft, deleteDraft: removeIntakeDraft, analyze: analyzeIntake, updateValue: updateIntakeValue, clear: () => setIntakeRaw(""), confirmIntake }) : tab === "tour" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TourPlanner, { records, drafts: intakeDrafts, items: tourItems, setItems: setTourItems, editRecord: setEditing, updateDraftCaseName: updateIntakeDraftCaseName, tourDate, setTourDate, tourTitle, setTourTitle, notify: flash, complete: (date, recordIds, draftIds) => {
         setRecords((previous) => previous.map((record) => recordIds.includes(record.id) ? withTrackedUpdate(record, { ...record, groupViewDate: date, updateDate: today() }) : record));
         setIntakeDrafts((previous) => previous.map((draft) => draftIds.includes(draft.id) ? { ...draft, groupViewDate: date } : draft));
         setTourItems([]);
@@ -45374,8 +45456,10 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       ] })
     ] });
   }
-  function SettingsPanel({ settings, setSettings, supabasePush, supabasePull }) {
+  function SettingsPanel({ settings, setSettings, supabasePush, supabasePull, cloudSession, supabaseSignIn, supabaseSignOut }) {
     const set = (k, v) => setSettings({ ...settings, [k]: v });
+    const [cloudEmail, setCloudEmail] = (0, import_react.useState)("");
+    const [cloudPassword, setCloudPassword] = (0, import_react.useState)("");
     const updatePerson = (id, patch) => setSettings({ ...settings, personnel: settings.personnel.map((p) => p.id === id ? { ...p, ...patch } : p) });
     const removePerson = (id) => {
       if (!confirm("\u78BA\u5B9A\u522A\u9664\u9019\u4F4D\u4EBA\u54E1\uFF1F\u522A\u9664\u5F8C\u5E8F\u865F\u6703\u81EA\u52D5\u91CD\u65B0\u7DE8\u6392\u3002")) return;
@@ -45431,32 +45515,40 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       ] }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("details", { className: "supabase", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("summary", { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u9032\u968E\uFF1ASupabase \u96F2\u7AEF\u5099\u4EFD" }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "\u9810\u8A2D\u96B1\u85CF" })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u9032\u968E\uFF1ASupabase \u96F2\u7AEF\u540C\u6B65" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: cloudSession ? `\u5DF2\u767B\u5165\uFF1A${cloudSession.email || "\u96F2\u7AEF\u5E33\u865F"}` : "\u9810\u8A2D\u96B1\u85CF" })
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "supabase-body", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "warning", children: "\u55AE\u6A5F\u6A21\u5F0F\u4E0D\u9700\u8981\u586B\u5BEB\u3002\u555F\u7528\u524D\u8ACB\u5148\u5728 Supabase \u5EFA\u7ACB\u542B id\u3001data\u3001updated_at \u6B04\u4F4D\u7684\u8CC7\u6599\u8868\u3002" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "warning", children: "\u8CC7\u6599\u53EA\u6703\u5728\u4F60\u4FEE\u6539\u5F8C\u7B49\u5F85 6 \u79D2\u540C\u6B65\u4E00\u6B21\uFF1B\u4E0D\u6703\u6BCF\u5E7E\u79D2\u8B80\u53D6\u6216\u4E0A\u50B3\u3002\u7167\u7247\u6A94\u6848\u4E0D\u6703\u4E0A\u50B3\u5230\u96F2\u7AEF\u3002" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-grid", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "field", children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Project URL" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { value: settings.supabaseUrl, onChange: (e) => set("supabaseUrl", e.target.value) })
             ] }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "field", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Anon Key" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "password", value: settings.supabaseKey, onChange: (e) => set("supabaseKey", e.target.value) })
-            ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "field", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u8CC7\u6599\u8868\u540D\u7A31" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { value: settings.supabaseTable, onChange: (e) => set("supabaseTable", e.target.value) })
-            ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "field", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u8CC7\u6599\u8B58\u5225\u78BC" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { value: settings.supabaseRecord, onChange: (e) => set("supabaseRecord", e.target.value) })
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Supabase Publishable key" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "password", value: settings.supabaseKey, onChange: (e) => set("supabaseKey", e.target.value), placeholder: "\u8CBC\u4E0A anon / publishable key" })
             ] })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "backup-actions", children: [
+          cloudSession ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "backup-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: supabasePull, children: "\u5F9E\u96F2\u7AEF\u5408\u4F75" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "primary", onClick: supabasePush, children: "\u5099\u4EFD\u5230\u96F2\u7AEF" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "primary", onClick: () => void supabasePush(), children: "\u7ACB\u5373\u540C\u6B65" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: supabaseSignOut, children: "\u767B\u51FA\u96F2\u7AEF\u5E33\u865F" })
+          ] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-grid", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "field", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u96F2\u7AEF\u767B\u5165 Email" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "email", value: cloudEmail, onChange: (e) => setCloudEmail(e.target.value) })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "field", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u96F2\u7AEF\u767B\u5165\u5BC6\u78BC" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "password", value: cloudPassword, onChange: (e) => setCloudPassword(e.target.value) })
+              ] })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "backup-actions", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => void supabaseSignIn(cloudEmail, cloudPassword, false), children: "\u767B\u5165" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "primary", onClick: () => void supabaseSignIn(cloudEmail, cloudPassword, true), children: "\u7B2C\u4E00\u6B21\u4F7F\u7528\uFF1A\u8A3B\u518A\u96F2\u7AEF\u5E33\u865F" })
+            ] })
           ] })
         ] })
       ] })

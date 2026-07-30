@@ -9,6 +9,7 @@ import colorWorkbookTemplateUrl from "./assets/彩色表範本.xlsm?url";
 type RecordItem = Record<string, string> & { id: string; photos: string[]; archived?: string };
 type Person = { id: string; sequence?: string; name: string; nationalId: string; phone?: string; role?: "業務" | "秘書"; status: "在職" | "離職" };
 type Settings = { personnel: Person[]; staffName?: string; staffId?: string; supabaseUrl: string; supabaseKey: string; supabaseTable: string; supabaseRecord: string };
+type CloudSession = { accessToken: string; refreshToken?: string; email?: string };
 type IntakeData = { id: string; values: Record<string, string>; propertyKind: "房屋" | "純土地"; createdAt: string; raw?: string; linkedRecordId?: string; enteredAt?: string; groupViewDate?: string };
 type TourItem = { id: string; recordId?: string; sequence: string; temporary?: boolean; data: RecordItem };
 
@@ -19,6 +20,9 @@ const PHOTO_INTAKE_CLEANUP_KEY = "property-desk-photo-intake-cleanup-v2";
 const TOUR_KEY = "property-desk-tour-plan-v1";
 const DAILY_HIDDEN_KEY = "property-desk-daily-hidden-v1";
 const MISSING_REMINDER_DATE_KEY = "property-desk-missing-reminder-date-v1";
+const CLOUD_SESSION_KEY = "property-desk-supabase-session-v1";
+const CASE_FILE_SUPABASE_URL = "https://oiywtmjbasoonfuxemtr.supabase.co";
+const CASE_FILE_SUPABASE_TABLE = "case_file_state";
 const newId = () => globalThis.crypto?.randomUUID?.() || `id-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
 const fields = [
@@ -396,7 +400,8 @@ const sample: RecordItem = {
 
 export default function Home() {
   const [records, setRecords] = useState<RecordItem[]>([]);
-  const [settings, setSettings] = useState<Settings>({ personnel: [], supabaseUrl: "", supabaseKey: "", supabaseTable: "property_app_state", supabaseRecord: "main" });
+  const [settings, setSettings] = useState<Settings>({ personnel: [], supabaseUrl: CASE_FILE_SUPABASE_URL, supabaseKey: "", supabaseTable: CASE_FILE_SUPABASE_TABLE, supabaseRecord: "main" });
+  const [cloudSession, setCloudSession] = useState<CloudSession | null>(null);
   const [tab, setTab] = useState<"active" | "archive" | "activity" | "inventory" | "tour" | "keys" | "public" | "settings" | "intake">("active");
   const [query, setQuery] = useState("");
   const [missingDataReminderOpen, setMissingDataReminderOpen] = useState(false);
@@ -423,6 +428,8 @@ export default function Home() {
   const [tourDate, setTourDate] = useState(today());
   const [tourTitle, setTourTitle] = useState(`${displayRocDate(today()).replace(/\//g, ".")}團看`);
   const selectedIntakeRef = useRef("");
+  const cloudSyncBaselineRef = useRef("");
+  const cloudSyncTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!editing || editing._generalWebsiteDefaultsApplied === "1") return;
@@ -439,7 +446,8 @@ export default function Home() {
       let loadedRecords: RecordItem[] = saved ? JSON.parse(saved) : [sample];
       const officialRecords = ((window as any).__PROPERTY_OFFICIAL_RECORDS__ || []) as RecordItem[]; const appRestoreMarker = "property-desk-app-restore-216-v3"; if (officialRecords.length && localStorage.getItem(appRestoreMarker) !== "1") { const keyOf = (record: RecordItem) => String(record.propertyNo || record.id || "").trim(); const merged = new Map(officialRecords.map(record => [keyOf(record), record])); loadedRecords.forEach(record => { const key = keyOf(record); if (!key) return; const base = merged.get(key) || {} as RecordItem; const next = { ...base, ...record }; if (!String(next.bookLocationDate || "").trim() && String(base.bookLocationDate || "").trim()) next.bookLocationDate = base.bookLocationDate; if (!String(next.bookLocationType || "").trim() && String(base.bookLocationType || "").trim()) next.bookLocationType = base.bookLocationType; merged.set(key, next); }); loadedRecords = [...merged.values()]; localStorage.setItem(STORAGE_KEY, JSON.stringify(loadedRecords)); localStorage.setItem(appRestoreMarker, "1"); }
       loadedRecords = loadedRecords.map(record => ({ ...record, salesBook: record.salesBook || "製作" }));
-      const savedSettings = localStorage.getItem(SETTINGS_KEY); setSettings(s => { const old = savedSettings ? JSON.parse(savedSettings) : {}; const personnel = old.personnel || (old.staffName || old.staffId ? [{ id: newId(), name: old.staffName || "", nationalId: old.staffId || "", status: "在職" }] : []); return { ...s, ...old, personnel: mergeSuppliedPersonnel(personnel) }; });
+      const savedSettings = localStorage.getItem(SETTINGS_KEY); setSettings(s => { const old = savedSettings ? JSON.parse(savedSettings) : {}; const personnel = old.personnel || (old.staffName || old.staffId ? [{ id: newId(), name: old.staffName || "", nationalId: old.staffId || "", status: "在職" }] : []); return { ...s, ...old, supabaseUrl: old.supabaseUrl || CASE_FILE_SUPABASE_URL, supabaseTable: old.supabaseTable === "property_app_state" || !old.supabaseTable ? CASE_FILE_SUPABASE_TABLE : old.supabaseTable, supabaseRecord: old.supabaseRecord || "main", personnel: mergeSuppliedPersonnel(personnel) }; });
+      const savedCloudSession = localStorage.getItem(CLOUD_SESSION_KEY); if (savedCloudSession) setCloudSession(JSON.parse(savedCloudSession));
       const savedIntake = localStorage.getItem(INTAKE_KEY); if (savedIntake) { const saved = JSON.parse(savedIntake); const drafts: IntakeData[] = saved.drafts || (saved.parsed ? [{ ...saved.parsed, raw: saved.raw || "" }] : []); if (!localStorage.getItem(PHOTO_INTAKE_CLEANUP_KEY)) { const legacyPhotoValues = new Map(drafts.filter(draft => draft.linkedRecordId).map(draft => [draft.linkedRecordId!, new Set(Object.entries(draft.values).filter(([key, value]) => value && (key.includes("進案文件") || key.includes("當下進案文件"))).map(([, value]) => value.trim()))])); loadedRecords = loadedRecords.map(record => { const values = legacyPhotoValues.get(record.id); const current = String(record.photoInfo || "").split(/[／/]/).map(value => value.trim()).filter(Boolean); return values && current.length && current.every(value => values.has(value)) ? { ...record, photoInfo: "" } : record; }); localStorage.setItem(PHOTO_INTAKE_CLEANUP_KEY, "1"); } const linkedDrafts = new Map(drafts.filter(draft => draft.linkedRecordId).map(draft => [draft.linkedRecordId!, draft])); loadedRecords = loadedRecords.map(record => { const draft = linkedDrafts.get(record.id); return draft ? intakeToRecord(draft, record) : record; }); setIntakeDrafts(drafts); setSelectedIntakeId(saved.selectedId || drafts[0]?.id || ""); setIntakeRaw(saved.raw || ""); }
       const savedTour = localStorage.getItem(TOUR_KEY); if (savedTour) { const tour = JSON.parse(savedTour); setTourItems(Array.isArray(tour.items) ? tour.items : []); setTourDate(tour.date || today()); setTourTitle(tour.title || `${displayRocDate(tour.date || today()).replace(/\//g, ".")}團看`); }
       setRecords(loadedRecords);
@@ -725,12 +733,70 @@ export default function Home() {
     });
     try { const pptBlob = await pptx.write({ outputType: "blob" }) as Blob; download(`${pptMeetingDateLabel()}開會PPT.pptx`, pptBlob); setPptPickerOpen(false); flash(`已產生 PPT，共 ${selected.length} 筆物件`); } catch (error) { console.error(error); flash("PPT 產生失敗，請再試一次"); }
   };
-  const supabasePush = async () => {
-    try { const url = `${settings.supabaseUrl.replace(/\/$/, "")}/rest/v1/${settings.supabaseTable}`; const res = await fetch(url, { method: "POST", headers: { apikey: settings.supabaseKey, Authorization: `Bearer ${settings.supabaseKey}`, "Content-Type": "application/json", Prefer: "resolution=merge-duplicates" }, body: JSON.stringify({ id: settings.supabaseRecord, data: { records }, updated_at: new Date().toISOString() }) }); if (!res.ok) throw new Error(await res.text()); flash("Supabase 備份完成"); } catch { flash("Supabase 備份失敗，請檢查設定"); }
+  // Cloud backup intentionally excludes locally stored photo payloads.
+  // Textual photo notes stay with the record, while real images remain on this computer.
+  const cloudData = () => ({
+    records: records.map(({ photos, ...record }) => record),
+    settings: { personnel: settings.personnel },
+    intake: { raw: intakeRaw, drafts: intakeDrafts, selectedId: selectedIntakeId },
+    tour: { date: tourDate, title: tourTitle, items: tourItems },
+  });
+  const cloudHeaders = () => ({ apikey: settings.supabaseKey, Authorization: `Bearer ${cloudSession?.accessToken || ""}`, "Content-Type": "application/json" });
+  const supabasePush = async (quiet = false) => {
+    if (!cloudSession?.accessToken) { if (!quiet) flash("請先登入雲端帳號"); return false; }
+    if (!settings.supabaseUrl || !settings.supabaseKey) { if (!quiet) flash("請先填入 Supabase Publishable key"); return false; }
+    try {
+      const url = `${settings.supabaseUrl.replace(/\/$/, "")}/rest/v1/${settings.supabaseTable}`;
+      const res = await fetch(url, { method: "POST", headers: { ...cloudHeaders(), Prefer: "resolution=merge-duplicates,return=minimal" }, body: JSON.stringify({ id: settings.supabaseRecord, data: cloudData(), updated_at: new Date().toISOString() }) });
+      if (!res.ok) throw new Error(await res.text());
+      if (!quiet) flash("雲端同步完成");
+      return true;
+    } catch { if (!quiet) flash("雲端同步失敗，請檢查登入與設定"); return false; }
   };
   const supabasePull = async () => {
-    try { const url = `${settings.supabaseUrl.replace(/\/$/, "")}/rest/v1/${settings.supabaseTable}?id=eq.${encodeURIComponent(settings.supabaseRecord)}&select=data`; const res = await fetch(url, { headers: { apikey: settings.supabaseKey, Authorization: `Bearer ${settings.supabaseKey}` } }); const rows = await res.json(); if (!res.ok || !rows[0]?.data?.records) throw new Error(); if (confirm("雲端資料將與本機資料合併，確定嗎？")) { setRecords(prev => { const map = new Map(prev.map(r => [r.id, r])); rows[0].data.records.forEach((r: RecordItem) => map.set(r.id, r)); return [...map.values()]; }); flash("Supabase 資料已合併"); } } catch { flash("Supabase 讀取失敗，請檢查設定"); }
+    if (!cloudSession?.accessToken) return flash("請先登入雲端帳號");
+    try {
+      const url = `${settings.supabaseUrl.replace(/\/$/, "")}/rest/v1/${settings.supabaseTable}?id=eq.${encodeURIComponent(settings.supabaseRecord)}&select=data`;
+      const res = await fetch(url, { headers: cloudHeaders() }); const rows = await res.json(); const data = rows[0]?.data;
+      if (!res.ok || !data?.records) throw new Error();
+      if (confirm("雲端資料將與本機資料合併，本機已修改但尚未同步的同一筆資料將以雲端版本為準。確定嗎？")) {
+        setRecords(prev => {
+          const map = new Map(prev.map(r => [r.id, r]));
+          data.records.forEach((r: RecordItem) => {
+            const local = map.get(r.id);
+            map.set(r.id, { ...local, ...r, photos: r.photos || local?.photos || [] });
+          });
+          return [...map.values()];
+        });
+        if (data.settings?.personnel) setSettings(previous => ({ ...previous, personnel: mergeSuppliedPersonnel(data.settings.personnel) }));
+        if (data.intake) { setIntakeRaw(data.intake.raw || ""); setIntakeDrafts(data.intake.drafts || []); setSelectedIntakeId(data.intake.selectedId || ""); }
+        if (data.tour) { setTourDate(data.tour.date || today()); setTourTitle(data.tour.title || ""); setTourItems(data.tour.items || []); }
+        flash("雲端資料已合併到本機");
+      }
+    } catch { flash("雲端讀取失敗，請檢查登入與設定"); }
   };
+  const supabaseSignIn = async (email: string, password: string, signUp = false) => {
+    if (!settings.supabaseKey) return flash("請先貼上 Supabase Publishable key");
+    try {
+      const endpoint = signUp ? "/auth/v1/signup" : "/auth/v1/token?grant_type=password";
+      const res = await fetch(`${settings.supabaseUrl.replace(/\/$/, "")}${endpoint}`, { method: "POST", headers: { apikey: settings.supabaseKey, "Content-Type": "application/json" }, body: JSON.stringify({ email, password }) });
+      const data = await res.json(); if (!res.ok) throw new Error(data?.message || data?.error_description || "");
+      if (!data.access_token) { flash("註冊完成，請先到 Email 收信完成驗證後再登入"); return; }
+      const session = { accessToken: data.access_token, refreshToken: data.refresh_token, email: data.user?.email || email };
+      setCloudSession(session); localStorage.setItem(CLOUD_SESSION_KEY, JSON.stringify(session)); flash("雲端帳號登入完成");
+    } catch { flash(signUp ? "註冊失敗，請檢查 Email 與密碼" : "登入失敗，請檢查 Email 與密碼"); }
+  };
+  const supabaseSignOut = () => { setCloudSession(null); localStorage.removeItem(CLOUD_SESSION_KEY); flash("已登出雲端帳號"); };
+  const cloudSnapshot = JSON.stringify({ records, personnel: settings.personnel, intakeRaw, intakeDrafts, selectedIntakeId, tourDate, tourTitle, tourItems });
+  useEffect(() => {
+    if (!cloudSyncBaselineRef.current) { cloudSyncBaselineRef.current = cloudSnapshot; return; }
+    if (cloudSyncBaselineRef.current === cloudSnapshot) return;
+    cloudSyncBaselineRef.current = cloudSnapshot;
+    if (!cloudSession?.accessToken || !settings.supabaseKey) return;
+    if (cloudSyncTimerRef.current) window.clearTimeout(cloudSyncTimerRef.current);
+    cloudSyncTimerRef.current = window.setTimeout(() => { void supabasePush(true); }, 6000);
+    return () => { if (cloudSyncTimerRef.current) window.clearTimeout(cloudSyncTimerRef.current); };
+  }, [cloudSnapshot, cloudSession?.accessToken, settings.supabaseKey]);
 
   const openPublic = () => { setTab("public"); setPublicUnlocked(false); setPublicPersonId(""); setPublicScope("mine"); setPassword(""); };
   const unlock = () => { const activePeople = settings.personnel.filter(p => p.status === "在職" && p.nationalId); if (!activePeople.length) return flash("請先在設定新增人員與身分證字號"); const person = activePeople.find(p => password.toUpperCase() === p.nationalId.toUpperCase()); if (person) { setPublicPersonId(person.id); setPublicScope("mine"); setPublicUnlocked(true); } else flash("密碼錯誤"); };
@@ -792,7 +858,7 @@ export default function Home() {
     {tab === "active" && <PropertyBookReview records={active} submit={submitBookReviews}/>}
     {tab === "public" && publicUnlocked && publicScope === "mine" && publicPerson && <MonthlyPropertyReport records={myProperties} person={publicPerson} submit={submitMonthlyPropertyReport}/>}
 
-    {tab === "settings" ? <SettingsPanel settings={settings} setSettings={setSettings} supabasePush={supabasePush} supabasePull={supabasePull} /> :
+    {tab === "settings" ? <SettingsPanel settings={settings} setSettings={setSettings} supabasePush={supabasePush} supabasePull={supabasePull} cloudSession={cloudSession} supabaseSignIn={supabaseSignIn} supabaseSignOut={supabaseSignOut} /> :
     tab === "intake" ? <IntakePanel raw={intakeRaw} setRaw={setIntakeRaw} drafts={intakeDrafts} draft={intakeDraft} selectDraft={selectIntakeDraft} deleteDraft={removeIntakeDraft} analyze={analyzeIntake} updateValue={updateIntakeValue} clear={() => setIntakeRaw("")} confirmIntake={confirmIntake} /> :
     tab === "tour" ? <TourPlanner records={records} drafts={intakeDrafts} items={tourItems} setItems={setTourItems} editRecord={setEditing} updateDraftCaseName={updateIntakeDraftCaseName} tourDate={tourDate} setTourDate={setTourDate} tourTitle={tourTitle} setTourTitle={setTourTitle} notify={flash} complete={(date, recordIds, draftIds) => { setRecords(previous => previous.map(record => recordIds.includes(record.id) ? withTrackedUpdate(record, { ...record, groupViewDate: date, updateDate: today() }) : record)); setIntakeDrafts(previous => previous.map(draft => draftIds.includes(draft.id) ? { ...draft, groupViewDate: date } : draft)); setTourItems([]); flash("團看日期已同步到物件與草稿"); }} /> :
     tab === "activity" ? <DailyActivity records={records} /> :
@@ -2005,8 +2071,10 @@ function Field({ fieldKey, label, record, records, setRecord }: { fieldKey: stri
   return <label className="field"><span>{label}{fieldKey === "propertyNo" || fieldKey === "caseName" ? " *" : ""}</span><input type="text" inputMode={["price", "reducedPrice", "builtYear", "indoorPing", "buildingPing", "landPing", "coverage", "far"].includes(fieldKey) ? "decimal" : undefined} value={value} onChange={e => set(e.target.value)}/>{fieldKey === "builtYear" && value && <small>目前換算：{ageOf(record)}</small>}</label>;
 }
 
-function SettingsPanel({ settings, setSettings, supabasePush, supabasePull }: { settings: Settings; setSettings: (s: Settings) => void; supabasePush: () => void; supabasePull: () => void }) {
+function SettingsPanel({ settings, setSettings, supabasePush, supabasePull, cloudSession, supabaseSignIn, supabaseSignOut }: { settings: Settings; setSettings: (s: Settings) => void; supabasePush: () => void; supabasePull: () => void; cloudSession: CloudSession | null; supabaseSignIn: (email: string, password: string, signUp?: boolean) => void; supabaseSignOut: () => void }) {
   const set = (k: keyof Settings, v: string) => setSettings({ ...settings, [k]: v });
+  const [cloudEmail, setCloudEmail] = useState("");
+  const [cloudPassword, setCloudPassword] = useState("");
   const updatePerson = (id: string, patch: Partial<Person>) => setSettings({ ...settings, personnel: settings.personnel.map(p => p.id === id ? { ...p, ...patch } : p) });
   const removePerson = (id: string) => {
     if (!confirm("確定刪除這位人員？刪除後序號會自動重新編排。")) return;
@@ -2017,7 +2085,7 @@ function SettingsPanel({ settings, setSettings, supabasePush, supabasePull }: { 
   const activePeople = sortPeopleBySequence(settings.personnel.filter(p => p.status === "在職"));
   const formerPeople = sortPeopleBySequence(settings.personnel.filter(p => p.status === "離職"));
   const personRow = (p: Person) => <div className="person-row" key={p.id}><input className="person-sequence" type="number" min="1" value={p.sequence || ""} onChange={e => updatePerson(p.id, { sequence: e.target.value })} placeholder="序"/><input value={p.name} onChange={e => updatePerson(p.id, { name: e.target.value })} placeholder="姓名"/><input type="text" value={p.nationalId} onChange={e => updatePerson(p.id, { nationalId: e.target.value.toUpperCase() })} placeholder="身分證字號"/><input type="tel" value={p.phone || ""} onChange={e => updatePerson(p.id, { phone: e.target.value })} placeholder="手機號碼"/><select value={p.role || "業務"} onChange={e => updatePerson(p.id, { role: e.target.value as Person["role"] })}><option>業務</option><option>秘書</option></select><select value={p.status} onChange={e => updatePerson(p.id, { status: e.target.value as Person["status"] })}><option>在職</option><option>離職</option></select><button className="danger" onClick={() => removePerson(p.id)}>刪除</button></div>;
-  return <section className="settings content"><SectionTitle title="系統設定" subtitle=""/><article className="panel personnel-panel"><div className="personnel-head"><h3>人員設定</h3><button className="primary" onClick={addPerson}>＋ 新增人員</button></div><div className="personnel-table"><div className="person-row person-labels"><span>序</span><span>人員</span><span>身分證字號（前台密碼）</span><span>手機號碼</span><span>職務</span><span>狀態</span><span>操作</span></div>{activePeople.map(personRow)}{!activePeople.length && <div className="no-person">尚未新增在職人員</div>}</div>{formerPeople.length > 0 && <details className="former-people"><summary>離職人員（{formerPeople.length}）</summary><div className="personnel-table">{formerPeople.map(personRow)}</div></details>}</article><details className="supabase"><summary><span>進階：Supabase 雲端備份</span><small>預設隱藏</small></summary><div className="supabase-body"><div className="warning">單機模式不需要填寫。啟用前請先在 Supabase 建立含 id、data、updated_at 欄位的資料表。</div><div className="form-grid"><label className="field"><span>Project URL</span><input value={settings.supabaseUrl} onChange={e => set("supabaseUrl", e.target.value)}/></label><label className="field"><span>Anon Key</span><input type="password" value={settings.supabaseKey} onChange={e => set("supabaseKey", e.target.value)}/></label><label className="field"><span>資料表名稱</span><input value={settings.supabaseTable} onChange={e => set("supabaseTable", e.target.value)}/></label><label className="field"><span>資料識別碼</span><input value={settings.supabaseRecord} onChange={e => set("supabaseRecord", e.target.value)}/></label></div><div className="backup-actions"><button onClick={supabasePull}>從雲端合併</button><button className="primary" onClick={supabasePush}>備份到雲端</button></div></div></details></section>;
+  return <section className="settings content"><SectionTitle title="系統設定" subtitle=""/><article className="panel personnel-panel"><div className="personnel-head"><h3>人員設定</h3><button className="primary" onClick={addPerson}>＋ 新增人員</button></div><div className="personnel-table"><div className="person-row person-labels"><span>序</span><span>人員</span><span>身分證字號（前台密碼）</span><span>手機號碼</span><span>職務</span><span>狀態</span><span>操作</span></div>{activePeople.map(personRow)}{!activePeople.length && <div className="no-person">尚未新增在職人員</div>}</div>{formerPeople.length > 0 && <details className="former-people"><summary>離職人員（{formerPeople.length}）</summary><div className="personnel-table">{formerPeople.map(personRow)}</div></details>}</article><details className="supabase"><summary><span>進階：Supabase 雲端同步</span><small>{cloudSession ? `已登入：${cloudSession.email || "雲端帳號"}` : "預設隱藏"}</small></summary><div className="supabase-body"><div className="warning">資料只會在你修改後等待 6 秒同步一次；不會每幾秒讀取或上傳。照片檔案不會上傳到雲端。</div><div className="form-grid"><label className="field"><span>Project URL</span><input value={settings.supabaseUrl} onChange={e => set("supabaseUrl", e.target.value)}/></label><label className="field"><span>Supabase Publishable key</span><input type="password" value={settings.supabaseKey} onChange={e => set("supabaseKey", e.target.value)} placeholder="貼上 anon / publishable key"/></label></div>{cloudSession ? <div className="backup-actions"><button onClick={supabasePull}>從雲端合併</button><button className="primary" onClick={() => void supabasePush()}>立即同步</button><button onClick={supabaseSignOut}>登出雲端帳號</button></div> : <><div className="form-grid"><label className="field"><span>雲端登入 Email</span><input type="email" value={cloudEmail} onChange={e => setCloudEmail(e.target.value)}/></label><label className="field"><span>雲端登入密碼</span><input type="password" value={cloudPassword} onChange={e => setCloudPassword(e.target.value)}/></label></div><div className="backup-actions"><button onClick={() => void supabaseSignIn(cloudEmail, cloudPassword, false)}>登入</button><button className="primary" onClick={() => void supabaseSignIn(cloudEmail, cloudPassword, true)}>第一次使用：註冊雲端帳號</button></div></>}</div></details></section>;
 }
 
 function SectionTitle({ title, subtitle }: { title: string; subtitle: string }) { return <div className="section-title"><h2>{title}</h2>{subtitle && <p>{subtitle}</p>}</div>; }
