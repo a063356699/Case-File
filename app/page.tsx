@@ -531,6 +531,22 @@ export default function Home() {
     const file = e.target.files?.[0]; if (!file) return;
     const reader = new FileReader(); reader.onload = () => { try {
       const data = JSON.parse(String(reader.result)); const list = Array.isArray(data) ? data : data.records; if (!Array.isArray(list)) throw new Error();
+      const repairDuplicates = !Array.isArray(data) && data.importMode === "repair-duplicate-property-no";
+      if (repairDuplicates) {
+        if (!confirm("將依物件編號合併重複案件，保留原有資料並補上空白欄位，確定嗎？")) return;
+        const grouped = new Map<string, RecordItem[]>();
+        records.forEach(record => { const key = String(record.propertyNo || record.id || "").trim(); grouped.set(key, [...(grouped.get(key) || []), record]); });
+        let removed = 0;
+        const nextRecords = [...grouped.values()].map(group => {
+          if (group.length === 1) return group[0]; removed += group.length - 1;
+          const ordered = group.slice().sort((a, b) => Number(String(b.id || "").startsWith("official-")) - Number(String(a.id || "").startsWith("official-")) || Object.values(b).filter(Boolean).length - Object.values(a).filter(Boolean).length);
+          return ordered.slice(1).reduce((merged, candidate) => {
+            const additions = Object.fromEntries(Object.entries(candidate).filter(([key, value]) => key !== "id" && key !== "photos" && String(value ?? "").trim() && !String(merged[key] || "").trim()));
+            return { ...merged, ...additions, photos: merged.photos?.length ? merged.photos : (candidate.photos || []) };
+          }, ordered[0]);
+        });
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(nextRecords)); alert(`已修復 ${removed} 筆重複案件，目前共 ${nextRecords.length} 件。`); location.reload(); return;
+      }
       const supplement = !Array.isArray(data) && data.importMode === "active-sales-form-supplement";
       if (supplement) {
         if (!confirm(`將依物件編號補入 ${list.length} 件售屋資料表欄位；已填寫的欄位不會被覆蓋，確定嗎？`)) return;

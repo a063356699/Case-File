@@ -41126,6 +41126,29 @@ ${String(ex)}`);
           const data = JSON.parse(String(reader.result));
           const list = Array.isArray(data) ? data : data.records;
           if (!Array.isArray(list)) throw new Error();
+          const repairDuplicates = !Array.isArray(data) && data.importMode === "repair-duplicate-property-no";
+          if (repairDuplicates) {
+            if (!confirm("\u5C07\u4F9D\u7269\u4EF6\u7DE8\u865F\u5408\u4F75\u91CD\u8907\u6848\u4EF6\uFF0C\u4FDD\u7559\u539F\u6709\u8CC7\u6599\u4E26\u88DC\u4E0A\u7A7A\u767D\u6B04\u4F4D\uFF0C\u78BA\u5B9A\u55CE\uFF1F")) return;
+            const grouped = /* @__PURE__ */ new Map();
+            records.forEach((record) => {
+              const key = String(record.propertyNo || record.id || "").trim();
+              grouped.set(key, [...grouped.get(key) || [], record]);
+            });
+            let removed = 0;
+            const nextRecords = [...grouped.values()].map((group) => {
+              if (group.length === 1) return group[0];
+              removed += group.length - 1;
+              const ordered = group.slice().sort((a, b) => Number(String(b.id || "").startsWith("official-")) - Number(String(a.id || "").startsWith("official-")) || Object.values(b).filter(Boolean).length - Object.values(a).filter(Boolean).length);
+              return ordered.slice(1).reduce((merged, candidate) => {
+                const additions = Object.fromEntries(Object.entries(candidate).filter(([key, value]) => key !== "id" && key !== "photos" && String(value ?? "").trim() && !String(merged[key] || "").trim()));
+                return { ...merged, ...additions, photos: merged.photos?.length ? merged.photos : candidate.photos || [] };
+              }, ordered[0]);
+            });
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(nextRecords));
+            alert(`\u5DF2\u4FEE\u5FA9 ${removed} \u7B46\u91CD\u8907\u6848\u4EF6\uFF0C\u76EE\u524D\u5171 ${nextRecords.length} \u4EF6\u3002`);
+            location.reload();
+            return;
+          }
           const supplement = !Array.isArray(data) && data.importMode === "active-sales-form-supplement";
           if (supplement) {
             if (!confirm(`\u5C07\u4F9D\u7269\u4EF6\u7DE8\u865F\u88DC\u5165 ${list.length} \u4EF6\u552E\u5C4B\u8CC7\u6599\u8868\u6B04\u4F4D\uFF1B\u5DF2\u586B\u5BEB\u7684\u6B04\u4F4D\u4E0D\u6703\u88AB\u8986\u84CB\uFF0C\u78BA\u5B9A\u55CE\uFF1F`)) return;
