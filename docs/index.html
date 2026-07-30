@@ -40117,6 +40117,7 @@ ${String(ex)}`);
   var CLOUD_SESSION_KEY = "property-desk-supabase-session-v1";
   var CASE_FILE_SUPABASE_URL = "https://oiywtmjbasoonfuxemtr.supabase.co";
   var CASE_FILE_SUPABASE_TABLE = "case_file_state";
+  var CASE_FILE_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_dhr81918k0zRtar14yepIA_ZWmTKT10";
   var newId = () => globalThis.crypto?.randomUUID?.() || `id-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   var fields = [
     ["propertyNo", "\u7269\u4EF6\u7DE8\u865F"],
@@ -40875,7 +40876,7 @@ ${String(ex)}`);
   };
   function Home() {
     const [records, setRecords] = (0, import_react.useState)([]);
-    const [settings, setSettings] = (0, import_react.useState)({ personnel: [], supabaseUrl: CASE_FILE_SUPABASE_URL, supabaseKey: "", supabaseTable: CASE_FILE_SUPABASE_TABLE, supabaseRecord: "main" });
+    const [settings, setSettings] = (0, import_react.useState)({ personnel: [], supabaseUrl: CASE_FILE_SUPABASE_URL, supabaseKey: CASE_FILE_SUPABASE_PUBLISHABLE_KEY, supabaseTable: CASE_FILE_SUPABASE_TABLE, supabaseRecord: "main" });
     const [cloudSession, setCloudSession] = (0, import_react.useState)(null);
     const [tab, setTab] = (0, import_react.useState)("active");
     const [query, setQuery] = (0, import_react.useState)("");
@@ -40940,7 +40941,7 @@ ${String(ex)}`);
         setSettings((s) => {
           const old = savedSettings ? JSON.parse(savedSettings) : {};
           const personnel = old.personnel || (old.staffName || old.staffId ? [{ id: newId(), name: old.staffName || "", nationalId: old.staffId || "", status: "\u5728\u8077" }] : []);
-          return { ...s, ...old, supabaseUrl: old.supabaseUrl || CASE_FILE_SUPABASE_URL, supabaseTable: old.supabaseTable === "property_app_state" || !old.supabaseTable ? CASE_FILE_SUPABASE_TABLE : old.supabaseTable, supabaseRecord: old.supabaseRecord || "main", personnel: mergeSuppliedPersonnel(personnel) };
+          return { ...s, ...old, supabaseUrl: old.supabaseUrl || CASE_FILE_SUPABASE_URL, supabaseKey: old.supabaseKey || CASE_FILE_SUPABASE_PUBLISHABLE_KEY, supabaseTable: old.supabaseTable === "property_app_state" || !old.supabaseTable ? CASE_FILE_SUPABASE_TABLE : old.supabaseTable, supabaseRecord: old.supabaseRecord || "main", personnel: mergeSuppliedPersonnel(personnel) };
         });
         const savedCloudSession = localStorage.getItem(CLOUD_SESSION_KEY);
         if (savedCloudSession) setCloudSession(JSON.parse(savedCloudSession));
