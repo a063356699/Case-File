@@ -34772,7 +34772,7 @@
     }
   });
 
-  // work/standalone-entry.tsx
+  // scripts/standalone-entry.tsx
   var import_client = __toESM(require_client(), 1);
 
   // app/page.tsx
@@ -45436,9 +45436,12 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     ] });
   }
 
-  // work/standalone-entry.tsx
+  // scripts/standalone-entry.tsx
   var import_jsx_runtime2 = __toESM(require_jsx_runtime(), 1);
   document.title = "\u7E3D\u8868 \u55AE\u6A5Fhtml";
+  if (localStorage.getItem("property-desk-v1") === null) {
+    localStorage.setItem("property-desk-v1", "[]");
+  }
   (0, import_client.createRoot)(document.getElementById("root")).render(/* @__PURE__ */ (0, import_jsx_runtime2.jsx)(Home, {}));
 })();
 /*! Bundled license information:

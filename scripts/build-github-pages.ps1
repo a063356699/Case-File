@@ -5,7 +5,7 @@ $nodeBin = "C:\Users\user\.cache\codex-runtimes\codex-primary-runtime\dependenci
 $env:PATH = $nodeBin + ";" + $env:PATH
 
 & "$projectRoot\node_modules\.bin\esbuild.cmd" `
-  "$projectRoot\work\standalone-entry.tsx" `
+  "$projectRoot\scripts\standalone-entry.tsx" `
   --bundle `
   --platform=browser `
   --format=iife `
