@@ -41180,6 +41180,8 @@ ${String(ex)}`);
     const selectedIntakeRef = (0, import_react.useRef)("");
     const cloudSyncBaselineRef = (0, import_react.useRef)("");
     const cloudSyncTimerRef = (0, import_react.useRef)(null);
+    const cloudAutoPullRef = (0, import_react.useRef)("");
+    const cloudLastPullRef = (0, import_react.useRef)(0);
     (0, import_react.useEffect)(() => {
       if (!editing || editing._generalWebsiteDefaultsApplied === "1") return;
       const contract = contractFromNo(editing.propertyNo) || editing.contractType || "";
@@ -41883,7 +41885,7 @@ ${String(ex)}`);
         return false;
       }
     };
-    const supabasePull = async () => {
+    const supabasePull = async (automatic = false) => {
       if (!cloudSession?.accessToken) return flash("\u8ACB\u5148\u767B\u5165\u96F2\u7AEF\u5E33\u865F");
       try {
         const url = `${settings.supabaseUrl.replace(/\/$/, "")}/rest/v1/${settings.supabaseTable}?id=eq.${encodeURIComponent(settings.supabaseRecord)}&select=data`;
@@ -41896,7 +41898,9 @@ ${String(ex)}`);
         const rows = await res.json();
         const data = rows[0]?.data;
         if (!res.ok || !data?.records) throw new Error();
-        if (confirm("\u96F2\u7AEF\u8CC7\u6599\u5C07\u8207\u672C\u6A5F\u8CC7\u6599\u5408\u4F75\uFF0C\u672C\u6A5F\u5DF2\u4FEE\u6539\u4F46\u5C1A\u672A\u540C\u6B65\u7684\u540C\u4E00\u7B46\u8CC7\u6599\u5C07\u4EE5\u96F2\u7AEF\u7248\u672C\u70BA\u6E96\u3002\u78BA\u5B9A\u55CE\uFF1F")) {
+        if (automatic || confirm("\u96F2\u7AEF\u8CC7\u6599\u5C07\u8207\u672C\u6A5F\u8CC7\u6599\u5408\u4F75\uFF0C\u672C\u6A5F\u5DF2\u4FEE\u6539\u4F46\u5C1A\u672A\u540C\u6B65\u7684\u540C\u4E00\u7B46\u8CC7\u6599\u5C07\u4EE5\u96F2\u7AEF\u7248\u672C\u70BA\u6E96\u3002\u78BA\u5B9A\u55CE\uFF1F")) {
+          cloudSyncBaselineRef.current = "";
+          cloudLastPullRef.current = Date.now();
           setRecords((prev) => {
             const keyOf = (record) => String(record.propertyNo || record.id || "").trim();
             const map = new Map(prev.map((record) => [keyOf(record), record]));
@@ -41918,7 +41922,7 @@ ${String(ex)}`);
             setTourTitle(data.tour.title || "");
             setTourItems(data.tour.items || []);
           }
-          flash("\u96F2\u7AEF\u8CC7\u6599\u5DF2\u5408\u4F75\u5230\u672C\u6A5F");
+          if (!automatic) flash("\u96F2\u7AEF\u8CC7\u6599\u5DF2\u5408\u4F75\u5230\u672C\u6A5F");
         }
       } catch {
         flash("\u96F2\u7AEF\u8B80\u53D6\u5931\u6557\uFF0C\u8ACB\u6AA2\u67E5\u767B\u5165\u8207\u8A2D\u5B9A");
@@ -41965,6 +41969,27 @@ ${String(ex)}`);
         if (cloudSyncTimerRef.current) window.clearTimeout(cloudSyncTimerRef.current);
       };
     }, [cloudSnapshot, cloudSession?.accessToken, settings.supabaseKey]);
+    (0, import_react.useEffect)(() => {
+      if (!cloudSession?.accessToken || !settings.supabaseKey) return;
+      const sessionKey = `${cloudSession.email || "account"}:${settings.supabaseRecord}`;
+      const pullWhenNeeded = () => {
+        if (Date.now() - cloudLastPullRef.current < 5e3) return;
+        void supabasePull(true);
+      };
+      if (cloudAutoPullRef.current !== sessionKey) {
+        cloudAutoPullRef.current = sessionKey;
+        pullWhenNeeded();
+      }
+      const onVisible = () => {
+        if (document.visibilityState === "visible") pullWhenNeeded();
+      };
+      window.addEventListener("focus", pullWhenNeeded);
+      document.addEventListener("visibilitychange", onVisible);
+      return () => {
+        window.removeEventListener("focus", pullWhenNeeded);
+        document.removeEventListener("visibilitychange", onVisible);
+      };
+    }, [cloudSession?.accessToken, cloudSession?.email, settings.supabaseKey, settings.supabaseRecord]);
     const openPublic = () => {
       setTab("public");
       setPublicUnlocked(false);

@@ -519,6 +519,8 @@ export default function Home() {
   const selectedIntakeRef = useRef("");
   const cloudSyncBaselineRef = useRef("");
   const cloudSyncTimerRef = useRef<number | null>(null);
+  const cloudAutoPullRef = useRef("");
+  const cloudLastPullRef = useRef(0);
 
   useEffect(() => {
     if (!editing || editing._generalWebsiteDefaultsApplied === "1") return;
@@ -902,7 +904,7 @@ export default function Home() {
       return true;
     } catch (error) { console.error("Supabase push failed", error); if (!quiet) flash("雲端同步失敗，請重新登入後再試"); return false; }
   };
-  const supabasePull = async () => {
+  const supabasePull = async (automatic = false) => {
     if (!cloudSession?.accessToken) return flash("請先登入雲端帳號");
     try {
       const url = `${settings.supabaseUrl.replace(/\/$/, "")}/rest/v1/${settings.supabaseTable}?id=eq.${encodeURIComponent(settings.supabaseRecord)}&select=data`;
@@ -914,7 +916,10 @@ export default function Home() {
       }
       const rows = await res.json(); const data = rows[0]?.data;
       if (!res.ok || !data?.records) throw new Error();
-      if (confirm("雲端資料將與本機資料合併，本機已修改但尚未同步的同一筆資料將以雲端版本為準。確定嗎？")) {
+      if (automatic || confirm("雲端資料將與本機資料合併，本機已修改但尚未同步的同一筆資料將以雲端版本為準。確定嗎？")) {
+        // This came from the cloud, so it must not trigger another upload.
+        cloudSyncBaselineRef.current = "";
+        cloudLastPullRef.current = Date.now();
         setRecords(prev => {
           // Property numbers are shared across computers; generated local ids are not.
           // Merge by property number so a cloud record replaces the same local case.
@@ -930,7 +935,7 @@ export default function Home() {
         if (data.settings?.personnel) setSettings(previous => ({ ...previous, personnel: mergeSuppliedPersonnel(data.settings.personnel) }));
         if (data.intake) { setIntakeRaw(data.intake.raw || ""); setIntakeDrafts(data.intake.drafts || []); setSelectedIntakeId(data.intake.selectedId || ""); }
         if (data.tour) { setTourDate(data.tour.date || today()); setTourTitle(data.tour.title || ""); setTourItems(data.tour.items || []); }
-        flash("雲端資料已合併到本機");
+        if (!automatic) flash("雲端資料已合併到本機");
       }
     } catch { flash("雲端讀取失敗，請檢查登入與設定"); }
   };
@@ -956,6 +961,25 @@ export default function Home() {
     cloudSyncTimerRef.current = window.setTimeout(() => { void supabasePush(true); }, 6000);
     return () => { if (cloudSyncTimerRef.current) window.clearTimeout(cloudSyncTimerRef.current); };
   }, [cloudSnapshot, cloudSession?.accessToken, settings.supabaseKey]);
+  useEffect(() => {
+    if (!cloudSession?.accessToken || !settings.supabaseKey) return;
+    const sessionKey = `${cloudSession.email || "account"}:${settings.supabaseRecord}`;
+    const pullWhenNeeded = () => {
+      if (Date.now() - cloudLastPullRef.current < 5000) return;
+      void supabasePull(true);
+    };
+    if (cloudAutoPullRef.current !== sessionKey) {
+      cloudAutoPullRef.current = sessionKey;
+      pullWhenNeeded();
+    }
+    const onVisible = () => { if (document.visibilityState === "visible") pullWhenNeeded(); };
+    window.addEventListener("focus", pullWhenNeeded);
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      window.removeEventListener("focus", pullWhenNeeded);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [cloudSession?.accessToken, cloudSession?.email, settings.supabaseKey, settings.supabaseRecord]);
 
   const openPublic = () => { setTab("public"); setPublicUnlocked(false); setPublicPersonId(""); setPublicScope("mine"); setPassword(""); };
   const unlock = () => { const activePeople = settings.personnel.filter(p => p.status === "在職" && p.nationalId); if (!activePeople.length) return flash("請先在設定新增人員與身分證字號"); const person = activePeople.find(p => password.toUpperCase() === p.nationalId.toUpperCase()); if (person) { setPublicPersonId(person.id); setPublicScope("mine"); setPublicUnlocked(true); } else flash("密碼錯誤"); };
