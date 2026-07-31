@@ -1563,10 +1563,12 @@ async function downloadColorWorkbook(record: RecordItem, personnel: Person[] = [
       Array.from(drawingDocument.documentElement.children).forEach(anchor => {
         const idNode = Array.from(anchor.getElementsByTagNameNS(xdrNs, "cNvPr")).find(node => rightBlockIds.has(node.getAttribute("id") || ""));
         if (!idNode) return;
-        Array.from(anchor.getElementsByTagNameNS(xdrNs, "rowOff")).forEach(offset => offset.textContent = String(Math.max(0, Number(offset.textContent || "0") - up)));
+        const extraPositionFrameUp = idNode.getAttribute("id") === "22" ? 72000 : 0; // 0.2 cm
+        const shift = up + extraPositionFrameUp;
+        Array.from(anchor.getElementsByTagNameNS(xdrNs, "rowOff")).forEach(offset => offset.textContent = String(Math.max(0, Number(offset.textContent || "0") - shift)));
         const transform = Array.from(anchor.getElementsByTagNameNS("http://schemas.openxmlformats.org/drawingml/2006/main", "xfrm"))[0];
         const offset = transform && Array.from(transform.children).find(node => node.localName === "off");
-        if (offset) offset.setAttribute("y", String(Math.max(0, Number(offset.getAttribute("y") || "0") - up)));
+        if (offset) offset.setAttribute("y", String(Math.max(0, Number(offset.getAttribute("y") || "0") - shift)));
       });
       // Blue captions use a fixed 1.5 cm height, matching the house sales
       // sheet reference and preventing row changes from stretching the labels.
@@ -1578,6 +1580,8 @@ async function downloadColorWorkbook(record: RecordItem, personnel: Person[] = [
         const shapeExtent = transform && Array.from(transform.children).find(node => node.localName === "ext");
         const width = Number(shapeExtent?.getAttribute("cx") || "1256400");
         const from = Array.from(anchor.children).find(node => node.localName === "from");
+        // Keep a small clear gap between the blue title and the white frame.
+        Array.from(anchor.getElementsByTagNameNS(xdrNs, "rowOff")).forEach(offset => offset.textContent = String(Math.max(0, Number(offset.textContent || "0") - 108000)));
         if (from && anchor.localName === "twoCellAnchor") {
           const replacement = drawingDocument.createElementNS(xdrNs, "xdr:oneCellAnchor");
           replacement.appendChild(from.cloneNode(true));
