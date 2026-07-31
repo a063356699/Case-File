@@ -43459,7 +43459,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
         Array.from(drawingDocument.documentElement.children).forEach((anchor) => {
           const idNode = Array.from(anchor.getElementsByTagNameNS(xdrNs, "cNvPr")).find((node) => rightBlockIds.has(node.getAttribute("id") || ""));
           if (!idNode) return;
-          const extraPositionFrameUp = idNode.getAttribute("id") === "22" ? 72e3 : 0;
+          const extraPositionFrameUp = idNode.getAttribute("id") === "22" ? 108e3 : 0;
           const shift = up + extraPositionFrameUp;
           Array.from(anchor.getElementsByTagNameNS(xdrNs, "rowOff")).forEach((offset2) => offset2.textContent = String(Math.max(0, Number(offset2.textContent || "0") - shift)));
           const transform = Array.from(anchor.getElementsByTagNameNS("http://schemas.openxmlformats.org/drawingml/2006/main", "xfrm"))[0];
@@ -43474,7 +43474,16 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
           const shapeExtent = transform && Array.from(transform.children).find((node) => node.localName === "ext");
           const width = Number(shapeExtent?.getAttribute("cx") || "1256400");
           const from = Array.from(anchor.children).find((node) => node.localName === "from");
-          Array.from(anchor.getElementsByTagNameNS(xdrNs, "rowOff")).forEach((offset) => offset.textContent = String(Math.max(0, Number(offset.textContent || "0") - 108e3)));
+          const captionShift = {
+            "36": 252e3,
+            // 1 照片標題：再上 0.4 cm
+            "34": 72e3,
+            // 3 格局圖標題：下 0.1 cm
+            "32": -36e3
+            // 5 位置圖標題：下 0.4 cm
+          };
+          const shift = captionShift[idNode.getAttribute("id") || ""] || 0;
+          Array.from(anchor.getElementsByTagNameNS(xdrNs, "rowOff")).forEach((offset) => offset.textContent = String(Math.max(0, Number(offset.textContent || "0") - shift)));
           if (from && anchor.localName === "twoCellAnchor") {
             const replacement = drawingDocument.createElementNS(xdrNs, "xdr:oneCellAnchor");
             replacement.appendChild(from.cloneNode(true));
