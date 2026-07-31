@@ -1320,16 +1320,11 @@ async function downloadColorWorkbook(record: RecordItem, personnel: Person[] = [
     const taxRows = isLand
       ? [{ row: 23, value: taxValue(record.generalLandValueTax || "") }, { row: 24, value: taxValue(record.selfUseLandValueTax || "") }]
       : [{ row: 33, value: taxValue(record.generalLandValueTax || "") }, { row: 34, value: taxValue(record.selfUseLandValueTax || "") }];
-    const splitTaxRows = taxRows.filter(item => item.value.startsWith("約"));
-    const mergeCells = visibleDocument.getElementsByTagNameNS(spreadsheetNs, "mergeCells")[0];
-    splitTaxRows.forEach(({ row, value }) => {
-      removeMergedRange(visibleDocument, `F${row}:J${row}`);
-      if (mergeCells) { const merge = visibleDocument.createElementNS(spreadsheetNs, "mergeCell"); merge.setAttribute("ref", `G${row}:J${row}`); mergeCells.appendChild(merge); }
-      setWorksheetCell(visibleDocument, `F${row}`, "約");
-      // 「元」已由右側獨立欄位顯示，金額格只保留千分位數字。
-      setWorksheetCell(visibleDocument, `G${row}`, value.slice(1).replace(/^\$/, ""));
+    // 「約」直接和金額寫在同一個完整欄位，避免金額被窄欄縮小。
+    taxRows.forEach(({ row, value }) => {
+      const display = value.startsWith("約$") ? value.replace(/^約\$/, "約") : value;
+      setWorksheetCell(visibleDocument, `F${row}`, display);
     });
-    if (mergeCells) mergeCells.setAttribute("count", String(mergeCells.getElementsByTagNameNS(spreadsheetNs, "mergeCell").length));
     // The template already contains this company line as an editable text box.
     // Keep A4 empty so the cell text does not overlap the text box.
     setWorksheetCell(visibleDocument, "A4", "");
@@ -1363,7 +1358,7 @@ async function downloadColorWorkbook(record: RecordItem, personnel: Person[] = [
       protection.setAttribute("locked", "0"); protection.setAttribute("hidden", "0");
       cellXfs.appendChild(newXf); cellXfs.setAttribute("count", String(cellXfs.children.length));
       if (headerCell) headerCell.setAttribute("s", String(cellXfs.children.length - 1));
-      splitTaxRows.forEach(({ row }) => {
+      taxRows.forEach(({ row }) => {
         const applyTaxAlignment = (address: string, horizontal: "left" | "center") => {
           const cell = Array.from(visibleDocument.getElementsByTagNameNS(spreadsheetNs, "c")).find(item => item.getAttribute("r") === address);
           if (!cell) return;
@@ -1374,9 +1369,8 @@ async function downloadColorWorkbook(record: RecordItem, personnel: Person[] = [
           taxAlignment.setAttribute("horizontal", horizontal); taxAlignment.setAttribute("vertical", "center"); taxAlignment.removeAttribute("indent");
           cellXfs.appendChild(taxXf); cell.setAttribute("s", String(cellXfs.children.length - 1));
         };
-        applyTaxAlignment(`F${row}`, "left");
-        applyTaxAlignment(`G${row}`, "center");
-        if (!isLand) ["F", "G"].forEach(column => {
+        applyTaxAlignment(`F${row}`, "center");
+        ["F"].forEach(column => {
           const cell = Array.from(visibleDocument.getElementsByTagNameNS(spreadsheetNs, "c")).find(item => item.getAttribute("r") === `${column}${row}`);
           if (!cell) return;
           const sourceXf = cellXfs.children[Number(cell.getAttribute("s") || "0")] || cellXfs.children[0];

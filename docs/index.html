@@ -43158,13 +43158,13 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       const visibleDocument = parser.parseFromString(visibleSheetXml, "application/xml");
       if (!isLand) {
         ["A9:A11", "B9:F11", "G9:M11", "G7:J7", "K7:M7", "P44:R44"].forEach((ref) => removeMergedRange(visibleDocument, ref));
-        const mergeCells2 = visibleDocument.getElementsByTagNameNS(spreadsheetNs, "mergeCells")[0];
+        const mergeCells = visibleDocument.getElementsByTagNameNS(spreadsheetNs, "mergeCells")[0];
         ["A9:A11", "B9:F11", "G9:M11", "G7:J7", "K7:M7", "P44:R44"].forEach((ref) => {
           const node = visibleDocument.createElementNS(spreadsheetNs, "mergeCell");
           node.setAttribute("ref", ref);
-          mergeCells2.appendChild(node);
+          mergeCells.appendChild(node);
         });
-        mergeCells2.setAttribute("count", String(mergeCells2.getElementsByTagNameNS(spreadsheetNs, "mergeCell").length));
+        mergeCells.setAttribute("count", String(mergeCells.getElementsByTagNameNS(spreadsheetNs, "mergeCell").length));
         const allCells = Array.from(visibleDocument.getElementsByTagNameNS(spreadsheetNs, "c"));
         const copyStyle = (source, target) => {
           const sourceCell = allCells.find((cell) => cell.getAttribute("r") === source);
@@ -43279,19 +43279,10 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
         if (f23?.getAttribute("s") && m23) m23.setAttribute("s", f23.getAttribute("s") || "0");
       }
       const taxRows = isLand ? [{ row: 23, value: taxValue(record.generalLandValueTax || "") }, { row: 24, value: taxValue(record.selfUseLandValueTax || "") }] : [{ row: 33, value: taxValue(record.generalLandValueTax || "") }, { row: 34, value: taxValue(record.selfUseLandValueTax || "") }];
-      const splitTaxRows = taxRows.filter((item) => item.value.startsWith("\u7D04"));
-      const mergeCells = visibleDocument.getElementsByTagNameNS(spreadsheetNs, "mergeCells")[0];
-      splitTaxRows.forEach(({ row: row2, value }) => {
-        removeMergedRange(visibleDocument, `F${row2}:J${row2}`);
-        if (mergeCells) {
-          const merge = visibleDocument.createElementNS(spreadsheetNs, "mergeCell");
-          merge.setAttribute("ref", `G${row2}:J${row2}`);
-          mergeCells.appendChild(merge);
-        }
-        setWorksheetCell(visibleDocument, `F${row2}`, "\u7D04");
-        setWorksheetCell(visibleDocument, `G${row2}`, value.slice(1).replace(/^\$/, ""));
+      taxRows.forEach(({ row: row2, value }) => {
+        const display = value.startsWith("\u7D04$") ? value.replace(/^約\$/, "\u7D04") : value;
+        setWorksheetCell(visibleDocument, `F${row2}`, display);
       });
-      if (mergeCells) mergeCells.setAttribute("count", String(mergeCells.getElementsByTagNameNS(spreadsheetNs, "mergeCell").length));
       setWorksheetCell(visibleDocument, "A4", "");
       setWorksheetRichCell(visibleDocument, "G9", `${price}${price ? "\u842C" : ""}`, { size: 36, font: "Microsoft JhengHei", bold: true, color: "FFFF0000" });
       if (!isLand) {
@@ -43350,7 +43341,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
         cellXfs.appendChild(newXf);
         cellXfs.setAttribute("count", String(cellXfs.children.length));
         if (headerCell) headerCell.setAttribute("s", String(cellXfs.children.length - 1));
-        splitTaxRows.forEach(({ row: row2 }) => {
+        taxRows.forEach(({ row: row2 }) => {
           const applyTaxAlignment = (address, horizontal) => {
             const cell = Array.from(visibleDocument.getElementsByTagNameNS(spreadsheetNs, "c")).find((item) => item.getAttribute("r") === address);
             if (!cell) return;
@@ -43367,9 +43358,8 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
             cellXfs.appendChild(taxXf);
             cell.setAttribute("s", String(cellXfs.children.length - 1));
           };
-          applyTaxAlignment(`F${row2}`, "left");
-          applyTaxAlignment(`G${row2}`, "center");
-          if (!isLand) ["F", "G"].forEach((column) => {
+          applyTaxAlignment(`F${row2}`, "center");
+          ["F"].forEach((column) => {
             const cell = Array.from(visibleDocument.getElementsByTagNameNS(spreadsheetNs, "c")).find((item) => item.getAttribute("r") === `${column}${row2}`);
             if (!cell) return;
             const sourceXf = cellXfs.children[Number(cell.getAttribute("s") || "0")] || cellXfs.children[0];
