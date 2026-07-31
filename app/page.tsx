@@ -1376,6 +1376,20 @@ async function downloadColorWorkbook(record: RecordItem, personnel: Person[] = [
         };
         applyTaxAlignment(`F${row}`, "left");
         applyTaxAlignment(`G${row}`, "center");
+        if (!isLand) ["F", "G"].forEach(column => {
+          const cell = Array.from(visibleDocument.getElementsByTagNameNS(spreadsheetNs, "c")).find(item => item.getAttribute("r") === `${column}${row}`);
+          if (!cell) return;
+          const sourceXf = cellXfs.children[Number(cell.getAttribute("s") || "0")] || cellXfs.children[0];
+          const largerXf = sourceXf.cloneNode(true) as Element;
+          const sourceFont = fonts.children[Number(sourceXf.getAttribute("fontId") || "0")] || fonts.children[0];
+          const largerFont = sourceFont.cloneNode(true) as Element;
+          let size = Array.from(largerFont.getElementsByTagNameNS(spreadsheetNs, "sz"))[0];
+          if (!size) { size = stylesDocument.createElementNS(spreadsheetNs, "sz"); largerFont.appendChild(size); }
+          size.setAttribute("val", "16");
+          fonts.appendChild(largerFont); fonts.setAttribute("count", String(fonts.children.length));
+          largerXf.setAttribute("fontId", String(fonts.children.length - 1)); largerXf.setAttribute("applyFont", "1");
+          cellXfs.appendChild(largerXf); cell.setAttribute("s", String(cellXfs.children.length - 1));
+        });
       });
       if (!isLand) {
         const priceCell = Array.from(visibleDocument.getElementsByTagNameNS(spreadsheetNs, "c")).find(item => item.getAttribute("r") === "G9");
