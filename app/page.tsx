@@ -1332,6 +1332,23 @@ async function downloadColorWorkbook(record: RecordItem, personnel: Person[] = [
         wrappedAlignment.setAttribute("vertical", "center");
         cellXfs.appendChild(wrappedXf); cell.setAttribute("s", String(cellXfs.children.length - 1));
       });
+      if (!isLand) {
+        // 市場／公園／學校：每列固定 0.95 公分，內容過長時在格內換行。
+        [29, 30, 31].forEach(rowNumber => {
+          const rowNode = Array.from(visibleDocument.getElementsByTagNameNS(spreadsheetNs, "row")).find(item => item.getAttribute("r") === String(rowNumber));
+          if (rowNode) { rowNode.setAttribute("ht", "26.93"); rowNode.setAttribute("customHeight", "1"); }
+        });
+        ["F29", "F30", "F31"].forEach(address => {
+          const cell = Array.from(visibleDocument.getElementsByTagNameNS(spreadsheetNs, "c")).find(item => item.getAttribute("r") === address);
+          if (!cell) return;
+          const sourceXf = cellXfs.children[Number(cell.getAttribute("s") || "0")] || cellXfs.children[0];
+          const wrappedXf = sourceXf.cloneNode(true) as Element;
+          let alignment = Array.from(wrappedXf.getElementsByTagNameNS(spreadsheetNs, "alignment"))[0];
+          if (!alignment) { alignment = stylesDocument.createElementNS(spreadsheetNs, "alignment"); wrappedXf.appendChild(alignment); }
+          alignment.setAttribute("wrapText", "1"); alignment.setAttribute("vertical", "center"); alignment.setAttribute("horizontal", "left");
+          cellXfs.appendChild(wrappedXf); cell.setAttribute("s", String(cellXfs.children.length - 1));
+        });
+      }
       [isLand ? "P33" : "P44"].forEach(address => {
         const cell = Array.from(visibleDocument.getElementsByTagNameNS(spreadsheetNs, "c")).find(item => item.getAttribute("r") === address);
         if (!cell) return;
