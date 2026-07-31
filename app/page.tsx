@@ -860,23 +860,59 @@ export default function Home() {
     intake: { raw: intakeRaw, drafts: intakeDrafts, selectedId: selectedIntakeId },
     tour: { date: tourDate, title: tourTitle, items: tourItems },
   });
-  const cloudHeaders = () => ({ apikey: settings.supabaseKey, Authorization: `Bearer ${cloudSession?.accessToken || ""}`, "Content-Type": "application/json" });
+  const cloudHeaders = (accessToken = cloudSession?.accessToken || "") => ({ apikey: settings.supabaseKey, Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" });
+  const refreshCloudSession = async (): Promise<CloudSession | null> => {
+    const refreshToken = cloudSession?.refreshToken;
+    if (!refreshToken || !settings.supabaseUrl || !settings.supabaseKey) return null;
+    try {
+      const res = await fetch(`${settings.supabaseUrl.replace(/\/$/, "")}/auth/v1/token?grant_type=refresh_token`, {
+        method: "POST",
+        headers: { apikey: settings.supabaseKey, "Content-Type": "application/json" },
+        body: JSON.stringify({ refresh_token: refreshToken }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data?.access_token) return null;
+      const session: CloudSession = {
+        accessToken: data.access_token,
+        refreshToken: data.refresh_token || refreshToken,
+        email: data.user?.email || cloudSession?.email,
+      };
+      setCloudSession(session);
+      localStorage.setItem(CLOUD_SESSION_KEY, JSON.stringify(session));
+      return session;
+    } catch (error) {
+      console.error("Supabase token refresh failed", error);
+      return null;
+    }
+  };
   const supabasePush = async (quiet = false) => {
     if (!cloudSession?.accessToken) { if (!quiet) flash("請先登入雲端帳號"); return false; }
     if (!settings.supabaseUrl || !settings.supabaseKey) { if (!quiet) flash("請先填入 Supabase Publishable key"); return false; }
     try {
       const url = `${settings.supabaseUrl.replace(/\/$/, "")}/rest/v1/${settings.supabaseTable}`;
-      const res = await fetch(url, { method: "POST", headers: { ...cloudHeaders(), Prefer: "resolution=merge-duplicates,return=minimal" }, body: JSON.stringify({ id: settings.supabaseRecord, data: cloudData(), updated_at: new Date().toISOString() }) });
-      if (!res.ok) throw new Error(await res.text());
+      const body = JSON.stringify({ id: settings.supabaseRecord, data: cloudData(), updated_at: new Date().toISOString() });
+      const request = (accessToken?: string) => fetch(url, { method: "POST", headers: { ...cloudHeaders(accessToken), Prefer: "resolution=merge-duplicates,return=minimal" }, body });
+      let res = await request();
+      if (res.status === 401) {
+        const session = await refreshCloudSession();
+        if (session) res = await request(session.accessToken);
+      }
+      if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
       if (!quiet) flash("雲端同步完成");
       return true;
-    } catch { if (!quiet) flash("雲端同步失敗，請檢查登入與設定"); return false; }
+    } catch (error) { console.error("Supabase push failed", error); if (!quiet) flash("雲端同步失敗，請重新登入後再試"); return false; }
   };
   const supabasePull = async () => {
     if (!cloudSession?.accessToken) return flash("請先登入雲端帳號");
     try {
       const url = `${settings.supabaseUrl.replace(/\/$/, "")}/rest/v1/${settings.supabaseTable}?id=eq.${encodeURIComponent(settings.supabaseRecord)}&select=data`;
-      const res = await fetch(url, { headers: cloudHeaders() }); const rows = await res.json(); const data = rows[0]?.data;
+      const request = (accessToken?: string) => fetch(url, { headers: cloudHeaders(accessToken) });
+      let res = await request();
+      if (res.status === 401) {
+        const session = await refreshCloudSession();
+        if (session) res = await request(session.accessToken);
+      }
+      const rows = await res.json(); const data = rows[0]?.data;
       if (!res.ok || !data?.records) throw new Error();
       if (confirm("雲端資料將與本機資料合併，本機已修改但尚未同步的同一筆資料將以雲端版本為準。確定嗎？")) {
         setRecords(prev => {

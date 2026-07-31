@@ -41831,7 +41831,31 @@ ${String(ex)}`);
       intake: { raw: intakeRaw, drafts: intakeDrafts, selectedId: selectedIntakeId },
       tour: { date: tourDate, title: tourTitle, items: tourItems }
     });
-    const cloudHeaders = () => ({ apikey: settings.supabaseKey, Authorization: `Bearer ${cloudSession?.accessToken || ""}`, "Content-Type": "application/json" });
+    const cloudHeaders = (accessToken = cloudSession?.accessToken || "") => ({ apikey: settings.supabaseKey, Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" });
+    const refreshCloudSession = async () => {
+      const refreshToken = cloudSession?.refreshToken;
+      if (!refreshToken || !settings.supabaseUrl || !settings.supabaseKey) return null;
+      try {
+        const res = await fetch(`${settings.supabaseUrl.replace(/\/$/, "")}/auth/v1/token?grant_type=refresh_token`, {
+          method: "POST",
+          headers: { apikey: settings.supabaseKey, "Content-Type": "application/json" },
+          body: JSON.stringify({ refresh_token: refreshToken })
+        });
+        const data = await res.json();
+        if (!res.ok || !data?.access_token) return null;
+        const session = {
+          accessToken: data.access_token,
+          refreshToken: data.refresh_token || refreshToken,
+          email: data.user?.email || cloudSession?.email
+        };
+        setCloudSession(session);
+        localStorage.setItem(CLOUD_SESSION_KEY, JSON.stringify(session));
+        return session;
+      } catch (error) {
+        console.error("Supabase token refresh failed", error);
+        return null;
+      }
+    };
     const supabasePush = async (quiet = false) => {
       if (!cloudSession?.accessToken) {
         if (!quiet) flash("\u8ACB\u5148\u767B\u5165\u96F2\u7AEF\u5E33\u865F");
@@ -41843,12 +41867,19 @@ ${String(ex)}`);
       }
       try {
         const url = `${settings.supabaseUrl.replace(/\/$/, "")}/rest/v1/${settings.supabaseTable}`;
-        const res = await fetch(url, { method: "POST", headers: { ...cloudHeaders(), Prefer: "resolution=merge-duplicates,return=minimal" }, body: JSON.stringify({ id: settings.supabaseRecord, data: cloudData(), updated_at: (/* @__PURE__ */ new Date()).toISOString() }) });
-        if (!res.ok) throw new Error(await res.text());
+        const body = JSON.stringify({ id: settings.supabaseRecord, data: cloudData(), updated_at: (/* @__PURE__ */ new Date()).toISOString() });
+        const request = (accessToken) => fetch(url, { method: "POST", headers: { ...cloudHeaders(accessToken), Prefer: "resolution=merge-duplicates,return=minimal" }, body });
+        let res = await request();
+        if (res.status === 401) {
+          const session = await refreshCloudSession();
+          if (session) res = await request(session.accessToken);
+        }
+        if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
         if (!quiet) flash("\u96F2\u7AEF\u540C\u6B65\u5B8C\u6210");
         return true;
-      } catch {
-        if (!quiet) flash("\u96F2\u7AEF\u540C\u6B65\u5931\u6557\uFF0C\u8ACB\u6AA2\u67E5\u767B\u5165\u8207\u8A2D\u5B9A");
+      } catch (error) {
+        console.error("Supabase push failed", error);
+        if (!quiet) flash("\u96F2\u7AEF\u540C\u6B65\u5931\u6557\uFF0C\u8ACB\u91CD\u65B0\u767B\u5165\u5F8C\u518D\u8A66");
         return false;
       }
     };
@@ -41856,7 +41887,12 @@ ${String(ex)}`);
       if (!cloudSession?.accessToken) return flash("\u8ACB\u5148\u767B\u5165\u96F2\u7AEF\u5E33\u865F");
       try {
         const url = `${settings.supabaseUrl.replace(/\/$/, "")}/rest/v1/${settings.supabaseTable}?id=eq.${encodeURIComponent(settings.supabaseRecord)}&select=data`;
-        const res = await fetch(url, { headers: cloudHeaders() });
+        const request = (accessToken) => fetch(url, { headers: cloudHeaders(accessToken) });
+        let res = await request();
+        if (res.status === 401) {
+          const session = await refreshCloudSession();
+          if (session) res = await request(session.accessToken);
+        }
         const rows = await res.json();
         const data = rows[0]?.data;
         if (!res.ok || !data?.records) throw new Error();
