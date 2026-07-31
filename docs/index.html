@@ -40785,8 +40785,18 @@ ${String(ex)}`);
     const cleared = Object.fromEntries(["titleFloor", "currentFloor", "floor", "layout"].filter((key) => landOnly(record[key])).map((key) => [key, ""]));
     return Object.keys(cleared).length ? { ...record, ...cleared } : record;
   };
+  var moveRestoredTextToCaseNote = (record) => {
+    const caseName = String(record.caseName || "");
+    const restoredTexts = [...caseName.matchAll(/(?:\d{2,4}[.\/-]\d{1,2}[.\/-]\d{1,2}\s*)?重新上架/g)].map((match) => match[0].trim());
+    if (!restoredTexts.length) return record;
+    const cleanCaseName = caseName.replace(/(?:\d{2,4}[.\/-]\d{1,2}[.\/-]\d{1,2}\s*)?重新上架/g, "").replace(/[　\s｜|·・—-]+$/g, "").trim();
+    const existingNote = String(record.caseNameNote || "").trim();
+    const additions = restoredTexts.filter((text) => !existingNote.includes(text));
+    const caseNameNote = [existingNote, ...additions].filter(Boolean).join("　");
+    return { ...record, caseName: cleanCaseName, caseNameNote, caseNameNoteModifiedAt: record.caseNameNoteModifiedAt || (/* @__PURE__ */ new Date()).toISOString() };
+  };
   var applySourceLayoutFixes = (records) => records.map((record) => {
-    record = clearImportedLandLabels(clearImportedContractChangePlaceholders(record));
+    record = moveRestoredTextToCaseNote(clearImportedLandLabels(clearImportedContractChangePlaceholders(record)));
     const sourceBalcony = sourceBalconyFixes[String(record.propertyNo || "").trim().toUpperCase()];
     if (!sourceBalcony || typeShort(record.type) === "\u571F\u5730" || /^(?:LG|LA)/i.test(record.propertyNo || "")) return record;
     const balcony = sourceBalcony.match(/(\d+)\s*陽台/)?.[1];
@@ -41868,8 +41878,9 @@ ${String(ex)}`);
           setRecords((prev) => {
             const map = new Map(prev.map((r) => [r.id, r]));
             data.records.forEach((r) => {
-              const local = map.get(r.id);
-              map.set(r.id, { ...local, ...r, photos: r.photos || local?.photos || [] });
+              const normalized = applySourceLayoutFixes([r])[0];
+              const local = map.get(normalized.id);
+              map.set(normalized.id, { ...local, ...normalized, photos: normalized.photos || local?.photos || [] });
             });
             return [...map.values()];
           });
