@@ -642,4 +642,5 @@
 .internal-public-app .login-card p{color:#0066cc}
 .website-list-value .website-inline-note{display:block!important;margin-top:2px!important;color:#2878ad!important;font-size:11px!important;font-weight:500!important;line-height:1.25!important;white-space:nowrap!important}
 .daily-table td.col-area,.daily-table th.col-area{vertical-align:middle!important;text-align:center!important}.daily-table td.col-area .area-lines{height:100%;min-height:0!important;justify-content:center!important;align-items:center!important;text-align:center!important}
+.expiry-settings-panel:not(.expiry-open)>p,.expiry-settings-panel:not(.expiry-open)>.form-grid{display:none}.expiry-settings-panel h3{display:flex;align-items:center;justify-content:space-between;margin:0}.expiry-toggle{padding:7px 14px;color:var(--green);border-color:#b9cfc4;background:#f3f8f4}
 .personnel-panel:not(.personnel-open)>.personnel-table,.personnel-panel:not(.personnel-open)>.former-people,.personnel-panel:not(.personnel-open) .personnel-head .primary{display:none}.personnel-toggle{padding:7px 14px;color:var(--green);border-color:#b9cfc4;background:#f3f8f4}

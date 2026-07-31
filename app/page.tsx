@@ -2430,6 +2430,13 @@ function SettingsPanel({ settings, setSettings, supabasePush, supabasePull, clou
     const panel = document.createElement("article");
     panel.className = "panel expiry-settings-panel";
     panel.innerHTML = `<h3>公司到期提醒</h3><p>591、5168 會在到期前 1 天提醒；經紀人會在到期前 1 個月提醒。</p><div class="form-grid"><label class="field"><span>591 到期日</span><input data-expiry-key="expiry591" placeholder="例如 115/8/31"></label><label class="field"><span>5168 到期日</span><input data-expiry-key="expiry5168" placeholder="例如 115/8/31"></label><label class="field"><span>經紀人到期日</span><input data-expiry-key="brokerExpiry" placeholder="例如 115/8/31"></label></div>`;
+    panel.classList.remove("expiry-open");
+    const expiryHeading = panel.querySelector<HTMLElement>("h3");
+    const expiryToggle = document.createElement("button");
+    expiryToggle.type = "button"; expiryToggle.className = "expiry-toggle"; expiryToggle.textContent = "\u5c55\u958b";
+    const toggleExpiryPanel = () => { const isOpen = panel.classList.toggle("expiry-open"); expiryToggle.textContent = isOpen ? "\u6536\u8d77" : "\u5c55\u958b"; };
+    expiryToggle.addEventListener("click", toggleExpiryPanel);
+    expiryHeading?.appendChild(expiryToggle);
     personnelPanel.parentElement?.insertBefore(panel, personnelPanel);
     const values: Record<string, string> = { expiry591: displayRocDate(settings.expiry591 || ""), expiry5168: displayRocDate(settings.expiry5168 || ""), brokerExpiry: displayRocDate(settings.brokerExpiry || "") };
     const handlers = Array.from(panel.querySelectorAll<HTMLInputElement>("[data-expiry-key]")).map(input => {
@@ -2438,7 +2445,7 @@ function SettingsPanel({ settings, setSettings, supabasePush, supabasePull, clou
       input.addEventListener("blur", handler);
       return { input, handler };
     });
-    return () => { handlers.forEach(({ input, handler }) => input.removeEventListener("blur", handler)); panel.remove(); };
+    return () => { expiryToggle.removeEventListener("click", toggleExpiryPanel); handlers.forEach(({ input, handler }) => input.removeEventListener("blur", handler)); panel.remove(); };
   }, [settings.expiry591, settings.expiry5168, settings.brokerExpiry]);
   useEffect(() => {
     const personnelPanel = document.querySelector<HTMLElement>(".settings .personnel-panel");
