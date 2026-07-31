@@ -669,6 +669,7 @@
 .cover-pill-parkingMethod .pill-options button{min-width:80px!important;padding:7px 8px!important;font-size:13px!important;line-height:1.1!important;white-space:nowrap!important;word-break:keep-all!important}
 .archive-cleanup-table{table-layout:auto!important;width:auto!important;min-width:100%!important}.archive-cleanup-table th,.archive-cleanup-table td{width:1%!important;padding:6px 2px!important;white-space:nowrap!important}.archive-cleanup-table th:first-child,.archive-cleanup-table td:first-child{width:auto!important;min-width:260px!important}.archive-cleanup-case-cell{white-space:normal!important}.archive-cleanup-websites{display:flex!important;flex-direction:column!important;align-items:stretch!important;justify-content:flex-start!important;gap:3px!important;white-space:nowrap!important}.archive-cleanup-websites button{display:block!important;width:100%!important;margin:0!important;padding:5px 3px!important}
 .archive-cleanup-website-row{padding:3px 2px!important}.archive-cleanup-website-row button{display:block!important;width:100%!important;margin:0!important;padding:6px 4px!important}.inventory-month-controls{display:flex;align-items:center;gap:9px;flex-wrap:wrap}.inventory-month-controls>b{font-size:18px;color:#283d35;white-space:nowrap}.inventory-month-controls>button{min-height:46px;padding:9px 17px;border-radius:12px;font-size:16px;font-weight:800;background:#fff}.inventory-month-controls>button.selected{background:#176044;color:#fff;border-color:#176044}.inventory-month{display:flex!important;align-items:center!important;gap:8px!important;margin:0!important;font-size:16px!important;font-weight:800!important}.inventory-month>span{white-space:nowrap}.inventory-month input{min-width:175px!important;height:46px!important;padding:8px 12px!important;border-radius:12px!important;font-size:17px!important;font-weight:800!important}
+.archive-cleanup-modal{width:min(1580px,99vw)!important}.archive-cleanup-table th:first-child,.archive-cleanup-table td:first-child{width:1%!important;min-width:0!important}.archive-cleanup-case-cell{white-space:nowrap!important;padding-left:8px!important;padding-right:8px!important}.archive-cleanup-na{color:#a1aaa5;font-size:13px}
 </style>
 </head>
 <body>
@@ -42016,15 +42017,33 @@ ${String(ex)}`);
       setPublicScope("mine");
       setPassword("");
     };
-    const unlock = () => {
-      const activePeople = settings.personnel.filter((p) => p.status === "\u5728\u8077" && p.nationalId);
-      if (!activePeople.length) return flash("\u8ACB\u5148\u5728\u8A2D\u5B9A\u65B0\u589E\u4EBA\u54E1\u8207\u8EAB\u5206\u8B49\u5B57\u865F");
-      const person = activePeople.find((p) => password.toUpperCase() === p.nationalId.toUpperCase());
+    const unlock = async () => {
+      const normalizeLoginId = (value = "") => value.trim().replace(/\s+/g, "").toUpperCase();
+      const activePeople = settings.personnel.filter((p) => (p.status || "\u5728\u8077") === "\u5728\u8077" && normalizeLoginId(p.nationalId));
+      const loginId = normalizeLoginId(password);
+      const person = activePeople.find((p) => loginId === normalizeLoginId(p.nationalId));
       if (person) {
         setPublicPersonId(person.id);
         setPublicScope("mine");
         setPublicUnlocked(true);
-      } else flash("\u5BC6\u78BC\u932F\u8AA4");
+        return;
+      }
+      if (!loginId) return flash("\u8ACB\u8F38\u5165\u8EAB\u5206\u8B49\u5B57\u865F");
+      try {
+        const response = await fetch(`${CASE_FILE_SUPABASE_URL}/rest/v1/rpc/case_file_front_login`, { method: "POST", headers: { apikey: CASE_FILE_SUPABASE_PUBLISHABLE_KEY, "Content-Type": "application/json" }, body: JSON.stringify({ p_national_id: loginId }) });
+        const data = await response.json();
+        if (!response.ok || !data?.personId || !Array.isArray(data.records)) return flash("\u8EAB\u5206\u8B49\u5B57\u865F\u932F\u8AA4\uFF0C\u6216\u4EBA\u54E1\u76EE\u524D\u4E0D\u662F\u5728\u8077");
+        const nextRecords = applySourceLayoutFixes(data.records).map((record) => ({ ...record, photos: [] }));
+        const nextPeople = (Array.isArray(data.personnel) ? data.personnel : []).map((entry) => ({ ...entry, id: entry.id || newId(), name: entry.name || "", nationalId: "", status: entry.status || "\u5728\u8077" }));
+        setRecords(nextRecords);
+        setSettings((previous) => ({ ...previous, personnel: nextPeople }));
+        setPublicPersonId(data.personId);
+        setPublicScope("mine");
+        setPublicUnlocked(true);
+        setPassword("");
+      } catch {
+        flash("\u76EE\u524D\u7121\u6CD5\u9023\u63A5\u96F2\u7AEF\uFF0C\u8ACB\u78BA\u8A8D\u7DB2\u8DEF\u5F8C\u518D\u8A66\u4E00\u6B21");
+      }
     };
     const publicPerson = settings.personnel.find((p) => p.id === publicPersonId);
     const contactPeople = sortPeopleBySequence(settings.personnel.filter((person) => person.status === "\u5728\u8077" && person.name.trim() && String(person.phone || "").trim()));
@@ -42412,24 +42431,23 @@ ${String(ex)}`);
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "\u623F\u7BA1\u4E0B\u67B6" }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "\u7269\u4EF6\u672C\uFF0F\u65C15\u4E0B\u67B6" }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "\u92B7\u552E\u672C\u4E0B\u67B6" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "\u7DB2\u7AD9\u4E0B\u67B6" })
+            archiveWebsiteTasks.map(([, label]) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: label }, label))
           ] }) }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("tbody", { children: pendingArchiveCleanup.flatMap(({ record, tasks }) => {
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("tbody", { children: pendingArchiveCleanup.map(({ record, tasks }) => {
+            const allTasks = archiveCleanupTasks(record);
             const buttonFor = (key) => {
-              const task = tasks.find((item) => item.key === key);
-              return task ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => completeArchiveCleanup(record, task.key), children: "\u5B8C\u6210\u4E0B\u67B6" }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "archive-cleanup-done", children: "\u5DF2\u5B8C\u6210" });
+              const applicable = allTasks.find((item) => item.key === key);
+              if (!applicable) return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "archive-cleanup-na", children: "\u2014" });
+              const pending = tasks.find((item) => item.key === key);
+              return pending ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => completeArchiveCleanup(record, pending.key), children: "\u5B8C\u6210\u4E0B\u67B6" }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "archive-cleanup-done", children: "\u5DF2\u5B8C\u6210" });
             };
-            const websiteTasks = tasks.filter((task) => !["housingDownDate", "bookDownDate", "salesBookDownDate"].includes(task.key));
-            const rows = websiteTasks.length ? websiteTasks : [null];
-            return rows.map((websiteTask, rowIndex) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { children: [
-              rowIndex === 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("td", { rowSpan: rows.length, className: "archive-cleanup-case-cell", children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: stripRestoredDisplay(record.caseName) || "\u672A\u547D\u540D\u6848\u4EF6" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { children: [record.propertyNo || "\u2014", "\u3000", displayRocDate(record.archived || ""), record.status || "\u4E0B\u67B6"] })] }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { rowSpan: rows.length, children: buttonFor("housingDownDate") }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { rowSpan: rows.length, children: buttonFor("bookDownDate") }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { rowSpan: rows.length, children: buttonFor("salesBookDownDate") })
-              ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { className: "archive-cleanup-website-row", children: websiteTask ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => completeArchiveCleanup(record, websiteTask.key), children: websiteTask.label }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "archive-cleanup-done", children: "\u5DF2\u5B8C\u6210" }) })
-            ] }, `${record.id}-${websiteTask?.key || "complete"}`));
+            return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("td", { className: "archive-cleanup-case-cell", children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: stripRestoredDisplay(record.caseName) || "\u672A\u547D\u540D\u6848\u4EF6" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { children: [record.propertyNo || "\u2014", "\u3000", displayRocDate(record.archived || ""), record.status || "\u4E0B\u67B6"] })] }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: buttonFor("housingDownDate") }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: buttonFor("bookDownDate") }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: buttonFor("salesBookDownDate") }),
+              archiveWebsiteTasks.map(([field]) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: buttonFor(`${field}DownDate`) }, field))
+            ] }, record.id);
           }) })
         ] }) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal-foot", children: [
