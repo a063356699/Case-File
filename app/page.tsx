@@ -81,7 +81,7 @@ const recordEditClass = (key: string) => `edit-cell edit-${key}`;
 const dateKeys = new Set(["entrustStart", "entrustEnd", "reportDate", "updateDate", "groupViewDate", "bookLocationDate", "salesBookDate", "coverChangeDate", "platform591Expiry", "price5168Expiry", "goldExposureExpiry"]);
 const selectOptions: Record<string, string[]> = {
   status: ["委託中", "售出下架", "成交下架", "下架洽開發"],
-  type: ["公寓：5樓含以下（無電梯）", "華廈：10樓含以下（有電梯）", "大樓：11樓含以上（有電梯）", "透天", "土地"],
+  type: ["公寓：5樓含以下（無電梯）", "華廈：10樓含以下（有電梯）", "大樓：11樓含以上（有電梯）", "透天", "廠房", "土地"],
   currentState: ["空屋", "自住", "出租中"],
 };
 
@@ -189,8 +189,8 @@ const ageOf = (r: RecordItem) => {
   return age >= 0 ? `${rocYear}年建（${age}年屋）` : "年份有誤";
 };
 const locationOf = (r: RecordItem) => `${r.bookLocationDate ? r.bookLocationDate.slice(5).replace("-", "/") : ""}${r.bookLocationType || "架上"}`;
-const contractFromNo = (value: string) => ({ EG: "房屋一般約", EA: "房屋專約", LG: "土地一般約", LA: "土地專約", EB: "租賃一般約", EC: "租賃專約" }[value.trim().toUpperCase().slice(0, 2)] || "");
-const typeShort = (value = "") => value.includes("透天") ? "透天" : value.includes("公寓") ? "公寓" : value.includes("華廈") || value.includes("華厦") || value.includes("華夏") ? "華廈" : value.includes("大樓") ? "大樓" : value.includes("土地") ? "土地" : value;
+const contractFromNo = (value: string) => ({ EG: "房屋一般約", EA: "房屋專約", LG: "土地一般約", LA: "土地專約", EB: "租賃一般約", EC: "租賃專約", RG: "預售一般約", RA: "預售專約" }[value.trim().toUpperCase().slice(0, 2)] || "");
+const typeShort = (value = "") => value.includes("廠房") || value.includes("廠辦") ? "廠房" : value.includes("透天") ? "透天" : value.includes("公寓") ? "公寓" : value.includes("華廈") || value.includes("華厦") || value.includes("華夏") ? "華廈" : value.includes("大樓") ? "大樓" : value.includes("土地") ? "土地" : value;
 const parkingShort = (value = "") => { if (!value) return ""; if (value.includes("無車位") || value.includes("無產權")) return "無"; if (value.includes("獨立車庫")) return "車庫"; const mechanical = value.match(/昇降[／/]機械\s*(.*)$/); if (mechanical) { const suffix = mechanical[1].replace(/[（(]\s*上層\s*[）)]/g, "上").replace(/[（(]\s*下層\s*[）)]/g, "下").replace(/號$/g, "").replace(/^[、，,：:\s]+/, ""); return `昇機${suffix}`; } const parts = value.split(/[／/]/).map(part => part.trim()).filter(Boolean); const number = (parts[parts.length - 1] || "").replace(/號$/, ""); if (value.includes("昇降") && value.includes("平面")) return `昇平${number}`; if (value.includes("坡道") && value.includes("平面")) return `坡平${number}`; return value; };
 const floorShort = (value = "") => {
   if (!value) return "";
@@ -225,8 +225,10 @@ const floorShortFixed = (value = "") => {
   if (!current) return total || normalized;
   if (total && current.toUpperCase() === total.toUpperCase()) return current.toUpperCase().startsWith("B") ? `${current}T` : `${current.split("~").pop()}T`;
   const totalRange = total.match(/^(\d+)~(\d+)$/), currentRange = current.match(/^(\d+)~(\d+)$/);
-  if (totalRange && currentRange && totalRange[1] === currentRange[1] && Number(currentRange[2]) > Number(totalRange[2])) {
-    const legalTop = Number(totalRange[2]), currentTop = Number(currentRange[2]);
+  const legalBottom = totalRange ? Number(totalRange[1]) : (/^\d+$/.test(total) ? Number(total) : Number.NaN);
+  const legalTop = totalRange ? Number(totalRange[2]) : legalBottom;
+  if (currentRange && currentRange[1] === String(legalBottom) && Number(currentRange[2]) > legalTop) {
+    const currentTop = Number(currentRange[2]);
     const additions = Array.from({ length: currentTop - legalTop }, (_, index) => legalTop + index + 1).join(".");
     return `${legalTop}T/${additions}樓增建`;
   }
@@ -308,7 +310,7 @@ const activeGroupKey = (record: RecordItem) => {
   const city = addressParts?.[1] || (/^(台南市|高雄市|嘉義市|嘉義縣|屏東縣|台北市|新北市|桃園市|台中市|彰化縣|雲林縣)/.exec(area)?.[1] || "");
   const district = addressParts?.[2] || area.replace(city, "") || "未填地區";
   const outside = city && city !== "台南市";
-  const typeOrder: Record<string, string> = { "透天": "1", "華廈": "2", "大樓": "3", "公寓": "4", "土地": "5" };
+  const typeOrder: Record<string, string> = { "透天": "1", "華廈": "2", "大樓": "3", "公寓": "4", "廠房": "5", "土地": "6" };
   const kind = typeShort(record.type);
   return `${outside ? "1外縣市" : "0台南市"}|${outside ? city : ""}|${district}|${typeOrder[kind] || "9"}${kind}`;
 };
@@ -320,7 +322,7 @@ const areaCategory = (record: RecordItem) => {
 };
 const activeGroupKeyFixed = (record: RecordItem) => {
   const areaOrder: Record<string, string> = { "北區": "01", "東區": "02", "中西區": "03", "南區": "04", "永康區": "05", "安平區": "06", "仁德區": "07", "安南區": "08", "其他區": "09", "外縣市": "10" };
-  const typeOrder: Record<string, string> = { "透天": "1", "華廈": "2", "大樓": "3", "公寓": "4", "土地": "5" };
+  const typeOrder: Record<string, string> = { "透天": "1", "華廈": "2", "大樓": "3", "公寓": "4", "廠房": "5", "土地": "6" };
   const area = areaCategory(record), kind = typeShort(record.type);
   return `${areaOrder[area] || "99"}|${typeOrder[kind] || "9"}${kind}`;
 };
@@ -2209,7 +2211,7 @@ function AdvancedFilterModal({ value, setValue, onClose, onReset }: { value: Adv
   const select = (key: string, label: string, options: string[]) => <label className="filter-field"><span>{label}</span><select value={value[key] || ""} onChange={event => change(key, event.target.value)}><option value="">不限</option>{options.map(option => <option key={option} value={option}>{option === "filled" ? "已填" : option === "empty" ? "未填" : option}</option>)}</select></label>;
   const sites: [string, string][] = [["yes319", "YES319"], ["houseinfor", "HOUSE INFOR"], ["homeWeb", "我家網"], ["platform591", "591"], ["price5168", "5168"], ["windowAd", "櫥窗"], ["led", "LED"], ["goldExposure", "黃金曝光"]];
   return <div className="modal-backdrop"><div className="modal advanced-filter-modal"><div className="modal-head"><div><span>委託中物件</span><h2>進階篩選</h2></div><button className="close" onClick={onClose}>×</button></div><div className="advanced-filter-body">
-    <section><h3>基本條件</h3><div className="advanced-filter-grid">{text("propertyNo", "物件編號")}{text("caseName", "案名")}{text("address", "地址")}{select("type", "種類", ["透天", "華廈", "大樓", "公寓", "土地"])}{text("direction", "朝向")}{text("developer", "開發業務")}{text("zoning", "使用分區")}{text("key", "鑰匙")}{text("currentState", "現況")}{select("parking", "車位", ["坡道", "平面", "機械", "昇降", "庭院", "平移"])}{select("salesBook", "銷售本", ["製作", "未製作", "完成"])}{select("photoInfo", "照片", ["filled", "empty"])}</div></section>
+    <section><h3>基本條件</h3><div className="advanced-filter-grid">{text("propertyNo", "物件編號")}{text("caseName", "案名")}{text("address", "地址")}{select("type", "種類", ["透天", "華廈", "大樓", "公寓", "廠房", "土地"])}{text("direction", "朝向")}{text("developer", "開發業務")}{text("zoning", "使用分區")}{text("key", "鑰匙")}{text("currentState", "現況")}{select("parking", "車位", ["坡道", "平面", "機械", "昇降", "庭院", "平移"])}{select("salesBook", "銷售本", ["製作", "未製作", "完成"])}{select("photoInfo", "照片", ["filled", "empty"])}</div></section>
     <section><h3>日期</h3><div className="advanced-filter-grid dates">{dateRange("entrustStartFrom", "entrustStartTo", "委託開始")}{dateRange("entrustEndFrom", "entrustEndTo", "委託結束")}{dateRange("reportFrom", "reportTo", "進案日期")}{dateRange("updateFrom", "updateTo", "更新日期")}{dateRange("groupFrom", "groupTo", "團看日期")}{dateRange("bookFrom", "bookTo", "物件本位置日期")}{dateRange("salesFrom", "salesTo", "銷售本日期")}</div></section>
     <section><h3>價格、坪數與樓層</h3><div className="advanced-filter-grid">{numberRange("priceFrom", "priceTo", "開價（萬）", "萬")}{numberRange("ageFrom", "ageTo", "屋齡", "年")}{text("floor", "所在樓層", "例：2")}{numberRange("indoorFrom", "indoorTo", "室內坪", "坪")}{numberRange("buildingFrom", "buildingTo", "建坪", "坪")}{numberRange("landFrom", "landTo", "土地坪", "坪")}{numberRange("roadFrom", "roadTo", "臨路", "米")}{numberRange("frontageFrom", "frontageTo", "面寬", "米")}{numberRange("depthFrom", "depthTo", "深度", "米")}{text("rooms", "格局－房", "例：3")}{text("halls", "格局－廳", "例：2")}{text("baths", "格局－衛", "例：2")}</div></section>
     <section><h3>網站編號</h3><p className="filter-help">選擇「已填」或「未填」可同時篩選多個網站。</p><div className="advanced-filter-grid website-filter-grid">{sites.map(([key, label]) => select(key, label, ["filled", "empty"]))}</div></section>
@@ -2441,7 +2443,7 @@ function Field({ fieldKey, label, record, records, setRecord }: { fieldKey: stri
   if (["buildingPing", "indoorPing", "landPing", "registryBuildingPing", "registryIndoorPing", "landSharePing"].includes(fieldKey)) { const parsed = record.areaPaste ? parseAreaPaste(record.areaPaste, record) : record; const compared = fieldKey === "buildingPing" ? parsed.registryBuildingPing : fieldKey === "indoorPing" ? parsed.registryIndoorPing : fieldKey === "landPing" ? parsed.landSharePing : fieldKey === "registryBuildingPing" ? record.buildingPing : fieldKey === "registryIndoorPing" ? record.indoorPing : record.landPing; const prefix = ["registryBuildingPing", "registryIndoorPing", "landSharePing"].includes(fieldKey) ? "進案" : "房管"; return <label className="field compared-ping-field"><span><b>{label}</b>{compared && <small>{prefix} {compared} 坪</small>}</span><input inputMode="decimal" value={value} onChange={event => set(event.target.value)}/></label>; }
   if (fieldKey === "price") return <div className="price-pair"><label className="field"><span>開價（萬）</span><input inputMode="decimal" value={record.price || ""} onChange={e => setRecord({ ...record, price: e.target.value })}/></label><label className="field reduced-price-field"><span>降價/調價(萬){record.reducedPrice && <small>修改：{displayModifiedAt(record.reducedPriceModifiedAt || record.lastModifiedAt)}</small>}</span><input inputMode="decimal" value={record.reducedPrice || ""} onChange={e => setRecord({ ...record, reducedPrice: e.target.value, reducedPriceModifiedAt: e.target.value ? new Date().toISOString() : "" })}/></label></div>;
   if (fieldKey === "bookLocationNo") return null;
-  if (fieldKey === "contractType") return <label className="field contract-field"><span>{label}<small>EG 房一、EA 房專、LG 土一、LA 土專、EB 租一、EC 租專</small></span><input value={contractFromNo(record.propertyNo) || value} readOnly placeholder="依物件編號自動判斷"/></label>;
+  if (fieldKey === "contractType") return <label className="field contract-field"><span>{label}<small>EG 房一、EA 房專、LG 土一、LA 土專、EB 租一、EC 租專、RG 預一、RA 預專</small></span><input value={contractFromNo(record.propertyNo) || value} readOnly placeholder="依物件編號自動判斷"/></label>;
   if (fieldKey === "coverage") { const storedParts = String(record.coverageCombined || "").split(/[／/]/); const combinedValue = record.coverageCombined && storedParts[0] === String(record.coverage || "") && (storedParts[1] || "") === String(record.far || "") ? record.coverageCombined : [record.coverage, record.far].filter(Boolean).join("/"); return <label className="field coverage-combined-field"><span>建蔽率%/容積率%</span><input type="text" inputMode="decimal" value={combinedValue} onChange={event => { const raw = event.target.value.replace(/／/g, "/"); const [coverage = "", far = ""] = raw.split("/"); setRecord({ ...record, coverageCombined: raw, coverage: coverage.trim(), far: far.trim() }); }} placeholder="例如 60/240"/></label>; }
   if (["platform591", "price5168", "goldExposure"].includes(fieldKey)) { const expiryKey = `${fieldKey}Expiry`; const siteLabel = fieldKey === "platform591" ? "591" : fieldKey === "price5168" ? "5168" : "黃金曝光"; return websiteInput(fieldKey, siteLabel, expiryKey); }
   if (fieldKey === "yes319") return <div className="website-stack">{websiteInput("yes319", "YES319")}{websiteInput("houseinfor", "HOUSE INFOR")}</div>;

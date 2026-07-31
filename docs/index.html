@@ -40490,7 +40490,7 @@ ${String(ex)}`);
   var dateKeys = /* @__PURE__ */ new Set(["entrustStart", "entrustEnd", "reportDate", "updateDate", "groupViewDate", "bookLocationDate", "salesBookDate", "coverChangeDate", "platform591Expiry", "price5168Expiry", "goldExposureExpiry"]);
   var selectOptions = {
     status: ["\u59D4\u8A17\u4E2D", "\u552E\u51FA\u4E0B\u67B6", "\u6210\u4EA4\u4E0B\u67B6", "\u4E0B\u67B6\u6D3D\u958B\u767C"],
-    type: ["\u516C\u5BD3\uFF1A5\u6A13\u542B\u4EE5\u4E0B\uFF08\u7121\u96FB\u68AF\uFF09", "\u83EF\u5EC8\uFF1A10\u6A13\u542B\u4EE5\u4E0B\uFF08\u6709\u96FB\u68AF\uFF09", "\u5927\u6A13\uFF1A11\u6A13\u542B\u4EE5\u4E0A\uFF08\u6709\u96FB\u68AF\uFF09", "\u900F\u5929", "\u571F\u5730"],
+    type: ["\u516C\u5BD3\uFF1A5\u6A13\u542B\u4EE5\u4E0B\uFF08\u7121\u96FB\u68AF\uFF09", "\u83EF\u5EC8\uFF1A10\u6A13\u542B\u4EE5\u4E0B\uFF08\u6709\u96FB\u68AF\uFF09", "\u5927\u6A13\uFF1A11\u6A13\u542B\u4EE5\u4E0A\uFF08\u6709\u96FB\u68AF\uFF09", "\u900F\u5929", "\u5EE0\u623F", "\u571F\u5730"],
     currentState: ["\u7A7A\u5C4B", "\u81EA\u4F4F", "\u51FA\u79DF\u4E2D"]
   };
   var activeColumns = ["propertyNo", "entrustStart", "entrustEnd", "area", "caseName", "address", "type", "price", "direction", "age", "floor", "layout", "indoorPing", "buildingPing", "landPing", "parking", "managementFee", "key", "currentState", "road", "frontage", "depth", "zoning", "coverageFar", "developer", "reportDate", "updateDate", "groupViewDate", "bookLocation", "salesBook", "notes", "photoInfo", "platform591", "yes319", "houseinfor", "windowAd", "led", "homeWeb", "price5168", "goldExposure"];
@@ -40673,8 +40673,8 @@ ${String(ex)}`);
     return age >= 0 ? `${rocYear}\u5E74\u5EFA\uFF08${age}\u5E74\u5C4B\uFF09` : "\u5E74\u4EFD\u6709\u8AA4";
   };
   var locationOf = (r) => `${r.bookLocationDate ? r.bookLocationDate.slice(5).replace("-", "/") : ""}${r.bookLocationType || "\u67B6\u4E0A"}`;
-  var contractFromNo = (value) => ({ EG: "\u623F\u5C4B\u4E00\u822C\u7D04", EA: "\u623F\u5C4B\u5C08\u7D04", LG: "\u571F\u5730\u4E00\u822C\u7D04", LA: "\u571F\u5730\u5C08\u7D04", EB: "\u79DF\u8CC3\u4E00\u822C\u7D04", EC: "\u79DF\u8CC3\u5C08\u7D04" })[value.trim().toUpperCase().slice(0, 2)] || "";
-  var typeShort = (value = "") => value.includes("\u900F\u5929") ? "\u900F\u5929" : value.includes("\u516C\u5BD3") ? "\u516C\u5BD3" : value.includes("\u83EF\u5EC8") || value.includes("\u83EF\u53A6") || value.includes("\u83EF\u590F") ? "\u83EF\u5EC8" : value.includes("\u5927\u6A13") ? "\u5927\u6A13" : value.includes("\u571F\u5730") ? "\u571F\u5730" : value;
+  var contractFromNo = (value) => ({ EG: "\u623F\u5C4B\u4E00\u822C\u7D04", EA: "\u623F\u5C4B\u5C08\u7D04", LG: "\u571F\u5730\u4E00\u822C\u7D04", LA: "\u571F\u5730\u5C08\u7D04", EB: "\u79DF\u8CC3\u4E00\u822C\u7D04", EC: "\u79DF\u8CC3\u5C08\u7D04", RG: "\u9810\u552E\u4E00\u822C\u7D04", RA: "\u9810\u552E\u5C08\u7D04" })[value.trim().toUpperCase().slice(0, 2)] || "";
+  var typeShort = (value = "") => value.includes("\u5EE0\u623F") || value.includes("\u5EE0\u8FA6") ? "\u5EE0\u623F" : value.includes("\u900F\u5929") ? "\u900F\u5929" : value.includes("\u516C\u5BD3") ? "\u516C\u5BD3" : value.includes("\u83EF\u5EC8") || value.includes("\u83EF\u53A6") || value.includes("\u83EF\u590F") ? "\u83EF\u5EC8" : value.includes("\u5927\u6A13") ? "\u5927\u6A13" : value.includes("\u571F\u5730") ? "\u571F\u5730" : value;
   var parkingShort = (value = "") => {
     if (!value) return "";
     if (value.includes("\u7121\u8ECA\u4F4D") || value.includes("\u7121\u7522\u6B0A")) return "\u7121";
@@ -40705,8 +40705,10 @@ ${String(ex)}`);
     if (!current) return total || normalized;
     if (total && current.toUpperCase() === total.toUpperCase()) return current.toUpperCase().startsWith("B") ? `${current}T` : `${current.split("~").pop()}T`;
     const totalRange = total.match(/^(\d+)~(\d+)$/), currentRange = current.match(/^(\d+)~(\d+)$/);
-    if (totalRange && currentRange && totalRange[1] === currentRange[1] && Number(currentRange[2]) > Number(totalRange[2])) {
-      const legalTop = Number(totalRange[2]), currentTop = Number(currentRange[2]);
+    const legalBottom = totalRange ? Number(totalRange[1]) : /^\d+$/.test(total) ? Number(total) : Number.NaN;
+    const legalTop = totalRange ? Number(totalRange[2]) : legalBottom;
+    if (currentRange && currentRange[1] === String(legalBottom) && Number(currentRange[2]) > legalTop) {
+      const currentTop = Number(currentRange[2]);
       const additions = Array.from({ length: currentTop - legalTop }, (_, index) => legalTop + index + 1).join(".");
       return `${legalTop}T/${additions}\u6A13\u589E\u5EFA`;
     }
@@ -40802,7 +40804,7 @@ ${String(ex)}`);
   };
   var activeGroupKeyFixed = (record) => {
     const areaOrder = { "\u5317\u5340": "01", "\u6771\u5340": "02", "\u4E2D\u897F\u5340": "03", "\u5357\u5340": "04", "\u6C38\u5EB7\u5340": "05", "\u5B89\u5E73\u5340": "06", "\u4EC1\u5FB7\u5340": "07", "\u5B89\u5357\u5340": "08", "\u5176\u4ED6\u5340": "09", "\u5916\u7E23\u5E02": "10" };
-    const typeOrder = { "\u900F\u5929": "1", "\u83EF\u5EC8": "2", "\u5927\u6A13": "3", "\u516C\u5BD3": "4", "\u571F\u5730": "5" };
+    const typeOrder = { "\u900F\u5929": "1", "\u83EF\u5EC8": "2", "\u5927\u6A13": "3", "\u516C\u5BD3": "4", "\u5EE0\u623F": "5", "\u571F\u5730": "6" };
     const area = areaCategory(record), kind = typeShort(record.type);
     return `${areaOrder[area] || "99"}|${typeOrder[kind] || "9"}${kind}`;
   };
@@ -44997,7 +44999,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
             text("propertyNo", "\u7269\u4EF6\u7DE8\u865F"),
             text("caseName", "\u6848\u540D"),
             text("address", "\u5730\u5740"),
-            select("type", "\u7A2E\u985E", ["\u900F\u5929", "\u83EF\u5EC8", "\u5927\u6A13", "\u516C\u5BD3", "\u571F\u5730"]),
+            select("type", "\u7A2E\u985E", ["\u900F\u5929", "\u83EF\u5EC8", "\u5927\u6A13", "\u516C\u5BD3", "\u5EE0\u623F", "\u571F\u5730"]),
             text("direction", "\u671D\u5411"),
             text("developer", "\u958B\u767C\u696D\u52D9"),
             text("zoning", "\u4F7F\u7528\u5206\u5340"),
@@ -46110,7 +46112,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     if (fieldKey === "contractType") return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "field contract-field", children: [
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
         label,
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "EG \u623F\u4E00\u3001EA \u623F\u5C08\u3001LG \u571F\u4E00\u3001LA \u571F\u5C08\u3001EB \u79DF\u4E00\u3001EC \u79DF\u5C08" })
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "EG \u623F\u4E00\u3001EA \u623F\u5C08\u3001LG \u571F\u4E00\u3001LA \u571F\u5C08\u3001EB \u79DF\u4E00\u3001EC \u79DF\u5C08\u3001RG \u9810\u4E00\u3001RA \u9810\u5C08" })
       ] }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { value: contractFromNo(record.propertyNo) || value, readOnly: true, placeholder: "\u4F9D\u7269\u4EF6\u7DE8\u865F\u81EA\u52D5\u5224\u65B7" })
     ] });
