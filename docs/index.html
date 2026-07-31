@@ -650,6 +650,7 @@
 .website-list-value .website-inline-note{display:block!important;margin-top:2px!important;color:#2878ad!important;font-size:11px!important;font-weight:500!important;line-height:1.25!important;white-space:nowrap!important}
 .daily-table td.col-area,.daily-table th.col-area{vertical-align:middle!important;text-align:center!important}.daily-table td.col-area .area-lines{height:100%;min-height:0!important;justify-content:center!important;align-items:center!important;text-align:center!important}
 .expiry-settings-panel:not(.expiry-open)>p,.expiry-settings-panel:not(.expiry-open)>.form-grid{display:none}.expiry-settings-panel h3{display:flex;align-items:center;justify-content:space-between;margin:0}.expiry-toggle{padding:7px 14px;color:var(--green);border-color:#b9cfc4;background:#f3f8f4}
+.advanced-filter-button{background:#eef6f1;border-color:#b9d3c5;color:#176044}.advanced-filter-modal{width:min(1040px,96vw)}.advanced-filter-body{padding:18px 24px 26px;display:grid;gap:18px}.advanced-filter-body section{border:1px solid #dbe4de;background:#fbfdfb;border-radius:11px;padding:15px}.advanced-filter-body h3{margin:0 0 12px;font-size:15px;color:#234b3d}.advanced-filter-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px 12px}.filter-field{display:flex;flex-direction:column;gap:5px;min-width:0}.filter-field>span{font-size:12px;font-weight:800;color:#51665d}.filter-field input,.filter-field select{min-width:0;width:100%;border:1px solid #c9d4cd;border-radius:7px;padding:8px 9px;background:#fff}.range-field>div{display:flex;align-items:center;gap:5px}.range-field input{min-width:0}.range-field i{font-style:normal;color:#738078;font-size:12px}.range-field em{font-style:normal;color:#6f7b75;font-size:12px;white-space:nowrap}.filter-help{margin:-4px 0 10px!important;color:#738078!important;font-size:12px!important}.website-filter-grid{grid-template-columns:repeat(4,minmax(0,1fr))}@media(max-width:800px){.advanced-filter-grid,.website-filter-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.advanced-filter-body{padding:14px}.advanced-filter-modal{width:100vw;height:100vh;max-height:100vh;border-radius:0}}
 .personnel-panel:not(.personnel-open)>.personnel-table,.personnel-panel:not(.personnel-open)>.former-people,.personnel-panel:not(.personnel-open) .personnel-head .primary{display:none}.personnel-toggle{padding:7px 14px;color:var(--green);border-color:#b9cfc4;background:#f3f8f4}
 </style>
 </head>
@@ -40512,6 +40513,20 @@ ${String(ex)}`);
     ...archiveWebsiteTasks.filter(([field]) => record.bookLocationType !== "\u65C15" && record[`${field}None`] !== "1" && String(record[field] || "").trim() && record[field] !== "\u65C15").map(([field, label]) => ({ key: `${field}DownDate`, label: `${label}\u4E0B\u67B6` }))
   ];
   var blankRecord = () => ({ ...Object.fromEntries(fields.map(([k]) => [k, ""])), id: newId(), photos: [], status: "\u59D4\u8A17\u4E2D", bookLocationType: "\u67B6\u4E0A", salesBook: "\u88FD\u4F5C" });
+  var blankAdvancedFilter = () => Object.fromEntries(["propertyNo", "entrustStartFrom", "entrustStartTo", "entrustEndFrom", "entrustEndTo", "caseName", "address", "type", "priceFrom", "priceTo", "direction", "ageFrom", "ageTo", "floor", "rooms", "halls", "baths", "indoorFrom", "indoorTo", "landFrom", "landTo", "buildingFrom", "buildingTo", "parking", "key", "currentState", "roadFrom", "roadTo", "frontageFrom", "frontageTo", "depthFrom", "depthTo", "zoning", "developer", "reportFrom", "reportTo", "updateFrom", "updateTo", "groupFrom", "groupTo", "bookFrom", "bookTo", "salesBook", "salesFrom", "salesTo", "photoInfo", "platform591", "yes319", "houseinfor", "windowAd", "led", "homeWeb", "price5168", "goldExposure"].map((key) => [key, ""]));
+  var filterNumber = (value, last = false) => {
+    const values = String(value ?? "").replace(/,/g, "").match(/-?\d+(?:\.\d+)?/g) || [];
+    const text = last ? values.at(-1) : values[0];
+    return text === void 0 ? NaN : Number(text);
+  };
+  var filterInRange = (value, from = "", to = "", last = false) => {
+    const number = filterNumber(value, last);
+    return (!from || Number.isFinite(number) && number >= Number(from)) && (!to || Number.isFinite(number) && number <= Number(to));
+  };
+  var filterDateInRange = (value, from = "", to = "") => {
+    const date = normalizeDateInput(String(value || ""));
+    return (!from || date && date >= from) && (!to || date && date <= to);
+  };
   var today = () => {
     const value = /* @__PURE__ */ new Date();
     return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(value.getDate()).padStart(2, "0")}`;
@@ -41128,6 +41143,8 @@ ${String(ex)}`);
     const [query, setQuery] = (0, import_react.useState)("");
     const [missingDataReminderOpen, setMissingDataReminderOpen] = (0, import_react.useState)(false);
     const [websiteFilter, setWebsiteFilter] = (0, import_react.useState)("");
+    const [advancedFilterOpen, setAdvancedFilterOpen] = (0, import_react.useState)(false);
+    const [advancedFilter, setAdvancedFilter] = (0, import_react.useState)(() => blankAdvancedFilter());
     const [editing, setEditing] = (0, import_react.useState)(null);
     const [expiryReminderOpen, setExpiryReminderOpen] = (0, import_react.useState)(false);
     const [websitePoReminderOpen, setWebsitePoReminderOpen] = (0, import_react.useState)(false);
@@ -41292,7 +41309,18 @@ ${String(ex)}`);
       if (expiredUnarchived.length) setExpiryReminderOpen(true);
       else setExpiryReminderOpen(false);
     }, [expiredUnarchived.map((record) => record.id).join("|")]);
-    const shown = (tab === "archive" ? archived : sortActiveRecords(active)).filter((r) => (!websiteFilter || tab === "archive" || (websiteFilter === "all" ? requiredWebsiteKeys(r).some((key) => isWebsiteMissing(r, key)) : isWebsiteMissing(r, websiteFilter))) && [r.propertyNo, r.area, r.caseName, r.address, r.developer].join(" ").toLowerCase().includes(query.toLowerCase()));
+    const matchesAdvancedFilter = (r) => {
+      const f = advancedFilter;
+      const includes = (key, value = r[key] || "") => !f[key] || String(value).toLowerCase().includes(f[key].toLowerCase());
+      const layout = String(r.layout || "");
+      const floor = String(r.currentFloor || r.floor || "").replace(/[～〜]/g, "~");
+      const floorMatch = !f.floor || new RegExp(`(^|\\D)${f.floor.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?=\\D|$)`).test(floor);
+      const parkingMatch = !f.parking || String(r.parking || [r.parkingType, r.parkingMethod, r.parkingOwnership].join("\uFF0F")).includes(f.parking);
+      const websiteMatch = Object.keys(websiteFieldMap).every((key) => !f[key] || (f[key] === "filled" ? !!String(r[key] || "").trim() && !/^(無|旁5)$/i.test(String(r[key] || "").trim()) : !String(r[key] || "").trim() || /^(無|旁5)$/i.test(String(r[key] || "").trim())));
+      const photoMatch = !f.photoInfo || (f.photoInfo === "filled" ? !!(String(r.photoInfo || "").trim() || r.photos?.length) : !(String(r.photoInfo || "").trim() || r.photos?.length));
+      return includes("propertyNo") && includes("caseName") && includes("address") && (!f.type || typeShort(r.type) === f.type) && includes("direction") && includes("zoning") && includes("developer") && includes("key") && includes("currentState") && includes("salesBook") && (!f.rooms || new RegExp(`${f.rooms}\\s*\u623F`).test(layout)) && (!f.halls || new RegExp(`${f.halls}\\s*\u5EF3`).test(layout)) && (!f.baths || new RegExp(`${f.baths}\\s*\u885B`).test(layout)) && floorMatch && parkingMatch && photoMatch && websiteMatch && filterDateInRange(r.entrustStart, f.entrustStartFrom, f.entrustStartTo) && filterDateInRange(r.entrustEnd, f.entrustEndFrom, f.entrustEndTo) && filterDateInRange(r.reportDate, f.reportFrom, f.reportTo) && filterDateInRange(r.updateDate, f.updateFrom, f.updateTo) && filterDateInRange(r.groupViewDate, f.groupFrom, f.groupTo) && filterDateInRange(r.bookLocationDate, f.bookFrom, f.bookTo) && filterDateInRange(r.salesBookDate, f.salesFrom, f.salesTo) && filterInRange(r.price, f.priceFrom, f.priceTo, true) && filterInRange(ageOf(r), f.ageFrom, f.ageTo) && filterInRange(r.indoorPing, f.indoorFrom, f.indoorTo) && filterInRange(r.landPing, f.landFrom, f.landTo) && filterInRange(r.buildingPing, f.buildingFrom, f.buildingTo) && filterInRange(r.road, f.roadFrom, f.roadTo) && filterInRange(r.frontage, f.frontageFrom, f.frontageTo) && filterInRange(r.depth, f.depthFrom, f.depthTo);
+    };
+    const shown = (tab === "archive" ? archived : sortActiveRecords(active)).filter((r) => (!websiteFilter || tab === "archive" || (websiteFilter === "all" ? requiredWebsiteKeys(r).some((key) => isWebsiteMissing(r, key)) : isWebsiteMissing(r, websiteFilter))) && (tab !== "active" || matchesAdvancedFilter(r)) && [r.propertyNo, r.area, r.caseName, r.address, r.developer].join(" ").toLowerCase().includes(query.toLowerCase()));
     const weeklyPptRecords = sortPptRecords(active.filter((record) => isCurrentPptWeek(record.reportDate)));
     const selectedPptRecords = sortPptRecords(active.filter((record) => isCurrentPptWeek(record.reportDate) || pptExtraIds.includes(record.id)));
     const flash = (text) => {
@@ -42143,6 +42171,7 @@ ${String(ex)}`);
                   " \u5C1A\u672A PO"
                 ] }, key))
               ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "advanced-filter-button", onClick: () => setAdvancedFilterOpen(true), children: "\u9032\u968E\u7BE9\u9078" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { className: missingDataRecords.length ? "missing-data-button has-items" : "missing-data-button", onClick: () => setMissingDataReminderOpen(true), children: [
                 "\u5F85\u88DC\u8CC7\u6599 ",
                 missingDataRecords.length
@@ -42166,7 +42195,8 @@ ${String(ex)}`);
           ] }, `${record.id}-${site}`))
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PropertyTable, { records: shown, columns: tab === "archive" ? archiveColumns : activeColumns, archiveMode: tab === "archive", activeLead: tab === "active", showAreaGroups: tab === "active", onEdit: setEditing, onArchive: archiveRecord, onRestore: setRestoreChoiceRecord, onRemove: removeRecord }),
-        !shown.length && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Empty, { text: query ? "\u627E\u4E0D\u5230\u7B26\u5408\u7684\u7269\u4EF6" : tab === "archive" ? "\u76EE\u524D\u6C92\u6709\u5C01\u5B58\u7269\u4EF6" : "\u76EE\u524D\u6C92\u6709\u59D4\u8A17\u4E2D\u7269\u4EF6" })
+        advancedFilterOpen && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(AdvancedFilterModal, { value: advancedFilter, setValue: setAdvancedFilter, onClose: () => setAdvancedFilterOpen(false), onReset: () => setAdvancedFilter(blankAdvancedFilter()) }),
+        !shown.length && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Empty, { text: query || tab === "active" && Object.values(advancedFilter).some(Boolean) ? "\u627E\u4E0D\u5230\u7B26\u5408\u7684\u7269\u4EF6" : tab === "archive" ? "\u76EE\u524D\u6C92\u6709\u5C01\u5B58\u7269\u4EF6" : "\u76EE\u524D\u6C92\u6709\u59D4\u8A17\u4E2D\u7269\u4EF6" })
       ] }),
       missingDataReminderOpen && tab !== "public" && !expiryReminderOpen && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "modal-backdrop missing-data-reminder-backdrop", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal expiry-reminder-modal missing-data-reminder-modal", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal-head", children: [
@@ -44912,6 +44942,104 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     if (key === "layout") return typeShort(r.type) === "\u571F\u5730" ? "\u571F\u5730" : layoutFull(r.layout, r.type);
     if (key === "contractType") return contractShort(contractFromNo(r.propertyNo) || r.contractType);
     return r[key] || "";
+  }
+  function AdvancedFilterModal({ value, setValue, onClose, onReset }) {
+    const change = (key, next) => setValue({ ...value, [key]: next });
+    const text = (key, label, placeholder = "") => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "filter-field", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: label }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { value: value[key] || "", placeholder, onChange: (event) => change(key, event.target.value) })
+    ] });
+    const dateRange = (from, to, label) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "filter-field range-field", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: label }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "date", value: value[from] || "", onChange: (event) => change(from, event.target.value) }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("i", { children: "\u81F3" }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "date", value: value[to] || "", onChange: (event) => change(to, event.target.value) })
+      ] })
+    ] });
+    const numberRange = (from, to, label, unit = "") => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "filter-field range-field", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: label }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { inputMode: "decimal", value: value[from] || "", placeholder: "\u6700\u5C0F", onChange: (event) => change(from, event.target.value) }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("i", { children: "\u81F3" }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { inputMode: "decimal", value: value[to] || "", placeholder: "\u6700\u5927", onChange: (event) => change(to, event.target.value) }),
+        unit && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("em", { children: unit })
+      ] })
+    ] });
+    const select = (key, label, options) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "filter-field", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: label }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", { value: value[key] || "", onChange: (event) => change(key, event.target.value), children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: "", children: "\u4E0D\u9650" }),
+        options.map((option) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: option, children: option === "filled" ? "\u5DF2\u586B" : option === "empty" ? "\u672A\u586B" : option }, option))
+      ] })
+    ] });
+    const sites = [["yes319", "YES319"], ["houseinfor", "HOUSE INFOR"], ["homeWeb", "\u6211\u5BB6\u7DB2"], ["platform591", "591"], ["price5168", "5168"], ["windowAd", "\u6AE5\u7A97"], ["led", "LED"], ["goldExposure", "\u9EC3\u91D1\u66DD\u5149"]];
+    return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "modal-backdrop", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal advanced-filter-modal", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal-head", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u59D4\u8A17\u4E2D\u7269\u4EF6" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", { children: "\u9032\u968E\u7BE9\u9078" })
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "close", onClick: onClose, children: "\xD7" })
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "advanced-filter-body", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { children: "\u57FA\u672C\u689D\u4EF6" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "advanced-filter-grid", children: [
+            text("propertyNo", "\u7269\u4EF6\u7DE8\u865F"),
+            text("caseName", "\u6848\u540D"),
+            text("address", "\u5730\u5740"),
+            select("type", "\u7A2E\u985E", ["\u900F\u5929", "\u83EF\u5EC8", "\u5927\u6A13", "\u516C\u5BD3", "\u571F\u5730"]),
+            text("direction", "\u671D\u5411"),
+            text("developer", "\u958B\u767C\u696D\u52D9"),
+            text("zoning", "\u4F7F\u7528\u5206\u5340"),
+            text("key", "\u9470\u5319"),
+            text("currentState", "\u73FE\u6CC1"),
+            select("parking", "\u8ECA\u4F4D", ["\u5761\u9053", "\u5E73\u9762", "\u6A5F\u68B0", "\u6607\u964D", "\u5EAD\u9662", "\u5E73\u79FB"]),
+            select("salesBook", "\u92B7\u552E\u672C", ["\u88FD\u4F5C", "\u672A\u88FD\u4F5C", "\u5B8C\u6210"]),
+            select("photoInfo", "\u7167\u7247", ["filled", "empty"])
+          ] })
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { children: "\u65E5\u671F" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "advanced-filter-grid dates", children: [
+            dateRange("entrustStartFrom", "entrustStartTo", "\u59D4\u8A17\u958B\u59CB"),
+            dateRange("entrustEndFrom", "entrustEndTo", "\u59D4\u8A17\u7D50\u675F"),
+            dateRange("reportFrom", "reportTo", "\u9032\u6848\u65E5\u671F"),
+            dateRange("updateFrom", "updateTo", "\u66F4\u65B0\u65E5\u671F"),
+            dateRange("groupFrom", "groupTo", "\u5718\u770B\u65E5\u671F"),
+            dateRange("bookFrom", "bookTo", "\u7269\u4EF6\u672C\u4F4D\u7F6E\u65E5\u671F"),
+            dateRange("salesFrom", "salesTo", "\u92B7\u552E\u672C\u65E5\u671F")
+          ] })
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { children: "\u50F9\u683C\u3001\u576A\u6578\u8207\u6A13\u5C64" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "advanced-filter-grid", children: [
+            numberRange("priceFrom", "priceTo", "\u958B\u50F9\uFF08\u842C\uFF09", "\u842C"),
+            numberRange("ageFrom", "ageTo", "\u5C4B\u9F61", "\u5E74"),
+            text("floor", "\u6240\u5728\u6A13\u5C64", "\u4F8B\uFF1A2"),
+            numberRange("indoorFrom", "indoorTo", "\u5BA4\u5167\u576A", "\u576A"),
+            numberRange("buildingFrom", "buildingTo", "\u5EFA\u576A", "\u576A"),
+            numberRange("landFrom", "landTo", "\u571F\u5730\u576A", "\u576A"),
+            numberRange("roadFrom", "roadTo", "\u81E8\u8DEF", "\u7C73"),
+            numberRange("frontageFrom", "frontageTo", "\u9762\u5BEC", "\u7C73"),
+            numberRange("depthFrom", "depthTo", "\u6DF1\u5EA6", "\u7C73"),
+            text("rooms", "\u683C\u5C40\uFF0D\u623F", "\u4F8B\uFF1A3"),
+            text("halls", "\u683C\u5C40\uFF0D\u5EF3", "\u4F8B\uFF1A2"),
+            text("baths", "\u683C\u5C40\uFF0D\u885B", "\u4F8B\uFF1A2")
+          ] })
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { children: "\u7DB2\u7AD9\u7DE8\u865F" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { className: "filter-help", children: "\u9078\u64C7\u300C\u5DF2\u586B\u300D\u6216\u300C\u672A\u586B\u300D\u53EF\u540C\u6642\u7BE9\u9078\u591A\u500B\u7DB2\u7AD9\u3002" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "advanced-filter-grid website-filter-grid", children: sites.map(([key, label]) => select(key, label, ["filled", "empty"])) })
+        ] })
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal-foot", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: onReset, children: "\u6E05\u9664\u5168\u90E8\u689D\u4EF6" }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "primary", onClick: onClose, children: "\u5957\u7528\u7BE9\u9078" })
+      ] })
+    ] }) });
   }
   function PropertyTable({ records, columns, publicMode = false, dailyMode = false, archiveMode = false, activeLead = false, expiryAnnotation = false, showAreaGroups = false, onEdit, onArchive, onRestore, onRemove, onPptChange }) {
     const showPpt = !!onPptChange && !publicMode;
