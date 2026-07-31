@@ -40746,8 +40746,13 @@ ${String(ex)}`);
     const cleared = Object.fromEntries(contractChangeKeys.filter((key) => isImportedDashPlaceholder(record[key])).map((key) => [key, ""]));
     return Object.keys(cleared).length ? { ...record, ...cleared } : record;
   };
+  var clearImportedLandLabels = (record) => {
+    const landOnly = (value) => /^(?:\s*(?:土地|建地)\s*)+$/.test(String(value ?? ""));
+    const cleared = Object.fromEntries(["titleFloor", "currentFloor", "layout"].filter((key) => landOnly(record[key])).map((key) => [key, ""]));
+    return Object.keys(cleared).length ? { ...record, ...cleared } : record;
+  };
   var applySourceLayoutFixes = (records) => records.map((record) => {
-    record = clearImportedContractChangePlaceholders(record);
+    record = clearImportedLandLabels(clearImportedContractChangePlaceholders(record));
     const sourceBalcony = sourceBalconyFixes[String(record.propertyNo || "").trim().toUpperCase()];
     if (!sourceBalcony || typeShort(record.type) === "\u571F\u5730" || /^(?:LG|LA)/i.test(record.propertyNo || "")) return record;
     const balcony = sourceBalcony.match(/(\d+)\s*陽台/)?.[1];
@@ -41299,11 +41304,11 @@ ${String(ex)}`);
     });
     const saveRecord = () => {
       if (!editing) return;
-      const normalizedEditing = {
+      const normalizedEditing = clearImportedLandLabels({
         ...editing,
         ...Object.fromEntries([...dateKeys].map((key) => [key, normalizeDateInput(editing[key] || "")])),
         completionDate: normalizeDateInput(editing.completionDate || "")
-      };
+      });
       const keyNumber = String(editing.key || "").match(/公司\s*[#＃]?\s*(\d+)/)?.[1];
       const allowedKeyNumbers = /* @__PURE__ */ new Set([1, 2, 3, 5, 6, 7, 8, 17, 18, 19, 20, 21, 22, 23, 24, 33, 34, 35, 36, 37, 38, 39, 49, 50, 51, 52, 53, 55, 56, 65, 66, 67, 68, 69, 70, 71, 72, 81, 82, 83, 85, 86, 87, 88]);
       if (keyNumber && !allowedKeyNumbers.has(Number(keyNumber))) {
@@ -44901,7 +44906,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       return label ? `${r.price || "\u2014"}${label}${r.reducedPrice}` : r.price || "";
     }
     if (key === "type") return typeShort(r.type);
-    if (key === "layout") return layoutFull(r.layout, r.type);
+    if (key === "layout") return typeShort(r.type) === "\u571F\u5730" ? "\u571F\u5730" : layoutFull(r.layout, r.type);
     if (key === "contractType") return contractShort(contractFromNo(r.propertyNo) || r.contractType);
     return r[key] || "";
   }
@@ -45836,7 +45841,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
   }
   function Field({ fieldKey, label, record, records, setRecord }) {
     const value = record[fieldKey] || "";
-    const inputValue = fieldKey === "layout" ? layoutFull(value, record.type) : value;
+    const inputValue = fieldKey === "layout" ? typeShort(record.type) === "\u571F\u5730" ? "" : layoutFull(value, record.type) : value;
     const set = (v) => setRecord(fieldKey === "propertyNo" ? { ...record, propertyNo: v, contractType: contractFromNo(v) } : { ...record, [fieldKey]: v });
     const websiteInput = (key, siteLabel, expiryKey = "") => {
       const noneKey = `${key}None`;

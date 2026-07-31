@@ -278,8 +278,13 @@ const clearImportedContractChangePlaceholders = (record: RecordItem): RecordItem
   const cleared = Object.fromEntries(contractChangeKeys.filter(key => isImportedDashPlaceholder(record[key])).map(key => [key, ""]));
   return Object.keys(cleared).length ? { ...record, ...cleared } : record;
 };
+const clearImportedLandLabels = (record: RecordItem): RecordItem => {
+  const landOnly = (value: unknown) => /^(?:\s*(?:土地|建地)\s*)+$/.test(String(value ?? ""));
+  const cleared = Object.fromEntries(["titleFloor", "currentFloor", "layout"].filter(key => landOnly(record[key])).map(key => [key, ""]));
+  return Object.keys(cleared).length ? { ...record, ...cleared } : record;
+};
 const applySourceLayoutFixes = (records: RecordItem[]) => records.map(record => {
-  record = clearImportedContractChangePlaceholders(record);
+  record = clearImportedLandLabels(clearImportedContractChangePlaceholders(record));
   const sourceBalcony = sourceBalconyFixes[String(record.propertyNo || "").trim().toUpperCase()];
   if (!sourceBalcony || typeShort(record.type) === "土地" || /^(?:LG|LA)/i.test(record.propertyNo || "")) return record;
   const balcony = sourceBalcony.match(/(\d+)\s*陽台/)?.[1];
@@ -578,11 +583,11 @@ export default function Home() {
   });
   const saveRecord = () => {
     if (!editing) return;
-    const normalizedEditing = {
+    const normalizedEditing = clearImportedLandLabels({
       ...editing,
       ...Object.fromEntries([...dateKeys].map(key => [key, normalizeDateInput(editing[key] || "")])),
       completionDate: normalizeDateInput(editing.completionDate || ""),
-    };
+    });
     const keyNumber = String(editing.key || "").match(/公司\s*[#＃]?\s*(\d+)/)?.[1];
     const allowedKeyNumbers = new Set([1, 2, 3, 5, 6, 7, 8, 17, 18, 19, 20, 21, 22, 23, 24, 33, 34, 35, 36, 37, 38, 39, 49, 50, 51, 52, 53, 55, 56, 65, 66, 67, 68, 69, 70, 71, 72, 81, 82, 83, 85, 86, 87, 88]);
     if (keyNumber && !allowedKeyNumbers.has(Number(keyNumber))) { alert(`鑰匙編號公司#${keyNumber}不在鑰匙總表的有效標號內，請重新輸入。`); return; }
@@ -2172,7 +2177,7 @@ function ChecklistPage({ val }: { val: (...keys: string[]) => string }) { return
 
 const numericPrice = (value = "") => { const match = String(value).replace(/,/g, "").match(/\d+(?:\.\d+)?/); return match ? Number(match[0]) : Number.NaN; };
 const adjustedPriceLabel = (price = "", adjusted = "") => { const original = numericPrice(price), next = numericPrice(adjusted); return Number.isFinite(original) && Number.isFinite(next) ? next < original ? "降" : next > original ? "調" : "" : ""; };
-function cellValue(r: RecordItem, key: string) { if (key === "age") return ageOf(r); if (key === "bookLocation") return locationOf(r); if (key === "coverageFar") return [r.coverage, r.far].filter(Boolean).join("／"); if (key === "status") return displayStatus(r); if (key === "archived") return displayRocDate(r.archived || (isExpired(r) ? today() : "")); if (dateKeys.has(key)) return displayRocDate(r[key]); if (key === "price") { const label = adjustedPriceLabel(r.price, r.reducedPrice); return label ? `${r.price || "—"}${label}${r.reducedPrice}` : r.price || ""; } if (key === "type") return typeShort(r.type); if (key === "layout") return layoutFull(r.layout, r.type); if (key === "contractType") return contractShort(contractFromNo(r.propertyNo) || r.contractType); return r[key] || ""; }
+function cellValue(r: RecordItem, key: string) { if (key === "age") return ageOf(r); if (key === "bookLocation") return locationOf(r); if (key === "coverageFar") return [r.coverage, r.far].filter(Boolean).join("／"); if (key === "status") return displayStatus(r); if (key === "archived") return displayRocDate(r.archived || (isExpired(r) ? today() : "")); if (dateKeys.has(key)) return displayRocDate(r[key]); if (key === "price") { const label = adjustedPriceLabel(r.price, r.reducedPrice); return label ? `${r.price || "—"}${label}${r.reducedPrice}` : r.price || ""; } if (key === "type") return typeShort(r.type); if (key === "layout") return typeShort(r.type) === "土地" ? "土地" : layoutFull(r.layout, r.type); if (key === "contractType") return contractShort(contractFromNo(r.propertyNo) || r.contractType); return r[key] || ""; }
 
 function PropertyTable({ records, columns, publicMode = false, dailyMode = false, archiveMode = false, activeLead = false, expiryAnnotation = false, showAreaGroups = false, onEdit, onArchive, onRestore, onRemove, onPptChange }: { records: RecordItem[]; columns: string[]; publicMode?: boolean; dailyMode?: boolean; archiveMode?: boolean; activeLead?: boolean; expiryAnnotation?: boolean; showAreaGroups?: boolean; onEdit: (r: RecordItem) => void; onArchive: (r: RecordItem, status?: string) => void; onRestore: (r: RecordItem) => void; onRemove: (r: RecordItem) => void; onPptChange?: (r: RecordItem, patch: Partial<RecordItem>) => void }) {
   const showPpt = !!onPptChange && !publicMode;
@@ -2383,7 +2388,7 @@ function BusinessInventory({ records, people }: { records: RecordItem[]; people:
 }
 
 function Field({ fieldKey, label, record, records, setRecord }: { fieldKey: string; label: string; record: RecordItem; records: RecordItem[]; setRecord: (r: RecordItem) => void }) {
-  const value = record[fieldKey] || ""; const inputValue = fieldKey === "layout" ? layoutFull(value, record.type) : value; const set = (v: string) => setRecord(fieldKey === "propertyNo" ? { ...record, propertyNo: v, contractType: contractFromNo(v) } : { ...record, [fieldKey]: v });
+  const value = record[fieldKey] || ""; const inputValue = fieldKey === "layout" ? (typeShort(record.type) === "土地" ? "" : layoutFull(value, record.type)) : value; const set = (v: string) => setRecord(fieldKey === "propertyNo" ? { ...record, propertyNo: v, contractType: contractFromNo(v) } : { ...record, [fieldKey]: v });
   const websiteInput = (key: string, siteLabel: string, expiryKey = "") => { const noneKey = `${key}None`; const none = record[noneKey] === "1"; const changeValue = (next: string) => { if (key === "windowAd" && next) { if (!/^\d+$/.test(next) || Number(next) < 1 || Number(next) > 15) return alert("櫥窗編號只能輸入 1～15"); const duplicate = records.find(item => item.id !== record.id && String(item.windowAd || "").trim() === next.trim() && item.windowAdNone !== "1"); if (duplicate) return alert(`櫥窗編號 ${next} 已由「${duplicate.caseName || duplicate.propertyNo}」使用`); } const detectedExpiry = expiryKey && !record[expiryKey] ? websiteEffectiveDate(next) : ""; setRecord({ ...record, [key]: next, ...(detectedExpiry ? { [expiryKey]: detectedExpiry } : {}) }); }; return <label className={`field website-field ${none ? "website-none" : ""}`}><span className="website-field-head"><b>{siteLabel}</b><i><input type="checkbox" checked={none} onChange={event => { if (event.target.checked && String(record[key] || "").trim() && !confirm(`${siteLabel}已有內容「${record[key]}」，確定要改成無並清除內容嗎？`)) return; setRecord({ ...record, [noneKey]: event.target.checked ? "1" : "", ...(event.target.checked ? { [key]: "", ...(expiryKey ? { [expiryKey]: "" } : {}) } : {}) }); }}/>無</i></span><input type="text" disabled={none} value={record[key] || ""} onChange={event => changeValue(event.target.value)} placeholder={none ? "不需刊登" : "輸入網站編號或註記"}/>{expiryKey && <><span className="website-expiry-label">{siteLabel}到期日期</span><input type="text" inputMode="numeric" disabled={none} value={displayRocDate(record[expiryKey] || websiteEffectiveDate(record[key] || ""))} onChange={event => setRecord({ ...record, [expiryKey]: event.target.value })} onBlur={event => setRecord({ ...record, [expiryKey]: normalizeDateInput(event.target.value) })} placeholder="例如 115/10/19"/></>}</label>; };
   if (["colorSheetHeader", "coverHeader", "websiteHeader"].includes(fieldKey)) return <div className="record-edit-section-title"><b>{label}</b><span>{fieldKey === "colorSheetHeader" ? "供彩色表 Excel 使用" : fieldKey === "coverHeader" ? "供列印新進資料封面使用" : "輸入各網站刊登編號"}</span></div>;
   if (fieldKey === "areaPaste") return <label className="field area-paste-field"><span>{label}</span><textarea rows={8} value={value} onChange={event => setRecord(parseAreaPaste(event.target.value, record))} placeholder="貼上建物面積、土地面積、建築完成日與主要建材整串文字，系統會自動抓取下方數字。"/><small>已抓取的內容仍可在下方個別修改。</small></label>;
