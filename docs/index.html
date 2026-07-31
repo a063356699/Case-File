@@ -43546,6 +43546,43 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
           const targetExtent = targetTransform && Array.from(targetTransform.children).find((node) => node.localName === "ext");
           if (targetExtent) targetExtent.setAttribute("cy", String(1.5 * 36e4));
         });
+        const fixedHouseObjects = {
+          "35": { x: 4945403, y: 2810609, width: 3478714, height: 2606809 },
+          "33": { x: 4958442, y: 6020789, width: 3480345, height: 2645112 },
+          "22": { x: 4944588, y: 9221189, width: 3480345, height: 2645112 },
+          "36": { x: 4936174, y: 2234609, width: 1335232, height: 54e4 },
+          "34": { x: 4936174, y: 5444789, width: 1335232, height: 54e4 },
+          "32": { x: 4922320, y: 8645189, width: 1335232, height: 54e4 }
+        };
+        Array.from(drawingDocument.documentElement.children).forEach((anchor) => {
+          const idNode = Array.from(anchor.getElementsByTagNameNS(xdrNs, "cNvPr")).find((node) => fixedHouseObjects[node.getAttribute("id") || ""]);
+          if (!idNode) return;
+          const config = fixedHouseObjects[idNode.getAttribute("id") || ""];
+          const replacement = drawingDocument.createElementNS(xdrNs, "xdr:absoluteAnchor");
+          const pos = drawingDocument.createElementNS(xdrNs, "xdr:pos");
+          pos.setAttribute("x", String(config.x));
+          pos.setAttribute("y", String(config.y));
+          const extent = drawingDocument.createElementNS(xdrNs, "xdr:ext");
+          extent.setAttribute("cx", String(config.width));
+          extent.setAttribute("cy", String(config.height));
+          replacement.appendChild(pos);
+          replacement.appendChild(extent);
+          Array.from(anchor.children).filter((node) => !["from", "to", "pos", "ext"].includes(node.localName)).forEach((node) => replacement.appendChild(node.cloneNode(true)));
+          anchor.parentNode?.replaceChild(replacement, anchor);
+          const transform = Array.from(replacement.getElementsByTagNameNS("http://schemas.openxmlformats.org/drawingml/2006/main", "xfrm"))[0];
+          if (transform) {
+            const offset = Array.from(transform.children).find((node) => node.localName === "off");
+            const shapeExtent = Array.from(transform.children).find((node) => node.localName === "ext");
+            if (offset) {
+              offset.setAttribute("x", String(config.x));
+              offset.setAttribute("y", String(config.y));
+            }
+            if (shapeExtent) {
+              shapeExtent.setAttribute("cx", String(config.width));
+              shapeExtent.setAttribute("cy", String(config.height));
+            }
+          }
+        });
       }
       Array.from(drawingDocument.getElementsByTagNameNS("http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing", "clientData")).forEach((node) => {
         node.setAttribute("fLocksWithSheet", "0");
