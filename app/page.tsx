@@ -169,6 +169,11 @@ const normalizeDateInput = (v = "") => {
   const iso = `${year.toString().padStart(4, "0")}-${month.toString().padStart(2, "0")}-${day.toString().padStart(2, "0")}`;
   const d = new Date(`${iso}T00:00:00`); return d.getFullYear() === year && d.getMonth() + 1 === month && d.getDate() === day ? iso : text;
 };
+const websiteEffectiveDate = (value = "") => {
+  const text = String(value || "");
+  const matched = text.match(/有效期\s*[:：]?\s*(\d{3,4}[.\/-]\d{1,2}[.\/-]\d{1,2})/) || text.match(/(\d{3,4}[.\/-]\d{1,2}[.\/-]\d{1,2})\s*刊登到期/);
+  return matched ? normalizeDateInput(matched[1]) : "";
+};
 const isExpired = (r: RecordItem) => validDate(r.entrustEnd) && !!r.entrustEnd && r.entrustEnd < today();
 const displayStatus = (r: RecordItem) => isExpired(r) && r.status === "委託中" ? "到期下架" : (r.status || "委託中");
 const ageOf = (r: RecordItem) => {
@@ -380,10 +385,13 @@ const displayNoteSegments = (value = "") => String(value || "").split(/[；;]/).
 const websiteCellDisplay = (record: RecordItem, key: string) => {
   const raw = String(record[key] || "").trim();
   const expiryKey = key === "platform591" ? "platform591Expiry" : key === "price5168" ? "price5168Expiry" : key === "goldExposure" ? "goldExposureExpiry" : "";
-  const expiry = expiryKey && record[expiryKey] ? `${displayRocDate(record[expiryKey])}到期` : "";
+  const detectedExpiry = expiryKey ? websiteEffectiveDate(raw) : "";
+  const expiryDate = expiryKey ? (record[expiryKey] || detectedExpiry) : "";
+  const expiry = expiryDate ? `${displayRocDate(expiryDate)}到期` : "";
   const down = record[`${key}DownDate`] ? `${displayRocDate(record[`${key}DownDate`])}下架` : "";
-  if (!raw || /^(?:無|旁5)$/i.test(raw)) return { value: raw || "—", notes: [expiry, down].filter(Boolean) };
-  const lines = raw.split(/\r?\n/).map(value => value.trim()).filter(Boolean);
+  const visibleRaw = raw.replace(/有效期\s*[:：]?\s*\d{3,4}[.\/-]\d{1,2}[.\/-]\d{1,2}/g, "").replace(/\d{3,4}[.\/-]\d{1,2}[.\/-]\d{1,2}\s*刊登到期/g, "").replace(/[\s,，;；]+$/g, "").trim();
+  if (!visibleRaw || /^(?:無|旁5)$/i.test(visibleRaw)) return expiryDate ? { value: displayRocDate(expiryDate), notes: ["到期", down].filter(Boolean) } : { value: visibleRaw || "—", notes: [down].filter(Boolean) };
+  const lines = visibleRaw.split(/\r?\n/).map(value => value.trim()).filter(Boolean);
   const compact = lines.join(" ");
   const leadingCode = compact.match(/^([0-9A-Za-zＡ-Ｚａ-ｚ][0-9A-Za-zＡ-Ｚａ-ｚ_－—\-]*)/);
   if (leadingCode) {
@@ -2332,7 +2340,7 @@ function BusinessInventory({ records, people }: { records: RecordItem[]; people:
 
 function Field({ fieldKey, label, record, records, setRecord }: { fieldKey: string; label: string; record: RecordItem; records: RecordItem[]; setRecord: (r: RecordItem) => void }) {
   const value = record[fieldKey] || ""; const inputValue = fieldKey === "layout" ? layoutFull(value, record.type) : value; const set = (v: string) => setRecord(fieldKey === "propertyNo" ? { ...record, propertyNo: v, contractType: contractFromNo(v) } : { ...record, [fieldKey]: v });
-  const websiteInput = (key: string, siteLabel: string, expiryKey = "") => { const noneKey = `${key}None`; const none = record[noneKey] === "1"; const changeValue = (next: string) => { if (key === "windowAd" && next) { if (!/^\d+$/.test(next) || Number(next) < 1 || Number(next) > 15) return alert("櫥窗編號只能輸入 1～15"); const duplicate = records.find(item => item.id !== record.id && String(item.windowAd || "").trim() === next.trim() && item.windowAdNone !== "1"); if (duplicate) return alert(`櫥窗編號 ${next} 已由「${duplicate.caseName || duplicate.propertyNo}」使用`); } setRecord({ ...record, [key]: next }); }; return <label className={`field website-field ${none ? "website-none" : ""}`}><span className="website-field-head"><b>{siteLabel}</b><i><input type="checkbox" checked={none} onChange={event => { if (event.target.checked && String(record[key] || "").trim() && !confirm(`${siteLabel}已有內容「${record[key]}」，確定要改成無並清除內容嗎？`)) return; setRecord({ ...record, [noneKey]: event.target.checked ? "1" : "", ...(event.target.checked ? { [key]: "", ...(expiryKey ? { [expiryKey]: "" } : {}) } : {}) }); }}/>無</i></span><input type="text" disabled={none} value={record[key] || ""} onChange={event => changeValue(event.target.value)} placeholder={none ? "不需刊登" : "輸入網站編號或註記"}/>{expiryKey && <><span className="website-expiry-label">{siteLabel}到期日期</span><input type="text" inputMode="numeric" disabled={none} value={displayRocDate(record[expiryKey] || "")} onChange={event => setRecord({ ...record, [expiryKey]: event.target.value })} onBlur={event => setRecord({ ...record, [expiryKey]: normalizeDateInput(event.target.value) })} placeholder="例如 115/8/31"/></>}</label>; };
+  const websiteInput = (key: string, siteLabel: string, expiryKey = "") => { const noneKey = `${key}None`; const none = record[noneKey] === "1"; const changeValue = (next: string) => { if (key === "windowAd" && next) { if (!/^\d+$/.test(next) || Number(next) < 1 || Number(next) > 15) return alert("櫥窗編號只能輸入 1～15"); const duplicate = records.find(item => item.id !== record.id && String(item.windowAd || "").trim() === next.trim() && item.windowAdNone !== "1"); if (duplicate) return alert(`櫥窗編號 ${next} 已由「${duplicate.caseName || duplicate.propertyNo}」使用`); } const detectedExpiry = expiryKey && !record[expiryKey] ? websiteEffectiveDate(next) : ""; setRecord({ ...record, [key]: next, ...(detectedExpiry ? { [expiryKey]: detectedExpiry } : {}) }); }; return <label className={`field website-field ${none ? "website-none" : ""}`}><span className="website-field-head"><b>{siteLabel}</b><i><input type="checkbox" checked={none} onChange={event => { if (event.target.checked && String(record[key] || "").trim() && !confirm(`${siteLabel}已有內容「${record[key]}」，確定要改成無並清除內容嗎？`)) return; setRecord({ ...record, [noneKey]: event.target.checked ? "1" : "", ...(event.target.checked ? { [key]: "", ...(expiryKey ? { [expiryKey]: "" } : {}) } : {}) }); }}/>無</i></span><input type="text" disabled={none} value={record[key] || ""} onChange={event => changeValue(event.target.value)} placeholder={none ? "不需刊登" : "輸入網站編號或註記"}/>{expiryKey && <><span className="website-expiry-label">{siteLabel}到期日期</span><input type="text" inputMode="numeric" disabled={none} value={displayRocDate(record[expiryKey] || websiteEffectiveDate(record[key] || ""))} onChange={event => setRecord({ ...record, [expiryKey]: event.target.value })} onBlur={event => setRecord({ ...record, [expiryKey]: normalizeDateInput(event.target.value) })} placeholder="例如 115/10/19"/></>}</label>; };
   if (["colorSheetHeader", "coverHeader", "websiteHeader"].includes(fieldKey)) return <div className="record-edit-section-title"><b>{label}</b><span>{fieldKey === "colorSheetHeader" ? "供彩色表 Excel 使用" : fieldKey === "coverHeader" ? "供列印新進資料封面使用" : "輸入各網站刊登編號"}</span></div>;
   if (fieldKey === "areaPaste") return <label className="field area-paste-field"><span>{label}</span><textarea rows={8} value={value} onChange={event => setRecord(parseAreaPaste(event.target.value, record))} placeholder="貼上建物面積、土地面積、建築完成日與主要建材整串文字，系統會自動抓取下方數字。"/><small>已抓取的內容仍可在下方個別修改。</small></label>;
   const pillChoices: Record<string, string[]> = {

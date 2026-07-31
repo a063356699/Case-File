@@ -40631,6 +40631,11 @@ ${String(ex)}`);
     const d = /* @__PURE__ */ new Date(`${iso}T00:00:00`);
     return d.getFullYear() === year && d.getMonth() + 1 === month && d.getDate() === day ? iso : text;
   };
+  var websiteEffectiveDate = (value = "") => {
+    const text = String(value || "");
+    const matched = text.match(/有效期\s*[:：]?\s*(\d{3,4}[.\/-]\d{1,2}[.\/-]\d{1,2})/) || text.match(/(\d{3,4}[.\/-]\d{1,2}[.\/-]\d{1,2})\s*刊登到期/);
+    return matched ? normalizeDateInput(matched[1]) : "";
+  };
   var isExpired = (r) => validDate(r.entrustEnd) && !!r.entrustEnd && r.entrustEnd < today();
   var displayStatus = (r) => isExpired(r) && r.status === "\u59D4\u8A17\u4E2D" ? "\u5230\u671F\u4E0B\u67B6" : r.status || "\u59D4\u8A17\u4E2D";
   var ageOf = (r) => {
@@ -40923,10 +40928,13 @@ ${String(ex)}`);
   var websiteCellDisplay = (record, key) => {
     const raw = String(record[key] || "").trim();
     const expiryKey = key === "platform591" ? "platform591Expiry" : key === "price5168" ? "price5168Expiry" : key === "goldExposure" ? "goldExposureExpiry" : "";
-    const expiry = expiryKey && record[expiryKey] ? `${displayRocDate(record[expiryKey])}\u5230\u671F` : "";
+    const detectedExpiry = expiryKey ? websiteEffectiveDate(raw) : "";
+    const expiryDate = expiryKey ? record[expiryKey] || detectedExpiry : "";
+    const expiry = expiryDate ? `${displayRocDate(expiryDate)}\u5230\u671F` : "";
     const down = record[`${key}DownDate`] ? `${displayRocDate(record[`${key}DownDate`])}\u4E0B\u67B6` : "";
-    if (!raw || /^(?:無|旁5)$/i.test(raw)) return { value: raw || "\u2014", notes: [expiry, down].filter(Boolean) };
-    const lines = raw.split(/\r?\n/).map((value) => value.trim()).filter(Boolean);
+    const visibleRaw = raw.replace(/有效期\s*[:：]?\s*\d{3,4}[.\/-]\d{1,2}[.\/-]\d{1,2}/g, "").replace(/\d{3,4}[.\/-]\d{1,2}[.\/-]\d{1,2}\s*刊登到期/g, "").replace(/[\s,，;；]+$/g, "").trim();
+    if (!visibleRaw || /^(?:無|旁5)$/i.test(visibleRaw)) return expiryDate ? { value: displayRocDate(expiryDate), notes: ["\u5230\u671F", down].filter(Boolean) } : { value: visibleRaw || "\u2014", notes: [down].filter(Boolean) };
+    const lines = visibleRaw.split(/\r?\n/).map((value) => value.trim()).filter(Boolean);
     const compact = lines.join(" ");
     const leadingCode = compact.match(/^([0-9A-Za-zＡ-Ｚａ-ｚ][0-9A-Za-zＡ-Ｚａ-ｚ_－—\-]*)/);
     if (leadingCode) {
@@ -45757,7 +45765,8 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
           const duplicate = records.find((item) => item.id !== record.id && String(item.windowAd || "").trim() === next.trim() && item.windowAdNone !== "1");
           if (duplicate) return alert(`\u6AE5\u7A97\u7DE8\u865F ${next} \u5DF2\u7531\u300C${duplicate.caseName || duplicate.propertyNo}\u300D\u4F7F\u7528`);
         }
-        setRecord({ ...record, [key]: next });
+        const detectedExpiry = expiryKey && !record[expiryKey] ? websiteEffectiveDate(next) : "";
+        setRecord({ ...record, [key]: next, ...detectedExpiry ? { [expiryKey]: detectedExpiry } : {} });
       };
       return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: `field website-field ${none ? "website-none" : ""}`, children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "website-field-head", children: [
@@ -45776,7 +45785,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
             siteLabel,
             "\u5230\u671F\u65E5\u671F"
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", inputMode: "numeric", disabled: none, value: displayRocDate(record[expiryKey] || ""), onChange: (event) => setRecord({ ...record, [expiryKey]: event.target.value }), onBlur: (event) => setRecord({ ...record, [expiryKey]: normalizeDateInput(event.target.value) }), placeholder: "\u4F8B\u5982 115/8/31" })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", inputMode: "numeric", disabled: none, value: displayRocDate(record[expiryKey] || websiteEffectiveDate(record[key] || "")), onChange: (event) => setRecord({ ...record, [expiryKey]: event.target.value }), onBlur: (event) => setRecord({ ...record, [expiryKey]: normalizeDateInput(event.target.value) }), placeholder: "\u4F8B\u5982 115/10/19" })
         ] })
       ] });
     };
