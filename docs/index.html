@@ -656,6 +656,7 @@
 .website-list-value .website-inline-note{display:block!important;margin-top:2px!important;color:#2878ad!important;font-size:11px!important;font-weight:500!important;line-height:1.25!important;white-space:nowrap!important}
 .daily-table td.col-area,.daily-table th.col-area{vertical-align:middle!important;text-align:center!important}.daily-table td.col-area .area-lines{height:100%;min-height:0!important;justify-content:center!important;align-items:center!important;text-align:center!important}
 .public-table td.col-area,.public-table th.col-area{vertical-align:middle!important;text-align:center!important}.public-table td.col-area .area-lines{height:100%;min-height:0!important;justify-content:center!important;align-items:center!important;text-align:center!important}
+.public-table td.col-road,.public-table td.col-frontage,.public-table td.col-depth,.public-table td.col-road *,.public-table td.col-frontage *,.public-table td.col-depth *{color:#111!important;font-weight:400!important}
 .daily-card .daily-table th.col-price,.daily-card .daily-table td.col-price{width:82px!important;min-width:82px!important;max-width:82px!important;vertical-align:middle!important;text-align:center!important}.daily-card .daily-table td.col-price .two-line-value{align-items:center!important;text-align:center!important}.daily-card .daily-table td.col-price .two-line-value b{color:#17242a!important;font-weight:800!important}.daily-card .daily-table td.col-price .price-reduction{display:block!important;color:#ff0000!important;font-weight:900!important}
 .expiry-settings-panel h3,.personnel-head h3{cursor:pointer}.expiry-settings-panel h3:hover,.personnel-head h3:hover{color:var(--green)}
 .expiry-settings-panel:not(.expiry-open)>p,.expiry-settings-panel:not(.expiry-open)>.form-grid{display:none}.expiry-settings-panel h3{display:flex;align-items:center;justify-content:space-between;margin:0}.expiry-toggle{padding:7px 14px;color:var(--green);border-color:#b9cfc4;background:#f3f8f4}
@@ -673,6 +674,7 @@
 .archive-cleanup-table{table-layout:auto!important;width:auto!important;min-width:100%!important}.archive-cleanup-table th,.archive-cleanup-table td{width:1%!important;padding:6px 2px!important;white-space:nowrap!important}.archive-cleanup-table th:first-child,.archive-cleanup-table td:first-child{width:auto!important;min-width:260px!important}.archive-cleanup-case-cell{white-space:normal!important}.archive-cleanup-websites{display:flex!important;flex-direction:column!important;align-items:stretch!important;justify-content:flex-start!important;gap:3px!important;white-space:nowrap!important}.archive-cleanup-websites button{display:block!important;width:100%!important;margin:0!important;padding:5px 3px!important}
 .archive-cleanup-website-row{padding:3px 2px!important}.archive-cleanup-website-row button{display:block!important;width:100%!important;margin:0!important;padding:6px 4px!important}.inventory-month-controls{display:flex;align-items:center;gap:9px;flex-wrap:wrap}.inventory-month-controls>b{font-size:18px;color:#283d35;white-space:nowrap}.inventory-month-controls>button{min-height:46px;padding:9px 17px;border-radius:12px;font-size:16px;font-weight:800;background:#fff}.inventory-month-controls>button.selected{background:#176044;color:#fff;border-color:#176044}.inventory-month{display:flex!important;align-items:center!important;gap:8px!important;margin:0!important;font-size:16px!important;font-weight:800!important}.inventory-month>span{white-space:nowrap}.inventory-month input{min-width:175px!important;height:46px!important;padding:8px 12px!important;border-radius:12px!important;font-size:17px!important;font-weight:800!important}
 .archive-cleanup-modal{width:min(1580px,99vw)!important}.archive-cleanup-table th:first-child,.archive-cleanup-table td:first-child{width:1%!important;min-width:0!important}.archive-cleanup-case-cell{white-space:nowrap!important;padding-left:8px!important;padding-right:8px!important}.archive-cleanup-na{color:#a1aaa5;font-size:13px}
+.archive-cleanup-case-cell .archive-cleanup-address{color:#2870a8;font-size:12px;margin-top:3px}
 </style>
 </head>
 <body>
@@ -40315,6 +40317,7 @@ ${String(ex)}`);
     ["area", "\u5730\u5340"],
     ["caseName", "\u6848\u540D"],
     ["caseNameNote", "\u6848\u540D\u5F8C\u65B9\u5099\u8A3B"],
+    ["showingFollowUp", "\u5E36\u770B\u8FFD\u8E64"],
     ["address", "\u5730\u5740"],
     ["price", "\u958B\u50F9\uFF08\u842C\uFF09"],
     ["reducedPrice", "\u964D\u50F9/\u8ABF\u50F9(\u842C)"],
@@ -40424,6 +40427,7 @@ ${String(ex)}`);
     "area",
     "caseName",
     "caseNameNote",
+    "showingFollowUp",
     "address",
     "developer",
     "price",
@@ -40503,11 +40507,12 @@ ${String(ex)}`);
   var recordEditClass = (key) => `edit-cell edit-${key}`;
   var dateKeys = /* @__PURE__ */ new Set(["entrustStart", "entrustEnd", "reportDate", "updateDate", "groupViewDate", "bookLocationDate", "salesBookDate", "coverChangeDate", "platform591Expiry", "price5168Expiry", "goldExposureExpiry"]);
   var selectOptions = {
+    showingFollowUp: ["", "\u66AB\u505C\u5E36\u770B\uFF0F\u7B49\u5F85\u696D\u52D9\u56DE\u8986"],
     status: ["\u59D4\u8A17\u4E2D", "\u552E\u51FA\u4E0B\u67B6", "\u6210\u4EA4\u4E0B\u67B6", "\u4E0B\u67B6\u6D3D\u958B\u767C"],
     type: ["\u516C\u5BD3\uFF1A5\u6A13\u542B\u4EE5\u4E0B\uFF08\u7121\u96FB\u68AF\uFF09", "\u83EF\u5EC8\uFF1A10\u6A13\u542B\u4EE5\u4E0B\uFF08\u6709\u96FB\u68AF\uFF09", "\u5927\u6A13\uFF1A11\u6A13\u542B\u4EE5\u4E0A\uFF08\u6709\u96FB\u68AF\uFF09", "\u900F\u5929", "\u5EE0\u623F", "\u571F\u5730"],
     currentState: ["\u7A7A\u5C4B", "\u81EA\u4F4F", "\u51FA\u79DF\u4E2D"]
   };
-  var activeColumns = ["propertyNo", "entrustStart", "entrustEnd", "area", "caseName", "address", "type", "price", "direction", "age", "floor", "layout", "indoorPing", "buildingPing", "landPing", "parking", "managementFee", "key", "currentState", "road", "frontage", "depth", "zoning", "coverageFar", "developer", "reportDate", "updateDate", "groupViewDate", "bookLocation", "salesBook", "notes", "photoInfo", "platform591", "yes319", "houseinfor", "windowAd", "led", "homeWeb", "price5168", "goldExposure"];
+  var activeColumns = ["propertyNo", "entrustStart", "entrustEnd", "area", "caseName", "showingFollowUp", "address", "type", "price", "direction", "age", "floor", "layout", "indoorPing", "buildingPing", "landPing", "parking", "managementFee", "key", "currentState", "road", "frontage", "depth", "zoning", "coverageFar", "developer", "reportDate", "updateDate", "groupViewDate", "bookLocation", "salesBook", "notes", "photoInfo", "platform591", "yes319", "houseinfor", "windowAd", "led", "homeWeb", "price5168", "goldExposure"];
   var archiveColumns = ["propertyNo", "entrustPeriod", "caseName", "address", "price", "key", "housingRemoval", "bookLocation", "salesBook", "photoInfo", "platform591", "yes319", "houseinfor", "windowAd", "led", "homeWeb", "price5168", "goldExposure"];
   var publicColumns = ["propertyNo", "area", "caseName", "address", "price", "direction", "age", "floor", "layout", "indoorPing", "buildingPing", "landPing", "parking", "managementFee", "key", "currentState", "road", "frontage", "depth", "zoning", "coverageFar", "developer", "reportDate", "updateDate", "groupViewDate", "photoInfo"];
   var dailyColumns = publicColumns.filter((column) => !["propertyNo", "photoInfo", "contractType", "status"].includes(column));
@@ -42516,6 +42521,7 @@ ${String(ex)}`);
             return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("td", { className: "archive-cleanup-case-cell", children: [
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: stripRestoredDisplay(record.caseName) || "\u672A\u547D\u540D\u6848\u4EF6" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "archive-cleanup-address", children: record.address || "\u672A\u586B\u5BEB\u5730\u5740" }),
                 /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { children: [
                   record.propertyNo || "\u2014",
                   "\u3000",
