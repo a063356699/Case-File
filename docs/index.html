@@ -45347,7 +45347,8 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: parts[2] })
       ] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: parking || "\u2014" });
     }
-    if (["indoorPing", "buildingPing", "landPing"].includes(k)) return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: String(r[k] || "").replace(/\s*坪\s*$/, "").trim() || "\u2014" });
+    if (k === "indoorPing") return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: String(r.registryIndoorPing || r.indoorPing || "").replace(/\s*坪\s*$/, "").trim() || "\u2014" });
+    if (["buildingPing", "landPing"].includes(k)) return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: String(r[k] || "").replace(/\s*坪\s*$/, "").trim() || "\u2014" });
     if (k === "zoning") {
       const chars = Array.from(r.zoning || "");
       const lines = Array.from({ length: Math.ceil(chars.length / 5) }, (_, index) => chars.slice(index * 5, index * 5 + 5).join(""));
