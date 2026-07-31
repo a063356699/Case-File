@@ -42152,7 +42152,7 @@ ${String(ex)}`);
           ] })
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: tab === "activity" ? "active" : "", onClick: () => setTab("activity"), children: "\u6BCF\u65E5\u7269\u4EF6\u52D5\u614B" }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: tab === "inventory" ? "active" : "", onClick: () => setTab("inventory"), children: "\u696D\u52D9\u5EAB\u5B58" }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: tab === "inventory" ? "active" : "", onClick: () => setTab("inventory"), children: "\u7269\u4EF6\u5EAB\u5B58" }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: tab === "tour" ? "active" : "", onClick: () => setTab("tour"), children: "\u5718\u770B\u5B89\u6392" }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: tab === "intake" ? "active" : "", onClick: () => {
           setTab("intake");
@@ -45814,16 +45814,13 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     const [month, setMonth] = (0, import_react.useState)(today().slice(0, 7));
     const activeRecords = records.filter((record) => !record.archived && !isExpired(record) && (record.status || "\u59D4\u8A17\u4E2D") === "\u59D4\u8A17\u4E2D");
     const knownNames = people.filter((person) => person.role !== "\u79D8\u66F8").map((person) => String(person.name || "").trim()).filter(Boolean);
+    const secretaryNames = people.filter((person) => person.role === "\u79D8\u66F8").map((person) => String(person.name || "").trim()).filter(Boolean);
     const namesFor = (record) => {
       const raw = String(record.developer || "").replace(/[\s、，,／/+&和與]/g, "");
-      const matched = knownNames.filter((name) => {
-        const fullName = name.replace(/\s/g, "");
-        const shortName = Array.from(fullName).slice(-2).join("");
-        return raw.includes(fullName) || shortName.length === 2 && raw.includes(shortName);
-      });
-      return matched.length ? matched : developerNameLines(raw);
+      const parsed = [...new Set(developerNameLines(raw, people).filter((name) => !secretaryNames.includes(name)))];
+      return parsed.length ? parsed : ["\u672A\u6B78\u5C6C\u696D\u52D9"];
     };
-    const allNames = Array.from(new Set((knownNames.length ? knownNames : records.flatMap((record) => namesFor(record))).filter(Boolean)));
+    const allNames = Array.from(new Set([...knownNames, ...records.flatMap((record) => namesFor(record))].filter(Boolean)));
     const monthMatches = (value = "") => normalizeDateInput(value).slice(0, 7) === month;
     const weightFor = (record, name) => {
       const names = namesFor(record);
@@ -45989,7 +45986,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     };
     return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", { className: "content business-inventory-page", children: [
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "list-head", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SectionTitle, { title: "\u696D\u52D9\u5EAB\u5B58\u4EF6\u6578\u8868", subtitle: "\u5171\u540C\u958B\u767C\u6848\u4EF6\u4F9D\u4EBA\u6578\u5E73\u5747\u8A08\u7B97" }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SectionTitle, { title: "\u7269\u4EF6\u5EAB\u5B58\u4EF6\u6578\u8868", subtitle: "\u5171\u540C\u958B\u767C\u6848\u4EF6\u4F9D\u4EBA\u6578\u5E73\u5747\u8A08\u7B97\uFF1B\u672A\u5C0D\u61C9\u4EBA\u54E1\u7684\u6848\u4EF6\u5217\u5165\u672A\u6B78\u5C6C\u696D\u52D9" }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "inventory-month", children: [
           "\u7D71\u8A08\u6708\u4EFD",
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "month", value: month, onChange: (event) => setMonth(event.target.value) })
