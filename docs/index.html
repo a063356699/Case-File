@@ -42937,13 +42937,13 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       const visibleDocument = parser.parseFromString(visibleSheetXml, "application/xml");
       if (!isLand) {
         ["A9:A11", "B9:F11", "G9:M11", "G7:J7", "K7:M7", "P44:R44"].forEach((ref) => removeMergedRange(visibleDocument, ref));
-        const mergeCells = visibleDocument.getElementsByTagNameNS(spreadsheetNs, "mergeCells")[0];
+        const mergeCells2 = visibleDocument.getElementsByTagNameNS(spreadsheetNs, "mergeCells")[0];
         ["A9:A11", "B9:F11", "G9:M11", "G7:J7", "K7:M7", "P44:R44"].forEach((ref) => {
           const node = visibleDocument.createElementNS(spreadsheetNs, "mergeCell");
           node.setAttribute("ref", ref);
-          mergeCells.appendChild(node);
+          mergeCells2.appendChild(node);
         });
-        mergeCells.setAttribute("count", String(mergeCells.getElementsByTagNameNS(spreadsheetNs, "mergeCell").length));
+        mergeCells2.setAttribute("count", String(mergeCells2.getElementsByTagNameNS(spreadsheetNs, "mergeCell").length));
         const allCells = Array.from(visibleDocument.getElementsByTagNameNS(spreadsheetNs, "c"));
         const copyStyle = (source, target) => {
           const sourceCell = allCells.find((cell) => cell.getAttribute("r") === source);
@@ -43052,6 +43052,20 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
         }
       });
       Object.entries(directValues).forEach(([address, value]) => setWorksheetCell(visibleDocument, address, value, isLand && address === "M15" ? 12 : address === "M23" ? 16 : 0));
+      const taxRows = isLand ? [{ row: 23, value: taxValue(record.generalLandValueTax || "") }, { row: 24, value: taxValue(record.selfUseLandValueTax || "") }] : [{ row: 33, value: taxValue(record.generalLandValueTax || "") }, { row: 34, value: taxValue(record.selfUseLandValueTax || "") }];
+      const splitTaxRows = taxRows.filter((item) => item.value.startsWith("\u7D04"));
+      const mergeCells = visibleDocument.getElementsByTagNameNS(spreadsheetNs, "mergeCells")[0];
+      splitTaxRows.forEach(({ row: row2, value }) => {
+        removeMergedRange(visibleDocument, `F${row2}:J${row2}`);
+        if (mergeCells) {
+          const merge = visibleDocument.createElementNS(spreadsheetNs, "mergeCell");
+          merge.setAttribute("ref", `G${row2}:J${row2}`);
+          mergeCells.appendChild(merge);
+        }
+        setWorksheetCell(visibleDocument, `F${row2}`, "\u7D04");
+        setWorksheetCell(visibleDocument, `G${row2}`, value.slice(1));
+      });
+      if (mergeCells) mergeCells.setAttribute("count", String(mergeCells.getElementsByTagNameNS(spreadsheetNs, "mergeCell").length));
       setWorksheetCell(visibleDocument, "A4", "");
       setWorksheetRichCell(visibleDocument, "G9", `${price}${price ? "\u842C" : ""}`, { size: 36, font: "Microsoft JhengHei", bold: true, color: "FFFF0000" });
       if (!isLand) {
@@ -43110,6 +43124,26 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
         cellXfs.appendChild(newXf);
         cellXfs.setAttribute("count", String(cellXfs.children.length));
         if (headerCell) headerCell.setAttribute("s", String(cellXfs.children.length - 1));
+        splitTaxRows.forEach(({ row: row2 }) => {
+          const applyTaxAlignment = (address, horizontal) => {
+            const cell = Array.from(visibleDocument.getElementsByTagNameNS(spreadsheetNs, "c")).find((item) => item.getAttribute("r") === address);
+            if (!cell) return;
+            const sourceXf = cellXfs.children[Number(cell.getAttribute("s") || "0")] || cellXfs.children[0];
+            const taxXf = sourceXf.cloneNode(true);
+            let taxAlignment = Array.from(taxXf.getElementsByTagNameNS(spreadsheetNs, "alignment"))[0];
+            if (!taxAlignment) {
+              taxAlignment = stylesDocument.createElementNS(spreadsheetNs, "alignment");
+              taxXf.appendChild(taxAlignment);
+            }
+            taxAlignment.setAttribute("horizontal", horizontal);
+            taxAlignment.setAttribute("vertical", "center");
+            taxAlignment.removeAttribute("indent");
+            cellXfs.appendChild(taxXf);
+            cell.setAttribute("s", String(cellXfs.children.length - 1));
+          };
+          applyTaxAlignment(`F${row2}`, "left");
+          applyTaxAlignment(`G${row2}`, "center");
+        });
         if (!isLand) {
           const priceCell = Array.from(visibleDocument.getElementsByTagNameNS(spreadsheetNs, "c")).find((item) => item.getAttribute("r") === "G9");
           if (priceCell) {
@@ -43462,8 +43496,8 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
           const extraFrameUp = {
             "35": 72e3,
             // 2 照片框：再上 0.2 cm
-            "22": 216e3
-            // 6 位置圖框：累計再上 0.3 cm
+            "22": 288e3
+            // 6 位置圖框：累計再上 0.2 cm
           };
           const shift = up + (extraFrameUp[idNode.getAttribute("id") || ""] || 0);
           Array.from(anchor.getElementsByTagNameNS(xdrNs, "rowOff")).forEach((offset2) => offset2.textContent = String(Math.max(0, Number(offset2.textContent || "0") - shift)));
@@ -43480,10 +43514,10 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
           const width = Number(shapeExtent?.getAttribute("cx") || "1256400");
           const from = Array.from(anchor.children).find((node) => node.localName === "from");
           const captionShift = {
-            "36": 612e3,
-            // 1 照片標題：再上 1 cm
-            "34": 36e3,
-            // 3 格局圖標題：再下 0.1 cm
+            "36": 756e3,
+            // 1 照片標題：再上 0.4 cm
+            "34": -36e3,
+            // 3 格局圖標題：再下 0.2 cm
             "32": 72e3
             // 5 位置圖標題：再上 0.3 cm
           };

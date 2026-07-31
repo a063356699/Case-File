@@ -1255,6 +1255,20 @@ async function downloadColorWorkbook(record: RecordItem, personnel: Person[] = [
     const longFeatureAddresses = new Set<string>();
     featureAddresses.forEach(address => { if (directValues[address]) { const normalized = String(directValues[address]).replace(/[\r\n]+/g, ""); if (Array.from(normalized).length > 27) longFeatureAddresses.add(address); directValues[address] = normalized; } });
     Object.entries(directValues).forEach(([address, value]) => setWorksheetCell(visibleDocument, address, value, isLand && address === "M15" ? 12 : address === "M23" ? 16 : 0));
+    // Separate 「約」 and the amount in tax rows: 「約」 stays at the left,
+    // while the number keeps a centred field of its own.
+    const taxRows = isLand
+      ? [{ row: 23, value: taxValue(record.generalLandValueTax || "") }, { row: 24, value: taxValue(record.selfUseLandValueTax || "") }]
+      : [{ row: 33, value: taxValue(record.generalLandValueTax || "") }, { row: 34, value: taxValue(record.selfUseLandValueTax || "") }];
+    const splitTaxRows = taxRows.filter(item => item.value.startsWith("約"));
+    const mergeCells = visibleDocument.getElementsByTagNameNS(spreadsheetNs, "mergeCells")[0];
+    splitTaxRows.forEach(({ row, value }) => {
+      removeMergedRange(visibleDocument, `F${row}:J${row}`);
+      if (mergeCells) { const merge = visibleDocument.createElementNS(spreadsheetNs, "mergeCell"); merge.setAttribute("ref", `G${row}:J${row}`); mergeCells.appendChild(merge); }
+      setWorksheetCell(visibleDocument, `F${row}`, "約");
+      setWorksheetCell(visibleDocument, `G${row}`, value.slice(1));
+    });
+    if (mergeCells) mergeCells.setAttribute("count", String(mergeCells.getElementsByTagNameNS(spreadsheetNs, "mergeCell").length));
     // The template already contains this company line as an editable text box.
     // Keep A4 empty so the cell text does not overlap the text box.
     setWorksheetCell(visibleDocument, "A4", "");
@@ -1288,6 +1302,20 @@ async function downloadColorWorkbook(record: RecordItem, personnel: Person[] = [
       protection.setAttribute("locked", "0"); protection.setAttribute("hidden", "0");
       cellXfs.appendChild(newXf); cellXfs.setAttribute("count", String(cellXfs.children.length));
       if (headerCell) headerCell.setAttribute("s", String(cellXfs.children.length - 1));
+      splitTaxRows.forEach(({ row }) => {
+        const applyTaxAlignment = (address: string, horizontal: "left" | "center") => {
+          const cell = Array.from(visibleDocument.getElementsByTagNameNS(spreadsheetNs, "c")).find(item => item.getAttribute("r") === address);
+          if (!cell) return;
+          const sourceXf = cellXfs.children[Number(cell.getAttribute("s") || "0")] || cellXfs.children[0];
+          const taxXf = sourceXf.cloneNode(true) as Element;
+          let taxAlignment = Array.from(taxXf.getElementsByTagNameNS(spreadsheetNs, "alignment"))[0];
+          if (!taxAlignment) { taxAlignment = stylesDocument.createElementNS(spreadsheetNs, "alignment"); taxXf.appendChild(taxAlignment); }
+          taxAlignment.setAttribute("horizontal", horizontal); taxAlignment.setAttribute("vertical", "center"); taxAlignment.removeAttribute("indent");
+          cellXfs.appendChild(taxXf); cell.setAttribute("s", String(cellXfs.children.length - 1));
+        };
+        applyTaxAlignment(`F${row}`, "left");
+        applyTaxAlignment(`G${row}`, "center");
+      });
       if (!isLand) {
         const priceCell = Array.from(visibleDocument.getElementsByTagNameNS(spreadsheetNs, "c")).find(item => item.getAttribute("r") === "G9");
         if (priceCell) {
@@ -1565,7 +1593,7 @@ async function downloadColorWorkbook(record: RecordItem, personnel: Person[] = [
         if (!idNode) return;
         const extraFrameUp: Record<string, number> = {
           "35": 72000,  // 2 照片框：再上 0.2 cm
-          "22": 216000, // 6 位置圖框：累計再上 0.3 cm
+          "22": 288000, // 6 位置圖框：累計再上 0.2 cm
         };
         const shift = up + (extraFrameUp[idNode.getAttribute("id") || ""] || 0);
         Array.from(anchor.getElementsByTagNameNS(xdrNs, "rowOff")).forEach(offset => offset.textContent = String(Math.max(0, Number(offset.textContent || "0") - shift)));
@@ -1584,8 +1612,8 @@ async function downloadColorWorkbook(record: RecordItem, personnel: Person[] = [
         const width = Number(shapeExtent?.getAttribute("cx") || "1256400");
         const from = Array.from(anchor.children).find(node => node.localName === "from");
         const captionShift: Record<string, number> = {
-          "36": 612000, // 1 照片標題：再上 1 cm
-          "34": 36000,  // 3 格局圖標題：再下 0.1 cm
+          "36": 756000, // 1 照片標題：再上 0.4 cm
+          "34": -36000, // 3 格局圖標題：再下 0.2 cm
           "32": 72000,  // 5 位置圖標題：再上 0.3 cm
         };
         const shift = captionShift[idNode.getAttribute("id") || ""] || 0;
