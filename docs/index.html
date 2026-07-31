@@ -656,7 +656,7 @@
 .daily-card .daily-table th.col-price,.daily-card .daily-table td.col-price{width:82px!important;min-width:82px!important;max-width:82px!important;vertical-align:middle!important;text-align:center!important}.daily-card .daily-table td.col-price .two-line-value{align-items:center!important;text-align:center!important}.daily-card .daily-table td.col-price .two-line-value b{color:#17242a!important;font-weight:800!important}.daily-card .daily-table td.col-price .price-reduction{display:block!important;color:#ff0000!important;font-weight:900!important}
 .expiry-settings-panel h3,.personnel-head h3{cursor:pointer}.expiry-settings-panel h3:hover,.personnel-head h3:hover{color:var(--green)}
 .expiry-settings-panel:not(.expiry-open)>p,.expiry-settings-panel:not(.expiry-open)>.form-grid{display:none}.expiry-settings-panel h3{display:flex;align-items:center;justify-content:space-between;margin:0}.expiry-toggle{padding:7px 14px;color:var(--green);border-color:#b9cfc4;background:#f3f8f4}
-.advanced-filter-button{background:#eef6f1;border-color:#b9d3c5;color:#176044}.advanced-filter-modal{width:min(1040px,96vw)}.advanced-filter-body{padding:18px 24px 26px;display:grid;gap:18px}.advanced-filter-body section{border:1px solid #dbe4de;background:#fbfdfb;border-radius:11px;padding:15px}.advanced-filter-body h3{margin:0 0 12px;font-size:15px;color:#234b3d}.advanced-filter-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px 12px}.filter-field{display:flex;flex-direction:column;gap:5px;min-width:0}.filter-field>span{font-size:12px;font-weight:800;color:#51665d}.filter-field input,.filter-field select{min-width:0;width:100%;border:1px solid #c9d4cd;border-radius:7px;padding:8px 9px;background:#fff}.range-field>div{display:flex;align-items:center;gap:5px}.range-field input{min-width:0}.range-field i{font-style:normal;color:#738078;font-size:12px}.range-field em{font-style:normal;color:#6f7b75;font-size:12px;white-space:nowrap}.filter-help{margin:-4px 0 10px!important;color:#738078!important;font-size:12px!important}.website-filter-grid{grid-template-columns:repeat(4,minmax(0,1fr))}@media(max-width:800px){.advanced-filter-grid,.website-filter-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.advanced-filter-body{padding:14px}.advanced-filter-modal{width:100vw;height:100vh;max-height:100vh;border-radius:0}}
+.advanced-filter-button{background:#eef6f1;border-color:#b9d3c5;color:#176044}.advanced-filter-modal{width:min(1540px,98vw)}.advanced-filter-body{padding:18px 20px 26px;display:grid;grid-template-columns:1.25fr 1fr 1.25fr 1fr;gap:0;align-items:start}.advanced-filter-body section{min-width:0;min-height:100%;border:0;border-right:1px solid #d8dedb;background:#fff;border-radius:0;padding:6px 22px 18px}.advanced-filter-body section:last-child{border-right:0}.advanced-filter-body h3{margin:0 0 14px;font-size:17px;color:#243b33}.advanced-filter-grid,.website-filter-grid{display:grid;grid-template-columns:1fr;gap:13px}.filter-field{display:flex;flex-direction:column;gap:6px;min-width:0}.filter-field>span{font-size:14px;font-weight:800;color:#354a42}.filter-field input,.filter-field select{min-width:0;width:100%;height:40px;border:1px solid #c7cfcb;border-radius:6px;padding:8px 9px;background:#fff;font-size:14px}.range-field>div{display:flex;align-items:center;gap:6px}.range-field input{min-width:0}.range-field i{font-style:normal;color:#606e67;font-size:13px}.range-field em{font-style:normal;color:#606e67;font-size:13px;white-space:nowrap}.choice-field>div{display:flex;flex-wrap:wrap;gap:8px 13px}.choice-field label{display:inline-flex;align-items:center;gap:5px;cursor:pointer;white-space:nowrap}.choice-field label input{width:19px;height:19px;margin:0;padding:0;accent-color:#f06b21}.choice-field label b{font-size:14px;font-weight:500;color:#27342f}.filter-help{margin:-5px 0 12px!important;color:#738078!important;font-size:12px!important}@media(max-width:1100px){.advanced-filter-body{grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.advanced-filter-body section:nth-child(2){border-right:0}}@media(max-width:800px){.advanced-filter-body{grid-template-columns:1fr;padding:14px}.advanced-filter-body section{border-right:0;border-bottom:1px solid #d8dedb;padding:8px 5px 18px}.advanced-filter-modal{width:100vw;height:100vh;max-height:100vh;border-radius:0}}
 .personnel-panel:not(.personnel-open)>.personnel-table,.personnel-panel:not(.personnel-open)>.former-people,.personnel-panel:not(.personnel-open) .personnel-head .primary{display:none}.personnel-toggle{padding:7px 14px;color:var(--green);border-color:#b9cfc4;background:#f3f8f4}
 .clear-filter-button{background:#fff;border-color:#b9cfc4;color:#176044}.active-lead-table{max-height:calc(100vh - 205px)}.active-lead-table th{padding-top:7px!important;padding-bottom:7px!important}.active-lead-table td{height:34px!important;padding-top:4px!important;padding-bottom:4px!important}.active-lead-table .area-group-row td{height:28px!important;padding-top:4px!important;padding-bottom:4px!important}
 .archive-cleanup-case .archive-cleanup-meta{font-size:11px;color:#66736d;white-space:nowrap;font-weight:500}
@@ -45071,9 +45071,9 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     const dateRange = (from, to, label) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "filter-field range-field", children: [
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: label }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { value: value[from] || "", placeholder: "115/7/24", onChange: (event) => change(from, event.target.value) }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { value: value[from] || "", "aria-label": `${label}\u958B\u59CB`, onChange: (event) => change(from, event.target.value) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("i", { children: "\u81F3" }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { value: value[to] || "", placeholder: "115/7/24", onChange: (event) => change(to, event.target.value) })
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { value: value[to] || "", "aria-label": `${label}\u7D50\u675F`, onChange: (event) => change(to, event.target.value) })
       ] })
     ] });
     const numberRange = (from, to, label, unit = "") => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "filter-field range-field", children: [
@@ -45092,6 +45092,16 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
         options.map((option) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: option, children: option === "filled" ? "\u5DF2\u586B" : option === "empty" ? "\u672A\u586B" : option }, option))
       ] })
     ] });
+    const choices = (key, label, options) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "filter-field choice-field", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: label }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { children: options.map((option) => {
+        const shown = option === "filled" ? "\u5DF2\u586B" : option === "empty" ? "\u672A\u586B" : option;
+        return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: value[key] === option, onChange: () => change(key, value[key] === option ? "" : option) }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: shown })
+        ] }, option);
+      }) })
+    ] });
     const sites = [["yes319", "YES319"], ["houseinfor", "HOUSE INFOR"], ["homeWeb", "\u6211\u5BB6\u7DB2"], ["platform591", "591"], ["price5168", "5168"], ["windowAd", "\u6AE5\u7A97"], ["led", "LED"], ["goldExposure", "\u9EC3\u91D1\u66DD\u5149"]];
     return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "modal-backdrop", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal advanced-filter-modal", children: [
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal-head", children: [
@@ -45108,15 +45118,15 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
             text("propertyNo", "\u7269\u4EF6\u7DE8\u865F"),
             text("caseName", "\u6848\u540D"),
             text("address", "\u5730\u5740"),
-            select("type", "\u7A2E\u985E", ["\u900F\u5929", "\u83EF\u5EC8", "\u5927\u6A13", "\u516C\u5BD3", "\u5EE0\u623F", "\u571F\u5730"]),
+            choices("type", "\u7A2E\u985E", ["\u900F\u5929", "\u83EF\u5EC8", "\u5927\u6A13", "\u516C\u5BD3", "\u5EE0\u623F", "\u571F\u5730"]),
             text("direction", "\u671D\u5411"),
             text("developer", "\u958B\u767C\u696D\u52D9"),
             text("zoning", "\u4F7F\u7528\u5206\u5340"),
             text("key", "\u9470\u5319"),
             text("currentState", "\u73FE\u6CC1"),
-            select("parking", "\u8ECA\u4F4D", ["\u5761\u9053", "\u5E73\u9762", "\u6A5F\u68B0", "\u6607\u964D", "\u5EAD\u9662", "\u5E73\u79FB"]),
-            select("salesBook", "\u92B7\u552E\u672C", ["\u88FD\u4F5C", "\u672A\u88FD\u4F5C", "\u5B8C\u6210"]),
-            select("photoInfo", "\u7167\u7247", ["filled", "empty"])
+            choices("parking", "\u8ECA\u4F4D", ["\u5761\u9053", "\u5E73\u9762", "\u6A5F\u68B0", "\u6607\u964D", "\u5EAD\u9662", "\u5E73\u79FB"]),
+            choices("salesBook", "\u92B7\u552E\u672C", ["\u88FD\u4F5C", "\u672A\u88FD\u4F5C", "\u5B8C\u6210"]),
+            choices("photoInfo", "\u7167\u7247", ["filled", "empty"])
           ] })
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", { children: [
@@ -45150,8 +45160,8 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", { children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { children: "\u7DB2\u7AD9\u7DE8\u865F" }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { className: "filter-help", children: "\u9078\u64C7\u300C\u5DF2\u586B\u300D\u6216\u300C\u672A\u586B\u300D\u53EF\u540C\u6642\u7BE9\u9078\u591A\u500B\u7DB2\u7AD9\u3002" }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "advanced-filter-grid website-filter-grid", children: sites.map(([key, label]) => select(key, label, ["filled", "empty"])) })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { className: "filter-help", children: "\u52FE\u9078\u300C\u5DF2\u586B\u300D\u6216\u300C\u672A\u586B\u300D\uFF0C\u53EF\u548C\u5176\u4ED6\u689D\u4EF6\u4E00\u8D77\u7BE9\u9078\u3002" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "advanced-filter-grid website-filter-grid", children: sites.map(([key, label]) => choices(key, label, ["filled", "empty"])) })
         ] })
       ] }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal-foot", children: [
