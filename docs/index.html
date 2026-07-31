@@ -40998,11 +40998,13 @@ ${String(ex)}`);
   var displayNoteSegments = (value = "") => String(value || "").split(/[；;]/).map((part) => part.trim()).filter((part) => part && !/^(?:0|無)$/.test(part)).map((part) => part.includes("\u958B\u767C%") && !/^中人[:：]/.test(part) ? `\u4E2D\u4EBA:${part}` : part);
   var websiteCellDisplay = (record, key) => {
     const raw = String(record[key] || "").trim();
+    const down = record[`${key}DownDate`] ? `${displayRocDate(record[`${key}DownDate`])}\u4E0B\u67B6` : "";
+    const price5168Listed = key === "price5168" ? raw.match(/^(\d{3,4}[.\/-]\d{1,2}[.\/-]\d{1,2})\s*(\u4E0A)$/) : null;
+    if (price5168Listed) return { value: price5168Listed[1], notes: [price5168Listed[2], down].filter(Boolean) };
     const expiryKey = key === "platform591" ? "platform591Expiry" : key === "price5168" ? "price5168Expiry" : key === "goldExposure" ? "goldExposureExpiry" : "";
     const detectedExpiry = expiryKey ? websiteEffectiveDate(raw) : "";
     const expiryDate = expiryKey ? record[expiryKey] || detectedExpiry : "";
     const expiry = expiryDate ? `${displayRocDate(expiryDate)}\u5230\u671F` : "";
-    const down = record[`${key}DownDate`] ? `${displayRocDate(record[`${key}DownDate`])}\u4E0B\u67B6` : "";
     const visibleRaw = raw.replace(/有效期\s*[:：]?\s*\d{3,4}[.\/-]\d{1,2}[.\/-]\d{1,2}/g, "").replace(/\d{3,4}[.\/-]\d{1,2}[.\/-]\d{1,2}\s*刊登到期/g, "").replace(/[\s,，;；]+$/g, "").trim();
     if (!visibleRaw || /^(?:無|旁5)$/i.test(visibleRaw)) return expiryDate ? { value: displayRocDate(expiryDate), notes: ["\u5230\u671F", down].filter(Boolean) } : { value: visibleRaw || "\u2014", notes: [down].filter(Boolean) };
     const lines = visibleRaw.split(/\r?\n/).map((value) => value.trim()).filter(Boolean);
