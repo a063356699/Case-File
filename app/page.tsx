@@ -2155,18 +2155,21 @@ function PropertyBookReview({ records, submit }: { records: RecordItem[]; submit
 }
 
 function BusinessReportInbox({ records, resolve, archive }: { records: RecordItem[]; resolve: (record: RecordItem, reportKey: string, keepActive?: boolean) => void; archive: (record: RecordItem, status: string) => void }) {
+  const [developerFilter, setDeveloperFilter] = useState("");
   const items = records.flatMap(record => {
     let reports: Record<string, any> = {}; try { reports = JSON.parse(record._monthlyReports || "{}"); } catch {}
     return Object.entries(reports).map(([key, report]) => ({ record, key, report })).filter(item => item.report?.status && item.report.status !== "委託中" && !item.report.adminHandledAt);
   }).sort((a, b) => String(b.report.reportedAt || "").localeCompare(String(a.report.reportedAt || "")));
   if (!items.length) return null;
+  const developers = Array.from(new Set(items.flatMap(item => developerNameLines(item.record.developer))));
+  const shownItems = developerFilter ? items.filter(item => developerNameLines(item.record.developer).includes(developerFilter)) : items;
   const action = (item: { record: RecordItem; key: string; report: any }) => {
     if (item.report.status === "售出下架") return <button className="primary" onClick={() => archive(item.record, "售出下架")}>確認售出下架</button>;
     if (item.report.status === "下架洽開發") return <button className="primary" onClick={() => archive(item.record, "下架洽開發")}>確認下架</button>;
     if (item.report.status === "請跟開發業務2確認") return <small className="business-report-wait">等待另一位開發確認委託中</small>;
     return <button onClick={() => resolve(item.record, item.key)}>已查看，等待再次確認</button>;
   };
-  return <section className="business-report-inbox"><header><div><b>業務回報待處理</b><span>業務回傳後，請在此完成下架或確認作業</span></div><strong>{items.length} 筆</strong></header><div className="business-report-list">{items.map(item => <article key={`${item.record.id}-${item.key}`}><div className="business-report-case"><b>{item.record.caseName || item.record.propertyNo}</b><small>{item.record.propertyNo}　開發：{item.record.developer || "未填"}</small><span>回報：<em>{item.report.status}</em>{item.report.reason ? `　原因：${item.report.reason}` : ""}</span>{item.report.status === "待確認" && item.report.dueDate && <i>下次確認：{displayRocDate(item.report.dueDate)}</i>}</div><div className="business-report-meta"><div className="business-report-developers">{developerNameLines(item.record.developer).map(name => <span key={name}>#{name}</span>)}</div><small>{item.report.personName || "業務人員"}　{new Date(item.report.reportedAt || Date.now()).toLocaleString("zh-TW")}</small>{action(item)}</div></article>)}</div></section>;
+  return <section className="business-report-inbox"><header><div><div className="business-report-title-row"><b>業務回報待處理</b><div className="business-report-developer-filter">{developers.map(name => <button key={name} className={developerFilter === name ? "selected" : ""} onClick={() => setDeveloperFilter(current => current === name ? "" : name)}>#{name}</button>)}</div></div><span>業務回傳後，請在此完成下架或確認作業</span></div><strong>{shownItems.length}{developerFilter ? `／${items.length}` : ""} 筆</strong></header><div className="business-report-list">{shownItems.map(item => <article key={`${item.record.id}-${item.key}`}><div className="business-report-case"><b>{item.record.caseName || item.record.propertyNo}</b><small>{item.record.propertyNo}　開發：{item.record.developer || "未填"}</small><span>回報：<em>{item.report.status}</em>{item.report.reason ? `　原因：${item.report.reason}` : ""}</span>{item.report.status === "待確認" && item.report.dueDate && <i>下次確認：{displayRocDate(item.report.dueDate)}</i>}</div><div className="business-report-meta"><small>{item.report.personName || "業務人員"}　{new Date(item.report.reportedAt || Date.now()).toLocaleString("zh-TW")}</small>{action(item)}</div></article>)}</div></section>;
 }
 
 function MonthlyPropertyReport({ records, person, submit }: { records: RecordItem[]; person: Person; submit: (record: RecordItem, status: string, reason: string) => void }) {
