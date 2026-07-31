@@ -644,6 +644,7 @@
 .business-report-title-row{display:flex;align-items:center;gap:9px;flex-wrap:wrap}.business-report-developer-filter{display:flex;gap:4px;flex-wrap:wrap}.business-report-developer-filter button{border:1px solid #ecc5b8;border-radius:999px;padding:3px 8px;background:#fff;color:#9a4135;font-size:11px;font-weight:750}.business-report-developer-filter button.selected{background:#9a4135;border-color:#9a4135;color:#fff}
 .book-record-line{display:flex!important;align-items:center;gap:6px;min-width:0;color:#526a75!important;font-size:11px!important;font-weight:400!important;line-height:1.35;white-space:nowrap}.book-record-line span:first-child{flex:none}.book-record-line span:last-child{min-width:0;overflow:hidden;text-overflow:ellipsis}.book-review-side{display:flex;flex:none;flex-direction:column;align-items:flex-end;justify-content:center;gap:2px}.book-current-note{display:block!important;margin:0!important;color:#2878ad!important;font-size:11px!important;font-weight:400!important;line-height:1.25;white-space:nowrap}
 .internal-public-app .login-card p{color:#0066cc}
+.website-list-value .website-inline-note{display:block!important;margin-top:2px!important;color:#2878ad!important;font-size:11px!important;font-weight:500!important;line-height:1.25!important;white-space:nowrap!important}
 </style>
 </head>
 <body>
@@ -40919,21 +40920,23 @@ ${String(ex)}`);
     return parsed.map((part) => `${part.label || "\u671D\u5411"}\u671D${part.facing}`).join("\uFF0F");
   };
   var displayNoteSegments = (value = "") => String(value || "").split(/[；;]/).map((part) => part.trim()).filter((part) => part && !/^(?:0|無)$/.test(part)).map((part) => part.includes("\u958B\u767C%") && !/^中人[:：]/.test(part) ? `\u4E2D\u4EBA:${part}` : part);
-  var websiteListNote = (record) => [
-    ["591", "platform591"],
-    ["YES319", "yes319"],
-    ["HOUSE INFOR", "houseinfor"],
-    ["\u6AE5\u7A97", "windowAd"],
-    ["LED", "led"],
-    ["\u6211\u5BB6\u7DB2", "homeWeb"],
-    ["5168", "price5168"],
-    ["\u9EC3\u91D1\u66DD\u5149", "goldExposure"]
-  ].flatMap(([label, key]) => {
+  var websiteCellDisplay = (record, key) => {
     const raw = String(record[key] || "").trim();
-    if (!raw || /^(?:無|旁5)$/i.test(raw)) return [];
-    const note = raw.replace(/[0-9０-９A-Za-zＡ-Ｚａ-ｚ]/g, "").replace(/[\s－—–_\-／/、,，.:：#＃()（）\[\]【】]/g, "").replace(label, "");
-    return /[\u4e00-\u9fff]/.test(note) ? [`${label}${note}`] : [];
-  }).join("\u3000");
+    const expiryKey = key === "platform591" ? "platform591Expiry" : key === "price5168" ? "price5168Expiry" : key === "goldExposure" ? "goldExposureExpiry" : "";
+    const expiry = expiryKey && record[expiryKey] ? `${displayRocDate(record[expiryKey])}\u5230\u671F` : "";
+    const down = record[`${key}DownDate`] ? `${displayRocDate(record[`${key}DownDate`])}\u4E0B\u67B6` : "";
+    if (!raw || /^(?:無|旁5)$/i.test(raw)) return { value: raw || "\u2014", notes: [expiry, down].filter(Boolean) };
+    const lines = raw.split(/\r?\n/).map((value) => value.trim()).filter(Boolean);
+    const compact = lines.join(" ");
+    const leadingCode = compact.match(/^([0-9A-Za-zＡ-Ｚａ-ｚ][0-9A-Za-zＡ-Ｚａ-ｚ_－—\-]*)/);
+    if (leadingCode) {
+      const value = leadingCode[1];
+      const note = compact.slice(value.length).replace(/^[\s／/、,，.:：#＃()（）\[\]【】－—\-]+/, "").trim();
+      return { value, notes: [note, expiry, down].filter(Boolean) };
+    }
+    const parts = compact.split(/[－—\-\n]/).map((value) => value.trim()).filter(Boolean);
+    return { value: parts.shift() || "\u2014", notes: [...parts, expiry, down].filter(Boolean) };
+  };
   var colorSheetAttention = (value = "", additionNotes = "") => {
     const addition = String(additionNotes || "").trim().replace(/^增建[:：]\s*/, "");
     const notes = displayNoteSegments(value).filter((part) => !/(?:中人|介紹費|開發\s*%)/.test(part)).filter((part) => !/^增建[:：]/.test(part));
@@ -44823,7 +44826,6 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
         const archiveDateLabel = displayRocDate(archiveDate);
         const archiveLabel = `${archiveDateLabel}${r.archived ? r.status || "\u4E0B\u67B6" : "\u5230\u671F\u4E0B\u67B6"}`;
         const restoredLabel = r._restoredAt ? `${displayRocDate(r._restoredAt)}\u91CD\u65B0\u4E0A\u67B6` : "";
-        const websiteNote = websiteListNote(r);
         const expiryDays = daysUntil(r.entrustEnd);
         return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_react.Fragment, { children: [
           showAreaGroups && (recordIndex === 0 || areaGroup(records[recordIndex - 1]) !== areaGroup(r)) && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("tr", { className: "area-group-row", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { colSpan: columns.length + (showPpt ? 2 : 0), children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: areaGroup(r) }) }) }),
@@ -44840,7 +44842,6 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
             ] }) : k === "caseName" ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "case-link", onClick: () => onEdit(r), children: chunkText(r.caseName || "\u2014", activeLead ? 12 : 15).map((line, lineIndex) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "case-name-line", children: line }, `${line}-${lineIndex}`)) }),
               r.caseNameNote && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "case-name-note", children: r.caseNameNote }),
-              activeLead && websiteNote && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "website-list-note", children: websiteNote }),
               activeLead && restoredLabel && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "restore-case-annotation", children: restoredLabel }),
               archiveMode && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "archive-case-annotation", children: archiveLabel })
             ] }) : k === "status" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: `status ${displayStatus(r) === "\u59D4\u8A17\u4E2D" ? "live" : "off"}`, children: displayStatus(r) }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CellContent, { record: r, column: k }) }, k)),
@@ -44941,12 +44942,10 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     ] });
     if (["platform591", "price5168", "goldExposure", "yes319", "houseinfor", "homeWeb", "windowAd", "led"].includes(k)) {
       if (r[`${k}None`] === "1") return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: "\u7121" });
+      const website = websiteCellDisplay(r, k);
       return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "two-line-value website-list-value", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: r[k] || "\u2014" }),
-        r[`${k}DownDate`] && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { className: "archive-down-note", children: [
-          displayRocDate(r[`${k}DownDate`]),
-          "\u4E0B\u67B6"
-        ] })
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: website.value }),
+        website.notes.map((note, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "website-inline-note", children: note }, `${note}-${index}`))
       ] });
     }
     if (k === "salesBook") return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "two-line-value archive-field-value", children: [
