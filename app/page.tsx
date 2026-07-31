@@ -279,7 +279,7 @@ const clearImportedContractChangePlaceholders = (record: RecordItem): RecordItem
   return Object.keys(cleared).length ? { ...record, ...cleared } : record;
 };
 const clearImportedLandLabels = (record: RecordItem): RecordItem => {
-  const landOnly = (value: unknown) => /^(?:\s*(?:土地|建地)\s*)+$/.test(String(value ?? ""));
+  const landOnly = (value: unknown) => /^(?:土地|建地)+$/.test(String(value ?? "").replace(/[\s／/]/g, ""));
   const cleared = Object.fromEntries(["titleFloor", "currentFloor", "layout"].filter(key => landOnly(record[key])).map(key => [key, ""]));
   return Object.keys(cleared).length ? { ...record, ...cleared } : record;
 };
