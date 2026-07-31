@@ -668,6 +668,7 @@
 .archive-cleanup-modal{width:min(1180px,97vw)!important}.archive-cleanup-table-wrap{max-height:68vh;overflow:auto;padding:14px 18px}.archive-cleanup-table{width:100%;border-collapse:collapse;table-layout:fixed}.archive-cleanup-table th,.archive-cleanup-table td{border:1px solid #d8ded9;padding:9px 7px;text-align:center;vertical-align:middle}.archive-cleanup-table th{background:#e4e8e5;color:#17241f;font-size:14px;white-space:nowrap}.archive-cleanup-table th:first-child{width:34%}.archive-cleanup-table th:nth-child(2),.archive-cleanup-table th:nth-child(3),.archive-cleanup-table th:nth-child(4){width:13%}.archive-cleanup-table th:last-child{width:27%}.archive-cleanup-case-cell{text-align:left!important}.archive-cleanup-case-cell b{display:block;color:#111;font-size:14px;font-weight:700}.archive-cleanup-case-cell small{display:block;margin-top:4px;color:#68736e;font-size:11px}.archive-cleanup-table button{padding:6px 9px;border-color:#e0aaa4;color:#b52d26;background:#fff8f7;font-size:12px;white-space:nowrap}.archive-cleanup-websites{display:flex;gap:5px;justify-content:center;align-items:center;flex-wrap:wrap}.archive-cleanup-done{color:#477564;font-size:12px;font-weight:700}
 .cover-pill-parkingMethod .pill-options button{min-width:80px!important;padding:7px 8px!important;font-size:13px!important;line-height:1.1!important;white-space:nowrap!important;word-break:keep-all!important}
 .archive-cleanup-table{table-layout:auto!important;width:auto!important;min-width:100%!important}.archive-cleanup-table th,.archive-cleanup-table td{width:1%!important;padding:6px 2px!important;white-space:nowrap!important}.archive-cleanup-table th:first-child,.archive-cleanup-table td:first-child{width:auto!important;min-width:260px!important}.archive-cleanup-case-cell{white-space:normal!important}.archive-cleanup-websites{display:flex!important;flex-direction:column!important;align-items:stretch!important;justify-content:flex-start!important;gap:3px!important;white-space:nowrap!important}.archive-cleanup-websites button{display:block!important;width:100%!important;margin:0!important;padding:5px 3px!important}
+.archive-cleanup-website-row{padding:3px 2px!important}.archive-cleanup-website-row button{display:block!important;width:100%!important;margin:0!important;padding:6px 4px!important}.inventory-month-controls{display:flex;align-items:center;gap:9px;flex-wrap:wrap}.inventory-month-controls>b{font-size:18px;color:#283d35;white-space:nowrap}.inventory-month-controls>button{min-height:46px;padding:9px 17px;border-radius:12px;font-size:16px;font-weight:800;background:#fff}.inventory-month-controls>button.selected{background:#176044;color:#fff;border-color:#176044}.inventory-month{display:flex!important;align-items:center!important;gap:8px!important;margin:0!important;font-size:16px!important;font-weight:800!important}.inventory-month>span{white-space:nowrap}.inventory-month input{min-width:175px!important;height:46px!important;padding:8px 12px!important;border-radius:12px!important;font-size:17px!important;font-weight:800!important}
 </style>
 </head>
 <body>
@@ -40670,6 +40671,7 @@ ${String(ex)}`);
     const d = /* @__PURE__ */ new Date(`${iso}T00:00:00`);
     return d.getFullYear() === year && d.getMonth() + 1 === month && d.getDate() === day ? iso : text;
   };
+  var normalizeCompleteDateInput = (value = "") => /^\d{2,4}[.\/-]\d{1,2}[.\/-]\d{2}$/.test(value.trim()) ? normalizeDateInput(value) : value;
   var websiteEffectiveDate = (value = "") => {
     const text = String(value || "");
     const matched = text.match(/有效期\s*[:：]?\s*(\d{3,4}[.\/-]\d{1,2}[.\/-]\d{1,2})/) || text.match(/(\d{3,4}[.\/-]\d{1,2}[.\/-]\d{1,2})\s*刊登到期/);
@@ -42412,19 +42414,22 @@ ${String(ex)}`);
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "\u92B7\u552E\u672C\u4E0B\u67B6" }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "\u7DB2\u7AD9\u4E0B\u67B6" })
           ] }) }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("tbody", { children: pendingArchiveCleanup.map(({ record, tasks }) => {
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("tbody", { children: pendingArchiveCleanup.flatMap(({ record, tasks }) => {
             const buttonFor = (key) => {
               const task = tasks.find((item) => item.key === key);
               return task ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => completeArchiveCleanup(record, task.key), children: "\u5B8C\u6210\u4E0B\u67B6" }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "archive-cleanup-done", children: "\u5DF2\u5B8C\u6210" });
             };
             const websiteTasks = tasks.filter((task) => !["housingDownDate", "bookDownDate", "salesBookDownDate"].includes(task.key));
-            return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("td", { className: "archive-cleanup-case-cell", children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: stripRestoredDisplay(record.caseName) || "\u672A\u547D\u540D\u6848\u4EF6" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { children: [record.propertyNo || "\u2014", "\u3000", displayRocDate(record.archived || ""), record.status || "\u4E0B\u67B6"] })] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: buttonFor("housingDownDate") }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: buttonFor("bookDownDate") }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: buttonFor("salesBookDownDate") }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { className: "archive-cleanup-websites", children: websiteTasks.length ? websiteTasks.map((task) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => completeArchiveCleanup(record, task.key), children: task.label }, task.key)) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "archive-cleanup-done", children: "\u5DF2\u5B8C\u6210" }) })
-            ] }, record.id);
+            const rows = websiteTasks.length ? websiteTasks : [null];
+            return rows.map((websiteTask, rowIndex) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { children: [
+              rowIndex === 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("td", { rowSpan: rows.length, className: "archive-cleanup-case-cell", children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: stripRestoredDisplay(record.caseName) || "\u672A\u547D\u540D\u6848\u4EF6" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { children: [record.propertyNo || "\u2014", "\u3000", displayRocDate(record.archived || ""), record.status || "\u4E0B\u67B6"] })] }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { rowSpan: rows.length, children: buttonFor("housingDownDate") }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { rowSpan: rows.length, children: buttonFor("bookDownDate") }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { rowSpan: rows.length, children: buttonFor("salesBookDownDate") })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { className: "archive-cleanup-website-row", children: websiteTask ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => completeArchiveCleanup(record, websiteTask.key), children: websiteTask.label }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "archive-cleanup-done", children: "\u5DF2\u5B8C\u6210" }) })
+            ] }, `${record.id}-${websiteTask?.key || "complete"}`));
           }) })
         ] }) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal-foot", children: [
@@ -45834,6 +45839,13 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
   }
   function BusinessInventory({ records, people }) {
     const [month, setMonth] = (0, import_react.useState)(today().slice(0, 7));
+    const monthAt = (offset) => {
+      const [year, value] = today().slice(0, 7).split("-").map(Number);
+      const date = new Date(year, value - 1 + offset, 1);
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+    };
+    const previousMonth = monthAt(-1), currentMonth = monthAt(0);
+    const shortMonth = (value) => `${Number(value.split("-")[1])}\u6708`;
     const activeRecords = records.filter((record) => !record.archived && !isExpired(record) && (record.status || "\u59D4\u8A17\u4E2D") === "\u59D4\u8A17\u4E2D");
     const knownNames = people.filter((person) => person.role !== "\u79D8\u66F8").map((person) => String(person.name || "").trim()).filter(Boolean);
     const secretaryNames = people.filter((person) => person.role === "\u79D8\u66F8").map((person) => String(person.name || "").trim()).filter(Boolean);
@@ -46009,9 +46021,14 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", { className: "content business-inventory-page", children: [
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "list-head", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SectionTitle, { title: "\u7269\u4EF6\u5EAB\u5B58\u4EF6\u6578\u8868", subtitle: "\u5171\u540C\u958B\u767C\u6848\u4EF6\u4F9D\u4EBA\u6578\u5E73\u5747\u8A08\u7B97\uFF1B\u672A\u5C0D\u61C9\u4EBA\u54E1\u7684\u6848\u4EF6\u5217\u5165\u672A\u6B78\u5C6C\u696D\u52D9" }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "inventory-month", children: [
-          "\u7D71\u8A08\u6708\u4EFD",
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "month", value: month, onChange: (event) => setMonth(event.target.value) })
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "inventory-month-controls", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u7D71\u8A08\u6708\u4EFD" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { className: month === previousMonth ? "selected" : "", onClick: () => setMonth(previousMonth), children: ["\u4E0A\u6708 ", shortMonth(previousMonth)] }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { className: month === currentMonth ? "selected" : "", onClick: () => setMonth(currentMonth), children: ["\u672C\u6708 ", shortMonth(currentMonth)] }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "inventory-month", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u9078\u6708\u4EFD" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "month", value: month, onChange: (event) => setMonth(event.target.value) })
+          ] })
         ] })
       ] }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "inventory-columns", children: [
@@ -46303,12 +46320,12 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     ] });
     if (fieldKey === "updateDate") return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "field update-date-field", children: [
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: label }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", inputMode: "numeric", value: displayRocDate(value), onChange: (e) => set(e.target.value), onBlur: (e) => set(normalizeDateInput(e.target.value)), placeholder: "\u4F8B\u5982 115/7/29" }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", inputMode: "numeric", value: displayRocDate(value), onChange: (e) => set(normalizeCompleteDateInput(e.target.value)), onBlur: (e) => set(normalizeDateInput(e.target.value)), placeholder: "\u4F8B\u5982 115/7/29" }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: record.lastModifiedAt ? `\u6700\u5F8C\u4FEE\u6539:${displayModifiedAt(record.lastModifiedAt)}` : "\u5C1A\u7121\u4FEE\u6539\u6642\u9593" })
     ] });
     if (dateKeys.has(fieldKey)) return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: `field ${value && !validDate(value) ? "invalid" : ""}`, children: [
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: label }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", inputMode: "numeric", placeholder: "\u4F8B\u5982 7/24", value: displayRocDate(value), onChange: (e) => set(e.target.value), onBlur: (e) => set(normalizeDateInput(e.target.value)) }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", inputMode: "numeric", placeholder: "\u4F8B\u5982 7/24", value: displayRocDate(value), onChange: (e) => set(normalizeCompleteDateInput(e.target.value)), onBlur: (e) => set(normalizeDateInput(e.target.value)) }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "\u53EF\u8F38\u5165 7/24\uFF0C\u81EA\u52D5\u8F49\u70BA\u6C11\u570B\u65E5\u671F" })
     ] });
     return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "field", children: [
