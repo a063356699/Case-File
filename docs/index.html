@@ -477,7 +477,7 @@
 .daily-updated-cell { color: #ff0000 !important; font-weight: 900; }
 .daily-updated-cell .status { color: #ff0000 !important; }
 .price-reduction { color: #ff0000 !important; font-weight: 900; }
-.case-name-note{display:block;margin-top:3px;color:#d43b68;font-size:11px;font-weight:500;line-height:1.35;white-space:normal}
+.case-name-note{display:block;margin-top:3px;color:#d43b68;font-size:11px;font-weight:500;line-height:1.35;white-space:pre-line}
 .website-list-note{display:block;margin-top:3px;color:#2878ad;font-size:10px;font-weight:500;line-height:1.3;white-space:normal}
 .daily-case-annotation {
   display: inline-block;
@@ -675,6 +675,7 @@
 .archive-cleanup-website-row{padding:3px 2px!important}.archive-cleanup-website-row button{display:block!important;width:100%!important;margin:0!important;padding:6px 4px!important}.inventory-month-controls{display:flex;align-items:center;gap:9px;flex-wrap:wrap}.inventory-month-controls>b{font-size:18px;color:#283d35;white-space:nowrap}.inventory-month-controls>button{min-height:46px;padding:9px 17px;border-radius:12px;font-size:16px;font-weight:800;background:#fff}.inventory-month-controls>button.selected{background:#176044;color:#fff;border-color:#176044}.inventory-month{display:flex!important;align-items:center!important;gap:8px!important;margin:0!important;font-size:16px!important;font-weight:800!important}.inventory-month>span{white-space:nowrap}.inventory-month input{min-width:175px!important;height:46px!important;padding:8px 12px!important;border-radius:12px!important;font-size:17px!important;font-weight:800!important}
 .archive-cleanup-modal{width:min(1580px,99vw)!important}.archive-cleanup-table th:first-child,.archive-cleanup-table td:first-child{width:1%!important;min-width:0!important}.archive-cleanup-case-cell{white-space:nowrap!important;padding-left:8px!important;padding-right:8px!important}.archive-cleanup-na{color:#a1aaa5;font-size:13px}
 .archive-cleanup-case-cell .archive-cleanup-address{color:#2870a8;font-size:12px;margin-top:3px}
+.showing-follow-up-filter{color:#c83268!important;border-color:#eba9c0!important;background:#fff6fa!important}.showing-follow-up-filter.selected{color:#fff!important;background:#d43b68!important;border-color:#d43b68!important}.showing-follow-up-manage{padding-left:9px!important;padding-right:9px!important}.showing-follow-up-modal{width:min(900px,96vw)!important}.showing-follow-up-form{display:grid;grid-template-columns:minmax(260px,2fr) 1fr 1fr auto;gap:10px;align-items:end;padding:18px 22px;background:#fff}.showing-follow-up-form label{display:flex;flex-direction:column;gap:5px}.showing-follow-up-form label span{font-size:12px;font-weight:700;color:#56645f}.showing-follow-up-form input,.showing-follow-up-form select{height:42px;border:1px solid #ccd2ce;border-radius:8px;background:#fff;padding:8px 10px}.showing-follow-up-list{padding:14px 22px;display:grid;gap:8px}.showing-follow-up-list>div{display:flex;justify-content:space-between;align-items:center;gap:15px;background:#fff;border:1px solid #ead2db;border-radius:10px;padding:12px 14px}.showing-follow-up-list section{display:flex;flex-direction:column;gap:3px}.showing-follow-up-list b{color:#17242a}.showing-follow-up-list small{color:#697570}.showing-follow-up-list em{color:#d43b68;font-style:normal;font-weight:700}.showing-follow-up-list span{font-size:12px;color:#85536a}.showing-follow-up-list>p{text-align:center;color:#728087;padding:24px}.showing-follow-up-list button{color:#b13b61;border-color:#e7b8c8}@media(max-width:800px){.showing-follow-up-form{grid-template-columns:1fr 1fr}.showing-follow-up-form label:first-child{grid-column:span 2}}
 </style>
 </head>
 <body>
@@ -40317,7 +40318,6 @@ ${String(ex)}`);
     ["area", "\u5730\u5340"],
     ["caseName", "\u6848\u540D"],
     ["caseNameNote", "\u6848\u540D\u5F8C\u65B9\u5099\u8A3B"],
-    ["showingFollowUp", "\u5E36\u770B\u8FFD\u8E64"],
     ["address", "\u5730\u5740"],
     ["price", "\u958B\u50F9\uFF08\u842C\uFF09"],
     ["reducedPrice", "\u964D\u50F9/\u8ABF\u50F9(\u842C)"],
@@ -40427,7 +40427,6 @@ ${String(ex)}`);
     "area",
     "caseName",
     "caseNameNote",
-    "showingFollowUp",
     "address",
     "developer",
     "price",
@@ -40507,12 +40506,11 @@ ${String(ex)}`);
   var recordEditClass = (key) => `edit-cell edit-${key}`;
   var dateKeys = /* @__PURE__ */ new Set(["entrustStart", "entrustEnd", "reportDate", "updateDate", "groupViewDate", "bookLocationDate", "salesBookDate", "coverChangeDate", "platform591Expiry", "price5168Expiry", "goldExposureExpiry"]);
   var selectOptions = {
-    showingFollowUp: ["", "\u66AB\u505C\u5E36\u770B\uFF0F\u7B49\u5F85\u696D\u52D9\u56DE\u8986"],
     status: ["\u59D4\u8A17\u4E2D", "\u552E\u51FA\u4E0B\u67B6", "\u6210\u4EA4\u4E0B\u67B6", "\u4E0B\u67B6\u6D3D\u958B\u767C"],
     type: ["\u516C\u5BD3\uFF1A5\u6A13\u542B\u4EE5\u4E0B\uFF08\u7121\u96FB\u68AF\uFF09", "\u83EF\u5EC8\uFF1A10\u6A13\u542B\u4EE5\u4E0B\uFF08\u6709\u96FB\u68AF\uFF09", "\u5927\u6A13\uFF1A11\u6A13\u542B\u4EE5\u4E0A\uFF08\u6709\u96FB\u68AF\uFF09", "\u900F\u5929", "\u5EE0\u623F", "\u571F\u5730"],
     currentState: ["\u7A7A\u5C4B", "\u81EA\u4F4F", "\u51FA\u79DF\u4E2D"]
   };
-  var activeColumns = ["propertyNo", "entrustStart", "entrustEnd", "area", "caseName", "showingFollowUp", "address", "type", "price", "direction", "age", "floor", "layout", "indoorPing", "buildingPing", "landPing", "parking", "managementFee", "key", "currentState", "road", "frontage", "depth", "zoning", "coverageFar", "developer", "reportDate", "updateDate", "groupViewDate", "bookLocation", "salesBook", "notes", "photoInfo", "platform591", "yes319", "houseinfor", "windowAd", "led", "homeWeb", "price5168", "goldExposure"];
+  var activeColumns = ["propertyNo", "entrustStart", "entrustEnd", "area", "caseName", "address", "type", "price", "direction", "age", "floor", "layout", "indoorPing", "buildingPing", "landPing", "parking", "managementFee", "key", "currentState", "road", "frontage", "depth", "zoning", "coverageFar", "developer", "reportDate", "updateDate", "groupViewDate", "bookLocation", "salesBook", "notes", "photoInfo", "platform591", "yes319", "houseinfor", "windowAd", "led", "homeWeb", "price5168", "goldExposure"];
   var archiveColumns = ["propertyNo", "entrustPeriod", "caseName", "address", "price", "key", "housingRemoval", "bookLocation", "salesBook", "photoInfo", "platform591", "yes319", "houseinfor", "windowAd", "led", "homeWeb", "price5168", "goldExposure"];
   var publicColumns = ["propertyNo", "area", "caseName", "address", "price", "direction", "age", "floor", "layout", "indoorPing", "buildingPing", "landPing", "parking", "managementFee", "key", "currentState", "road", "frontage", "depth", "zoning", "coverageFar", "developer", "reportDate", "updateDate", "groupViewDate", "photoInfo"];
   var dailyColumns = publicColumns.filter((column) => !["propertyNo", "photoInfo", "contractType", "status"].includes(column));
@@ -40909,6 +40907,7 @@ ${String(ex)}`);
   };
   var stripRestoredDisplay = (value = "") => String(value || "").replace(/(?:\d{2,4}[.\/-]\d{1,2}[.\/-]\d{1,2}\s*)?重新上架/g, "").replace(/[　\s｜|·・—-]+$/g, "").trim();
   var archiveDisplayRecord = (record) => ({ ...record, caseName: stripRestoredDisplay(record.caseName), caseNameNote: stripRestoredDisplay(record.caseNameNote) });
+  var showingFollowUpDisplayRecord = (record) => record.showingFollowUp === "\u66AB\u505C\u5E36\u770B\uFF0F\u7B49\u5F85\u696D\u52D9\u56DE\u8986" ? { ...record, caseNameNote: [record.caseNameNote, `${displayRocDate(record.showingFollowUpDate)} \u66AB\u505C\u5E36\u770B\uFF0F\u7B49\u5F85\u696D\u52D9\u56DE\u8986`].filter(Boolean).join("\n") } : record;
   var sortPptRecords = (items) => items.map((record, index) => ({ record, index })).sort((a, b) => {
     const priority = (record) => /王啟山|蔡宇育/.test(record.developer || "") ? 0 : 1;
     const priorityDiff = priority(a.record) - priority(b.record);
@@ -41239,6 +41238,11 @@ ${String(ex)}`);
     const [query, setQuery] = (0, import_react.useState)("");
     const [missingDataReminderOpen, setMissingDataReminderOpen] = (0, import_react.useState)(false);
     const [websiteFilter, setWebsiteFilter] = (0, import_react.useState)("");
+    const [showingFollowUpOnly, setShowingFollowUpOnly] = (0, import_react.useState)(false);
+    const [showingFollowUpOpen, setShowingFollowUpOpen] = (0, import_react.useState)(false);
+    const [showingFollowUpRecordId, setShowingFollowUpRecordId] = (0, import_react.useState)("");
+    const [showingFollowUpStart, setShowingFollowUpStart] = (0, import_react.useState)(today());
+    const [showingFollowUpDue, setShowingFollowUpDue] = (0, import_react.useState)("");
     const [advancedFilterOpen, setAdvancedFilterOpen] = (0, import_react.useState)(false);
     const [advancedFilter, setAdvancedFilter] = (0, import_react.useState)(() => blankAdvancedFilter());
     const [editing, setEditing] = (0, import_react.useState)(null);
@@ -41379,6 +41383,15 @@ ${String(ex)}`);
     }, [tourDate, tourTitle, tourItems]);
     const archived = (0, import_react.useMemo)(() => records.filter((r) => r.archived || isExpired(r) || r.status !== "\u59D4\u8A17\u4E2D"), [records]);
     const active = (0, import_react.useMemo)(() => records.filter((r) => !r.archived && !isExpired(r) && (r.status || "\u59D4\u8A17\u4E2D") === "\u59D4\u8A17\u4E2D"), [records]);
+    const showingFollowUpRecords = active.filter((record) => record.showingFollowUp === "\u66AB\u505C\u5E36\u770B\uFF0F\u7B49\u5F85\u696D\u52D9\u56DE\u8986");
+    (0, import_react.useEffect)(() => {
+      const dueToday = showingFollowUpRecords.filter((record) => normalizeDateInput(record.showingFollowUpDueDate || "") === today());
+      const reminderKey = `property-desk-showing-follow-up-${today()}`;
+      if (!dueToday.length || localStorage.getItem(reminderKey) === "1") return;
+      localStorage.setItem(reminderKey, "1");
+      setTimeout(() => alert(`\u4ECA\u65E5\u6709 ${dueToday.length} \u7B46\u5E36\u770B\u8FFD\u8E64\u5230\u671F\uFF1A
+${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 100);
+    }, [showingFollowUpRecords.map((record) => `${record.id}:${record.showingFollowUpDueDate}`).join("|")]);
     const controlledKeyCount = new Set(records.map((record) => String(record.key || "").match(/公司\s*[#＃]?\s*(\d+)/)?.[1]).filter(Boolean)).size;
     const pendingArchiveCleanup = archived.map((record) => ({ record, tasks: archiveCleanupTasks(record).filter((task) => !record[task.key]) })).filter((item) => item.record.archived && item.tasks.length > 0);
     (0, import_react.useEffect)(() => {
@@ -41443,7 +41456,7 @@ ${String(ex)}`);
       const photoMatch = !f.photoInfo || (f.photoInfo === "filled" ? !!(String(r.photoInfo || "").trim() || r.photos?.length) : !(String(r.photoInfo || "").trim() || r.photos?.length));
       return includes("propertyNo") && includes("caseName") && includes("address") && (!f.type || typeShort(r.type) === f.type) && includes("direction") && includes("zoning") && includes("developer") && includes("key") && includes("currentState") && includes("salesBook") && (!f.rooms || new RegExp(`${f.rooms}\\s*\u623F`).test(layout)) && (!f.halls || new RegExp(`${f.halls}\\s*\u5EF3`).test(layout)) && (!f.baths || new RegExp(`${f.baths}\\s*\u885B`).test(layout)) && floorMatch && parkingMatch && photoMatch && websiteMatch && filterDateInRange(r.entrustStart, f.entrustStartFrom, f.entrustStartTo) && filterDateInRange(r.entrustEnd, f.entrustEndFrom, f.entrustEndTo) && filterDateInRange(r.reportDate, f.reportFrom, f.reportTo) && filterDateInRange(r.updateDate, f.updateFrom, f.updateTo) && filterDateInRange(r.groupViewDate, f.groupFrom, f.groupTo) && filterDateInRange(r.bookLocationDate, f.bookFrom, f.bookTo) && filterDateInRange(r.salesBookDate, f.salesFrom, f.salesTo) && filterInRange(r.price, f.priceFrom, f.priceTo, true) && filterInRange(ageOf(r), f.ageFrom, f.ageTo) && filterInRange(r.indoorPing, f.indoorFrom, f.indoorTo) && filterInRange(r.landPing, f.landFrom, f.landTo) && filterInRange(r.buildingPing, f.buildingFrom, f.buildingTo) && filterInRange(r.road, f.roadFrom, f.roadTo) && filterInRange(r.frontage, f.frontageFrom, f.frontageTo) && filterInRange(r.depth, f.depthFrom, f.depthTo);
     };
-    const shown = (tab === "archive" ? archived : sortActiveRecords(active)).filter((r) => (!websiteFilter || tab === "archive" || (websiteFilter === "all" ? requiredWebsiteKeys(r).some((key) => isWebsiteMissing(r, key)) : isWebsiteMissing(r, websiteFilter))) && (tab !== "active" || matchesAdvancedFilter(r)) && [r.propertyNo, r.area, r.caseName, r.address, r.developer].join(" ").toLowerCase().includes(query.toLowerCase()));
+    const shown = (tab === "archive" ? archived : sortActiveRecords(active)).filter((r) => (!showingFollowUpOnly || tab !== "active" || r.showingFollowUp === "\u66AB\u505C\u5E36\u770B\uFF0F\u7B49\u5F85\u696D\u52D9\u56DE\u8986") && (!websiteFilter || tab === "archive" || (websiteFilter === "all" ? requiredWebsiteKeys(r).some((key) => isWebsiteMissing(r, key)) : isWebsiteMissing(r, websiteFilter))) && (tab !== "active" || matchesAdvancedFilter(r)) && [r.propertyNo, r.area, r.caseName, r.address, r.developer].join(" ").toLowerCase().includes(query.toLowerCase()));
     const selectedPptWeek = pptWeekOf(pptWeekStart);
     const pptWeekOptions = [.../* @__PURE__ */ new Set([currentPptWeek().start, ...records.map((record) => normalizeDateInput(record.reportDate || "")).filter((date) => /^\d{4}-\d{2}-\d{2}$/.test(date)).map((date) => pptWeekOf(date).start)])].sort((a, b) => b.localeCompare(a));
     const weeklyPptRecords = sortPptRecords(records.filter((record) => isPptWeek(record.reportDate, selectedPptWeek)));
@@ -41451,6 +41464,20 @@ ${String(ex)}`);
     const flash = (text) => {
       setNotice(text);
       setTimeout(() => setNotice(""), 2600);
+    };
+    const addShowingFollowUp = () => {
+      if (!showingFollowUpRecordId) return flash("\u8ACB\u5148\u9078\u64C7\u59D4\u8A17\u4E2D\u6848\u4EF6");
+      if (!normalizeDateInput(showingFollowUpStart)) return flash("\u8ACB\u586B\u5BEB\u66AB\u505C\u65E5\u671F");
+      if (!normalizeDateInput(showingFollowUpDue)) return flash("\u8ACB\u586B\u5BEB\u8FFD\u8E64\u65E5\u671F");
+      setRecords((previous) => previous.map((record) => record.id === showingFollowUpRecordId ? { ...record, showingFollowUp: "\u66AB\u505C\u5E36\u770B\uFF0F\u7B49\u5F85\u696D\u52D9\u56DE\u8986", showingFollowUpDate: normalizeDateInput(showingFollowUpStart), showingFollowUpDueDate: normalizeDateInput(showingFollowUpDue), lastModifiedAt: (/* @__PURE__ */ new Date()).toISOString() } : record));
+      setShowingFollowUpRecordId("");
+      setShowingFollowUpStart(today());
+      setShowingFollowUpDue("");
+      flash("\u5DF2\u52A0\u5165\u5E36\u770B\u8FFD\u8E64");
+    };
+    const clearShowingFollowUp = (record) => {
+      setRecords((previous) => previous.map((item) => item.id === record.id ? { ...item, showingFollowUp: "", showingFollowUpDate: "", showingFollowUpDueDate: "", lastModifiedAt: (/* @__PURE__ */ new Date()).toISOString() } : item));
+      flash("\u5DF2\u89E3\u9664\u5E36\u770B\u8FFD\u8E64\uFF0C\u6848\u4EF6\u4ECD\u4FDD\u7559\u59D4\u8A17\u4E2D");
     };
     const updateEditingRecord = (next) => setEditing((previous) => {
       if (!previous) return next;
@@ -42313,6 +42340,11 @@ ${String(ex)}`);
             ] })
           ] }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "tools", children: tab === "active" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { className: `showing-follow-up-filter ${showingFollowUpOnly ? "selected" : ""}`, onClick: () => setShowingFollowUpOnly((value) => !value), children: [
+              "\u5E36\u770B\u8FFD\u8E64 ",
+              showingFollowUpRecords.length
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "showing-follow-up-manage", onClick: () => setShowingFollowUpOpen(true), children: "\uFF0B\u8A2D\u5B9A\u8FFD\u8E64" }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { className: missingDataRecords.length ? "missing-data-button has-items" : "missing-data-button", onClick: () => setMissingDataReminderOpen(true), children: [
               "\u5F85\u88DC\u8CC7\u6599 ",
               missingDataRecords.length
@@ -42327,6 +42359,7 @@ ${String(ex)}`);
             ] }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "advanced-filter-button", onClick: () => setAdvancedFilterOpen(true), children: "\u9032\u968E\u7BE9\u9078" }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "clear-filter-button", onClick: () => {
+              setShowingFollowUpOnly(false);
               setWebsiteFilter("");
               setAdvancedFilter(blankAdvancedFilter());
               setQuery("");
@@ -42344,10 +42377,67 @@ ${String(ex)}`);
             " \u5230\u671F"
           ] }, `${record.id}-${site}`))
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PropertyTable, { records: tab === "archive" ? shown.map(archiveDisplayRecord) : shown, columns: tab === "archive" ? archiveColumns : activeColumns, archiveMode: tab === "archive", activeLead: tab === "active", showAreaGroups: tab === "active", onEdit: setEditing, onArchive: archiveRecord, onRestore: setRestoreChoiceRecord, onRemove: removeRecord }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PropertyTable, { records: tab === "archive" ? shown.map(archiveDisplayRecord) : shown.map(showingFollowUpDisplayRecord), columns: tab === "archive" ? archiveColumns : activeColumns, archiveMode: tab === "archive", activeLead: tab === "active", showAreaGroups: tab === "active", onEdit: setEditing, onArchive: archiveRecord, onRestore: setRestoreChoiceRecord, onRemove: removeRecord }),
         advancedFilterOpen && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(AdvancedFilterModal, { value: advancedFilter, setValue: setAdvancedFilter, onClose: () => setAdvancedFilterOpen(false), onReset: () => setAdvancedFilter(blankAdvancedFilter()) }),
         !shown.length && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Empty, { text: query || tab === "active" && Object.values(advancedFilter).some(Boolean) ? "\u627E\u4E0D\u5230\u7B26\u5408\u7684\u7269\u4EF6" : tab === "archive" ? "\u76EE\u524D\u6C92\u6709\u5C01\u5B58\u7269\u4EF6" : "\u76EE\u524D\u6C92\u6709\u59D4\u8A17\u4E2D\u7269\u4EF6" })
       ] }),
+      showingFollowUpOpen && tab === "active" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "modal-backdrop", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal showing-follow-up-modal", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal-head", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u59D4\u8A17\u4E2D\u6848\u4EF6" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", { children: "\u5E36\u770B\u8FFD\u8E64\u8A2D\u5B9A" })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "close", onClick: () => setShowingFollowUpOpen(false), children: "\xD7" })
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "showing-follow-up-form", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u9078\u64C7\u6848\u4EF6" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", { value: showingFollowUpRecordId, onChange: (event) => setShowingFollowUpRecordId(event.target.value), children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: "", children: "\u8ACB\u9078\u64C7\u59D4\u8A17\u4E2D\u6848\u4EF6" }),
+              sortActiveRecords(active).filter((record) => !record.showingFollowUp).map((record) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("option", { value: record.id, children: [
+                record.propertyNo,
+                "\u3000",
+                record.caseName
+              ] }, record.id))
+            ] })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u66AB\u505C\u65E5\u671F" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: displayRocDate(showingFollowUpStart), onChange: (event) => setShowingFollowUpStart(event.target.value), onBlur: (event) => setShowingFollowUpStart(normalizeDateInput(event.target.value) || today()) })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u8FFD\u8E64\u65E5\u671F" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: displayRocDate(showingFollowUpDue), onChange: (event) => setShowingFollowUpDue(event.target.value), onBlur: (event) => setShowingFollowUpDue(normalizeDateInput(event.target.value)), placeholder: "\u5230\u671F\u7576\u5929\u63D0\u9192\u4E00\u6B21" })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "primary", onClick: addShowingFollowUp, children: "\u52A0\u5165\u8FFD\u8E64" })
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "showing-follow-up-list", children: [
+          showingFollowUpRecords.map((record) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: record.caseName || record.propertyNo }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { children: [
+                record.propertyNo,
+                "\u3000",
+                record.address
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("em", { children: [
+                displayRocDate(record.showingFollowUpDate),
+                " \u66AB\u505C\u5E36\u770B\uFF0F\u7B49\u5F85\u696D\u52D9\u56DE\u8986"
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+                "\u8FFD\u8E64\u65E5\u671F\uFF1A",
+                displayRocDate(record.showingFollowUpDueDate)
+              ] })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => clearShowingFollowUp(record), children: "\u89E3\u9664\u8FFD\u8E64" })
+          ] }, record.id)),
+          !showingFollowUpRecords.length && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "\u76EE\u524D\u6C92\u6709\u5E36\u770B\u8FFD\u8E64\u6848\u4EF6" })
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal-foot", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u6848\u4EF6\u6703\u6301\u7E8C\u4FDD\u7559\u5728\u59D4\u8A17\u4E2D\uFF1B\u53EA\u5728\u8FFD\u8E64\u65E5\u671F\u7576\u5929\u63D0\u9192\u4E00\u6B21" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => setShowingFollowUpOpen(false), children: "\u5B8C\u6210" })
+        ] })
+      ] }) }),
       dealCompletionReminderOpen && tab !== "public" && pendingDealCompletion.length > 0 && !expiryReminderOpen && !websitePoReminderOpen && !missingDataReminderOpen && !archiveCleanupReminderOpen && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "modal-backdrop archive-cleanup-backdrop", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal archive-cleanup-modal", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal-head", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
