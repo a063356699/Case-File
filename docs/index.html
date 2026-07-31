@@ -648,6 +648,7 @@
 .book-record-line{display:flex!important;align-items:center;gap:6px;min-width:0;color:#526a75!important;font-size:11px!important;font-weight:400!important;line-height:1.35;white-space:nowrap}.book-record-line span:first-child{flex:none}.book-record-line span:last-child{min-width:0;overflow:hidden;text-overflow:ellipsis}.book-review-side{display:flex;flex:none;flex-direction:column;align-items:flex-end;justify-content:center;gap:2px}.book-current-note{display:block!important;margin:0!important;color:#2878ad!important;font-size:11px!important;font-weight:400!important;line-height:1.25;white-space:nowrap}
 .internal-public-app .login-card p{color:#0066cc}
 .website-list-value .website-inline-note{display:block!important;margin-top:2px!important;color:#2878ad!important;font-size:11px!important;font-weight:500!important;line-height:1.25!important;white-space:nowrap!important}
+.personnel-panel:not(.personnel-open)>.personnel-table,.personnel-panel:not(.personnel-open)>.former-people,.personnel-panel:not(.personnel-open) .personnel-head .primary{display:none}.personnel-toggle{padding:7px 14px;color:var(--green);border-color:#b9cfc4;background:#f3f8f4}
 </style>
 </head>
 <body>
@@ -46092,6 +46093,26 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
         panel.remove();
       };
     }, [settings.expiry591, settings.expiry5168, settings.brokerExpiry]);
+    (0, import_react.useEffect)(() => {
+      const personnelPanel = document.querySelector(".settings .personnel-panel");
+      const head = personnelPanel?.querySelector(".personnel-head");
+      if (!personnelPanel || !head) return;
+      personnelPanel.classList.remove("personnel-open");
+      const toggle = document.createElement("button");
+      toggle.type = "button";
+      toggle.className = "personnel-toggle";
+      toggle.textContent = "\u5C55\u958B";
+      const togglePanel = () => {
+        const isOpen = personnelPanel.classList.toggle("personnel-open");
+        toggle.textContent = isOpen ? "\u6536\u8D77" : "\u5C55\u958B";
+      };
+      toggle.addEventListener("click", togglePanel);
+      head.appendChild(toggle);
+      return () => {
+        toggle.removeEventListener("click", togglePanel);
+        toggle.remove();
+      };
+    }, []);
     const [cloudEmail, setCloudEmail] = (0, import_react.useState)("");
     const [cloudPassword, setCloudPassword] = (0, import_react.useState)("");
     const updatePerson = (id, patch) => setSettings({ ...settings, personnel: settings.personnel.map((p) => p.id === id ? { ...p, ...patch } : p) });

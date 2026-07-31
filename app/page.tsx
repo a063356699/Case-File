@@ -2440,6 +2440,17 @@ function SettingsPanel({ settings, setSettings, supabasePush, supabasePull, clou
     });
     return () => { handlers.forEach(({ input, handler }) => input.removeEventListener("blur", handler)); panel.remove(); };
   }, [settings.expiry591, settings.expiry5168, settings.brokerExpiry]);
+  useEffect(() => {
+    const personnelPanel = document.querySelector<HTMLElement>(".settings .personnel-panel");
+    const head = personnelPanel?.querySelector<HTMLElement>(".personnel-head");
+    if (!personnelPanel || !head) return;
+    personnelPanel.classList.remove("personnel-open");
+    const toggle = document.createElement("button");
+    toggle.type = "button"; toggle.className = "personnel-toggle"; toggle.textContent = "展開";
+    const togglePanel = () => { const isOpen = personnelPanel.classList.toggle("personnel-open"); toggle.textContent = isOpen ? "收起" : "展開"; };
+    toggle.addEventListener("click", togglePanel); head.appendChild(toggle);
+    return () => { toggle.removeEventListener("click", togglePanel); toggle.remove(); };
+  }, []);
   const [cloudEmail, setCloudEmail] = useState("");
   const [cloudPassword, setCloudPassword] = useState("");
   const updatePerson = (id: string, patch: Partial<Person>) => setSettings({ ...settings, personnel: settings.personnel.map(p => p.id === id ? { ...p, ...patch } : p) });
