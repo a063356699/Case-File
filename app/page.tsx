@@ -1175,6 +1175,16 @@ async function downloadColorWorkbook(record: RecordItem, personnel: Person[] = [
     }
     cell.appendChild(inline);
   };
+  const setWorksheetNumberCell = (document: Document, address: string, value: number) => {
+    const rowNumber = address.match(/\d+/)?.[0] || "";
+    const targetRow = Array.from(document.getElementsByTagNameNS(spreadsheetNs, "row")).find(item => item.getAttribute("r") === rowNumber);
+    if (!targetRow) return;
+    let cell = Array.from(targetRow.getElementsByTagNameNS(spreadsheetNs, "c")).find(item => item.getAttribute("r") === address);
+    if (!cell) { cell = document.createElementNS(spreadsheetNs, "c"); cell.setAttribute("r", address); targetRow.appendChild(cell); }
+    while (cell.firstChild) cell.removeChild(cell.firstChild);
+    cell.removeAttribute("t");
+    const number = document.createElementNS(spreadsheetNs, "v"); number.textContent = String(value); cell.appendChild(number);
+  };
   const setWorksheetRichCell = (document: Document, address: string, value: unknown, options: { size?: number; font?: string; color?: string; bold?: boolean } = {}) => {
     const rowNumber = address.match(/\d+/)?.[0] || "";
     const targetRow = Array.from(document.getElementsByTagNameNS(spreadsheetNs, "row")).find(item => item.getAttribute("r") === rowNumber);
@@ -1371,6 +1381,27 @@ async function downloadColorWorkbook(record: RecordItem, personnel: Person[] = [
       protection.setAttribute("locked", "0"); protection.setAttribute("hidden", "0");
       cellXfs.appendChild(newXf); cellXfs.setAttribute("count", String(cellXfs.children.length));
       if (headerCell) headerCell.setAttribute("s", String(cellXfs.children.length - 1));
+      if (isLand) {
+        const mergeCells = visibleDocument.getElementsByTagNameNS(spreadsheetNs, "mergeCells")[0];
+        const numberFormats = stylesDocument.getElementsByTagNameNS(spreadsheetNs, "numFmts")[0];
+        const formatCode = '"約"$#,##0';
+        let formatId = Array.from(numberFormats?.getElementsByTagNameNS(spreadsheetNs, "numFmt") || []).find(item => item.getAttribute("formatCode") === formatCode)?.getAttribute("numFmtId") || "";
+        if (!formatId && numberFormats) { const ids = Array.from(numberFormats.getElementsByTagNameNS(spreadsheetNs, "numFmt")).map(item => Number(item.getAttribute("numFmtId") || 163)); formatId = String(Math.max(163, ...ids) + 1); const format = stylesDocument.createElementNS(spreadsheetNs, "numFmt"); format.setAttribute("numFmtId", formatId); format.setAttribute("formatCode", formatCode); numberFormats.appendChild(format); numberFormats.setAttribute("count", String(numberFormats.children.length)); }
+        taxRows.forEach(({ row, value }) => {
+          const amount = Number(cleanNumber(value)); if (!value.startsWith("約") || !Number.isFinite(amount) || amount <= 0) return;
+          removeMergedRange(visibleDocument, `F${row}:J${row}`);
+          if (mergeCells) { const merge = visibleDocument.createElementNS(spreadsheetNs, "mergeCell"); merge.setAttribute("ref", `F${row}:J${row}`); mergeCells.appendChild(merge); mergeCells.setAttribute("count", String(mergeCells.getElementsByTagNameNS(spreadsheetNs, "mergeCell").length)); }
+          setWorksheetNumberCell(visibleDocument, `F${row}`, amount);
+          const cell = Array.from(visibleDocument.getElementsByTagNameNS(spreadsheetNs, "c")).find(item => item.getAttribute("r") === `F${row}`);
+          if (!cell || !formatId) return;
+          const sourceXf = cellXfs.children[Number(cell.getAttribute("s") || "0")] || cellXfs.children[0];
+          const formattedXf = sourceXf.cloneNode(true) as Element;
+          formattedXf.setAttribute("numFmtId", formatId); formattedXf.setAttribute("applyNumberFormat", "1");
+          let alignment = Array.from(formattedXf.getElementsByTagNameNS(spreadsheetNs, "alignment"))[0]; if (!alignment) { alignment = stylesDocument.createElementNS(spreadsheetNs, "alignment"); formattedXf.appendChild(alignment); }
+          alignment.setAttribute("horizontal", "center"); alignment.setAttribute("vertical", "center");
+          cellXfs.appendChild(formattedXf); cell.setAttribute("s", String(cellXfs.children.length - 1));
+        });
+      }
       taxRows.forEach(({ row }) => {
         const applyTaxAlignment = (address: string, horizontal: "left" | "center") => {
           const cell = Array.from(visibleDocument.getElementsByTagNameNS(spreadsheetNs, "c")).find(item => item.getAttribute("r") === address);
