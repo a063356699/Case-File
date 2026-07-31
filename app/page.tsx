@@ -541,7 +541,8 @@ export default function Home() {
   const importJson = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]; if (!file) return;
     const reader = new FileReader(); reader.onload = () => { try {
-      const data = JSON.parse(String(reader.result)); const list = Array.isArray(data) ? data : data.records; if (!Array.isArray(list)) throw new Error();
+      // Windows exports can contain a UTF-8 BOM; remove it before JSON parsing.
+      const data = JSON.parse(String(reader.result).replace(/^\uFEFF/, "")); const list = Array.isArray(data) ? data : data.records; if (!Array.isArray(list)) throw new Error();
       const repairDuplicates = !Array.isArray(data) && data.importMode === "repair-duplicate-property-no";
       if (repairDuplicates) {
         if (!confirm("將依物件編號合併重複案件，保留原有資料並補上空白欄位，確定嗎？")) return;

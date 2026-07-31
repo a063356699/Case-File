@@ -41132,7 +41132,7 @@ ${String(ex)}`);
       const reader = new FileReader();
       reader.onload = () => {
         try {
-          const data = JSON.parse(String(reader.result));
+          const data = JSON.parse(String(reader.result).replace(/^\uFEFF/, ""));
           const list = Array.isArray(data) ? data : data.records;
           if (!Array.isArray(list)) throw new Error();
           const repairDuplicates = !Array.isArray(data) && data.importMode === "repair-duplicate-property-no";
