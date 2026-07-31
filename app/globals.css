@@ -281,6 +281,7 @@
 .table-wrap td.col-caseName {
   text-align: center !important;
 }
+.public-table th.col-area,.public-table td.col-area{text-align:center!important;}
 .table-wrap td.col-caseName .case-link {
   width: 100%;
   text-align: center;

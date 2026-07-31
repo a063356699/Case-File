@@ -288,6 +288,7 @@
 .table-wrap td.col-caseName {
   text-align: center !important;
 }
+.public-table th.col-area,.public-table td.col-area{text-align:center!important;}
 .table-wrap td.col-caseName .case-link {
   width: 100%;
   text-align: center;
@@ -40487,7 +40488,7 @@ ${String(ex)}`);
   };
   var activeColumns = ["propertyNo", "entrustStart", "entrustEnd", "area", "caseName", "address", "type", "price", "direction", "age", "floor", "layout", "indoorPing", "buildingPing", "landPing", "parking", "managementFee", "key", "currentState", "road", "frontage", "depth", "zoning", "coverageFar", "developer", "reportDate", "updateDate", "groupViewDate", "bookLocation", "salesBook", "notes", "photoInfo", "platform591", "yes319", "houseinfor", "windowAd", "led", "homeWeb", "price5168", "goldExposure"];
   var archiveColumns = ["propertyNo", "entrustPeriod", "caseName", "address", "price", "key", "housingRemoval", "bookLocation", "salesBook", "photoInfo", "platform591", "yes319", "houseinfor", "windowAd", "led", "homeWeb", "price5168", "goldExposure"];
-  var publicColumns = ["propertyNo", "area", "caseName", "address", "type", "contractType", "status", "price", "direction", "age", "floor", "layout", "indoorPing", "buildingPing", "landPing", "parking", "managementFee", "key", "currentState", "road", "frontage", "depth", "zoning", "coverageFar", "developer", "reportDate", "updateDate", "groupViewDate", "photoInfo"];
+  var publicColumns = ["propertyNo", "area", "caseName", "address", "price", "direction", "age", "floor", "layout", "indoorPing", "buildingPing", "landPing", "parking", "managementFee", "key", "currentState", "road", "frontage", "depth", "zoning", "coverageFar", "developer", "reportDate", "updateDate", "groupViewDate", "photoInfo"];
   var dailyColumns = publicColumns.filter((column) => !["propertyNo", "photoInfo", "contractType", "status"].includes(column));
   var labels = Object.fromEntries(fields);
   Object.assign(labels, { age: "\u5C4B\u9F61", bookLocation: "\u7269\u4EF6\u672C\u4F4D\u7F6E", housingRemoval: "\u623F\u7BA1\u4E0B\u67B6", entrustPeriod: "\u59D4\u8A17\u671F\u9593", archived: "\u5C01\u5B58\u65E5\u671F", coverageFar: "\u5EFA\u853D\u7387\uFF0F\u5BB9\u7A4D\u7387" });
