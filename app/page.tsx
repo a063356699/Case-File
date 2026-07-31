@@ -880,6 +880,17 @@ export default function Home() {
     setRecords(previous => previous.map(item => item.id === record.id ? { ...item, _monthlyReports: JSON.stringify(reports), ...(updatesDate ? { updateDate: today(), lastModifiedAt: new Date().toISOString() } : {}) } : item));
     flash(status === "待確認" ? `已設定 ${displayRocDate(dueDate)} 再次確認` : "物件回報完成");
   };
+  const resolveMonthlyPropertyReport = (record: RecordItem, reportKey: string, keepActive = false) => {
+    const handledAt = new Date().toISOString();
+    setRecords(previous => previous.map(item => {
+      if (item.id !== record.id) return item;
+      let reports: Record<string, any> = {}; try { reports = JSON.parse(item._monthlyReports || "{}"); } catch {}
+      if (!reports[reportKey]) return item;
+      reports[reportKey] = { ...reports[reportKey], adminHandledAt: handledAt };
+      return { ...item, _monthlyReports: JSON.stringify(reports), ...(keepActive ? { updateDate: today(), lastModifiedAt: handledAt } : {}) };
+    }));
+    flash(keepActive ? "已確認維持委託中，更新日期已更新" : "已標示處理完成");
+  };
   const submitBookReviews = (reviews: Array<{ record: RecordItem; status: string }>) => { const stamp = new Date().toISOString(), cycle = bookReviewCycleKey(); setRecords(previous => previous.map(item => reviews.some(value => value.record.id === item.id) ? { ...item, bookLocationDate: today(), _bookReviewAt: stamp, _bookReviewCycle: cycle, lastModifiedAt: stamp } : item)); flash(`已確認 ${reviews.length} 筆物件本，日期更新為今天`); };
 
   return <main>
@@ -899,6 +910,7 @@ export default function Home() {
     </nav>
 
     {tab === "active" && <PropertyBookReview records={active} submit={submitBookReviews}/>}
+    {tab === "active" && <BusinessReportInbox records={active} resolve={resolveMonthlyPropertyReport} archive={(record, status) => setArchiveChoice({ record, status, date: today() })}/>} 
     {tab === "public" && publicUnlocked && publicScope === "mine" && publicPerson && <MonthlyPropertyReport records={myProperties} person={publicPerson} submit={submitMonthlyPropertyReport}/>}
 
     {tab === "settings" ? <SettingsPanel settings={settings} setSettings={setSettings} supabasePush={supabasePush} supabasePull={supabasePull} cloudSession={cloudSession} supabaseSignIn={supabaseSignIn} supabaseSignOut={supabaseSignOut} /> :
@@ -2128,6 +2140,21 @@ function PropertyBookReview({ records, submit }: { records: RecordItem[]; submit
   const bookAreaOrder = ["北區", "東區", "中西區", "南區", "永康區", "安平區", "仁德區", "安南區", "其他區", "外縣市"];
   const groupedDueRecords = bookAreaOrder.map(area => ({ area, items: dueRecords.filter(record => areaCategory(record) === area) })).filter(group => group.items.length);
   return <section className="book-review-panel"><div className="book-review-head"><div className="book-review-title"><b>物件本確認</b><span>本次確認：{displayRocDate(cycleStart)}　下次確認：{displayRocDate(nextCheckDate)}</span></div><div className="book-review-actions"><strong>{dueRecords.length} 筆待確認</strong><button onClick={() => { setScanMessage(""); setScannerOpen(true); }}>掃描QR Code</button><label className="file-button">上傳QR圖片<input type="file" accept="image/*" capture="environment" onChange={event => { decodeImage(event.target.files?.[0]); event.target.value = ""; }}/></label></div></div><div className="book-review-list">{groupedDueRecords.map(group => <Fragment key={group.area}><div className="book-review-area"><span>{group.area}</span><small>{group.items.length}筆</small></div>{group.items.map(record => <div id={`book-review-${record.id}`} className="book-review-row" key={record.id}><div><b>{record.caseName || record.propertyNo}</b><small className="book-record-line"><span>{record.propertyNo}</span><span>{record.address || "未填地址"}</span></small></div><div className="book-review-side"><small className="book-current-note">{displayRocDate(record.bookLocationDate || "") || "未填日期"}　{record.bookLocationType || "未填位置"}</small><strong className="book-scan-status">待確認</strong></div></div>)}</Fragment>)}</div><div className="book-review-foot"><span>本次已掃描 {scannedIds.length} 筆</span></div>{scannerOpen && <div className="qr-scanner-backdrop"><div className="qr-scanner-modal"><div><b>連續掃描物件QR Code</b><button onClick={() => setScannerOpen(false)}>×</button></div><video ref={videoRef} playsInline muted/><strong className="qr-scan-count">已掃描 {scannedIds.length} 筆</strong><p>{scanMessage || "將QR Code放在畫面中央，掃完一件可直接刷下一件。"}</p><button className="primary qr-scan-done" onClick={() => setScannerOpen(false)}>掃描完成</button></div></div>}</section>;
+}
+
+function BusinessReportInbox({ records, resolve, archive }: { records: RecordItem[]; resolve: (record: RecordItem, reportKey: string, keepActive?: boolean) => void; archive: (record: RecordItem, status: string) => void }) {
+  const items = records.flatMap(record => {
+    let reports: Record<string, any> = {}; try { reports = JSON.parse(record._monthlyReports || "{}"); } catch {}
+    return Object.entries(reports).map(([key, report]) => ({ record, key, report })).filter(item => item.report?.status && item.report.status !== "委託中" && !item.report.adminHandledAt);
+  }).sort((a, b) => String(b.report.reportedAt || "").localeCompare(String(a.report.reportedAt || "")));
+  if (!items.length) return null;
+  const action = (item: { record: RecordItem; key: string; report: any }) => {
+    if (item.report.status === "售出下架") return <button className="primary" onClick={() => archive(item.record, "售出下架")}>確認售出下架</button>;
+    if (item.report.status === "下架洽開發") return <button className="primary" onClick={() => archive(item.record, "下架洽開發")}>確認下架</button>;
+    if (item.report.status === "請跟開發業務2確認") return <button className="primary" onClick={() => resolve(item.record, item.key, true)}>確認維持委託中</button>;
+    return <button onClick={() => resolve(item.record, item.key)}>已查看，等待再次確認</button>;
+  };
+  return <section className="business-report-inbox"><header><div><b>業務回報待處理</b><span>業務回傳後，請在此完成下架或確認作業</span></div><strong>{items.length} 筆</strong></header><div className="business-report-list">{items.map(item => <article key={`${item.record.id}-${item.key}`}><div className="business-report-case"><b>{item.record.caseName || item.record.propertyNo}</b><small>{item.record.propertyNo}　開發：{item.record.developer || "未填"}</small><span>回報：<em>{item.report.status}</em>{item.report.reason ? `　原因：${item.report.reason}` : ""}</span>{item.report.status === "待確認" && item.report.dueDate && <i>下次確認：{displayRocDate(item.report.dueDate)}</i>}</div><div className="business-report-meta"><small>{item.report.personName || "業務人員"}　{new Date(item.report.reportedAt || Date.now()).toLocaleString("zh-TW")}</small>{action(item)}</div></article>)}</div></section>;
 }
 
 function MonthlyPropertyReport({ records, person, submit }: { records: RecordItem[]; person: Person; submit: (record: RecordItem, status: string, reason: string) => void }) {
