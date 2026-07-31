@@ -558,22 +558,27 @@ export default function Home() {
   });
   const saveRecord = () => {
     if (!editing) return;
+    const normalizedEditing = {
+      ...editing,
+      ...Object.fromEntries([...dateKeys].map(key => [key, normalizeDateInput(editing[key] || "")])),
+      completionDate: normalizeDateInput(editing.completionDate || ""),
+    };
     const keyNumber = String(editing.key || "").match(/公司\s*[#＃]?\s*(\d+)/)?.[1];
     const allowedKeyNumbers = new Set([1, 2, 3, 5, 6, 7, 8, 17, 18, 19, 20, 21, 22, 23, 24, 33, 34, 35, 36, 37, 38, 39, 49, 50, 51, 52, 53, 55, 56, 65, 66, 67, 68, 69, 70, 71, 72, 81, 82, 83, 85, 86, 87, 88]);
     if (keyNumber && !allowedKeyNumbers.has(Number(keyNumber))) { alert(`鑰匙編號公司#${keyNumber}不在鑰匙總表的有效標號內，請重新輸入。`); return; }
     const duplicatedKey = keyNumber ? records.find(record => record.id !== editing.id && String(record.key || "").match(/公司\s*[#＃]?\s*(\d+)/)?.[1] === keyNumber) : undefined;
     if (duplicatedKey) { alert(`鑰匙編號公司#${keyNumber}已由「${duplicatedKey.caseName || duplicatedKey.propertyNo}」使用，請確認後再儲存。`); return; }
-    if (editing._intakeDraftId) {
-      setIntakeDrafts(previous => previous.map(draft => draft.id === editing._intakeDraftId ? { ...draft, values: syncRecordToDraftValues(draft, editing), propertyKind: editing.type.includes("土地") ? "純土地" : "房屋" } : draft));
-      setTourItems(previous => previous.map(item => item.data._intakeDraftId === editing._intakeDraftId ? { ...item, data: { ...item.data, ...editing, reportDate: "", status: "尚未進案", _notEntered: "1" } } : item));
+    if (normalizedEditing._intakeDraftId) {
+      setIntakeDrafts(previous => previous.map(draft => draft.id === normalizedEditing._intakeDraftId ? { ...draft, values: syncRecordToDraftValues(draft, normalizedEditing), propertyKind: normalizedEditing.type.includes("土地") ? "純土地" : "房屋" } : draft));
+      setTourItems(previous => previous.map(item => item.data._intakeDraftId === normalizedEditing._intakeDraftId ? { ...item, data: { ...item.data, ...normalizedEditing, reportDate: "", status: "尚未進案", _notEntered: "1" } } : item));
       setEditing(null); flash("草稿與團看資料已同步更新"); return;
     }
-    if (!editing.propertyNo || !editing.caseName) return flash("請填寫物件編號與案名");
-    const invalid = [...dateKeys].find(k => k !== "groupViewDate" && !validDate(editing[k])); if (invalid) return flash(`${labels[invalid]}日期格式錯誤`);
-    const existing = records.find(record => record.id === editing.id);
-    const combinedFloor = [editing.titleFloor, editing.currentFloor].filter(Boolean).join("／");
-    const combinedParking = [editing.parkingOwnership, editing.parkingType, editing.parkingMethod, editing.parkingNo].filter(Boolean).join("／");
-    const prepared = { ...editing, builtYear: editing.completionDate ? String(Number(editing.completionDate.split(/[./]/)[0])) : editing.builtYear, floor: combinedFloor || editing.floor, parking: combinedParking || editing.parking, contractType: contractFromNo(editing.propertyNo) || editing.contractType, status: editing.status || "委託中", updateDate: editing.updateDate || existing?.updateDate || today(), lastModifiedAt: editing.lastModifiedAt || existing?.lastModifiedAt || "" };
+    if (!normalizedEditing.propertyNo || !normalizedEditing.caseName) return flash("請填寫物件編號與案名");
+    const invalid = [...dateKeys].find(k => k !== "groupViewDate" && !validDate(normalizedEditing[k])); if (invalid) return flash(`${labels[invalid]}日期格式錯誤`);
+    const existing = records.find(record => record.id === normalizedEditing.id);
+    const combinedFloor = [normalizedEditing.titleFloor, normalizedEditing.currentFloor].filter(Boolean).join("／");
+    const combinedParking = [normalizedEditing.parkingOwnership, normalizedEditing.parkingType, normalizedEditing.parkingMethod, normalizedEditing.parkingNo].filter(Boolean).join("／");
+    const prepared = { ...normalizedEditing, builtYear: normalizedEditing.completionDate ? String(Number(normalizedEditing.completionDate.split(/[./]/)[0])) : normalizedEditing.builtYear, floor: combinedFloor || normalizedEditing.floor, parking: combinedParking || normalizedEditing.parking, contractType: contractFromNo(normalizedEditing.propertyNo) || normalizedEditing.contractType, status: normalizedEditing.status || "委託中", updateDate: normalizedEditing.updateDate || existing?.updateDate || today(), lastModifiedAt: normalizedEditing.lastModifiedAt || existing?.lastModifiedAt || "" };
     const next = existing ? withTrackedUpdate(existing, prepared) : prepared;
     setRecords(prev => prev.some(r => r.id === next.id) ? prev.map(r => r.id === next.id ? next : r) : [next, ...prev]);
     setIntakeDrafts(previous => previous.map(draft => draft.linkedRecordId === next.id ? { ...draft, values: syncRecordToDraftValues(draft, next) } : draft));
@@ -2338,7 +2343,7 @@ function Field({ fieldKey, label, record, records, setRecord }: { fieldKey: stri
   if (pillChoices[fieldKey]) return <label className={`field cover-pill-field cover-pill-${fieldKey}`}><span>{label}</span><span className="pill-options">{pillChoices[fieldKey].map(option => <button type="button" className={value === option ? "active" : ""} onClick={() => set(value === option ? "" : option)} key={option}>{option}</button>)}</span></label>;
   if (fieldKey === "reducedPrice") return null;
   if (fieldKey === "caseNameNote") return <label className="field case-name-note-field"><span>{label}{record.caseNameNoteModifiedAt && <small>修改:{displayModifiedAt(record.caseNameNoteModifiedAt)}</small>}</span><input type="text" value={value} onChange={event => setRecord({ ...record, caseNameNote: event.target.value, caseNameNoteModifiedAt: new Date().toISOString() })}/></label>;
-  if (fieldKey === "completionDate") { const parsed = record.areaPaste ? parseAreaPaste(record.areaPaste, record) : record; const shownDate = value || parsed.completionDate || ""; const yearText = String(shownDate || record.builtYear || "").match(/\d{2,4}/)?.[0] || ""; const yearNumber = Number(yearText); const westernYear = yearNumber ? (yearNumber > 1911 ? yearNumber : yearNumber + 1911) : 0; const age = westernYear ? new Date().getFullYear() - westernYear : NaN; return <label className="field completion-age-field"><span>{label}{Number.isFinite(age) && age >= 0 && <small>約 {age} 年屋</small>}</span><input type="text" inputMode="numeric" value={shownDate} onChange={event => set(event.target.value)} placeholder="例如 074.04.16"/></label>; }
+  if (fieldKey === "completionDate") { const parsed = record.areaPaste ? parseAreaPaste(record.areaPaste, record) : record; const shownDate = value || parsed.completionDate || ""; const yearText = String(shownDate || record.builtYear || "").match(/\d{2,4}/)?.[0] || ""; const yearNumber = Number(yearText); const westernYear = yearNumber ? (yearNumber > 1911 ? yearNumber : yearNumber + 1911) : 0; const age = westernYear ? new Date().getFullYear() - westernYear : NaN; return <label className="field completion-age-field"><span>{label}{Number.isFinite(age) && age >= 0 && <small>約 {age} 年屋</small>}</span><input type="text" inputMode="numeric" value={displayRocDate(shownDate)} onChange={event => set(event.target.value)} onBlur={event => set(normalizeDateInput(event.target.value))} placeholder="例如 074.04.16"/></label>; }
   if (["buildingPing", "indoorPing", "landPing", "registryBuildingPing", "registryIndoorPing", "landSharePing"].includes(fieldKey)) { const parsed = record.areaPaste ? parseAreaPaste(record.areaPaste, record) : record; const compared = fieldKey === "buildingPing" ? parsed.registryBuildingPing : fieldKey === "indoorPing" ? parsed.registryIndoorPing : fieldKey === "landPing" ? parsed.landSharePing : fieldKey === "registryBuildingPing" ? record.buildingPing : fieldKey === "registryIndoorPing" ? record.indoorPing : record.landPing; const prefix = ["registryBuildingPing", "registryIndoorPing", "landSharePing"].includes(fieldKey) ? "進案" : "房管"; return <label className="field compared-ping-field"><span><b>{label}</b>{compared && <small>{prefix} {compared} 坪</small>}</span><input inputMode="decimal" value={value} onChange={event => set(event.target.value)}/></label>; }
   if (fieldKey === "price") return <div className="price-pair"><label className="field"><span>開價（萬）</span><input inputMode="decimal" value={record.price || ""} onChange={e => setRecord({ ...record, price: e.target.value })}/></label><label className="field reduced-price-field"><span>降價/調價(萬){record.reducedPrice && <small>修改：{displayModifiedAt(record.reducedPriceModifiedAt || record.lastModifiedAt)}</small>}</span><input inputMode="decimal" value={record.reducedPrice || ""} onChange={e => setRecord({ ...record, reducedPrice: e.target.value, reducedPriceModifiedAt: e.target.value ? new Date().toISOString() : "" })}/></label></div>;
   if (fieldKey === "bookLocationNo") return null;

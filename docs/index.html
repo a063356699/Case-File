@@ -41277,6 +41277,11 @@ ${String(ex)}`);
     });
     const saveRecord = () => {
       if (!editing) return;
+      const normalizedEditing = {
+        ...editing,
+        ...Object.fromEntries([...dateKeys].map((key) => [key, normalizeDateInput(editing[key] || "")])),
+        completionDate: normalizeDateInput(editing.completionDate || "")
+      };
       const keyNumber = String(editing.key || "").match(/公司\s*[#＃]?\s*(\d+)/)?.[1];
       const allowedKeyNumbers = /* @__PURE__ */ new Set([1, 2, 3, 5, 6, 7, 8, 17, 18, 19, 20, 21, 22, 23, 24, 33, 34, 35, 36, 37, 38, 39, 49, 50, 51, 52, 53, 55, 56, 65, 66, 67, 68, 69, 70, 71, 72, 81, 82, 83, 85, 86, 87, 88]);
       if (keyNumber && !allowedKeyNumbers.has(Number(keyNumber))) {
@@ -41288,20 +41293,20 @@ ${String(ex)}`);
         alert(`\u9470\u5319\u7DE8\u865F\u516C\u53F8#${keyNumber}\u5DF2\u7531\u300C${duplicatedKey.caseName || duplicatedKey.propertyNo}\u300D\u4F7F\u7528\uFF0C\u8ACB\u78BA\u8A8D\u5F8C\u518D\u5132\u5B58\u3002`);
         return;
       }
-      if (editing._intakeDraftId) {
-        setIntakeDrafts((previous) => previous.map((draft) => draft.id === editing._intakeDraftId ? { ...draft, values: syncRecordToDraftValues(draft, editing), propertyKind: editing.type.includes("\u571F\u5730") ? "\u7D14\u571F\u5730" : "\u623F\u5C4B" } : draft));
-        setTourItems((previous) => previous.map((item) => item.data._intakeDraftId === editing._intakeDraftId ? { ...item, data: { ...item.data, ...editing, reportDate: "", status: "\u5C1A\u672A\u9032\u6848", _notEntered: "1" } } : item));
+      if (normalizedEditing._intakeDraftId) {
+        setIntakeDrafts((previous) => previous.map((draft) => draft.id === normalizedEditing._intakeDraftId ? { ...draft, values: syncRecordToDraftValues(draft, normalizedEditing), propertyKind: normalizedEditing.type.includes("\u571F\u5730") ? "\u7D14\u571F\u5730" : "\u623F\u5C4B" } : draft));
+        setTourItems((previous) => previous.map((item) => item.data._intakeDraftId === normalizedEditing._intakeDraftId ? { ...item, data: { ...item.data, ...normalizedEditing, reportDate: "", status: "\u5C1A\u672A\u9032\u6848", _notEntered: "1" } } : item));
         setEditing(null);
         flash("\u8349\u7A3F\u8207\u5718\u770B\u8CC7\u6599\u5DF2\u540C\u6B65\u66F4\u65B0");
         return;
       }
-      if (!editing.propertyNo || !editing.caseName) return flash("\u8ACB\u586B\u5BEB\u7269\u4EF6\u7DE8\u865F\u8207\u6848\u540D");
-      const invalid = [...dateKeys].find((k) => k !== "groupViewDate" && !validDate(editing[k]));
+      if (!normalizedEditing.propertyNo || !normalizedEditing.caseName) return flash("\u8ACB\u586B\u5BEB\u7269\u4EF6\u7DE8\u865F\u8207\u6848\u540D");
+      const invalid = [...dateKeys].find((k) => k !== "groupViewDate" && !validDate(normalizedEditing[k]));
       if (invalid) return flash(`${labels[invalid]}\u65E5\u671F\u683C\u5F0F\u932F\u8AA4`);
-      const existing = records.find((record) => record.id === editing.id);
-      const combinedFloor = [editing.titleFloor, editing.currentFloor].filter(Boolean).join("\uFF0F");
-      const combinedParking = [editing.parkingOwnership, editing.parkingType, editing.parkingMethod, editing.parkingNo].filter(Boolean).join("\uFF0F");
-      const prepared = { ...editing, builtYear: editing.completionDate ? String(Number(editing.completionDate.split(/[./]/)[0])) : editing.builtYear, floor: combinedFloor || editing.floor, parking: combinedParking || editing.parking, contractType: contractFromNo(editing.propertyNo) || editing.contractType, status: editing.status || "\u59D4\u8A17\u4E2D", updateDate: editing.updateDate || existing?.updateDate || today(), lastModifiedAt: editing.lastModifiedAt || existing?.lastModifiedAt || "" };
+      const existing = records.find((record) => record.id === normalizedEditing.id);
+      const combinedFloor = [normalizedEditing.titleFloor, normalizedEditing.currentFloor].filter(Boolean).join("\uFF0F");
+      const combinedParking = [normalizedEditing.parkingOwnership, normalizedEditing.parkingType, normalizedEditing.parkingMethod, normalizedEditing.parkingNo].filter(Boolean).join("\uFF0F");
+      const prepared = { ...normalizedEditing, builtYear: normalizedEditing.completionDate ? String(Number(normalizedEditing.completionDate.split(/[./]/)[0])) : normalizedEditing.builtYear, floor: combinedFloor || normalizedEditing.floor, parking: combinedParking || normalizedEditing.parking, contractType: contractFromNo(normalizedEditing.propertyNo) || normalizedEditing.contractType, status: normalizedEditing.status || "\u59D4\u8A17\u4E2D", updateDate: normalizedEditing.updateDate || existing?.updateDate || today(), lastModifiedAt: normalizedEditing.lastModifiedAt || existing?.lastModifiedAt || "" };
       const next = existing ? withTrackedUpdate(existing, prepared) : prepared;
       setRecords((prev) => prev.some((r) => r.id === next.id) ? prev.map((r) => r.id === next.id ? next : r) : [next, ...prev]);
       setIntakeDrafts((previous) => previous.map((draft) => draft.linkedRecordId === next.id ? { ...draft, values: syncRecordToDraftValues(draft, next) } : draft));
@@ -45828,7 +45833,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
             " \u5E74\u5C4B"
           ] })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", inputMode: "numeric", value: shownDate, onChange: (event) => set(event.target.value), placeholder: "\u4F8B\u5982 074.04.16" })
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", inputMode: "numeric", value: displayRocDate(shownDate), onChange: (event) => set(event.target.value), onBlur: (event) => set(normalizeDateInput(event.target.value)), placeholder: "\u4F8B\u5982 074.04.16" })
       ] });
     }
     if (["buildingPing", "indoorPing", "landPing", "registryBuildingPing", "registryIndoorPing", "landSharePing"].includes(fieldKey)) {
