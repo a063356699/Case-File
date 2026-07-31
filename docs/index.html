@@ -664,6 +664,8 @@
 .list-title-search{display:flex;align-items:center;gap:16px;min-width:0}.list-title-search .section-title{flex:0 0 auto}.list-title-search .search{margin-top:0}@media(max-width:800px){.list-title-search{width:100%;flex-wrap:wrap;gap:9px}.list-title-search .search{width:100%}}
 .active-lead-table th.col-caseName,.active-lead-table td.col-caseName{text-align:center!important}.active-lead-table td.col-caseName .case-link{display:block!important;width:100%!important;max-width:100%!important;margin:0 auto!important;text-align:center!important}.active-lead-table td.col-caseName .case-link span,.active-lead-table td.col-caseName .case-name-line{display:block!important;width:100%!important;text-align:center!important}
 .active-lead-table th.col-reportDate,.active-lead-table td.col-reportDate,.active-lead-table th.col-updateDate,.active-lead-table td.col-updateDate{width:92px!important;min-width:92px!important;max-width:92px!important}
+.active-lead-table td.col-road,.active-lead-table td.col-frontage,.active-lead-table td.col-depth{height:40px!important;max-height:none!important}.active-lead-table td.col-road .road-lines,.active-lead-table td.col-frontage .measure-value,.active-lead-table td.col-depth .measure-value{display:flex!important;flex-direction:column!important;align-items:center!important;line-height:1.05!important}.active-lead-table td.col-road small,.active-lead-table td.col-frontage .measure-value small,.active-lead-table td.col-depth .measure-value small{display:block!important;font-size:10px!important;font-weight:400!important;color:#66736d!important;margin-top:2px!important}.active-lead-table .measure-number{color:#111!important;font-weight:400!important;margin:0!important}
+.archive-cleanup-modal{width:min(1180px,97vw)!important}.archive-cleanup-table-wrap{max-height:68vh;overflow:auto;padding:14px 18px}.archive-cleanup-table{width:100%;border-collapse:collapse;table-layout:fixed}.archive-cleanup-table th,.archive-cleanup-table td{border:1px solid #d8ded9;padding:9px 7px;text-align:center;vertical-align:middle}.archive-cleanup-table th{background:#e4e8e5;color:#17241f;font-size:14px;white-space:nowrap}.archive-cleanup-table th:first-child{width:34%}.archive-cleanup-table th:nth-child(2),.archive-cleanup-table th:nth-child(3),.archive-cleanup-table th:nth-child(4){width:13%}.archive-cleanup-table th:last-child{width:27%}.archive-cleanup-case-cell{text-align:left!important}.archive-cleanup-case-cell b{display:block;color:#111;font-size:14px;font-weight:700}.archive-cleanup-case-cell small{display:block;margin-top:4px;color:#68736e;font-size:11px}.archive-cleanup-table button{padding:6px 9px;border-color:#e0aaa4;color:#b52d26;background:#fff8f7;font-size:12px;white-space:nowrap}.archive-cleanup-websites{display:flex;gap:5px;justify-content:center;align-items:center;flex-wrap:wrap}.archive-cleanup-done{color:#477564;font-size:12px;font-weight:700}
 .cover-pill-parkingMethod .pill-options button{min-width:80px!important;padding:7px 8px!important;font-size:13px!important;line-height:1.1!important;white-space:nowrap!important;word-break:keep-all!important}
 </style>
 </head>
@@ -40847,13 +40849,39 @@ ${String(ex)}`);
     const chars = Array.from(value);
     return Array.from({ length: Math.ceil(chars.length / actualSize) }, (_, index) => chars.slice(index * actualSize, index * actualSize + actualSize).join(""));
   };
-  var developerNameLines = (value = "", personnel = []) => String(value || "").split(/[\/／,，、。]+/).map((name) => name.trim()).filter(Boolean).map((name) => {
-    if (name === "\u738B\u7E3D") return "\u738B\u555F\u5C71";
-    if (Array.from(name).length !== 2) return name;
-    const matches = personnel.filter((person) => person.name && person.name.includes(name));
-    return matches.length === 1 ? matches[0].name : name;
-  });
   var developerPersonnelForDisplay = [];
+  var developerNameLines = (value = "", personnel = []) => {
+    const people = personnel.length ? personnel : developerPersonnelForDisplay;
+    const aliases = people.flatMap((person) => {
+      const full = String(person.name || "").trim();
+      const chars = Array.from(full);
+      return full ? [{ token: full, full }, ...chars.length >= 3 ? [{ token: chars.slice(-2).join(""), full }] : []] : [];
+    });
+    const expand = (segment) => {
+      if (segment === "\u738B\u7E3D") return ["\u738B\u555F\u5C71"];
+      const chars = Array.from(segment);
+      const names = [];
+      let index = 0;
+      while (index < chars.length) {
+        const remaining = chars.slice(index).join("");
+        const candidates = aliases.filter((item) => remaining.startsWith(item.token)).sort((a, b) => Array.from(b.token).length - Array.from(a.token).length);
+        if (candidates.length) {
+          const longest = Array.from(candidates[0].token).length;
+          const sameToken = candidates.filter((item) => Array.from(item.token).length === longest && item.token === candidates[0].token);
+          const fullNames = [...new Set(sameToken.map((item) => item.full))];
+          names.push(fullNames.length === 1 ? fullNames[0] : candidates[0].token);
+          index += longest;
+        } else {
+          names.push(chars.slice(index, index + 2).join(""));
+          index += Math.min(2, chars.length - index);
+        }
+      }
+      return names;
+    };
+    return String(value || "").split(/[\/／,，、。]+/).map((name) => name.trim()).filter(Boolean).flatMap(expand);
+  };
+  var stripRestoredDisplay = (value = "") => String(value || "").replace(/(?:\d{2,4}[.\/-]\d{1,2}[.\/-]\d{1,2}\s*)?\u91CD\u65B0\u4E0A\u67B6/g, "").replace(/[\u3000\s\uFF5C|\xB7\u30FB\u2014-]+$/g, "").trim();
+  var archiveDisplayRecord = (record) => ({ ...record, caseName: stripRestoredDisplay(record.caseName), caseNameNote: stripRestoredDisplay(record.caseNameNote) });
   var sortPptRecords = (items) => items.map((record, index) => ({ record, index })).sort((a, b) => {
     const priority = (record) => /王啟山|蔡宇育/.test(record.developer || "") ? 0 : 1;
     const priorityDiff = priority(a.record) - priority(b.record);
@@ -42241,7 +42269,7 @@ ${String(ex)}`);
             " \u5230\u671F"
           ] }, `${record.id}-${site}`))
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PropertyTable, { records: shown, columns: tab === "archive" ? archiveColumns : activeColumns, archiveMode: tab === "archive", activeLead: tab === "active", showAreaGroups: tab === "active", onEdit: setEditing, onArchive: archiveRecord, onRestore: setRestoreChoiceRecord, onRemove: removeRecord }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PropertyTable, { records: tab === "archive" ? shown.map(archiveDisplayRecord) : shown, columns: tab === "archive" ? archiveColumns : activeColumns, archiveMode: tab === "archive", activeLead: tab === "active", showAreaGroups: tab === "active", onEdit: setEditing, onArchive: archiveRecord, onRestore: setRestoreChoiceRecord, onRemove: removeRecord }),
         advancedFilterOpen && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(AdvancedFilterModal, { value: advancedFilter, setValue: setAdvancedFilter, onClose: () => setAdvancedFilterOpen(false), onReset: () => setAdvancedFilter(blankAdvancedFilter()) }),
         !shown.length && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Empty, { text: query || tab === "active" && Object.values(advancedFilter).some(Boolean) ? "\u627E\u4E0D\u5230\u7B26\u5408\u7684\u7269\u4EF6" : tab === "archive" ? "\u76EE\u524D\u6C92\u6709\u5C01\u5B58\u7269\u4EF6" : "\u76EE\u524D\u6C92\u6709\u59D4\u8A17\u4E2D\u7269\u4EF6" })
       ] }),
@@ -42355,25 +42383,29 @@ ${String(ex)}`);
             " \u7B46\u5C01\u5B58\u6848\u4EF6\u5C1A\u672A\u5B8C\u6210\u4E0B\u67B6"
           ] })
         ] }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "close", onClick: () => setArchiveCleanupReminderOpen(false), children: "\xD7" })] }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "archive-cleanup-list", children: pendingArchiveCleanup.map(({ record, tasks }) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("article", { className: "archive-cleanup-case", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: record.caseName || "\u672A\u547D\u540D\u6848\u4EF6" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
-              record.propertyNo || "\u2014",
-              "\u3000\u5C01\u5B58\uFF1A",
-              displayRocDate(record.archived || "")
-            ] })
-          ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { children: tasks.map((task) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { onClick: () => completeArchiveCleanup(record, task.key), children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: task.label }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { className: "archive-cleanup-meta", children: [
-              displayRocDate(record.archived || ""),
-              "\u30FB",
-              record.status || "\u4E0B\u67B6"
-            ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u5B8C\u6210\u4E0B\u67B6" })
-          ] }, task.key)) })
-        ] }, record.id)) }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "archive-cleanup-table-wrap", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("table", { className: "archive-cleanup-table", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("thead", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "\u6848\u4EF6" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "\u623F\u7BA1\u4E0B\u67B6" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "\u7269\u4EF6\u672C\uFF0F\u65C15\u4E0B\u67B6" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "\u92B7\u552E\u672C\u4E0B\u67B6" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "\u7DB2\u7AD9\u4E0B\u67B6" })
+          ] }) }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("tbody", { children: pendingArchiveCleanup.map(({ record, tasks }) => {
+            const buttonFor = (key) => {
+              const task = tasks.find((item) => item.key === key);
+              return task ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => completeArchiveCleanup(record, task.key), children: "\u5B8C\u6210\u4E0B\u67B6" }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "archive-cleanup-done", children: "\u5DF2\u5B8C\u6210" });
+            };
+            const websiteTasks = tasks.filter((task) => !["housingDownDate", "bookDownDate", "salesBookDownDate"].includes(task.key));
+            return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("td", { className: "archive-cleanup-case-cell", children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: stripRestoredDisplay(record.caseName) || "\u672A\u547D\u540D\u6848\u4EF6" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { children: [record.propertyNo || "\u2014", "\u3000", displayRocDate(record.archived || ""), record.status || "\u4E0B\u67B6"] })] }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: buttonFor("housingDownDate") }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: buttonFor("bookDownDate") }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: buttonFor("salesBookDownDate") }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { className: "archive-cleanup-websites", children: websiteTasks.length ? websiteTasks.map((task) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => completeArchiveCleanup(record, task.key), children: task.label }, task.key)) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "archive-cleanup-done", children: "\u5DF2\u5B8C\u6210" }) })
+            ] }, record.id);
+          }) })
+        ] }) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal-foot", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u672A\u5B8C\u6210\u524D\uFF0C\u4E0B\u6B21\u958B\u555F\u7CFB\u7D71\u4ECD\u6703\u63D0\u9192" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => setArchiveCleanupReminderOpen(false), children: "\u7A0D\u5F8C\u8655\u7406" })
@@ -45347,10 +45379,10 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     ] });
     if (k === "road") {
       const values = String(r.road || "").split(/[\/／]/).map((part) => part.match(/\d+(?:\.\d+)?/)?.[0] || "").filter(Boolean);
-      return values.length ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "floor-lines road-lines", children: values.map((value, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: value }, `${value}-${index}`)) }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: "\u2014" });
+      return values.length ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "floor-lines road-lines", children: [values.map((value, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "measure-number", children: value }, `${value}-${index}`)), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "\u7C73" })] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: "\u2014" });
     }
-    if (["frontage", "depth"].includes(k)) return r[k] ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "two-line-value", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: r[k].replace(/\s*米\s*$/, "") }),
+    if (["frontage", "depth"].includes(k)) return r[k] ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "two-line-value measure-value", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "measure-number", children: r[k].replace(/\s*米\s*$/, "") }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "\u7C73" })
     ] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: "\u2014" });
     if (["coverage", "far"].includes(k)) return r[k] ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "two-line-value", children: [
