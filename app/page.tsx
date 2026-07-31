@@ -237,6 +237,30 @@ const floorPptDisplay = (value = "") => {
   return totalTop ? `在${current}樓/共${totalTop}樓` : `在${current}樓`;
 };
 const contractShort = (value = "") => value.includes("一般") ? "一般約" : value.includes("專") ? "專約" : value;
+const layoutFull = (value = "", type = "") => {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  if (typeShort(type) === "土地" || /^(?:土地\s*)+$/.test(raw)) return "土地";
+  const numberOf = (pattern: RegExp) => raw.match(pattern)?.[1] || "";
+  let room = numberOf(/(\d+)\s*房/);
+  let hall = numberOf(/(\d+)\s*廳/);
+  let bath = numberOf(/(\d+)\s*衛(?:浴)?/);
+  let balcony = numberOf(/(\d+)\s*陽台/);
+  if (!room && !hall && !bath && !balcony) {
+    const parts = raw.match(/\d+/g) || [];
+    [room, hall, bath, balcony] = [parts[0] || "", parts[1] || "", parts[2] || "", parts[3] || ""];
+  }
+  if (!room && !hall && !bath && !balcony) return raw;
+  return `${room || "0"}房${hall || "0"}廳${bath || "0"}衛${balcony || "0"}陽台`;
+};
+const layoutShort = (value = "", type = "") => {
+  const full = layoutFull(value, type);
+  if (full === "土地") return "土地";
+  const room = full.match(/(\d+)\s*房/)?.[1];
+  const hall = full.match(/(\d+)\s*廳/)?.[1];
+  const bath = full.match(/(\d+)\s*衛/)?.[1];
+  return [room, hall, bath].every(Boolean) ? [room, hall, bath].join(".") : full;
+};
 const nameMatches = (developer = "", person = "") => { const a = developer.replace(/\s/g, ""); const b = person.replace(/\s/g, ""); return !!a && !!b && (a.includes(b) || b.includes(a)); };
 const daysUntil = (date = "") => validDate(date) && date ? Math.ceil((Date.parse(`${date}T00:00:00`) - Date.parse(`${today()}T00:00:00`)) / 86400000) : 99999;
 const nextDate = (date = "") => { const normalized = normalizeDateInput(date); if (!validDate(normalized)) return today(); const value = new Date(`${normalized}T00:00:00`); value.setDate(value.getDate() + 1); return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(value.getDate()).padStart(2, "0")}`; };
@@ -1127,7 +1151,12 @@ async function downloadColorWorkbook(record: RecordItem, personnel: Person[] = [
   const pingValue = (value = "") => `${truncated2(value)}坪`;
   const halfWidth = (value = "") => String(value || "").replace(/[０-９]/g, character => String(character.charCodeAt(0) - 0xFEE0)).replace(/[～〜﹣－–—-]/g, "~");
   const currentFloorValue = (value = "") => halfWidth(value).replace(/^現況\s*/g, "").trim();
-  const taxValue = (value = "") => { const number = cleanNumber(value); return !number || Number(number) === 0 ? "$0 依稅單為準" : `約$${Number(number).toLocaleString("en-US")}`; };
+  const taxValue = (value = "") => {
+    const raw = String(value || "").trim();
+    const number = cleanNumber(raw);
+    if (!raw || (!number && !/[\d]/.test(raw))) return raw || "$0 依稅單為準";
+    return !number || Number(number) === 0 ? "$0 依稅單為準" : `約$${Number(number).toLocaleString("en-US")}`;
+  };
   const layoutNumber = (pattern: RegExp) => String(record.layout || "").match(pattern)?.[1] || "";
   const floorParts = String(record.floor || "").split(/[／/]/).map(value => value.trim()).filter(Boolean);
   const cleanNotes = colorSheetAttention(record.attentionNotes || record.notes || "", record.additionNotes || "");
@@ -1203,7 +1232,7 @@ async function downloadColorWorkbook(record: RecordItem, personnel: Person[] = [
     } : {
       ...commonValues, F13: pingValue(record.registryBuildingPing || record.buildingPing), M13: pingValue(record.landSharePing || record.landPing), F14: pingValue(record.registryIndoorPing || record.indoorPing), M14: pingValue(record.buildingOtherPing || record.basementPing),
       F15: pingValue(record.mainBuildingPing), M15: record.parkingType || record.parking || "", F16: pingValue(record.auxiliaryBuildingPing), M16: record.parkingMethod || "", F17: pingValue(record.commonAreaPing), M17: record.parkingNo || "",
-      F19: typeShort(record.type), M19: record.buildingName || "", F20: `${record.unitsPerFloor || ""}戶`, M20: `${record.elevatorCount || ""}部`, F21: record.managementMethod || "", M21: !cleanNumber(record.managementFee) || Number(cleanNumber(record.managementFee)) === 0 ? "-/月" : `${cleanNumber(record.managementFee)}/月`, F22: record.layout || "",
+      F19: typeShort(record.type), M19: record.buildingName || "", F20: `${record.unitsPerFloor || ""}戶`, M20: `${record.elevatorCount || ""}部`, F21: record.managementMethod || "", M21: !cleanNumber(record.managementFee) || Number(cleanNumber(record.managementFee)) === 0 ? "-/月" : `${cleanNumber(record.managementFee)}/月`, F22: layoutFull(record.layout || "", record.type),
       F23: record.titleFloor || floorParts[0] || "", M23: currentFloorValue(record.currentFloor || floorParts[1] || ""), F24: record.completionDate || record.builtYear || "", M24: `約${String(ageOf(record)).match(/(\d+(?:\.\d+)?)\s*年屋/)?.[1] || String(ageOf(record)).match(/(\d+(?:\.\d+)?)/)?.[1] || ""}年屋`, F25: record.direction || "", M25: record.currentState || "",
       F27: aboutMeter(record.road), M27: [record.coverage, record.far].filter(Boolean).join("/"), F28: aboutMeter(record.frontage), M28: aboutMeter(record.depth), F29: record.market || "", F30: record.park || "", F31: record.school || "",
       F33: taxValue(record.generalLandValueTax || ""), F34: taxValue(record.selfUseLandValueTax || ""), F35: "$- 依稅單為準", C37: noteParts[0], C38: noteParts[1], C39: noteParts[2], C40: noteParts[3], B41: cleanNotes, P44: developerContact,
@@ -1217,7 +1246,7 @@ async function downloadColorWorkbook(record: RecordItem, personnel: Person[] = [
     setWorksheetCell(visibleDocument, "A4", "");
     setWorksheetRichCell(visibleDocument, "G9", `${price}${price ? "萬" : ""}`, { size: 36, font: "Microsoft JhengHei", bold: true, color: "FFFF0000" });
     if (!isLand) { setWorksheetRichCell(visibleDocument, "F13", directValues.F13 || "坪", { size: 16, bold: true }); setWorksheetRichCell(visibleDocument, "M15", directValues.M15 || "", { size: 14 }); }
-    if (!isLand) setWorksheetRichCell(visibleDocument, "P44", developerContact, { size: 12, font: "DFKai-SB" });
+    if (!isLand) setWorksheetRichCell(visibleDocument, "P44", developerContact, { size: 18, font: "DFKai-SB" });
     if (isLand) setWorksheetRichCell(visibleDocument, "P33", developerContact, { size: 12, font: "DFKai-SB" });
     const headerRow = Array.from(visibleDocument.getElementsByTagNameNS(spreadsheetNs, "row")).find(item => item.getAttribute("r") === "4");
     if (headerRow) { headerRow.setAttribute("ht", "20"); headerRow.setAttribute("customHeight", "1"); }
@@ -1308,7 +1337,7 @@ async function downloadColorWorkbook(record: RecordItem, personnel: Person[] = [
         const contactFont = sourceFont.cloneNode(true) as Element;
         let contactSize = Array.from(contactFont.getElementsByTagNameNS(spreadsheetNs, "sz"))[0];
         if (!contactSize) { contactSize = stylesDocument.createElementNS(spreadsheetNs, "sz"); contactFont.appendChild(contactSize); }
-        contactSize.setAttribute("val", "16");
+        contactSize.setAttribute("val", isLand ? "16" : "18");
         if (isLand && address === "P33") {
           let contactName = Array.from(contactFont.getElementsByTagNameNS(spreadsheetNs, "name"))[0];
           if (!contactName) { contactName = stylesDocument.createElementNS(spreadsheetNs, "name"); contactFont.appendChild(contactName); }
@@ -1490,6 +1519,18 @@ async function downloadColorWorkbook(record: RecordItem, personnel: Person[] = [
           positionFrame.parentNode?.replaceChild(replacement, positionFrame);
         }
       }
+      // Keep the complete right-side photo / layout / location block together.
+      // Move all three blue captions and their white frames up by 0.3 cm.
+      const up = 108000; // 0.3 cm in EMU
+      const rightBlockIds = new Set(["22", "33", "35", "32", "34", "36"]);
+      Array.from(drawingDocument.documentElement.children).forEach(anchor => {
+        const idNode = Array.from(anchor.getElementsByTagNameNS(xdrNs, "cNvPr")).find(node => rightBlockIds.has(node.getAttribute("id") || ""));
+        if (!idNode) return;
+        Array.from(anchor.getElementsByTagNameNS(xdrNs, "rowOff")).forEach(offset => offset.textContent = String(Math.max(0, Number(offset.textContent || "0") - up)));
+        const transform = Array.from(anchor.getElementsByTagNameNS("http://schemas.openxmlformats.org/drawingml/2006/main", "xfrm"))[0];
+        const offset = transform && Array.from(transform.children).find(node => node.localName === "off");
+        if (offset) offset.setAttribute("y", String(Math.max(0, Number(offset.getAttribute("y") || "0") - up)));
+      });
     }
     Array.from(drawingDocument.getElementsByTagNameNS("http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing", "clientData")).forEach(node => {
       node.setAttribute("fLocksWithSheet", "0");
@@ -1858,7 +1899,7 @@ function ChecklistPage({ val }: { val: (...keys: string[]) => string }) { return
 
 const numericPrice = (value = "") => { const match = String(value).replace(/,/g, "").match(/\d+(?:\.\d+)?/); return match ? Number(match[0]) : Number.NaN; };
 const adjustedPriceLabel = (price = "", adjusted = "") => { const original = numericPrice(price), next = numericPrice(adjusted); return Number.isFinite(original) && Number.isFinite(next) ? next < original ? "降" : next > original ? "調" : "" : ""; };
-function cellValue(r: RecordItem, key: string) { if (key === "age") return ageOf(r); if (key === "bookLocation") return locationOf(r); if (key === "coverageFar") return [r.coverage, r.far].filter(Boolean).join("／"); if (key === "status") return displayStatus(r); if (key === "archived") return displayRocDate(r.archived || (isExpired(r) ? today() : "")); if (dateKeys.has(key)) return displayRocDate(r[key]); if (key === "price") { const label = adjustedPriceLabel(r.price, r.reducedPrice); return label ? `${r.price || "—"}${label}${r.reducedPrice}` : r.price || ""; } if (key === "type") return typeShort(r.type); if (key === "contractType") return contractShort(contractFromNo(r.propertyNo) || r.contractType); return r[key] || ""; }
+function cellValue(r: RecordItem, key: string) { if (key === "age") return ageOf(r); if (key === "bookLocation") return locationOf(r); if (key === "coverageFar") return [r.coverage, r.far].filter(Boolean).join("／"); if (key === "status") return displayStatus(r); if (key === "archived") return displayRocDate(r.archived || (isExpired(r) ? today() : "")); if (dateKeys.has(key)) return displayRocDate(r[key]); if (key === "price") { const label = adjustedPriceLabel(r.price, r.reducedPrice); return label ? `${r.price || "—"}${label}${r.reducedPrice}` : r.price || ""; } if (key === "type") return typeShort(r.type); if (key === "layout") return layoutFull(r.layout, r.type); if (key === "contractType") return contractShort(contractFromNo(r.propertyNo) || r.contractType); return r[key] || ""; }
 
 function PropertyTable({ records, columns, publicMode = false, dailyMode = false, archiveMode = false, activeLead = false, expiryAnnotation = false, showAreaGroups = false, onEdit, onArchive, onRestore, onRemove, onPptChange }: { records: RecordItem[]; columns: string[]; publicMode?: boolean; dailyMode?: boolean; archiveMode?: boolean; activeLead?: boolean; expiryAnnotation?: boolean; showAreaGroups?: boolean; onEdit: (r: RecordItem) => void; onArchive: (r: RecordItem, status?: string) => void; onRestore: (r: RecordItem) => void; onRemove: (r: RecordItem) => void; onPptChange?: (r: RecordItem, patch: Partial<RecordItem>) => void }) {
   const showPpt = !!onPptChange && !publicMode;
@@ -1903,7 +1944,7 @@ function CellContent({ record: r, column: k }: { record: RecordItem; column: str
   if (k === "developer") { const names = String(r.developer || "").split(/[\/／,，、。]+/).map(value => value.trim()).filter(Boolean); return names.length ? <span className="floor-lines">{names.map((name, index) => <span key={`${name}-${index}`}>{name}</span>)}</span> : <>—</>; }
   if (k === "price") { const price = String(r.price || "").replace(/\s*萬(?:元)?\s*/g, "").trim(); const adjusted = String(r.reducedPrice || "").replace(/\s*萬(?:元)?\s*/g, "").trim(); const label = adjustedPriceLabel(price, adjusted); return <span className="two-line-value"><b>{price || "—"}</b>{label && <span className="price-reduction">{label}{adjusted}</span>}</span>; }
   if (k === "floor") { const floor = floorShortFixed(r.floor); const parts = floor.match(/^(\d+T)(\/.*增建)$/); return parts ? <span className="two-line-value"><b>{parts[1]}</b><small>{parts[2]}</small></span> : <>{floor || "—"}</>; }
-  if (k === "layout") { if (typeShort(r.type) === "土地" || /^(?:土地\s*)+$/.test(r.layout || "")) return <>土地</>; const room = (r.layout || "").match(/(\d+)\s*房/)?.[1]; const hall = (r.layout || "").match(/(\d+)\s*廳/)?.[1]; const bath = (r.layout || "").match(/(\d+)\s*衛(?:浴)?/)?.[1]; return <>{[room, hall, bath].filter(value => value !== undefined).join(".") || r.layout || "—"}</>; }
+  if (k === "layout") return <>{layoutShort(r.layout, r.type) || "—"}</>;
   if (k === "parking") { const parking = parkingShort(r.parking); const parts = parking.match(/^(坡平|昇平)(.+)$/); return parts ? <span className="two-line-value"><b>{parts[1]}</b><small>{parts[2]}</small></span> : <>{parking || "—"}</>; }
   if (["indoorPing", "buildingPing", "landPing"].includes(k)) return <>{String(r[k] || "").replace(/\s*坪\s*$/, "").trim() || "—"}</>;
   if (k === "zoning") { const chars = Array.from(r.zoning || ""); const lines = Array.from({ length: Math.ceil(chars.length / 5) }, (_, index) => chars.slice(index * 5, index * 5 + 5).join("")); return lines.length ? <span className="floor-lines">{lines.map((line, index) => <span key={`${line}-${index}`}>{line}</span>)}</span> : <>—</>; }
@@ -2045,7 +2086,7 @@ function BusinessInventory({ records, people }: { records: RecordItem[]; people:
 }
 
 function Field({ fieldKey, label, record, records, setRecord }: { fieldKey: string; label: string; record: RecordItem; records: RecordItem[]; setRecord: (r: RecordItem) => void }) {
-  const value = record[fieldKey] || ""; const set = (v: string) => setRecord(fieldKey === "propertyNo" ? { ...record, propertyNo: v, contractType: contractFromNo(v) } : { ...record, [fieldKey]: v });
+  const value = record[fieldKey] || ""; const inputValue = fieldKey === "layout" ? layoutFull(value, record.type) : value; const set = (v: string) => setRecord(fieldKey === "propertyNo" ? { ...record, propertyNo: v, contractType: contractFromNo(v) } : { ...record, [fieldKey]: v });
   const websiteInput = (key: string, siteLabel: string, expiryKey = "") => { const noneKey = `${key}None`; const none = record[noneKey] === "1"; const changeValue = (next: string) => { if (key === "windowAd" && next) { if (!/^\d+$/.test(next) || Number(next) < 1 || Number(next) > 15) return alert("櫥窗編號只能輸入 1～15"); const duplicate = records.find(item => item.id !== record.id && String(item.windowAd || "").trim() === next.trim() && item.windowAdNone !== "1"); if (duplicate) return alert(`櫥窗編號 ${next} 已由「${duplicate.caseName || duplicate.propertyNo}」使用`); } setRecord({ ...record, [key]: next }); }; return <label className={`field website-field ${none ? "website-none" : ""}`}><span className="website-field-head"><b>{siteLabel}</b><i><input type="checkbox" checked={none} onChange={event => { if (event.target.checked && String(record[key] || "").trim() && !confirm(`${siteLabel}已有內容「${record[key]}」，確定要改成無並清除內容嗎？`)) return; setRecord({ ...record, [noneKey]: event.target.checked ? "1" : "", ...(event.target.checked ? { [key]: "", ...(expiryKey ? { [expiryKey]: "" } : {}) } : {}) }); }}/>無</i></span><input type="text" disabled={none} value={record[key] || ""} onChange={event => changeValue(event.target.value)} placeholder={none ? "不需刊登" : "輸入網站編號或註記"}/>{expiryKey && <><span className="website-expiry-label">{siteLabel}到期日期</span><input type="text" inputMode="numeric" disabled={none} value={displayRocDate(record[expiryKey] || "")} onChange={event => setRecord({ ...record, [expiryKey]: event.target.value })} onBlur={event => setRecord({ ...record, [expiryKey]: normalizeDateInput(event.target.value) })} placeholder="例如 115/8/31"/></>}</label>; };
   if (["colorSheetHeader", "coverHeader", "websiteHeader"].includes(fieldKey)) return <div className="record-edit-section-title"><b>{label}</b><span>{fieldKey === "colorSheetHeader" ? "供彩色表 Excel 使用" : fieldKey === "coverHeader" ? "供列印新進資料封面使用" : "輸入各網站刊登編號"}</span></div>;
   if (fieldKey === "areaPaste") return <label className="field area-paste-field"><span>{label}</span><textarea rows={8} value={value} onChange={event => setRecord(parseAreaPaste(event.target.value, record))} placeholder="貼上建物面積、土地面積、建築完成日與主要建材整串文字，系統會自動抓取下方數字。"/><small>已抓取的內容仍可在下方個別修改。</small></label>;
@@ -2076,7 +2117,7 @@ function Field({ fieldKey, label, record, records, setRecord }: { fieldKey: stri
   if (fieldKey === "groupViewDate") return <label className="field"><span>{label}</span><input type="text" placeholder="例如：115年7月28日、已團看" value={value} onChange={e => set(e.target.value)}/><small>可輸入日期或中文註記</small></label>;
   if (fieldKey === "updateDate") return <label className="field update-date-field"><span>{label}</span><input type="text" inputMode="numeric" value={displayRocDate(value)} onChange={e => set(e.target.value)} onBlur={e => set(normalizeDateInput(e.target.value))} placeholder="例如 115/7/29"/><small>{record.lastModifiedAt ? `最後修改:${displayModifiedAt(record.lastModifiedAt)}` : "尚無修改時間"}</small></label>;
   if (dateKeys.has(fieldKey)) return <label className={`field ${value && !validDate(value) ? "invalid" : ""}`}><span>{label}</span><input type="text" inputMode="numeric" placeholder="例如 7/24" value={displayRocDate(value)} onChange={e => set(e.target.value)} onBlur={e => set(normalizeDateInput(e.target.value))}/><small>可輸入 7/24，自動轉為民國日期</small></label>;
-  return <label className="field"><span>{label}{fieldKey === "propertyNo" || fieldKey === "caseName" ? " *" : ""}</span><input type="text" inputMode={["price", "reducedPrice", "builtYear", "indoorPing", "buildingPing", "landPing", "coverage", "far"].includes(fieldKey) ? "decimal" : undefined} value={value} onChange={e => set(e.target.value)}/>{fieldKey === "builtYear" && value && <small>目前換算：{ageOf(record)}</small>}</label>;
+  return <label className="field"><span>{label}{fieldKey === "propertyNo" || fieldKey === "caseName" ? " *" : ""}</span><input type="text" inputMode={["price", "reducedPrice", "builtYear", "indoorPing", "buildingPing", "landPing", "coverage", "far"].includes(fieldKey) ? "decimal" : undefined} value={inputValue} onChange={e => set(e.target.value)}/>{fieldKey === "builtYear" && value && <small>目前換算：{ageOf(record)}</small>}</label>;
 }
 
 function SettingsPanel({ settings, setSettings, supabasePush, supabasePull, cloudSession, supabaseSignIn, supabaseSignOut }: { settings: Settings; setSettings: (s: Settings) => void; supabasePush: () => void; supabasePull: () => void; cloudSession: CloudSession | null; supabaseSignIn: (email: string, password: string, signUp?: boolean) => void; supabaseSignOut: () => void }) {

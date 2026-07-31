@@ -40536,6 +40536,30 @@ ${String(ex)}`);
     return totalTop ? `\u5728${current}\u6A13/\u5171${totalTop}\u6A13` : `\u5728${current}\u6A13`;
   };
   var contractShort = (value = "") => value.includes("\u4E00\u822C") ? "\u4E00\u822C\u7D04" : value.includes("\u5C08") ? "\u5C08\u7D04" : value;
+  var layoutFull = (value = "", type = "") => {
+    const raw = String(value || "").trim();
+    if (!raw) return "";
+    if (typeShort(type) === "\u571F\u5730" || /^(?:土地\s*)+$/.test(raw)) return "\u571F\u5730";
+    const numberOf = (pattern) => raw.match(pattern)?.[1] || "";
+    let room = numberOf(/(\d+)\s*房/);
+    let hall = numberOf(/(\d+)\s*廳/);
+    let bath = numberOf(/(\d+)\s*衛(?:浴)?/);
+    let balcony = numberOf(/(\d+)\s*陽台/);
+    if (!room && !hall && !bath && !balcony) {
+      const parts = raw.match(/\d+/g) || [];
+      [room, hall, bath, balcony] = [parts[0] || "", parts[1] || "", parts[2] || "", parts[3] || ""];
+    }
+    if (!room && !hall && !bath && !balcony) return raw;
+    return `${room || "0"}\u623F${hall || "0"}\u5EF3${bath || "0"}\u885B${balcony || "0"}\u967D\u53F0`;
+  };
+  var layoutShort = (value = "", type = "") => {
+    const full = layoutFull(value, type);
+    if (full === "\u571F\u5730") return "\u571F\u5730";
+    const room = full.match(/(\d+)\s*房/)?.[1];
+    const hall = full.match(/(\d+)\s*廳/)?.[1];
+    const bath = full.match(/(\d+)\s*衛/)?.[1];
+    return [room, hall, bath].every(Boolean) ? [room, hall, bath].join(".") : full;
+  };
   var nameMatches = (developer = "", person = "") => {
     const a = developer.replace(/\s/g, "");
     const b = person.replace(/\s/g, "");
@@ -42820,7 +42844,9 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     const halfWidth = (value = "") => String(value || "").replace(/[０-９]/g, (character) => String(character.charCodeAt(0) - 65248)).replace(/[～〜﹣－–—-]/g, "~");
     const currentFloorValue = (value = "") => halfWidth(value).replace(/^現況\s*/g, "").trim();
     const taxValue = (value = "") => {
-      const number = cleanNumber(value);
+      const raw = String(value || "").trim();
+      const number = cleanNumber(raw);
+      if (!raw || !number && !/[\d]/.test(raw)) return raw || "$0 \u4F9D\u7A05\u55AE\u70BA\u6E96";
       return !number || Number(number) === 0 ? "$0 \u4F9D\u7A05\u55AE\u70BA\u6E96" : `\u7D04$${Number(number).toLocaleString("en-US")}`;
     };
     const layoutNumber = (pattern) => String(record.layout || "").match(pattern)?.[1] || "";
@@ -42980,7 +43006,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
         M20: `${record.elevatorCount || ""}\u90E8`,
         F21: record.managementMethod || "",
         M21: !cleanNumber(record.managementFee) || Number(cleanNumber(record.managementFee)) === 0 ? "-/\u6708" : `${cleanNumber(record.managementFee)}/\u6708`,
-        F22: record.layout || "",
+        F22: layoutFull(record.layout || "", record.type),
         F23: record.titleFloor || floorParts[0] || "",
         M23: currentFloorValue(record.currentFloor || floorParts[1] || ""),
         F24: record.completionDate || record.builtYear || "",
@@ -43020,7 +43046,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
         setWorksheetRichCell(visibleDocument, "F13", directValues.F13 || "\u576A", { size: 16, bold: true });
         setWorksheetRichCell(visibleDocument, "M15", directValues.M15 || "", { size: 14 });
       }
-      if (!isLand) setWorksheetRichCell(visibleDocument, "P44", developerContact, { size: 12, font: "DFKai-SB" });
+      if (!isLand) setWorksheetRichCell(visibleDocument, "P44", developerContact, { size: 18, font: "DFKai-SB" });
       if (isLand) setWorksheetRichCell(visibleDocument, "P33", developerContact, { size: 12, font: "DFKai-SB" });
       const headerRow = Array.from(visibleDocument.getElementsByTagNameNS(spreadsheetNs, "row")).find((item) => item.getAttribute("r") === "4");
       if (headerRow) {
@@ -43167,7 +43193,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
             contactSize = stylesDocument.createElementNS(spreadsheetNs, "sz");
             contactFont.appendChild(contactSize);
           }
-          contactSize.setAttribute("val", "16");
+          contactSize.setAttribute("val", isLand ? "16" : "18");
           if (isLand && address === "P33") {
             let contactName = Array.from(contactFont.getElementsByTagNameNS(spreadsheetNs, "name"))[0];
             if (!contactName) {
@@ -43384,6 +43410,16 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
             positionFrame.parentNode?.replaceChild(replacement, positionFrame);
           }
         }
+        const up = 108e3;
+        const rightBlockIds = /* @__PURE__ */ new Set(["22", "33", "35", "32", "34", "36"]);
+        Array.from(drawingDocument.documentElement.children).forEach((anchor) => {
+          const idNode = Array.from(anchor.getElementsByTagNameNS(xdrNs, "cNvPr")).find((node) => rightBlockIds.has(node.getAttribute("id") || ""));
+          if (!idNode) return;
+          Array.from(anchor.getElementsByTagNameNS(xdrNs, "rowOff")).forEach((offset2) => offset2.textContent = String(Math.max(0, Number(offset2.textContent || "0") - up)));
+          const transform = Array.from(anchor.getElementsByTagNameNS("http://schemas.openxmlformats.org/drawingml/2006/main", "xfrm"))[0];
+          const offset = transform && Array.from(transform.children).find((node) => node.localName === "off");
+          if (offset) offset.setAttribute("y", String(Math.max(0, Number(offset.getAttribute("y") || "0") - up)));
+        });
       }
       Array.from(drawingDocument.getElementsByTagNameNS("http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing", "clientData")).forEach((node) => {
         node.setAttribute("fLocksWithSheet", "0");
@@ -44356,6 +44392,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       return label ? `${r.price || "\u2014"}${label}${r.reducedPrice}` : r.price || "";
     }
     if (key === "type") return typeShort(r.type);
+    if (key === "layout") return layoutFull(r.layout, r.type);
     if (key === "contractType") return contractShort(contractFromNo(r.propertyNo) || r.contractType);
     return r[key] || "";
   }
@@ -44559,13 +44596,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: parts[2] })
       ] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: floor || "\u2014" });
     }
-    if (k === "layout") {
-      if (typeShort(r.type) === "\u571F\u5730" || /^(?:土地\s*)+$/.test(r.layout || "")) return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: "\u571F\u5730" });
-      const room = (r.layout || "").match(/(\d+)\s*房/)?.[1];
-      const hall = (r.layout || "").match(/(\d+)\s*廳/)?.[1];
-      const bath = (r.layout || "").match(/(\d+)\s*衛(?:浴)?/)?.[1];
-      return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: [room, hall, bath].filter((value) => value !== void 0).join(".") || r.layout || "\u2014" });
-    }
+    if (k === "layout") return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: layoutShort(r.layout, r.type) || "\u2014" });
     if (k === "parking") {
       const parking = parkingShort(r.parking);
       const parts = parking.match(/^(坡平|昇平)(.+)$/);
@@ -45232,6 +45263,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
   }
   function Field({ fieldKey, label, record, records, setRecord }) {
     const value = record[fieldKey] || "";
+    const inputValue = fieldKey === "layout" ? layoutFull(value, record.type) : value;
     const set = (v) => setRecord(fieldKey === "propertyNo" ? { ...record, propertyNo: v, contractType: contractFromNo(v) } : { ...record, [fieldKey]: v });
     const websiteInput = (key, siteLabel, expiryKey = "") => {
       const noneKey = `${key}None`;
@@ -45452,7 +45484,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
         label,
         fieldKey === "propertyNo" || fieldKey === "caseName" ? " *" : ""
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", inputMode: ["price", "reducedPrice", "builtYear", "indoorPing", "buildingPing", "landPing", "coverage", "far"].includes(fieldKey) ? "decimal" : void 0, value, onChange: (e) => set(e.target.value) }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", inputMode: ["price", "reducedPrice", "builtYear", "indoorPing", "buildingPing", "landPing", "coverage", "far"].includes(fieldKey) ? "decimal" : void 0, value: inputValue, onChange: (e) => set(e.target.value) }),
       fieldKey === "builtYear" && value && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { children: [
         "\u76EE\u524D\u63DB\u7B97\uFF1A",
         ageOf(record)
