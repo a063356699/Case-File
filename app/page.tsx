@@ -1887,7 +1887,10 @@ async function downloadColorWorkbook(record: RecordItem, personnel: Person[] = [
   const blob = await zip.generateAsync({ type: "blob", mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
   const link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
-  link.download = `${(record.caseName || record.propertyNo || "物件").replace(/[\\/:*?"<>|]/g, "-")}_彩色表.xlsx`;
+  const filenameArea = String(record.area || areaCategory(record) || "").trim();
+  const filenameAddress = String(record.address || "").replace(/^(?:台|臺)?[^市縣]+[市縣]/, "").replace(/^[^市縣區鄉鎮]+(?:區|鄉|鎮|市)/, "").trim();
+  const filenameParts = [filenameArea, record.caseName, filenameAddress, record.developer].map(value => String(value || "").trim()).filter(Boolean);
+  link.download = `${(filenameParts.join("-") || record.propertyNo || "物件").replace(/[\\/:*?"<>|]/g, "-")}.xlsx`;
   document.body.appendChild(link); link.click(); link.remove();
   // Keep the blob URL alive for this local session. Edge may hand the temporary
   // download path to Excel a few seconds after the click; revoking immediately
