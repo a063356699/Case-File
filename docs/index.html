@@ -46217,11 +46217,11 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       panel.className = "panel expiry-settings-panel";
       panel.innerHTML = `<h3>\u516C\u53F8\u5230\u671F\u63D0\u9192</h3><p>591\u30015168 \u6703\u5728\u5230\u671F\u524D 1 \u5929\u63D0\u9192\uFF1B\u7D93\u7D00\u4EBA\u6703\u5728\u5230\u671F\u524D 1 \u500B\u6708\u63D0\u9192\u3002</p><div class="form-grid"><label class="field"><span>591 \u5230\u671F\u65E5</span><input data-expiry-key="expiry591" placeholder="\u4F8B\u5982 115/8/31"></label><label class="field"><span>5168 \u5230\u671F\u65E5</span><input data-expiry-key="expiry5168" placeholder="\u4F8B\u5982 115/8/31"></label><label class="field"><span>\u7D93\u7D00\u4EBA\u5230\u671F\u65E5</span><input data-expiry-key="brokerExpiry" placeholder="\u4F8B\u5982 115/8/31"></label></div>`;
       panel.classList.remove("expiry-open");
-      const expiryHeading = panel.querySelector("h3");
-      const toggleExpiryPanel = () => {
+      const toggleExpiryPanel = (event) => {
+        if (event.target.closest("input,select,textarea,button,label")) return;
         panel.classList.toggle("expiry-open");
       };
-      expiryHeading?.addEventListener("click", toggleExpiryPanel);
+      panel.addEventListener("click", toggleExpiryPanel);
       personnelPanel.parentElement?.insertBefore(panel, personnelPanel);
       const values = { expiry591: displayRocDate(settings.expiry591 || ""), expiry5168: displayRocDate(settings.expiry5168 || ""), brokerExpiry: displayRocDate(settings.brokerExpiry || "") };
       const handlers = Array.from(panel.querySelectorAll("[data-expiry-key]")).map((input) => {
@@ -46231,7 +46231,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
         return { input, handler };
       });
       return () => {
-        expiryHeading?.removeEventListener("click", toggleExpiryPanel);
+        panel.removeEventListener("click", toggleExpiryPanel);
         handlers.forEach(({ input, handler }) => input.removeEventListener("blur", handler));
         panel.remove();
       };
@@ -46241,13 +46241,13 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       const head = personnelPanel?.querySelector(".personnel-head");
       if (!personnelPanel || !head) return;
       personnelPanel.classList.remove("personnel-open");
-      const heading = head.querySelector("h3");
-      const togglePanel = () => {
+      const togglePanel = (event) => {
+        if (event.target.closest("input,select,textarea,button,label")) return;
         personnelPanel.classList.toggle("personnel-open");
       };
-      heading?.addEventListener("click", togglePanel);
+      personnelPanel.addEventListener("click", togglePanel);
       return () => {
-        heading?.removeEventListener("click", togglePanel);
+        personnelPanel.removeEventListener("click", togglePanel);
       };
     }, []);
     const [cloudEmail, setCloudEmail] = (0, import_react.useState)("");
