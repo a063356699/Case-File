@@ -1521,7 +1521,7 @@ async function downloadColorWorkbook(record: RecordItem, personnel: Person[] = [
       }
       // Keep the complete right-side photo / layout / location block together.
       // Move all three blue captions and their white frames up by 0.3 cm.
-      const up = 108000; // 0.3 cm in EMU
+      const up = 180000; // 0.5 cm in EMU
       const rightBlockIds = new Set(["22", "33", "35", "32", "34", "36"]);
       Array.from(drawingDocument.documentElement.children).forEach(anchor => {
         const idNode = Array.from(anchor.getElementsByTagNameNS(xdrNs, "cNvPr")).find(node => rightBlockIds.has(node.getAttribute("id") || ""));

@@ -43410,7 +43410,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
             positionFrame.parentNode?.replaceChild(replacement, positionFrame);
           }
         }
-        const up = 108e3;
+        const up = 18e4;
         const rightBlockIds = /* @__PURE__ */ new Set(["22", "33", "35", "32", "34", "36"]);
         Array.from(drawingDocument.documentElement.children).forEach((anchor) => {
           const idNode = Array.from(anchor.getElementsByTagNameNS(xdrNs, "cNvPr")).find((node) => rightBlockIds.has(node.getAttribute("id") || ""));
