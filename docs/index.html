@@ -45292,6 +45292,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     }
     if (k === "layout") return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: layoutShort(r.layout, r.type) || "\u2014" });
     if (k === "parking") {
+      if (typeShort(r.type) === "\u571F\u5730" || /^(?:LG|LA)/i.test(String(r.propertyNo || ""))) return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, {});
       const parking = parkingShort(r.parking);
       const parts = parking.match(/^(坡平|昇平)(.+)$/);
       return parts ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "two-line-value", children: [
