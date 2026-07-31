@@ -41200,8 +41200,10 @@ ${String(ex)}`);
             alert(`JSON \u532F\u5165\u5B8C\u6210\uFF0C\u5171 ${nextRecords.length} \u7B46\uFF0C\u73FE\u5728\u91CD\u65B0\u8F09\u5165\u3002`);
             location.reload();
           }
-        } catch {
-          flash("JSON \u6A94\u6848\u683C\u5F0F\u932F\u8AA4");
+        } catch (error) {
+          console.error("JSON import failed", error);
+          const detail = error instanceof Error ? error.message : String(error || "");
+          flash(detail ? `JSON \u532F\u5165\u5931\u6557\uFF1A${detail}` : "JSON \u6A94\u6848\u683C\u5F0F\u932F\u8AA4");
         }
         e.target.value = "";
       };

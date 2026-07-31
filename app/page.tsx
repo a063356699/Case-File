@@ -573,7 +573,11 @@ export default function Home() {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(nextRecords)); alert(`售屋資料表補齊完成：${changed} 件有新增欄位，原本已填資料均已保留。`); location.reload(); return;
       }
       const fullBackup = !Array.isArray(data) && Number(data.version || 0) >= 2 && Array.isArray(data.records); const replaceExisting = fullBackup || (!Array.isArray(data) && data.replaceExisting === true); const message = replaceExisting ? `將以備份中的 ${list.length} 筆資料取代 Edge 目前物件，確定嗎？` : `將匯入 ${list.length} 筆資料，並與現有資料合併，確定嗎？`; if (confirm(message)) { const normalized = list.map((r: RecordItem) => ({ ...blankRecord(), ...r, id: r.id || newId(), photos: Array.isArray(r.photos) ? r.photos : [] })); let nextRecords = normalized; if (!replaceExisting) { const map = new Map(records.map(r => [r.id, r])); normalized.forEach((r: RecordItem) => map.set(r.id, r)); nextRecords = [...map.values()]; } localStorage.setItem(STORAGE_KEY, JSON.stringify(nextRecords)); if (!Array.isArray(data) && Array.isArray(data.settings?.personnel)) { let savedSettings: any = {}; try { savedSettings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}"); } catch {} localStorage.setItem(SETTINGS_KEY, JSON.stringify({ ...savedSettings, personnel: mergeSuppliedPersonnel(data.settings.personnel) })); } localStorage.setItem("property-desk-official-merge-2026-07-30-v6", "1"); localStorage.setItem("property-desk-app-restore-216-v3", "1"); alert(`JSON 匯入完成，共 ${nextRecords.length} 筆，現在重新載入。`); location.reload(); }
-    } catch { flash("JSON 檔案格式錯誤"); } e.target.value = ""; }; reader.readAsText(file);
+    } catch (error) {
+      console.error("JSON import failed", error);
+      const detail = error instanceof Error ? error.message : String(error || "");
+      flash(detail ? `JSON 匯入失敗：${detail}` : "JSON 檔案格式錯誤");
+    } e.target.value = ""; }; reader.readAsText(file);
   };
   const exportExcel = () => {
     const cols = activeColumns.filter(k => k !== "photos");
