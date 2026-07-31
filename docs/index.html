@@ -45684,33 +45684,6 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     ] }, p.id);
     return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", { className: "settings content", children: [
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SectionTitle, { title: "\u7CFB\u7D71\u8A2D\u5B9A", subtitle: "" }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("article", { className: "panel personnel-panel", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "personnel-head", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { children: "\u4EBA\u54E1\u8A2D\u5B9A" }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "primary", onClick: addPerson, children: "\uFF0B \u65B0\u589E\u4EBA\u54E1" })
-        ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "personnel-table", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "person-row person-labels", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u5E8F" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u4EBA\u54E1" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u8EAB\u5206\u8B49\u5B57\u865F\uFF08\u524D\u53F0\u5BC6\u78BC\uFF09" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u624B\u6A5F\u865F\u78BC" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u8077\u52D9" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u72C0\u614B" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u64CD\u4F5C" })
-          ] }),
-          activePeople.map(personRow),
-          !activePeople.length && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "no-person", children: "\u5C1A\u672A\u65B0\u589E\u5728\u8077\u4EBA\u54E1" })
-        ] }),
-        formerPeople.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("details", { className: "former-people", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("summary", { children: [
-            "\u96E2\u8077\u4EBA\u54E1\uFF08",
-            formerPeople.length,
-            "\uFF09"
-          ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "personnel-table", children: formerPeople.map(personRow) })
-        ] })
-      ] }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("details", { className: "supabase", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("summary", { children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u9032\u968E\uFF1ASupabase \u96F2\u7AEF\u540C\u6B65" }),
@@ -45748,6 +45721,33 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "primary", onClick: () => void supabaseSignIn(cloudEmail, cloudPassword, true), children: "\u7B2C\u4E00\u6B21\u4F7F\u7528\uFF1A\u8A3B\u518A\u96F2\u7AEF\u5E33\u865F" })
             ] })
           ] })
+        ] })
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("article", { className: "panel personnel-panel", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "personnel-head", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { children: "\u4EBA\u54E1\u8A2D\u5B9A" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "primary", onClick: addPerson, children: "\uFF0B \u65B0\u589E\u4EBA\u54E1" })
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "personnel-table", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "person-row person-labels", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u5E8F" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u4EBA\u54E1" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u8EAB\u5206\u8B49\u5B57\u865F\uFF08\u524D\u53F0\u5BC6\u78BC\uFF09" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u624B\u6A5F\u865F\u78BC" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u8077\u52D9" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u72C0\u614B" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u64CD\u4F5C" })
+          ] }),
+          activePeople.map(personRow),
+          !activePeople.length && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "no-person", children: "\u5C1A\u672A\u65B0\u589E\u5728\u8077\u4EBA\u54E1" })
+        ] }),
+        formerPeople.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("details", { className: "former-people", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("summary", { children: [
+            "\u96E2\u8077\u4EBA\u54E1\uFF08",
+            formerPeople.length,
+            "\uFF09"
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "personnel-table", children: formerPeople.map(personRow) })
         ] })
       ] })
     ] });
