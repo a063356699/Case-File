@@ -42179,6 +42179,10 @@ ${String(ex)}`);
             ] })
           ] }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "tools", children: tab === "active" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { className: missingDataRecords.length ? "missing-data-button has-items" : "missing-data-button", onClick: () => setMissingDataReminderOpen(true), children: [
+              "\u5F85\u88DC\u8CC7\u6599 ",
+              missingDataRecords.length
+            ] }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", { className: "website-filter", value: websiteFilter, onChange: (event) => setWebsiteFilter(event.target.value), children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: "", children: "\u5168\u90E8\u7269\u4EF6" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: "all", children: "\u5168\u90E8\u5C1A\u672A PO" }),
@@ -42192,11 +42196,7 @@ ${String(ex)}`);
               setWebsiteFilter("");
               setAdvancedFilter(blankAdvancedFilter());
               setQuery("");
-            }, children: "\u6E05\u9664\u7BE9\u9078" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { className: missingDataRecords.length ? "missing-data-button has-items" : "missing-data-button", onClick: () => setMissingDataReminderOpen(true), children: [
-              "\u5F85\u88DC\u8CC7\u6599 ",
-              missingDataRecords.length
-            ] })
+            }, children: "\u6E05\u9664\u7BE9\u9078" })
           ] }) })
         ] }),
         tab === "active" && websiteExpiryRecords.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "website-expiry-reminder", children: [
