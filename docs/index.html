@@ -43380,7 +43380,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
         if (isLand) {
           const mergeCells = visibleDocument.getElementsByTagNameNS(spreadsheetNs, "mergeCells")[0];
           const numberFormats = stylesDocument.getElementsByTagNameNS(spreadsheetNs, "numFmts")[0];
-          const formatCode = '"\u7D04"$#,##0';
+          const formatCode = '"\u7D04  "$#,##0';
           let formatId = Array.from(numberFormats?.getElementsByTagNameNS(spreadsheetNs, "numFmt") || []).find((item) => item.getAttribute("formatCode") === formatCode)?.getAttribute("numFmtId") || "";
           if (!formatId && numberFormats) {
             const ids = Array.from(numberFormats.getElementsByTagNameNS(spreadsheetNs, "numFmt")).map((item) => Number(item.getAttribute("numFmtId") || 163));

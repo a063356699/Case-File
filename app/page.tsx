@@ -1391,7 +1391,7 @@ async function downloadColorWorkbook(record: RecordItem, personnel: Person[] = [
       if (isLand) {
         const mergeCells = visibleDocument.getElementsByTagNameNS(spreadsheetNs, "mergeCells")[0];
         const numberFormats = stylesDocument.getElementsByTagNameNS(spreadsheetNs, "numFmts")[0];
-        const formatCode = '"約"$#,##0';
+        const formatCode = '"約  "$#,##0';
         let formatId = Array.from(numberFormats?.getElementsByTagNameNS(spreadsheetNs, "numFmt") || []).find(item => item.getAttribute("formatCode") === formatCode)?.getAttribute("numFmtId") || "";
         if (!formatId && numberFormats) { const ids = Array.from(numberFormats.getElementsByTagNameNS(spreadsheetNs, "numFmt")).map(item => Number(item.getAttribute("numFmtId") || 163)); formatId = String(Math.max(163, ...ids) + 1); const format = stylesDocument.createElementNS(spreadsheetNs, "numFmt"); format.setAttribute("numFmtId", formatId); format.setAttribute("formatCode", formatCode); numberFormats.appendChild(format); numberFormats.setAttribute("count", String(numberFormats.children.length)); }
         taxRows.forEach(({ row, value }) => {
