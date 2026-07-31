@@ -41199,6 +41199,9 @@ ${String(ex)}`);
       if (internalView) setTab("public");
     }, [internalView]);
     (0, import_react.useEffect)(() => {
+      if (internalView) document.title = "\u9023\u57CE\u5167\u90E8\u7E3D\u8868 \u8ACB\u52FF\u5916\u6D41";
+    }, [internalView]);
+    (0, import_react.useEffect)(() => {
       if (records.length) localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
     }, [records]);
     (0, import_react.useEffect)(() => {

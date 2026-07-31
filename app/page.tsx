@@ -505,6 +505,9 @@ export default function Home() {
     } catch { setRecords([sample]); }
   }, []);
   useEffect(() => { if (internalView) setTab("public"); }, [internalView]);
+  useEffect(() => {
+    if (internalView) document.title = "連城內部總表 請勿外流";
+  }, [internalView]);
   useEffect(() => { if (records.length) localStorage.setItem(STORAGE_KEY, JSON.stringify(records)); }, [records]);
   useEffect(() => { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); }, [settings]);
   useEffect(() => { localStorage.setItem(INTAKE_KEY, JSON.stringify({ raw: intakeRaw, drafts: intakeDrafts, selectedId: selectedIntakeId })); }, [intakeRaw, intakeDrafts, selectedIntakeId]);
