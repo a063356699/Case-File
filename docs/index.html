@@ -229,6 +229,9 @@
 .restore-in-editor{background:#e4f1eb!important;border-color:#8fb6a5!important;color:#15513f!important;font-weight:900!important}
 .ppt-picker-modal{width:min(1080px,96vw)!important;max-height:90vh!important}
 .ppt-picker-body{padding:22px 24px;display:flex;flex-direction:column;gap:13px}
+.ppt-week-selector{padding:12px 16px;border:1px solid #c9d9d2;border-radius:11px;background:#fff}
+.ppt-week-selector label{display:flex;align-items:center;gap:14px;color:#174f40}
+.ppt-week-selector select{flex:1;min-height:42px;border:1px solid #aebfb8;border-radius:9px;background:#fff;padding:6px 12px;font-size:16px;font-weight:700;color:#243d35}
 .ppt-week-range{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-radius:11px;background:#e6f1ec;color:#174f40}
 .ppt-week-range span{font-weight:800}
 .ppt-meeting-note{padding:4px 2px;color:#7b4c19;font-size:15px;font-weight:900;text-align:center}
@@ -40648,26 +40651,25 @@ ${String(ex)}`);
     history[date] = [.../* @__PURE__ */ new Set([...history[date] || [], ...changed])];
     return { ...next, updateDate: date, lastModifiedAt: (/* @__PURE__ */ new Date()).toISOString(), _updateHistory: JSON.stringify(history) };
   };
-  var currentPptWeek = () => {
-    const now = /* @__PURE__ */ new Date();
-    now.setHours(0, 0, 0, 0);
-    const start = new Date(now);
-    start.setDate(now.getDate() - (now.getDay() + 1) % 7);
+  var isoLocalDate = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  var pptWeekOf = (anchor = today()) => {
+    const parsed = /^\d{4}-\d{2}-\d{2}$/.test(anchor) ? /* @__PURE__ */ new Date(`${anchor}T00:00:00`) : /* @__PURE__ */ new Date();
+    parsed.setHours(0, 0, 0, 0);
+    const start = new Date(parsed);
+    start.setDate(parsed.getDate() - (parsed.getDay() + 1) % 7);
     const end = new Date(start);
     end.setDate(start.getDate() + 6);
-    const iso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-    return { start: iso(start), end: iso(end) };
+    const meeting = new Date(end);
+    meeting.setDate(end.getDate() + 3);
+    return { start: isoLocalDate(start), end: isoLocalDate(end), meeting: isoLocalDate(meeting) };
   };
-  var pptMeetingDateLabel = () => {
-    const [year, month, day] = currentPptWeek().end.split("-").map(Number);
-    const meeting = new Date(year, month - 1, day);
-    meeting.setDate(meeting.getDate() + 3);
-    return `${meeting.getFullYear() - 1911}\u5E74${meeting.getMonth() + 1}\u6708${meeting.getDate()}\u65E5`;
+  var currentPptWeek = () => pptWeekOf(today());
+  var pptMeetingDateLabel = (week = currentPptWeek()) => {
+    const [year, month, day] = week.meeting.split("-").map(Number);
+    return `${year - 1911}\u5E74${month}\u6708${day}\u65E5`;
   };
-  var isCurrentPptWeek = (value = "") => {
-    const { start, end } = currentPptWeek();
-    return /^\d{4}-\d{2}-\d{2}$/.test(value) && value >= start && value <= end;
-  };
+  var isPptWeek = (value = "", week = currentPptWeek()) => /^\d{4}-\d{2}-\d{2}$/.test(value) && value >= week.start && value <= week.end;
+  var isCurrentPptWeek = (value = "") => isPptWeek(value, currentPptWeek());
   var pptIncluded = (record) => record.pptSelected === "1" || record.pptSelected !== "0" && isCurrentPptWeek(record.reportDate);
   var pptCategory = (record) => record.pptCategory || (isCurrentPptWeek(record.reportDate) ? "\u672C\u9031\u9032\u6848" : "\u81E8\u6642\u65B0\u589E");
   var validDate = (v = "") => !v || /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(v));
@@ -41253,6 +41255,7 @@ ${String(ex)}`);
     const [pptPickerOpen, setPptPickerOpen] = (0, import_react.useState)(false);
     const [pptShowExtras, setPptShowExtras] = (0, import_react.useState)(false);
     const [pptExtraIds, setPptExtraIds] = (0, import_react.useState)([]);
+    const [pptWeekStart, setPptWeekStart] = (0, import_react.useState)(currentPptWeek().start);
     const [tourItems, setTourItems] = (0, import_react.useState)([]);
     const [tourDate, setTourDate] = (0, import_react.useState)(today());
     const [tourTitle, setTourTitle] = (0, import_react.useState)(`${displayRocDate(today()).replace(/\//g, ".")}\u5718\u770B`);
@@ -41436,8 +41439,10 @@ ${String(ex)}`);
       return includes("propertyNo") && includes("caseName") && includes("address") && (!f.type || typeShort(r.type) === f.type) && includes("direction") && includes("zoning") && includes("developer") && includes("key") && includes("currentState") && includes("salesBook") && (!f.rooms || new RegExp(`${f.rooms}\\s*\u623F`).test(layout)) && (!f.halls || new RegExp(`${f.halls}\\s*\u5EF3`).test(layout)) && (!f.baths || new RegExp(`${f.baths}\\s*\u885B`).test(layout)) && floorMatch && parkingMatch && photoMatch && websiteMatch && filterDateInRange(r.entrustStart, f.entrustStartFrom, f.entrustStartTo) && filterDateInRange(r.entrustEnd, f.entrustEndFrom, f.entrustEndTo) && filterDateInRange(r.reportDate, f.reportFrom, f.reportTo) && filterDateInRange(r.updateDate, f.updateFrom, f.updateTo) && filterDateInRange(r.groupViewDate, f.groupFrom, f.groupTo) && filterDateInRange(r.bookLocationDate, f.bookFrom, f.bookTo) && filterDateInRange(r.salesBookDate, f.salesFrom, f.salesTo) && filterInRange(r.price, f.priceFrom, f.priceTo, true) && filterInRange(ageOf(r), f.ageFrom, f.ageTo) && filterInRange(r.indoorPing, f.indoorFrom, f.indoorTo) && filterInRange(r.landPing, f.landFrom, f.landTo) && filterInRange(r.buildingPing, f.buildingFrom, f.buildingTo) && filterInRange(r.road, f.roadFrom, f.roadTo) && filterInRange(r.frontage, f.frontageFrom, f.frontageTo) && filterInRange(r.depth, f.depthFrom, f.depthTo);
     };
     const shown = (tab === "archive" ? archived : sortActiveRecords(active)).filter((r) => (!websiteFilter || tab === "archive" || (websiteFilter === "all" ? requiredWebsiteKeys(r).some((key) => isWebsiteMissing(r, key)) : isWebsiteMissing(r, websiteFilter))) && (tab !== "active" || matchesAdvancedFilter(r)) && [r.propertyNo, r.area, r.caseName, r.address, r.developer].join(" ").toLowerCase().includes(query.toLowerCase()));
-    const weeklyPptRecords = sortPptRecords(active.filter((record) => isCurrentPptWeek(record.reportDate)));
-    const selectedPptRecords = sortPptRecords(active.filter((record) => isCurrentPptWeek(record.reportDate) || pptExtraIds.includes(record.id)));
+    const selectedPptWeek = pptWeekOf(pptWeekStart);
+    const pptWeekOptions = [.../* @__PURE__ */ new Set([currentPptWeek().start, ...records.map((record) => normalizeDateInput(record.reportDate || "")).filter((date) => /^\d{4}-\d{2}-\d{2}$/.test(date)).map((date) => pptWeekOf(date).start)])].sort((a, b) => b.localeCompare(a));
+    const weeklyPptRecords = sortPptRecords(records.filter((record) => isPptWeek(record.reportDate, selectedPptWeek)));
+    const selectedPptRecords = sortPptRecords(records.filter((record) => isPptWeek(record.reportDate, selectedPptWeek) || pptExtraIds.includes(record.id)));
     const flash = (text) => {
       setNotice(text);
       setTimeout(() => setNotice(""), 2600);
@@ -41727,7 +41732,7 @@ ${String(ex)}`);
       });
       canvas.toBlob((blob) => {
         if (!blob) return flash("\u5716\u7247\u7522\u751F\u5931\u6557");
-        download(`\u516C\u544A${pptMeetingDateLabel()}\u958B\u6703\u661F\u671F\u4E00PPT.png`, blob);
+        download(`\u516C\u544A${pptMeetingDateLabel(selectedPptWeek)}\u958B\u6703\u661F\u671F\u4E00PPT.png`, blob);
         flash(`\u5DF2\u7522\u751F\u5716\u7247\uFF0C\u5171 ${selectedPptRecords.length} \u7B46\u7269\u4EF6`);
       }, "image/png");
     };
@@ -41811,7 +41816,7 @@ ${String(ex)}`);
       });
       try {
         const pptBlob = await pptx.write({ outputType: "blob" });
-        download(`${pptMeetingDateLabel()}\u958B\u6703PPT.pptx`, pptBlob);
+        download(`${pptMeetingDateLabel(selectedPptWeek)}\u958B\u6703PPT.pptx`, pptBlob);
         setPptPickerOpen(false);
         flash(`\u5DF2\u7522\u751F PPT\uFF0C\u5171 ${selected.length} \u7B46\u7269\u4EF6`);
       } catch (error) {
@@ -41922,7 +41927,7 @@ ${String(ex)}`);
       });
       try {
         const pptBlob = await pptx.write({ outputType: "blob" });
-        download(`${pptMeetingDateLabel()}\u958B\u6703PPT.pptx`, pptBlob);
+        download(`${pptMeetingDateLabel(selectedPptWeek)}\u958B\u6703PPT.pptx`, pptBlob);
         setPptPickerOpen(false);
         flash(`\u5DF2\u7522\u751F PPT\uFF0C\u5171 ${selected.length} \u7B46\u7269\u4EF6`);
       } catch (error) {
@@ -42685,20 +42690,40 @@ ${String(ex)}`);
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal-head", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u7522\u751F POWERPOINT" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", { children: "\u9078\u64C7\u672C\u6B21\u9032\u6848\u7269\u4EF6" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", { children: "\u9078\u64C7\u9031\u5831\u671F\u5225\u8207\u9032\u6848\u7269\u4EF6" })
           ] }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "close", onClick: () => setPptPickerOpen(false), children: "\xD7" })
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "ppt-picker-body", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "ppt-week-selector", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u5831\u544A\u9031\u671F" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("select", { value: pptWeekStart, onChange: (event) => {
+              setPptWeekStart(event.target.value);
+              setPptExtraIds([]);
+            }, children: pptWeekOptions.map((start) => {
+              const week = pptWeekOf(start);
+              return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("option", { value: start, children: [
+                displayRocDate(week.start),
+                "\uFF5E",
+                displayRocDate(week.end),
+                "\uFF08",
+                displayRocDate(week.meeting),
+                "\u5831\u544A\uFF09"
+              ] }, start);
+            }) })
+          ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "ppt-week-range", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u81EA\u52D5\u6293\u53D6\u672C\u9031\u9032\u6848" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u672C\u9031\u9032\u6848" }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
-              displayRocDate(currentPptWeek().start),
-              " \uFF5E ",
-              displayRocDate(currentPptWeek().end)
+              displayRocDate(selectedPptWeek.start),
+              "\uFF5E",
+              displayRocDate(selectedPptWeek.end),
+              "\u3000\u9810\u8A08",
+              displayRocDate(selectedPptWeek.meeting),
+              "\u5831\u544A"
             ] })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "ppt-meeting-note", children: "\u4EE5\u4E0A\u70BA\u4E0B\u5468\u4E00 \u958B\u6703\u9032\u6848\u5831\u544A\u9806\u5E8F \u8ACB\u540C\u4EC1\u6E96\u5099" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "ppt-meeting-note", children: "\u4EE5\u4E0A\u70BA\u661F\u671F\u4E00\u958B\u6703\u9032\u6848\u5831\u544A\u9806\u5E8F\uFF0C\u8ACB\u540C\u4EC1\u6E96\u5099\uFF1B\u6B77\u53F2\u9031\u671F\u6703\u6301\u7E8C\u4FDD\u7559\u3002" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "ppt-case-list", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "ppt-case-heading", children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u5E8F" }),
@@ -42714,13 +42739,13 @@ ${String(ex)}`);
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "ppt-case-address", children: chunkText(record.address || "\u2014", 20).map((line, lineIndex) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: line }, `${line}-${lineIndex}`)) }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: record.developer || "\u2014" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: displayRocDate(record.reportDate) || "\u2014" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "ppt-auto-mark", children: "\u81EA\u52D5\u52A0\u5165" })
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "ppt-auto-mark", children: "\u9031\u671F\u4FDD\u7559" })
             ] }, record.id)),
             !weeklyPptRecords.length && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "ppt-empty", children: "\u9019\u500B\u65E5\u671F\u5340\u9593\u76EE\u524D\u6C92\u6709\u9032\u6848\u7269\u4EF6" })
           ] }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: "ppt-extra-toggle", onClick: () => setPptShowExtras((value) => !value), children: "\uFF0B \u9078\u64C7\u81E8\u6642\u52A0\u5165\u7269\u4EF6" }),
           pptShowExtras && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "ppt-extra-list", children: [
-            active.filter((record) => !isCurrentPptWeek(record.reportDate)).map((record) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "ppt-case-row extra", children: [
+            active.filter((record) => !isPptWeek(record.reportDate, selectedPptWeek)).map((record) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "ppt-case-row extra", children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: pptExtraIds.includes(record.id), onChange: (event) => setPptExtraIds((previous) => event.target.checked ? [...previous, record.id] : previous.filter((id) => id !== record.id)) }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: record.caseName || "\u672A\u547D\u540D\u6848\u4EF6" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "ppt-case-address", children: chunkText(record.address || "\u2014", 20).map((line, lineIndex) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: line }, `${line}-${lineIndex}`)) }),
@@ -42728,12 +42753,12 @@ ${String(ex)}`);
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: displayRocDate(record.reportDate) || "\u7121\u9032\u6848\u65E5\u671F" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {})
             ] }, record.id)),
-            !active.some((record) => !isCurrentPptWeek(record.reportDate)) && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "ppt-empty", children: "\u6C92\u6709\u5176\u4ED6\u53EF\u81E8\u6642\u52A0\u5165\u7684\u59D4\u8A17\u4E2D\u7269\u4EF6" })
+            !active.some((record) => !isPptWeek(record.reportDate, selectedPptWeek)) && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "ppt-empty", children: "\u6C92\u6709\u5176\u4ED6\u53EF\u81E8\u6642\u52A0\u5165\u7684\u59D4\u8A17\u4E2D\u7269\u4EF6" })
           ] })
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal-foot ppt-picker-foot", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
-            "\u672C\u9031 ",
+            "\u672C\u671F ",
             weeklyPptRecords.length,
             " \u7B46\uFF0B\u81E8\u6642 ",
             pptExtraIds.length,
