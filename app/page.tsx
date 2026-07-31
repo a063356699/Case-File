@@ -1468,12 +1468,12 @@ async function downloadColorWorkbook(record: RecordItem, personnel: Person[] = [
       const lastFrameOffset = lastFrame ? Array.from(lastFrame.getElementsByTagNameNS(xdrNs, "rowOff"))[0] : null;
       if (lastFrameOffset) lastFrameOffset.textContent = String(Math.max(0, Number(lastFrameOffset.textContent || "0") - 180000));
       const fixedLandObjects: Record<string, { x: number; y: number; width: number; height: number; caption?: boolean }> = {
-        "10": { x: 4546386, y: 2302221, width: Math.round(9.61 * 360000), height: Math.round(7.22 * 360000) },
-        "11": { x: 4537421, y: 5470765, width: Math.round(9.63 * 360000), height: Math.round(6.94 * 360000) },
-        "12": { x: 4546386, y: 8531180, width: Math.round(9.61 * 360000), height: Math.round(7.12 * 360000) },
-        "15": { x: 4528457, y: 1794621, width: Math.round(3.49 * 360000), height: Math.round(1.31 * 360000), caption: true },
-        "14": { x: 4528457, y: 4963165, width: Math.round(3.49 * 360000), height: Math.round(1.31 * 360000), caption: true },
-        "13": { x: 4528457, y: 8023580, width: Math.round(3.49 * 360000), height: Math.round(1.31 * 360000), caption: true },
+        "10": { x: 4546386, y: 2194221, width: Math.round(9.61 * 360000), height: Math.round(7.22 * 360000) },
+        "11": { x: 4537421, y: 5362765, width: Math.round(9.63 * 360000), height: Math.round(6.94 * 360000) },
+        "12": { x: 4546386, y: 8423180, width: Math.round(9.61 * 360000), height: Math.round(7.12 * 360000) },
+        "15": { x: 4528457, y: 1686621, width: Math.round(3.49 * 360000), height: Math.round(1 * 360000), caption: true },
+        "14": { x: 4528457, y: 4855165, width: Math.round(3.49 * 360000), height: Math.round(1 * 360000), caption: true },
+        "13": { x: 4528457, y: 7915580, width: Math.round(3.49 * 360000), height: Math.round(1 * 360000), caption: true },
       };
       Array.from(drawingDocument.documentElement.children).forEach(anchor => {
         const idNode = Array.from(anchor.getElementsByTagNameNS(xdrNs, "cNvPr")).find(node => fixedLandObjects[node.getAttribute("id") || ""]);
