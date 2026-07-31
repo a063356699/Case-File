@@ -41090,6 +41090,7 @@ ${String(ex)}`);
     photos: []
   };
   function Home() {
+    const [internalView] = (0, import_react.useState)(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("view") === "internal");
     const [records, setRecords] = (0, import_react.useState)([]);
     const [settings, setSettings] = (0, import_react.useState)({ personnel: [], supabaseUrl: CASE_FILE_SUPABASE_URL, supabaseKey: CASE_FILE_SUPABASE_PUBLISHABLE_KEY, supabaseTable: CASE_FILE_SUPABASE_TABLE, supabaseRecord: "main" });
     const [cloudSession, setCloudSession] = (0, import_react.useState)(null);
@@ -41194,6 +41195,9 @@ ${String(ex)}`);
         setRecords([sample]);
       }
     }, []);
+    (0, import_react.useEffect)(() => {
+      if (internalView) setTab("public");
+    }, [internalView]);
     (0, import_react.useEffect)(() => {
       if (records.length) localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
     }, [records]);
@@ -41971,8 +41975,9 @@ ${String(ex)}`);
       setRecords((previous) => previous.map((item) => reviews.some((value) => value.record.id === item.id) ? { ...item, bookLocationDate: today(), _bookReviewAt: stamp, _bookReviewCycle: cycle, lastModifiedAt: stamp } : item));
       flash(`\u5DF2\u78BA\u8A8D ${reviews.length} \u7B46\u7269\u4EF6\u672C\uFF0C\u65E5\u671F\u66F4\u65B0\u70BA\u4ECA\u5929`);
     };
-    return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("main", { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { className: "topbar", children: [
+    const showingPublic = internalView || tab === "public";
+    return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("main", { className: internalView ? "internal-public-app" : "", children: [
+      !internalView && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { className: "topbar", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", { children: "\u7269\u4EF6\u7BA1\u7406\u7E3D\u8868" }) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "ppt-export-button", onClick: () => {
@@ -41993,7 +41998,7 @@ ${String(ex)}`);
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "primary", onClick: () => setEditing(blankRecord()), children: "\uFF0B \u65B0\u589E\u7269\u4EF6" })
         ] })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("nav", { className: "nav", children: [
+      !internalView && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("nav", { className: "nav", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { className: tab === "active" ? "active" : "", onClick: () => setTab("active"), children: [
           "\u59D4\u8A17\u4E2D ",
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: active.length })
@@ -42016,19 +42021,19 @@ ${String(ex)}`);
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: tab === "public" ? "active" : "", onClick: openPublic, children: "\u524D\u53F0\u7E3D\u8868" }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: tab === "settings" ? "active" : "", onClick: () => setTab("settings"), children: "\u8A2D\u5B9A" })
       ] }),
-      tab === "active" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PropertyBookReview, { records: active, submit: submitBookReviews }),
-      tab === "active" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(BusinessReportInbox, { records: active, resolve: resolveMonthlyPropertyReport, archive: (record, status) => setArchiveChoice({ record, status, date: today() }) }),
-      tab === "public" && publicUnlocked && publicScope === "mine" && publicPerson && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(MonthlyPropertyReport, { records: myProperties, person: publicPerson, submit: submitMonthlyPropertyReport }),
+      !internalView && tab === "active" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PropertyBookReview, { records: active, submit: submitBookReviews }),
+      !internalView && tab === "active" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(BusinessReportInbox, { records: active, resolve: resolveMonthlyPropertyReport, archive: (record, status) => setArchiveChoice({ record, status, date: today() }) }),
+      showingPublic && publicUnlocked && publicScope === "mine" && publicPerson && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(MonthlyPropertyReport, { records: myProperties, person: publicPerson, submit: submitMonthlyPropertyReport }),
       tab === "settings" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SettingsPanel, { settings, setSettings, supabasePush, supabasePull, cloudSession, supabaseSignIn, supabaseSignOut }) : tab === "intake" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(IntakePanel, { raw: intakeRaw, setRaw: setIntakeRaw, drafts: intakeDrafts, draft: intakeDraft, selectDraft: selectIntakeDraft, deleteDraft: removeIntakeDraft, analyze: analyzeIntake, updateValue: updateIntakeValue, clear: () => setIntakeRaw(""), confirmIntake }) : tab === "tour" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TourPlanner, { records, drafts: intakeDrafts, items: tourItems, setItems: setTourItems, editRecord: setEditing, updateDraftCaseName: updateIntakeDraftCaseName, tourDate, setTourDate, tourTitle, setTourTitle, notify: flash, complete: (date, recordIds, draftIds) => {
         setRecords((previous) => previous.map((record) => recordIds.includes(record.id) ? withTrackedUpdate(record, { ...record, groupViewDate: date, updateDate: today() }) : record));
         setIntakeDrafts((previous) => previous.map((draft) => draftIds.includes(draft.id) ? { ...draft, groupViewDate: date } : draft));
         setTourItems([]);
         flash("\u5718\u770B\u65E5\u671F\u5DF2\u540C\u6B65\u5230\u7269\u4EF6\u8207\u8349\u7A3F");
-      } }) : tab === "activity" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(DailyActivity, { records }) : tab === "inventory" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(BusinessInventory, { records, people: settings.personnel }) : tab === "keys" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(KeySummary, { records }) : tab === "public" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("section", { className: "public-shell", children: !publicUnlocked ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "login-card", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", { children: "\u524D\u53F0\u7269\u4EF6\u7E3D\u8868" }),
+      } }) : tab === "activity" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(DailyActivity, { records }) : tab === "inventory" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(BusinessInventory, { records, people: settings.personnel }) : tab === "keys" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(KeySummary, { records }) : showingPublic ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("section", { className: "public-shell", children: !publicUnlocked ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "login-card", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", { children: "\u5167\u90E8\u7E3D\u8868" }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "\u8ACB\u8F38\u5165\u696D\u52D9\u4EBA\u54E1\u8EAB\u5206\u8B49\u5B57\u865F\u9032\u5165" }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "password", value: password, onChange: (e) => setPassword(e.target.value), onKeyDown: (e) => e.key === "Enter" && unlock(), placeholder: "\u8ACB\u8F38\u5165\u5BC6\u78BC" }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "primary wide", onClick: unlock, children: "\u9032\u5165\u524D\u53F0" }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "primary wide", onClick: unlock, children: "\u9032\u5165\u5167\u90E8\u7E3D\u8868" }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "\u5BC6\u78BC\u53EF\u7531\u7BA1\u7406\u7AEF\u300C\u8A2D\u5B9A\u300D\u4FEE\u6539" })
       ] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "public-head", children: [

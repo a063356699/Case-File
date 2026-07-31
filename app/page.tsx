@@ -449,6 +449,7 @@ const sample: RecordItem = {
 };
 
 export default function Home() {
+  const [internalView] = useState(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("view") === "internal");
   const [records, setRecords] = useState<RecordItem[]>([]);
   const [settings, setSettings] = useState<Settings>({ personnel: [], supabaseUrl: CASE_FILE_SUPABASE_URL, supabaseKey: CASE_FILE_SUPABASE_PUBLISHABLE_KEY, supabaseTable: CASE_FILE_SUPABASE_TABLE, supabaseRecord: "main" });
   const [cloudSession, setCloudSession] = useState<CloudSession | null>(null);
@@ -503,6 +504,7 @@ export default function Home() {
       setRecords(loadedRecords);
     } catch { setRecords([sample]); }
   }, []);
+  useEffect(() => { if (internalView) setTab("public"); }, [internalView]);
   useEffect(() => { if (records.length) localStorage.setItem(STORAGE_KEY, JSON.stringify(records)); }, [records]);
   useEffect(() => { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); }, [settings]);
   useEffect(() => { localStorage.setItem(INTAKE_KEY, JSON.stringify({ raw: intakeRaw, drafts: intakeDrafts, selectedId: selectedIntakeId })); }, [intakeRaw, intakeDrafts, selectedIntakeId]);
@@ -913,12 +915,14 @@ export default function Home() {
   };
   const submitBookReviews = (reviews: Array<{ record: RecordItem; status: string }>) => { const stamp = new Date().toISOString(), cycle = bookReviewCycleKey(); setRecords(previous => previous.map(item => reviews.some(value => value.record.id === item.id) ? { ...item, bookLocationDate: today(), _bookReviewAt: stamp, _bookReviewCycle: cycle, lastModifiedAt: stamp } : item)); flash(`已確認 ${reviews.length} 筆物件本，日期更新為今天`); };
 
-  return <main>
-    <header className="topbar">
+  const showingPublic = internalView || tab === "public";
+
+  return <main className={internalView ? "internal-public-app" : ""}>
+    {!internalView && <header className="topbar">
       <div className="brand"><h1>物件管理總表</h1></div>
       <div className="header-actions"><button className="ppt-export-button" onClick={() => { setPptExtraIds([]); setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button onClick={exportExcel}>匯出 Excel</button><label className="file-button">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button onClick={exportJson}>匯出 JSON</button><button className="key-tag" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{active.filter(r => r.key).length}</b></button><button className="primary" onClick={() => setEditing(blankRecord())}>＋ 新增物件</button></div>
-    </header>
-    <nav className="nav">
+    </header>}
+    {!internalView && <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
       <button className={tab === "archive" ? "active" : ""} onClick={() => setTab("archive")}>封存 <span>{archived.length}</span>{pendingArchiveCleanup.length > 0 && <small className="archive-pending-count">待下架 {pendingArchiveCleanup.length}</small>}</button>
       <button className={tab === "activity" ? "active" : ""} onClick={() => setTab("activity")}>每日物件動態</button>
@@ -927,11 +931,11 @@ export default function Home() {
       <button className={tab === "intake" ? "active" : ""} onClick={() => { setTab("intake"); selectIntakeDraft(""); }}>進案草稿</button>
       <button className={tab === "public" ? "active" : ""} onClick={openPublic}>前台總表</button>
       <button className={tab === "settings" ? "active" : ""} onClick={() => setTab("settings")}>設定</button>
-    </nav>
+    </nav>}
 
-    {tab === "active" && <PropertyBookReview records={active} submit={submitBookReviews}/>}
-    {tab === "active" && <BusinessReportInbox records={active} resolve={resolveMonthlyPropertyReport} archive={(record, status) => setArchiveChoice({ record, status, date: today() })}/>}
-    {tab === "public" && publicUnlocked && publicScope === "mine" && publicPerson && <MonthlyPropertyReport records={myProperties} person={publicPerson} submit={submitMonthlyPropertyReport}/>}
+    {!internalView && tab === "active" && <PropertyBookReview records={active} submit={submitBookReviews}/>}
+    {!internalView && tab === "active" && <BusinessReportInbox records={active} resolve={resolveMonthlyPropertyReport} archive={(record, status) => setArchiveChoice({ record, status, date: today() })}/>}
+    {showingPublic && publicUnlocked && publicScope === "mine" && publicPerson && <MonthlyPropertyReport records={myProperties} person={publicPerson} submit={submitMonthlyPropertyReport}/>}
 
     {tab === "settings" ? <SettingsPanel settings={settings} setSettings={setSettings} supabasePush={supabasePush} supabasePull={supabasePull} cloudSession={cloudSession} supabaseSignIn={supabaseSignIn} supabaseSignOut={supabaseSignOut} /> :
     tab === "intake" ? <IntakePanel raw={intakeRaw} setRaw={setIntakeRaw} drafts={intakeDrafts} draft={intakeDraft} selectDraft={selectIntakeDraft} deleteDraft={removeIntakeDraft} analyze={analyzeIntake} updateValue={updateIntakeValue} clear={() => setIntakeRaw("")} confirmIntake={confirmIntake} /> :
@@ -939,7 +943,7 @@ export default function Home() {
     tab === "activity" ? <DailyActivity records={records} /> :
     tab === "inventory" ? <BusinessInventory records={records} people={settings.personnel} /> :
     tab === "keys" ? <KeySummary records={records}/> :
-    tab === "public" ? <section className="public-shell">{!publicUnlocked ? <div className="login-card"><h2>前台物件總表</h2><p>請輸入業務人員身分證字號進入</p><input type="password" value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === "Enter" && unlock()} placeholder="請輸入密碼"/><button className="primary wide" onClick={unlock}>進入前台</button><small>密碼可由管理端「設定」修改</small></div> : <><div className="public-head"><div><p className="logged-person">登錄人員：{publicPerson?.name || "業務人員"}</p><h2>{publicScope === "activity" ? "每日物件動態" : publicScope === "mine" ? "我的物件" : publicScope === "contacts" ? "通訊錄" : "物件總表"}</h2><div className="scope-tabs"><button className={publicScope === "activity" ? "selected" : ""} onClick={() => setPublicScope("activity")}>每日物件動態</button><button className={publicScope === "mine" ? "selected" : ""} onClick={() => setPublicScope("mine")}>我的物件 {myProperties.length}</button><button className={publicScope === "all" ? "selected" : ""} onClick={() => setPublicScope("all")}>物件總表 {active.length}</button><button className={publicScope === "contacts" ? "selected" : ""} onClick={() => setPublicScope("contacts")}>通訊錄</button></div></div><button onClick={() => { setPublicUnlocked(false); setPublicPersonId(""); }}>鎖定畫面</button></div>{publicScope === "activity" ? <DailyActivity records={records} compact/> : publicScope === "contacts" ? <ContactDirectory people={contactPeople}/> : <>{publicScope === "mine" && expiryAlerts.length > 0 && <div className="expiry-alert"><b>委託到期提醒</b>{expiryAlerts.map(r => <span key={r.id}>{r.caseName}：還有 {daysUntil(r.entrustEnd)} 天到期{daysUntil(r.entrustEnd) <= 15 ? "（15天內）" : "（30天內）"}</span>)}</div>}<PropertyTable records={publicScope === "mine" ? myProperties : active} columns={publicColumns} publicMode expiryAnnotation={publicScope === "mine"} onEdit={() => {}} onArchive={() => {}} onRestore={() => {}} onRemove={() => {}}/></>}</>}</section> :
+    showingPublic ? <section className="public-shell">{!publicUnlocked ? <div className="login-card"><h2>內部總表</h2><p>請輸入業務人員身分證字號進入</p><input type="password" value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === "Enter" && unlock()} placeholder="請輸入密碼"/><button className="primary wide" onClick={unlock}>進入內部總表</button><small>密碼可由管理端「設定」修改</small></div> : <><div className="public-head"><div><p className="logged-person">登錄人員：{publicPerson?.name || "業務人員"}</p><h2>{publicScope === "activity" ? "每日物件動態" : publicScope === "mine" ? "我的物件" : publicScope === "contacts" ? "通訊錄" : "物件總表"}</h2><div className="scope-tabs"><button className={publicScope === "activity" ? "selected" : ""} onClick={() => setPublicScope("activity")}>每日物件動態</button><button className={publicScope === "mine" ? "selected" : ""} onClick={() => setPublicScope("mine")}>我的物件 {myProperties.length}</button><button className={publicScope === "all" ? "selected" : ""} onClick={() => setPublicScope("all")}>物件總表 {active.length}</button><button className={publicScope === "contacts" ? "selected" : ""} onClick={() => setPublicScope("contacts")}>通訊錄</button></div></div><button onClick={() => { setPublicUnlocked(false); setPublicPersonId(""); }}>鎖定畫面</button></div>{publicScope === "activity" ? <DailyActivity records={records} compact/> : publicScope === "contacts" ? <ContactDirectory people={contactPeople}/> : <>{publicScope === "mine" && expiryAlerts.length > 0 && <div className="expiry-alert"><b>委託到期提醒</b>{expiryAlerts.map(r => <span key={r.id}>{r.caseName}：還有 {daysUntil(r.entrustEnd)} 天到期{daysUntil(r.entrustEnd) <= 15 ? "（15天內）" : "（30天內）"}</span>)}</div>}<PropertyTable records={publicScope === "mine" ? myProperties : active} columns={publicColumns} publicMode expiryAnnotation={publicScope === "mine"} onEdit={() => {}} onArchive={() => {}} onRestore={() => {}} onRemove={() => {}}/></>}</>}</section> :
     <section className={`content ${tab === "archive" ? "archive-list-page" : "active-list-page"}`}>
       <div className="list-head"><SectionTitle title={tab === "archive" ? "封存物件" : "委託中物件"} subtitle={tab === "archive" ? "到期與已下架物件紀錄" : ""}/><div className="tools">{tab === "active" && <><select className="website-filter" value={websiteFilter} onChange={event => setWebsiteFilter(event.target.value)}><option value="">全部物件</option><option value="all">全部尚未 PO</option>{Object.entries(websiteFieldMap).map(([key, name]) => <option key={key} value={key}>{name} 尚未 PO</option>)}</select><button className={missingDataRecords.length ? "missing-data-button has-items" : "missing-data-button"} onClick={() => setMissingDataReminderOpen(true)}>待補資料 {missingDataRecords.length}</button></>}<label className="search">⌕<input value={query} onChange={e => setQuery(e.target.value)} placeholder="搜尋編號、地區、案名、地址…"/></label></div></div>
       {tab === "active" && websiteExpiryRecords.length > 0 && <div className="website-expiry-reminder"><b>網站廣告到期提醒</b>{websiteExpiryRecords.map(({ record, site, date }) => <button key={`${record.id}-${site}`} onClick={() => setEditing(record)}>{record.caseName || record.propertyNo}：{site} 已於 {displayRocDate(date)} 到期</button>)}</div>}
