@@ -40693,6 +40693,11 @@ ${String(ex)}`);
       const suffix = mechanical[1].replace(/[（(]\s*上層\s*[）)]/g, "\u4E0A").replace(/[（(]\s*下層\s*[）)]/g, "\u4E0B").replace(/號$/g, "").replace(/^[、，,：:\s]+/, "");
       return `\u6607\u6A5F${suffix}`;
     }
+    const horizontalOrRampMechanical = value.match(/(平移|坡道)[／/]機械\s*(.*)$/);
+    if (horizontalOrRampMechanical) {
+      const suffix = horizontalOrRampMechanical[2].replace(/號$/g, "").replace(/^[、，,：:\s]+/, "");
+      return `${horizontalOrRampMechanical[1] === "\u5E73\u79FB" ? "\u5E73\u6A5F" : "\u5761\u6A5F"}${suffix}`;
+    }
     const parts = value.split(/[／/]/).map((part) => part.trim()).filter(Boolean);
     const number = (parts[parts.length - 1] || "").replace(/號$/, "");
     if (value.includes("\u6607\u964D") && value.includes("\u5E73\u9762")) return `\u6607\u5E73${number}`;
