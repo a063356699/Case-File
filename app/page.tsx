@@ -880,10 +880,14 @@ export default function Home() {
       if (!res.ok || !data?.records) throw new Error();
       if (confirm("雲端資料將與本機資料合併，本機已修改但尚未同步的同一筆資料將以雲端版本為準。確定嗎？")) {
         setRecords(prev => {
-          const map = new Map(prev.map(r => [r.id, r]));
-          data.records.forEach((r: RecordItem) => {
-            const local = map.get(r.id);
-            map.set(r.id, { ...local, ...r, photos: r.photos || local?.photos || [] });
+          // Property numbers are shared across computers; generated local ids are not.
+          // Merge by property number so a cloud record replaces the same local case.
+          const keyOf = (record: RecordItem) => String(record.propertyNo || record.id || "").trim();
+          const map = new Map(prev.map(record => [keyOf(record), record]));
+          data.records.forEach((record: RecordItem) => {
+            const key = keyOf(record);
+            const local = map.get(key);
+            map.set(key, { ...local, ...record, id: record.id || local?.id || newId(), photos: record.photos || local?.photos || [] });
           });
           return [...map.values()];
         });

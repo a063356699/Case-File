@@ -41862,10 +41862,12 @@ ${String(ex)}`);
         if (!res.ok || !data?.records) throw new Error();
         if (confirm("\u96F2\u7AEF\u8CC7\u6599\u5C07\u8207\u672C\u6A5F\u8CC7\u6599\u5408\u4F75\uFF0C\u672C\u6A5F\u5DF2\u4FEE\u6539\u4F46\u5C1A\u672A\u540C\u6B65\u7684\u540C\u4E00\u7B46\u8CC7\u6599\u5C07\u4EE5\u96F2\u7AEF\u7248\u672C\u70BA\u6E96\u3002\u78BA\u5B9A\u55CE\uFF1F")) {
           setRecords((prev) => {
-            const map = new Map(prev.map((r) => [r.id, r]));
-            data.records.forEach((r) => {
-              const local = map.get(r.id);
-              map.set(r.id, { ...local, ...r, photos: r.photos || local?.photos || [] });
+            const keyOf = (record) => String(record.propertyNo || record.id || "").trim();
+            const map = new Map(prev.map((record) => [keyOf(record), record]));
+            data.records.forEach((record) => {
+              const key = keyOf(record);
+              const local = map.get(key);
+              map.set(key, { ...local, ...record, id: record.id || local?.id || newId(), photos: record.photos || local?.photos || [] });
             });
             return [...map.values()];
           });
