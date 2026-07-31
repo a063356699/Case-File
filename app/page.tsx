@@ -1254,7 +1254,12 @@ async function downloadColorWorkbook(record: RecordItem, personnel: Person[] = [
     const featureAddresses = isLand ? ["C26", "C27", "C28", "C29"] : ["C37", "C38", "C39", "C40"];
     const longFeatureAddresses = new Set<string>();
     featureAddresses.forEach(address => { if (directValues[address]) { const normalized = String(directValues[address]).replace(/[\r\n]+/g, ""); if (Array.from(normalized).length > 27) longFeatureAddresses.add(address); directValues[address] = normalized; } });
-    Object.entries(directValues).forEach(([address, value]) => setWorksheetCell(visibleDocument, address, value, isLand && address === "M15" ? 12 : address === "M23" ? 16 : 0));
+    Object.entries(directValues).forEach(([address, value]) => setWorksheetCell(visibleDocument, address, value, isLand && address === "M15" ? 12 : 0));
+    if (!isLand) {
+      const f23 = Array.from(visibleDocument.getElementsByTagNameNS(spreadsheetNs, "c")).find(cell => cell.getAttribute("r") === "F23");
+      const m23 = Array.from(visibleDocument.getElementsByTagNameNS(spreadsheetNs, "c")).find(cell => cell.getAttribute("r") === "M23");
+      if (f23?.getAttribute("s") && m23) m23.setAttribute("s", f23.getAttribute("s") || "0");
+    }
     // Separate 「約」 and the amount in tax rows: 「約」 stays at the left,
     // while the number keeps a centred field of its own.
     const taxRows = isLand
