@@ -44892,7 +44892,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     };
     (0, import_react.useEffect)(() => {
       let stopped = false;
-      const endpoint = location.protocol === "file:" ? "http://localhost:8765/api/mobile-qr" : "/api/mobile-qr";
+      const endpoint = "http://localhost:8765/api/mobile-qr";
       const poll = async () => {
         try {
           const response = await fetch(endpoint, { cache: "no-store" });
