@@ -40846,7 +40846,13 @@ ${String(ex)}`);
     const chars = Array.from(value);
     return Array.from({ length: Math.ceil(chars.length / actualSize) }, (_, index) => chars.slice(index * actualSize, index * actualSize + actualSize).join(""));
   };
-  var developerNameLines = (value = "") => String(value || "").split(/[\/／,，、。]+/).map((name) => name.trim()).filter(Boolean).map((name) => name === "\u738B\u7E3D" ? "\u738B\u555F\u5C71" : name);
+  var developerNameLines = (value = "", personnel = []) => String(value || "").split(/[\/／,，、。]+/).map((name) => name.trim()).filter(Boolean).map((name) => {
+    if (name === "\u738B\u7E3D") return "\u738B\u555F\u5C71";
+    if (Array.from(name).length !== 2) return name;
+    const matches = personnel.filter((person) => person.name && person.name.includes(name));
+    return matches.length === 1 ? matches[0].name : name;
+  });
+  var developerPersonnelForDisplay = [];
   var sortPptRecords = (items) => items.map((record, index) => ({ record, index })).sort((a, b) => {
     const priority = (record) => /王啟山|蔡宇育/.test(record.developer || "") ? 0 : 1;
     const priorityDiff = priority(a.record) - priority(b.record);
@@ -41169,6 +41175,7 @@ ${String(ex)}`);
     const [internalView] = (0, import_react.useState)(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("view") === "internal");
     const [records, setRecords] = (0, import_react.useState)([]);
     const [settings, setSettings] = (0, import_react.useState)({ personnel: [], supabaseUrl: CASE_FILE_SUPABASE_URL, supabaseKey: CASE_FILE_SUPABASE_PUBLISHABLE_KEY, supabaseTable: CASE_FILE_SUPABASE_TABLE, supabaseRecord: "main" });
+    developerPersonnelForDisplay = settings.personnel;
     const [cloudSession, setCloudSession] = (0, import_react.useState)(null);
     const [tab, setTab] = (0, import_react.useState)("active");
     const [query, setQuery] = (0, import_react.useState)("");
@@ -45267,7 +45274,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       ] });
     }
     if (k === "developer") {
-      const names = String(r.developer || "").split(/[\/／,，、。]+/).map((value) => value.trim()).filter(Boolean);
+      const names = developerNameLines(r.developer, developerPersonnelForDisplay);
       return names.length ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "floor-lines", children: names.map((name, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: name }, `${name}-${index}`)) }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: "\u2014" });
     }
     if (k === "price") {
