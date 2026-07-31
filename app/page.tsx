@@ -1352,7 +1352,7 @@ async function downloadColorWorkbook(record: RecordItem, personnel: Person[] = [
       : [{ row: 33, value: taxValue(record.generalLandValueTax || "") }, { row: 34, value: taxValue(record.selfUseLandValueTax || "") }];
     // 「約」直接和金額寫在同一個完整欄位，避免金額被窄欄縮小。
     taxRows.forEach(({ row, value }) => {
-      const display = value.startsWith("約$") ? value.replace(/^約\$/, "約") : value;
+      const display = value.startsWith("約$") ? value.replace(/^約\$/, "約  ") : value;
       setWorksheetCell(visibleDocument, `F${row}`, display);
     });
     // The template already contains this company line as an editable text box.

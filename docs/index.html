@@ -43316,7 +43316,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       }
       const taxRows = isLand ? [{ row: 23, value: taxValue(record.generalLandValueTax || "") }, { row: 24, value: taxValue(record.selfUseLandValueTax || "") }] : [{ row: 33, value: taxValue(record.generalLandValueTax || "") }, { row: 34, value: taxValue(record.selfUseLandValueTax || "") }];
       taxRows.forEach(({ row: row2, value }) => {
-        const display = value.startsWith("\u7D04$") ? value.replace(/^約\$/, "\u7D04") : value;
+        const display = value.startsWith("\u7D04$") ? value.replace(/^約\$/, "\u7D04  ") : value;
         setWorksheetCell(visibleDocument, `F${row2}`, display);
       });
       setWorksheetCell(visibleDocument, "A4", "");
