@@ -1563,8 +1563,11 @@ async function downloadColorWorkbook(record: RecordItem, personnel: Person[] = [
       Array.from(drawingDocument.documentElement.children).forEach(anchor => {
         const idNode = Array.from(anchor.getElementsByTagNameNS(xdrNs, "cNvPr")).find(node => rightBlockIds.has(node.getAttribute("id") || ""));
         if (!idNode) return;
-        const extraPositionFrameUp = idNode.getAttribute("id") === "22" ? 108000 : 0; // 0.3 cm
-        const shift = up + extraPositionFrameUp;
+        const extraFrameUp: Record<string, number> = {
+          "35": 72000,  // 2 照片框：再上 0.2 cm
+          "22": 216000, // 6 位置圖框：累計再上 0.3 cm
+        };
+        const shift = up + (extraFrameUp[idNode.getAttribute("id") || ""] || 0);
         Array.from(anchor.getElementsByTagNameNS(xdrNs, "rowOff")).forEach(offset => offset.textContent = String(Math.max(0, Number(offset.textContent || "0") - shift)));
         const transform = Array.from(anchor.getElementsByTagNameNS("http://schemas.openxmlformats.org/drawingml/2006/main", "xfrm"))[0];
         const offset = transform && Array.from(transform.children).find(node => node.localName === "off");
@@ -1581,9 +1584,9 @@ async function downloadColorWorkbook(record: RecordItem, personnel: Person[] = [
         const width = Number(shapeExtent?.getAttribute("cx") || "1256400");
         const from = Array.from(anchor.children).find(node => node.localName === "from");
         const captionShift: Record<string, number> = {
-          "36": 252000,  // 1 照片標題：再上 0.4 cm
-          "34": 72000,   // 3 格局圖標題：下 0.1 cm
-          "32": -36000,  // 5 位置圖標題：下 0.4 cm
+          "36": 612000, // 1 照片標題：再上 1 cm
+          "34": 36000,  // 3 格局圖標題：再下 0.1 cm
+          "32": 72000,  // 5 位置圖標題：再上 0.3 cm
         };
         const shift = captionShift[idNode.getAttribute("id") || ""] || 0;
         Array.from(anchor.getElementsByTagNameNS(xdrNs, "rowOff")).forEach(offset => offset.textContent = String(Math.max(0, Number(offset.textContent || "0") - shift)));

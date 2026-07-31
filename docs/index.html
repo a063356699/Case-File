@@ -43459,8 +43459,13 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
         Array.from(drawingDocument.documentElement.children).forEach((anchor) => {
           const idNode = Array.from(anchor.getElementsByTagNameNS(xdrNs, "cNvPr")).find((node) => rightBlockIds.has(node.getAttribute("id") || ""));
           if (!idNode) return;
-          const extraPositionFrameUp = idNode.getAttribute("id") === "22" ? 108e3 : 0;
-          const shift = up + extraPositionFrameUp;
+          const extraFrameUp = {
+            "35": 72e3,
+            // 2 照片框：再上 0.2 cm
+            "22": 216e3
+            // 6 位置圖框：累計再上 0.3 cm
+          };
+          const shift = up + (extraFrameUp[idNode.getAttribute("id") || ""] || 0);
           Array.from(anchor.getElementsByTagNameNS(xdrNs, "rowOff")).forEach((offset2) => offset2.textContent = String(Math.max(0, Number(offset2.textContent || "0") - shift)));
           const transform = Array.from(anchor.getElementsByTagNameNS("http://schemas.openxmlformats.org/drawingml/2006/main", "xfrm"))[0];
           const offset = transform && Array.from(transform.children).find((node) => node.localName === "off");
@@ -43475,12 +43480,12 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
           const width = Number(shapeExtent?.getAttribute("cx") || "1256400");
           const from = Array.from(anchor.children).find((node) => node.localName === "from");
           const captionShift = {
-            "36": 252e3,
-            // 1 照片標題：再上 0.4 cm
-            "34": 72e3,
-            // 3 格局圖標題：下 0.1 cm
-            "32": -36e3
-            // 5 位置圖標題：下 0.4 cm
+            "36": 612e3,
+            // 1 照片標題：再上 1 cm
+            "34": 36e3,
+            // 3 格局圖標題：再下 0.1 cm
+            "32": 72e3
+            // 5 位置圖標題：再上 0.3 cm
           };
           const shift = captionShift[idNode.getAttribute("id") || ""] || 0;
           Array.from(anchor.getElementsByTagNameNS(xdrNs, "rowOff")).forEach((offset) => offset.textContent = String(Math.max(0, Number(offset.textContent || "0") - shift)));
