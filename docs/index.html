@@ -40846,7 +40846,7 @@ ${String(ex)}`);
     return date || a.index - b.index;
   }).map((item) => item.record);
   var chunkText = (value = "", size = 16) => {
-    const actualSize = size === 20 ? 25 : size === 15 ? 12 : size;
+    const actualSize = size === 20 ? 25 : size === 15 || size === 10 ? 12 : size;
     const chars = Array.from(value);
     return Array.from({ length: Math.ceil(chars.length / actualSize) }, (_, index) => chars.slice(index * actualSize, index * actualSize + actualSize).join(""));
   };
@@ -41321,6 +41321,25 @@ ${String(ex)}`);
     (0, import_react.useEffect)(() => {
       if (records.length) localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
     }, [records]);
+    (0, import_react.useEffect)(() => {
+      const syncAcrossTabs = (event) => {
+        if (event.key === STORAGE_KEY && event.newValue) {
+          try {
+            setRecords(applySourceLayoutFixes(JSON.parse(event.newValue)));
+          } catch {
+          }
+        }
+        if (event.key === SETTINGS_KEY && event.newValue) {
+          try {
+            const next = JSON.parse(event.newValue);
+            setSettings((previous) => ({ ...previous, ...next, personnel: mergeSuppliedPersonnel(next.personnel || previous.personnel) }));
+          } catch {
+          }
+        }
+      };
+      window.addEventListener("storage", syncAcrossTabs);
+      return () => window.removeEventListener("storage", syncAcrossTabs);
+    }, []);
     (0, import_react.useEffect)(() => {
       localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
     }, [settings]);
