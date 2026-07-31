@@ -43197,7 +43197,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
           [29, 30, 31].forEach((rowNumber) => {
             const rowNode = Array.from(visibleDocument.getElementsByTagNameNS(spreadsheetNs, "row")).find((item) => item.getAttribute("r") === String(rowNumber));
             if (rowNode) {
-              rowNode.setAttribute("ht", "32.4");
+              rowNode.setAttribute("ht", "33.82");
               rowNode.setAttribute("customHeight", "1");
             }
           });
@@ -43282,7 +43282,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       if (!isLand) [29, 30, 31].forEach((rowNumber) => {
         const rowNode = Array.from(visibleDocument.getElementsByTagNameNS(spreadsheetNs, "row")).find((item) => item.getAttribute("r") === String(rowNumber));
         if (rowNode) {
-          rowNode.setAttribute("ht", "32.4");
+          rowNode.setAttribute("ht", "33.82");
           rowNode.setAttribute("customHeight", "1");
         }
       });
