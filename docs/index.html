@@ -41331,6 +41331,7 @@ ${String(ex)}`);
     }, [tourDate, tourTitle, tourItems]);
     const archived = (0, import_react.useMemo)(() => records.filter((r) => r.archived || isExpired(r) || r.status !== "\u59D4\u8A17\u4E2D"), [records]);
     const active = (0, import_react.useMemo)(() => records.filter((r) => !r.archived && !isExpired(r) && (r.status || "\u59D4\u8A17\u4E2D") === "\u59D4\u8A17\u4E2D"), [records]);
+    const controlledKeyCount = new Set(records.map((record) => String(record.key || "").match(/\u516C\u53F8\s*[#\uFF03]?\s*(\d+)/)?.[1]).filter(Boolean)).size;
     const pendingArchiveCleanup = archived.map((record) => ({ record, tasks: archiveCleanupTasks(record).filter((task) => !record[task.key]) })).filter((item) => item.record.archived && item.tasks.length > 0);
     (0, import_react.useEffect)(() => {
       if (pendingArchiveCleanup.length) setArchiveCleanupReminderOpen(true);
@@ -42134,7 +42135,7 @@ ${String(ex)}`);
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: exportJson, children: "\u532F\u51FA JSON" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { className: "key-tag", onClick: () => setTab("keys"), children: [
             "\u{1F511} \u9470\u5319\u7E3D\u8868 ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: active.filter((r) => r.key).length })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: controlledKeyCount })
           ] }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "primary", onClick: () => setEditing(blankRecord()), children: "\uFF0B \u65B0\u589E\u7269\u4EF6" })
         ] })
