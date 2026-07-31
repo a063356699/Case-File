@@ -45232,6 +45232,8 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       ] });
     }
     if (k === "floor") {
+      const rawFloor = String(r.floor || "").replace(/[\s／/]/g, "");
+      if (/^(?:土地|建地)+$/.test(rawFloor)) return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, {});
       const floor = floorShortFixed(r.floor);
       const parts = floor.match(/^(\d+T)(\/.*增建)$/);
       return parts ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "two-line-value", children: [
