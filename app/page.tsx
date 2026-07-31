@@ -1302,7 +1302,8 @@ async function downloadColorWorkbook(record: RecordItem, personnel: Person[] = [
       removeMergedRange(visibleDocument, `F${row}:J${row}`);
       if (mergeCells) { const merge = visibleDocument.createElementNS(spreadsheetNs, "mergeCell"); merge.setAttribute("ref", `G${row}:J${row}`); mergeCells.appendChild(merge); }
       setWorksheetCell(visibleDocument, `F${row}`, "約");
-      setWorksheetCell(visibleDocument, `G${row}`, value.slice(1));
+      // 「元」已由右側獨立欄位顯示，金額格只保留千分位數字。
+      setWorksheetCell(visibleDocument, `G${row}`, value.slice(1).replace(/^\$/, ""));
     });
     if (mergeCells) mergeCells.setAttribute("count", String(mergeCells.getElementsByTagNameNS(spreadsheetNs, "mergeCell").length));
     // The template already contains this company line as an editable text box.
@@ -1364,6 +1365,20 @@ async function downloadColorWorkbook(record: RecordItem, personnel: Person[] = [
         }
       }
       if (isLand) {
+        ["G23", "G24"].forEach(address => {
+          const cell = Array.from(visibleDocument.getElementsByTagNameNS(spreadsheetNs, "c")).find(item => item.getAttribute("r") === address);
+          if (!cell) return;
+          const sourceXf = cellXfs.children[Number(cell.getAttribute("s") || "0")] || cellXfs.children[0];
+          const amountXf = sourceXf.cloneNode(true) as Element;
+          const sourceFont = fonts.children[Number(sourceXf.getAttribute("fontId") || "0")] || fonts.children[0];
+          const amountFont = sourceFont.cloneNode(true) as Element;
+          let amountSize = Array.from(amountFont.getElementsByTagNameNS(spreadsheetNs, "sz"))[0];
+          if (!amountSize) { amountSize = stylesDocument.createElementNS(spreadsheetNs, "sz"); amountFont.appendChild(amountSize); }
+          amountSize.setAttribute("val", "16");
+          fonts.appendChild(amountFont); fonts.setAttribute("count", String(fonts.children.length));
+          amountXf.setAttribute("fontId", String(fonts.children.length - 1)); amountXf.setAttribute("applyFont", "1");
+          cellXfs.appendChild(amountXf); cell.setAttribute("s", String(cellXfs.children.length - 1));
+        });
         const landZoningCell = Array.from(visibleDocument.getElementsByTagNameNS(spreadsheetNs, "c")).find(item => item.getAttribute("r") === "M15");
         if (landZoningCell) {
           const sourceXf = cellXfs.children[Number(landZoningCell.getAttribute("s") || "0")] || cellXfs.children[0];
