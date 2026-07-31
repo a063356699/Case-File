@@ -555,6 +555,7 @@ export default function Home() {
 
   const archived = useMemo(() => records.filter(r => r.archived || isExpired(r) || r.status !== "委託中"), [records]);
   const active = useMemo(() => records.filter(r => !r.archived && !isExpired(r) && (r.status || "委託中") === "委託中"), [records]);
+  const latestModifiedAt = useMemo(() => records.map(record => record.lastModifiedAt || "").filter(Boolean).sort().at(-1) || "", [records]);
   const pendingArchiveCleanup = archived.map(record => ({ record, tasks: archiveCleanupTasks(record).filter(task => !record[task.key]) })).filter(item => item.record.archived && item.tasks.length > 0);
   useEffect(() => { if (pendingArchiveCleanup.length) setArchiveCleanupReminderOpen(true); else setArchiveCleanupReminderOpen(false); }, [pendingArchiveCleanup.map(item => `${item.record.id}:${item.tasks.map(task => task.key).join(",")}`).join("|")]);
   const missingDataOf = (record: RecordItem) => [!record.bookLocationDate ? "物件本日期" : "", (!record.salesBookDate || !record.salesBook) ? "銷售本" : "", (!record.photoInfo && !record.photos?.length) ? "照片" : ""].filter(Boolean);
@@ -1046,7 +1047,7 @@ export default function Home() {
   return <main className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
       <div className="brand"><h1>物件管理總表</h1></div>
-      <div className="header-actions"><button className="ppt-export-button" onClick={() => { setPptExtraIds([]); setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button onClick={exportExcel}>匯出 Excel</button><label className="file-button">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button onClick={exportJson}>匯出 JSON</button><button className="key-tag" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{active.filter(r => r.key).length}</b></button><button className="primary" onClick={() => setEditing(blankRecord())}>＋ 新增物件</button></div>
+      <div className="header-actions"><button className="ppt-export-button" onClick={() => { setPptExtraIds([]); setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button onClick={exportExcel}>匯出 Excel</button><label className="file-button">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button onClick={exportJson}>匯出 JSON</button><button className="key-tag" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{active.filter(r => r.key).length}</b></button><div className="header-new-record"><button className="primary" onClick={() => setEditing(blankRecord())}>＋ 新增物件</button><small>最後修改時間：{latestModifiedAt ? displayModifiedAt(latestModifiedAt) : "尚無"}</small></div></div>
     </header>}
     {!internalView && <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
