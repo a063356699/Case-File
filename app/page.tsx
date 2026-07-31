@@ -5,6 +5,7 @@ import PptxGenJS from "pptxgenjs";
 import JSZip from "jszip";
 import jsQR from "./jsQR.cjs";
 import colorWorkbookTemplateUrl from "./assets/彩色表範本.xlsm?url";
+import { sourceBalconyFixes } from "./source-balcony-fixes";
 
 type RecordItem = Record<string, string> & { id: string; photos: string[]; archived?: string };
 type Person = { id: string; sequence?: string; name: string; nationalId: string; phone?: string; role?: "業務" | "秘書"; status: "在職" | "離職" };
@@ -266,12 +267,15 @@ const layoutShort = (value = "", type = "") => {
   return [room, hall, bath].every(Boolean) ? [room, hall, bath].join(".") : full;
 };
 const nameMatches = (developer = "", person = "") => { const a = developer.replace(/\s/g, ""); const b = person.replace(/\s/g, ""); return !!a && !!b && (a.includes(b) || b.includes(a)); };
-// 原物件 Excel「回應」工作表的格局欄位是匯入依據；早期 216 筆匯入時，
-// EG0495442 漏讀了 Z2 的「2陽台」，所以在這裡保留可追溯的資料修正。
-const sourceLayoutFixes: Record<string, string> = { EG0495442: "3房2廳2衛2陽台" };
 const applySourceLayoutFixes = (records: RecordItem[]) => records.map(record => {
-  const fixedLayout = sourceLayoutFixes[String(record.propertyNo || "").trim().toUpperCase()];
-  return fixedLayout && /^(?:3[.．、,\s]2[.．、,\s]2|3房2廳2衛(?:0陽台)?)$/.test(String(record.layout || "").trim()) ? { ...record, layout: fixedLayout } : record;
+  const sourceBalcony = sourceBalconyFixes[String(record.propertyNo || "").trim().toUpperCase()];
+  if (!sourceBalcony || typeShort(record.type) === "土地" || /^(?:LG|LA)/i.test(record.propertyNo || "")) return record;
+  const balcony = sourceBalcony.match(/(\d+)\s*陽台/)?.[1];
+  const current = String(record.layout || "").trim();
+  const normalized = layoutFull(current, record.type);
+  if (!balcony || !normalized || normalized === "土地") return record;
+  const corrected = normalized.replace(/\d+陽台$/, `${balcony}陽台`);
+  return corrected === normalized ? record : { ...record, layout: corrected };
 });
 const daysUntil = (date = "") => validDate(date) && date ? Math.ceil((Date.parse(`${date}T00:00:00`) - Date.parse(`${today()}T00:00:00`)) / 86400000) : 99999;
 const nextDate = (date = "") => { const normalized = normalizeDateInput(date); if (!validDate(normalized)) return today(); const value = new Date(`${normalized}T00:00:00`); value.setDate(value.getDate() + 1); return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(value.getDate()).padStart(2, "0")}`; };
@@ -1676,7 +1680,7 @@ async function downloadColorWorkbook(record: RecordItem, personnel: Person[] = [
         "22": { x: 4944588, y: 8969189, width: 3480345, height: 2645112 },
         "36": { x: 4936174, y: 2054609, width: 1335232, height: 468000 },
         "34": { x: 4936174, y: 5264789, width: 1335232, height: 468000 },
-        "32": { x: 4922320, y: 8465189, width: 1335232, height: 468000 },
+        "32": { x: 4922320, y: 8501189, width: 1335232, height: 468000 },
       };
       Array.from(drawingDocument.documentElement.children).forEach(anchor => {
         const idNode = Array.from(anchor.getElementsByTagNameNS(xdrNs, "cNvPr")).find(node => fixedHouseObjects[node.getAttribute("id") || ""]);
