@@ -1186,7 +1186,17 @@ async function downloadColorWorkbook(record: RecordItem, personnel: Person[] = [
   Object.entries(cells).forEach(([address, value]) => setCell(address, value));
   zip.file(sheetPath, serializer.serializeToString(sheetDocument));
 
-  const developerNames = developerNameLines(record.developer || "");
+  // 開發欄位有時會只輸入名字後兩字並直接相連（例如「庭宇妤宸」）。
+  // 下載表格時以通訊錄的全名比對，保留原輸入中的先後順序。
+  const developerRaw = String(record.developer || "").replace(/\s/g, "");
+  const matchedDeveloperNames = personnel.map(person => {
+    const name = String(person.name || "").trim();
+    if (!name) return null;
+    const aliases = [name, name.slice(-2), ...(name === "王啟山" ? ["王總"] : [])].filter(alias => alias.length >= 2);
+    const positions = aliases.map(alias => developerRaw.indexOf(alias)).filter(position => position >= 0);
+    return positions.length ? { name, position: Math.min(...positions) } : null;
+  }).filter((item): item is { name: string; position: number } => !!item).sort((a, b) => a.position - b.position).map(item => item.name);
+  const developerNames = matchedDeveloperNames.length ? matchedDeveloperNames : developerNameLines(record.developer || "");
   const developerContactRows = developerNames.map(name => {
     const person = personnel.find(item => item.name === name || item.name.includes(name) || name.includes(item.name));
     return { name: person?.name || name, phone: person?.phone ? displayPhone(person.phone) : "" };
