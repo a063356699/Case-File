@@ -1651,12 +1651,12 @@ async function downloadColorWorkbook(record: RecordItem, personnel: Person[] = [
       // sheet.  This keeps all six house objects stable even when Excel rows
       // or text sizes change.
       const fixedHouseObjects: Record<string, { x: number; y: number; width: number; height: number }> = {
-        "35": { x: 4945403, y: 2630609, width: 3478714, height: 2606809 },
-        "33": { x: 4958442, y: 5840789, width: 3480345, height: 2645112 },
-        "22": { x: 4944588, y: 9041189, width: 3480345, height: 2645112 },
-        "36": { x: 4936174, y: 2054609, width: 1335232, height: 540000 },
-        "34": { x: 4936174, y: 5264789, width: 1335232, height: 540000 },
-        "32": { x: 4922320, y: 8465189, width: 1335232, height: 540000 },
+        "35": { x: 4945403, y: 2558609, width: 3478714, height: 2606809 },
+        "33": { x: 4958442, y: 5768789, width: 3480345, height: 2645112 },
+        "22": { x: 4944588, y: 8969189, width: 3480345, height: 2645112 },
+        "36": { x: 4936174, y: 1982609, width: 1335232, height: 540000 },
+        "34": { x: 4936174, y: 5192789, width: 1335232, height: 540000 },
+        "32": { x: 4922320, y: 8393189, width: 1335232, height: 540000 },
       };
       Array.from(drawingDocument.documentElement.children).forEach(anchor => {
         const idNode = Array.from(anchor.getElementsByTagNameNS(xdrNs, "cNvPr")).find(node => fixedHouseObjects[node.getAttribute("id") || ""]);
