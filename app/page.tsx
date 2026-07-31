@@ -9,7 +9,7 @@ import { sourceBalconyFixes } from "./source-balcony-fixes";
 
 type RecordItem = Record<string, string> & { id: string; photos: string[]; archived?: string };
 type Person = { id: string; sequence?: string; name: string; nationalId: string; phone?: string; role?: "業務" | "秘書"; status: "在職" | "離職" };
-type Settings = { personnel: Person[]; staffName?: string; staffId?: string; supabaseUrl: string; supabaseKey: string; supabaseTable: string; supabaseRecord: string };
+type Settings = { personnel: Person[]; staffName?: string; staffId?: string; supabaseUrl: string; supabaseKey: string; supabaseTable: string; supabaseRecord: string; expiry591?: string; expiry5168?: string; brokerExpiry?: string };
 type CloudSession = { accessToken: string; refreshToken?: string; email?: string };
 type IntakeData = { id: string; values: Record<string, string>; propertyKind: "房屋" | "純土地"; createdAt: string; raw?: string; linkedRecordId?: string; enteredAt?: string; groupViewDate?: string };
 type TourItem = { id: string; recordId?: string; sequence: string; temporary?: boolean; data: RecordItem };
@@ -557,6 +557,11 @@ export default function Home() {
   const websiteExpiryRecords = active.flatMap(record => record.bookLocationType === "旁5" ? [] : [
     ["591", "platform591", record.platform591Expiry], ["5168", "price5168", record.price5168Expiry], ["黃金曝光", "goldExposure", record.goldExposureExpiry],
   ].filter((entry): entry is [string, string, string] => record[`${entry[1]}None`] !== "1" && Boolean(entry[2]) && normalizeDateInput(entry[2]) < today()).map(([site, , date]) => ({ record, site, date })));
+  const systemExpiryReminders = [
+    { label: "591", date: normalizeDateInput(settings.expiry591 || ""), leadDays: 1 },
+    { label: "5168", date: normalizeDateInput(settings.expiry5168 || ""), leadDays: 1 },
+    { label: "經紀人", date: normalizeDateInput(settings.brokerExpiry || ""), leadDays: 30 },
+  ].filter(item => validDate(item.date) && item.date <= addDaysIso(today(), item.leadDays));
   const expiredUnarchived = useMemo(() => records.filter(r => !r.archived && (r.status || "委託中") === "委託中" && isExpired(r)), [records]);
   useEffect(() => { if (expiredUnarchived.length) setExpiryReminderOpen(true); else setExpiryReminderOpen(false); }, [expiredUnarchived.map(record => record.id).join("|")]);
   const shown = (tab === "archive" ? archived : sortActiveRecords(active)).filter(r => (!websiteFilter || tab === "archive" || (websiteFilter === "all" ? requiredWebsiteKeys(r).some(key => isWebsiteMissing(r, key)) : isWebsiteMissing(r, websiteFilter))) && [r.propertyNo, r.area, r.caseName, r.address, r.developer].join(" ").toLowerCase().includes(query.toLowerCase()));
@@ -965,6 +970,7 @@ export default function Home() {
       <button className={tab === "settings" ? "active" : ""} onClick={() => setTab("settings")}>設定</button>
     </nav>}
 
+    {!internalView && tab === "active" && systemExpiryReminders.length > 0 && <div className="system-expiry-reminder"><b>系統到期提醒</b>{systemExpiryReminders.map(item => <span key={item.label}>{item.label}：{displayRocDate(item.date)} 到期{item.date < today() ? "（已到期）" : item.leadDays === 30 ? "（30天內）" : "（明天到期）"}</span>)}</div>}
     {!internalView && tab === "active" && <PropertyBookReview records={active} submit={submitBookReviews}/>}
     {!internalView && tab === "active" && <BusinessReportInbox records={active} resolve={resolveMonthlyPropertyReport} archive={(record, status) => setArchiveChoice({ record, status, date: today() })}/>}
     {showingPublic && publicUnlocked && publicScope === "mine" && publicPerson && <MonthlyPropertyReport records={myProperties} person={publicPerson} submit={submitMonthlyPropertyReport}/>}
@@ -2413,6 +2419,22 @@ function Field({ fieldKey, label, record, records, setRecord }: { fieldKey: stri
 
 function SettingsPanel({ settings, setSettings, supabasePush, supabasePull, cloudSession, supabaseSignIn, supabaseSignOut }: { settings: Settings; setSettings: (s: Settings) => void; supabasePush: () => void; supabasePull: () => void; cloudSession: CloudSession | null; supabaseSignIn: (email: string, password: string, signUp?: boolean) => void; supabaseSignOut: () => void }) {
   const set = (k: keyof Settings, v: string) => setSettings({ ...settings, [k]: v });
+  useEffect(() => {
+    const personnelPanel = document.querySelector<HTMLElement>(".settings .personnel-panel");
+    if (!personnelPanel) return;
+    const panel = document.createElement("article");
+    panel.className = "panel expiry-settings-panel";
+    panel.innerHTML = `<h3>公司到期提醒</h3><p>591、5168 會在到期前 1 天提醒；經紀人會在到期前 1 個月提醒。</p><div class="form-grid"><label class="field"><span>591 到期日</span><input data-expiry-key="expiry591" placeholder="例如 115/8/31"></label><label class="field"><span>5168 到期日</span><input data-expiry-key="expiry5168" placeholder="例如 115/8/31"></label><label class="field"><span>經紀人到期日</span><input data-expiry-key="brokerExpiry" placeholder="例如 115/8/31"></label></div>`;
+    personnelPanel.parentElement?.insertBefore(panel, personnelPanel);
+    const values: Record<string, string> = { expiry591: displayRocDate(settings.expiry591 || ""), expiry5168: displayRocDate(settings.expiry5168 || ""), brokerExpiry: displayRocDate(settings.brokerExpiry || "") };
+    const handlers = Array.from(panel.querySelectorAll<HTMLInputElement>("[data-expiry-key]")).map(input => {
+      input.value = values[input.dataset.expiryKey || ""] || "";
+      const handler = () => setSettings({ ...settings, [input.dataset.expiryKey || ""]: normalizeDateInput(input.value) });
+      input.addEventListener("blur", handler);
+      return { input, handler };
+    });
+    return () => { handlers.forEach(({ input, handler }) => input.removeEventListener("blur", handler)); panel.remove(); };
+  }, [settings.expiry591, settings.expiry5168, settings.brokerExpiry]);
   const [cloudEmail, setCloudEmail] = useState("");
   const [cloudPassword, setCloudPassword] = useState("");
   const updatePerson = (id: string, patch: Partial<Person>) => setSettings({ ...settings, personnel: settings.personnel.map(p => p.id === id ? { ...p, ...patch } : p) });

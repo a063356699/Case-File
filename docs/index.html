@@ -578,6 +578,8 @@
 .archive-list-page td.col-notes{vertical-align:top!important;text-align:left!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;line-height:1.35!important}
 .archive-list-page td.col-notes .notes-display{display:block!important;width:100%!important;font-size:calc(1em - 2pt)!important;font-weight:400!important;text-align:left!important;white-space:normal!important;overflow-wrap:anywhere!important;line-height:1.35!important}
 .website-field{padding:10px;border:1px solid #d6ded9;border-radius:10px;background:#f8faf8}.website-field .website-expiry-label{margin-top:7px;color:#8a3f3a}.selected-filter{background:var(--green)!important;border-color:var(--green)!important;color:#fff!important}.data-reminder,.website-expiry-reminder{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 12px;padding:10px 12px;border:1px solid #e3c483;border-radius:10px;background:#fff6df;color:#765019}.website-expiry-reminder{border-color:#e3aaa7;background:#fff0ef;color:#8d302c}.data-reminder button,.website-expiry-reminder button{padding:5px 9px;border:0;background:#fff;border-radius:7px;color:inherit;font-size:12px;font-weight:400}.data-reminder b,.website-expiry-reminder b{margin-right:4px}
+.system-expiry-reminder{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:14px 34px 0;padding:10px 12px;border:1px solid #86b8dd;border-radius:10px;background:#edf7ff;color:#17628f}.system-expiry-reminder span{background:#fff;border-radius:999px;padding:4px 9px;font-size:12px}
+.expiry-settings-panel{margin-top:20px}.expiry-settings-panel .form-grid{padding:0;margin-top:12px}
 .website-filter{min-width:160px;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink);font-weight:700}
 .edit-houseinfor,.edit-led{display:none!important}.website-stack{display:flex;flex-direction:column;gap:8px}.website-stack .website-field{padding:8px 10px}.website-field-head{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:8px!important}.website-field-head>b{font-size:12px;color:#56645f}.website-field-head>i{display:inline-flex;align-items:center;gap:3px;color:#6c7471;font-size:11px;font-style:normal;font-weight:400;white-space:nowrap}.website-field-head>i input{width:13px!important;height:13px!important;margin:0!important;padding:0!important;accent-color:var(--green)}.website-none{background:#f1f1ee!important}.website-none>input{background:#e6e7e4!important;color:#888!important}.website-none .website-expiry-label{color:#888!important}
 .website-po-reminder-row small{color:#b33b34;font-size:12px;font-weight:700}.website-po-reminder-row>button{flex:0 0 auto;background:#fff;border-color:#d6a39c;color:#9f3029}.website-po-reminder-modal .modal-head span{color:#b33b34}
@@ -41271,6 +41273,11 @@ ${String(ex)}`);
       ["5168", "price5168", record.price5168Expiry],
       ["\u9EC3\u91D1\u66DD\u5149", "goldExposure", record.goldExposureExpiry]
     ].filter((entry) => record[`${entry[1]}None`] !== "1" && Boolean(entry[2]) && normalizeDateInput(entry[2]) < today()).map(([site, , date]) => ({ record, site, date })));
+    const systemExpiryReminders = [
+      { label: "591", date: normalizeDateInput(settings.expiry591 || ""), leadDays: 1 },
+      { label: "5168", date: normalizeDateInput(settings.expiry5168 || ""), leadDays: 1 },
+      { label: "\u7D93\u7D00\u4EBA", date: normalizeDateInput(settings.brokerExpiry || ""), leadDays: 30 }
+    ].filter((item) => validDate(item.date) && item.date <= addDaysIso(today(), item.leadDays));
     const expiredUnarchived = (0, import_react.useMemo)(() => records.filter((r) => !r.archived && (r.status || "\u59D4\u8A17\u4E2D") === "\u59D4\u8A17\u4E2D" && isExpired(r)), [records]);
     (0, import_react.useEffect)(() => {
       if (expiredUnarchived.length) setExpiryReminderOpen(true);
@@ -42047,6 +42054,16 @@ ${String(ex)}`);
         }, children: "\u9032\u6848\u8349\u7A3F" }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: tab === "public" ? "active" : "", onClick: openPublic, children: "\u524D\u53F0\u7E3D\u8868" }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: tab === "settings" ? "active" : "", onClick: () => setTab("settings"), children: "\u8A2D\u5B9A" })
+      ] }),
+      !internalView && tab === "active" && systemExpiryReminders.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "system-expiry-reminder", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u7CFB\u7D71\u5230\u671F\u63D0\u9192" }),
+        systemExpiryReminders.map((item) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+          item.label,
+          "\uFF1A",
+          displayRocDate(item.date),
+          " \u5230\u671F",
+          item.date < today() ? "\uFF08\u5DF2\u5230\u671F\uFF09" : item.leadDays === 30 ? "\uFF0830\u5929\u5167\uFF09" : "\uFF08\u660E\u5929\u5230\u671F\uFF09"
+        ] }, item.label))
       ] }),
       !internalView && tab === "active" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PropertyBookReview, { records: active, submit: submitBookReviews }),
       !internalView && tab === "active" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(BusinessReportInbox, { records: active, resolve: resolveMonthlyPropertyReport, archive: (record, status) => setArchiveChoice({ record, status, date: today() }) }),
@@ -46050,6 +46067,25 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
   }
   function SettingsPanel({ settings, setSettings, supabasePush, supabasePull, cloudSession, supabaseSignIn, supabaseSignOut }) {
     const set = (k, v) => setSettings({ ...settings, [k]: v });
+    (0, import_react.useEffect)(() => {
+      const personnelPanel = document.querySelector(".settings .personnel-panel");
+      if (!personnelPanel) return;
+      const panel = document.createElement("article");
+      panel.className = "panel expiry-settings-panel";
+      panel.innerHTML = `<h3>\u516C\u53F8\u5230\u671F\u63D0\u9192</h3><p>591\u30015168 \u6703\u5728\u5230\u671F\u524D 1 \u5929\u63D0\u9192\uFF1B\u7D93\u7D00\u4EBA\u6703\u5728\u5230\u671F\u524D 1 \u500B\u6708\u63D0\u9192\u3002</p><div class="form-grid"><label class="field"><span>591 \u5230\u671F\u65E5</span><input data-expiry-key="expiry591" placeholder="\u4F8B\u5982 115/8/31"></label><label class="field"><span>5168 \u5230\u671F\u65E5</span><input data-expiry-key="expiry5168" placeholder="\u4F8B\u5982 115/8/31"></label><label class="field"><span>\u7D93\u7D00\u4EBA\u5230\u671F\u65E5</span><input data-expiry-key="brokerExpiry" placeholder="\u4F8B\u5982 115/8/31"></label></div>`;
+      personnelPanel.parentElement?.insertBefore(panel, personnelPanel);
+      const values = { expiry591: displayRocDate(settings.expiry591 || ""), expiry5168: displayRocDate(settings.expiry5168 || ""), brokerExpiry: displayRocDate(settings.brokerExpiry || "") };
+      const handlers = Array.from(panel.querySelectorAll("[data-expiry-key]")).map((input) => {
+        input.value = values[input.dataset.expiryKey || ""] || "";
+        const handler = () => setSettings({ ...settings, [input.dataset.expiryKey || ""]: normalizeDateInput(input.value) });
+        input.addEventListener("blur", handler);
+        return { input, handler };
+      });
+      return () => {
+        handlers.forEach(({ input, handler }) => input.removeEventListener("blur", handler));
+        panel.remove();
+      };
+    }, [settings.expiry591, settings.expiry5168, settings.brokerExpiry]);
     const [cloudEmail, setCloudEmail] = (0, import_react.useState)("");
     const [cloudPassword, setCloudPassword] = (0, import_react.useState)("");
     const updatePerson = (id, patch) => setSettings({ ...settings, personnel: settings.personnel.map((p) => p.id === id ? { ...p, ...patch } : p) });
