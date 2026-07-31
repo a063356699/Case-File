@@ -650,6 +650,7 @@
 .website-list-value .website-inline-note{display:block!important;margin-top:2px!important;color:#2878ad!important;font-size:11px!important;font-weight:500!important;line-height:1.25!important;white-space:nowrap!important}
 .daily-table td.col-area,.daily-table th.col-area{vertical-align:middle!important;text-align:center!important}.daily-table td.col-area .area-lines{height:100%;min-height:0!important;justify-content:center!important;align-items:center!important;text-align:center!important}
 .public-table td.col-area,.public-table th.col-area{vertical-align:middle!important;text-align:center!important}.public-table td.col-area .area-lines{height:100%;min-height:0!important;justify-content:center!important;align-items:center!important;text-align:center!important}
+.expiry-settings-panel h3,.personnel-head h3{cursor:pointer}.expiry-settings-panel h3:hover,.personnel-head h3:hover{color:var(--green)}
 .expiry-settings-panel:not(.expiry-open)>p,.expiry-settings-panel:not(.expiry-open)>.form-grid{display:none}.expiry-settings-panel h3{display:flex;align-items:center;justify-content:space-between;margin:0}.expiry-toggle{padding:7px 14px;color:var(--green);border-color:#b9cfc4;background:#f3f8f4}
 .advanced-filter-button{background:#eef6f1;border-color:#b9d3c5;color:#176044}.advanced-filter-modal{width:min(1040px,96vw)}.advanced-filter-body{padding:18px 24px 26px;display:grid;gap:18px}.advanced-filter-body section{border:1px solid #dbe4de;background:#fbfdfb;border-radius:11px;padding:15px}.advanced-filter-body h3{margin:0 0 12px;font-size:15px;color:#234b3d}.advanced-filter-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px 12px}.filter-field{display:flex;flex-direction:column;gap:5px;min-width:0}.filter-field>span{font-size:12px;font-weight:800;color:#51665d}.filter-field input,.filter-field select{min-width:0;width:100%;border:1px solid #c9d4cd;border-radius:7px;padding:8px 9px;background:#fff}.range-field>div{display:flex;align-items:center;gap:5px}.range-field input{min-width:0}.range-field i{font-style:normal;color:#738078;font-size:12px}.range-field em{font-style:normal;color:#6f7b75;font-size:12px;white-space:nowrap}.filter-help{margin:-4px 0 10px!important;color:#738078!important;font-size:12px!important}.website-filter-grid{grid-template-columns:repeat(4,minmax(0,1fr))}@media(max-width:800px){.advanced-filter-grid,.website-filter-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.advanced-filter-body{padding:14px}.advanced-filter-modal{width:100vw;height:100vh;max-height:100vh;border-radius:0}}
 .personnel-panel:not(.personnel-open)>.personnel-table,.personnel-panel:not(.personnel-open)>.former-people,.personnel-panel:not(.personnel-open) .personnel-head .primary{display:none}.personnel-toggle{padding:7px 14px;color:var(--green);border-color:#b9cfc4;background:#f3f8f4}
@@ -46216,16 +46217,10 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       panel.innerHTML = `<h3>\u516C\u53F8\u5230\u671F\u63D0\u9192</h3><p>591\u30015168 \u6703\u5728\u5230\u671F\u524D 1 \u5929\u63D0\u9192\uFF1B\u7D93\u7D00\u4EBA\u6703\u5728\u5230\u671F\u524D 1 \u500B\u6708\u63D0\u9192\u3002</p><div class="form-grid"><label class="field"><span>591 \u5230\u671F\u65E5</span><input data-expiry-key="expiry591" placeholder="\u4F8B\u5982 115/8/31"></label><label class="field"><span>5168 \u5230\u671F\u65E5</span><input data-expiry-key="expiry5168" placeholder="\u4F8B\u5982 115/8/31"></label><label class="field"><span>\u7D93\u7D00\u4EBA\u5230\u671F\u65E5</span><input data-expiry-key="brokerExpiry" placeholder="\u4F8B\u5982 115/8/31"></label></div>`;
       panel.classList.remove("expiry-open");
       const expiryHeading = panel.querySelector("h3");
-      const expiryToggle = document.createElement("button");
-      expiryToggle.type = "button";
-      expiryToggle.className = "expiry-toggle";
-      expiryToggle.textContent = "\u5C55\u958B";
       const toggleExpiryPanel = () => {
-        const isOpen = panel.classList.toggle("expiry-open");
-        expiryToggle.textContent = isOpen ? "\u6536\u8D77" : "\u5C55\u958B";
+        panel.classList.toggle("expiry-open");
       };
-      expiryToggle.addEventListener("click", toggleExpiryPanel);
-      expiryHeading?.appendChild(expiryToggle);
+      expiryHeading?.addEventListener("click", toggleExpiryPanel);
       personnelPanel.parentElement?.insertBefore(panel, personnelPanel);
       const values = { expiry591: displayRocDate(settings.expiry591 || ""), expiry5168: displayRocDate(settings.expiry5168 || ""), brokerExpiry: displayRocDate(settings.brokerExpiry || "") };
       const handlers = Array.from(panel.querySelectorAll("[data-expiry-key]")).map((input) => {
@@ -46235,7 +46230,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
         return { input, handler };
       });
       return () => {
-        expiryToggle.removeEventListener("click", toggleExpiryPanel);
+        expiryHeading?.removeEventListener("click", toggleExpiryPanel);
         handlers.forEach(({ input, handler }) => input.removeEventListener("blur", handler));
         panel.remove();
       };
@@ -46245,19 +46240,13 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       const head = personnelPanel?.querySelector(".personnel-head");
       if (!personnelPanel || !head) return;
       personnelPanel.classList.remove("personnel-open");
-      const toggle = document.createElement("button");
-      toggle.type = "button";
-      toggle.className = "personnel-toggle";
-      toggle.textContent = "\u5C55\u958B";
+      const heading = head.querySelector("h3");
       const togglePanel = () => {
-        const isOpen = personnelPanel.classList.toggle("personnel-open");
-        toggle.textContent = isOpen ? "\u6536\u8D77" : "\u5C55\u958B";
+        personnelPanel.classList.toggle("personnel-open");
       };
-      toggle.addEventListener("click", togglePanel);
-      head.appendChild(toggle);
+      heading?.addEventListener("click", togglePanel);
       return () => {
-        toggle.removeEventListener("click", togglePanel);
-        toggle.remove();
+        heading?.removeEventListener("click", togglePanel);
       };
     }, []);
     const [cloudEmail, setCloudEmail] = (0, import_react.useState)("");
