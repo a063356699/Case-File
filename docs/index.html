@@ -45264,9 +45264,12 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       ] });
     }
     if (k === "floor") {
-      const rawFloor = String(r.floor || "").replace(/[\s／/]/g, "");
-      if (/^(?:土地|建地)+$/.test(rawFloor)) return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, {});
-      const floor = floorShortFixed(r.floor);
+      const unusable = (value = "") => /^(?:土地|建地|農地|遊樂區|無|0T|0|-|—)$/i.test(value.replace(/\s+/g, ""));
+      const titleFloor = String(r.titleFloor || "").trim();
+      const currentFloor = String(r.currentFloor || "").trim();
+      const editorFloors = [titleFloor, currentFloor].filter((value) => value && !unusable(value)).filter((value, index, values) => values.indexOf(value) === index);
+      const legacyFloor = floorShortFixed(r.floor);
+      const floor = editorFloors.length ? editorFloors.join("/") : unusable(legacyFloor) || /^(?:土地|無|農地|遊樂區)(?:[／/]?(?:土地|無|農地|遊樂區))*$/i.test(legacyFloor.replace(/\s+/g, "")) ? "" : legacyFloor;
       const parts = floor.match(/^(\d+T)(\/.*增建)$/);
       return parts ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "two-line-value", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: parts[1] }),
