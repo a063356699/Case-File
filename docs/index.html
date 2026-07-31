@@ -40525,7 +40525,9 @@ ${String(ex)}`);
   };
   var filterDateInRange = (value, from = "", to = "") => {
     const date = normalizeDateInput(String(value || ""));
-    return (!from || date && date >= from) && (!to || date && date <= to);
+    const start = normalizeDateInput(from) || from;
+    const end = normalizeDateInput(to) || to;
+    return (!start || date && date >= start) && (!end || date && date <= end);
   };
   var today = () => {
     const value = /* @__PURE__ */ new Date();
@@ -44952,9 +44954,9 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     const dateRange = (from, to, label) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "filter-field range-field", children: [
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: label }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "date", value: value[from] || "", onChange: (event) => change(from, event.target.value) }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { value: value[from] || "", placeholder: "115/7/24", onChange: (event) => change(from, event.target.value) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("i", { children: "\u81F3" }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "date", value: value[to] || "", onChange: (event) => change(to, event.target.value) })
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { value: value[to] || "", placeholder: "115/7/24", onChange: (event) => change(to, event.target.value) })
       ] })
     ] });
     const numberRange = (from, to, label, unit = "") => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "filter-field range-field", children: [
