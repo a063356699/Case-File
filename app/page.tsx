@@ -1388,6 +1388,12 @@ async function downloadColorWorkbook(record: RecordItem, personnel: Person[] = [
       cellXfs.setAttribute("count", String(cellXfs.children.length));
       zip.file("xl/styles.xml", serializer.serializeToString(stylesDocument));
     }
+    // Write the physical row height again after all template adjustments.
+    // Excel measures row height in points: 26.93 pt is 0.95 cm.
+    if (!isLand) [29, 30, 31].forEach(rowNumber => {
+      const rowNode = Array.from(visibleDocument.getElementsByTagNameNS(spreadsheetNs, "row")).find(item => item.getAttribute("r") === String(rowNumber));
+      if (rowNode) { rowNode.setAttribute("ht", "26.93"); rowNode.setAttribute("customHeight", "1"); }
+    });
     (isLand ? [26, 27, 28, 29] : [37, 38, 39, 40]).forEach(rowNumber => {
       const rowNode = Array.from(visibleDocument.getElementsByTagNameNS(spreadsheetNs, "row")).find(item => item.getAttribute("r") === String(rowNumber));
       if (rowNode) { rowNode.setAttribute("ht", isLand ? "48.40" : "28.35"); rowNode.setAttribute("customHeight", "1"); }
