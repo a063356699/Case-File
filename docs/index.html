@@ -40569,6 +40569,11 @@ ${String(ex)}`);
     const b = person.replace(/\s/g, "");
     return !!a && !!b && (a.includes(b) || b.includes(a));
   };
+  var sourceLayoutFixes = { EG0495442: "3\u623F2\u5EF32\u885B2\u967D\u53F0" };
+  var applySourceLayoutFixes = (records) => records.map((record) => {
+    const fixedLayout = sourceLayoutFixes[String(record.propertyNo || "").trim().toUpperCase()];
+    return fixedLayout && /^(?:3[.．、,\s]2[.．、,\s]2|3房2廳2衛(?:0陽台)?)$/.test(String(record.layout || "").trim()) ? { ...record, layout: fixedLayout } : record;
+  });
   var daysUntil = (date = "") => validDate(date) && date ? Math.ceil((Date.parse(`${date}T00:00:00`) - Date.parse(`${today()}T00:00:00`)) / 864e5) : 99999;
   var nextDate = (date = "") => {
     const normalized = normalizeDateInput(date);
@@ -40964,7 +40969,7 @@ ${String(ex)}`);
           localStorage.setItem(STORAGE_KEY, JSON.stringify(loadedRecords));
           localStorage.setItem(appRestoreMarker, "1");
         }
-        loadedRecords = loadedRecords.map((record) => ({ ...record, salesBook: record.salesBook || "\u88FD\u4F5C" }));
+        loadedRecords = applySourceLayoutFixes(loadedRecords).map((record) => ({ ...record, salesBook: record.salesBook || "\u88FD\u4F5C" }));
         const savedSettings = localStorage.getItem(SETTINGS_KEY);
         setSettings((s) => {
           const old = savedSettings ? JSON.parse(savedSettings) : {};
@@ -41207,7 +41212,7 @@ ${String(ex)}`);
           const replaceExisting = fullBackup || !Array.isArray(data) && data.replaceExisting === true;
           const message = replaceExisting ? `\u5C07\u4EE5\u5099\u4EFD\u4E2D\u7684 ${list.length} \u7B46\u8CC7\u6599\u53D6\u4EE3 Edge \u76EE\u524D\u7269\u4EF6\uFF0C\u78BA\u5B9A\u55CE\uFF1F` : `\u5C07\u532F\u5165 ${list.length} \u7B46\u8CC7\u6599\uFF0C\u4E26\u8207\u73FE\u6709\u8CC7\u6599\u5408\u4F75\uFF0C\u78BA\u5B9A\u55CE\uFF1F`;
           if (confirm(message)) {
-            const normalized = list.map((r) => ({ ...blankRecord(), ...r, id: r.id || newId(), photos: Array.isArray(r.photos) ? r.photos : [] }));
+            const normalized = applySourceLayoutFixes(list.map((r) => ({ ...blankRecord(), ...r, id: r.id || newId(), photos: Array.isArray(r.photos) ? r.photos : [] })));
             let nextRecords = normalized;
             if (!replaceExisting) {
               const map = new Map(records.map((r) => [r.id, r]));
