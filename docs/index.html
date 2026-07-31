@@ -45342,7 +45342,11 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
         "\u4E0B\u67B6"
       ] })
     ] });
-    if (["road", "frontage", "depth"].includes(k)) return r[k] ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "two-line-value", children: [
+    if (k === "road") {
+      const values = String(r.road || "").split(/[\/／]/).map((part) => part.match(/\d+(?:\.\d+)?/)?.[0] || "").filter(Boolean);
+      return values.length ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "floor-lines road-lines", children: values.map((value, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: value }, `${value}-${index}`)) }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: "\u2014" });
+    }
+    if (["frontage", "depth"].includes(k)) return r[k] ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "two-line-value", children: [
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: r[k].replace(/\s*米\s*$/, "") }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "\u7C73" })
     ] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: "\u2014" });
