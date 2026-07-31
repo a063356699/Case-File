@@ -253,6 +253,10 @@ const layoutFull = (value = "", type = "") => {
   if (!room && !hall && !bath && !balcony) return raw;
   return `${room || "0"}房${hall || "0"}廳${bath || "0"}衛${balcony || "0"}陽台`;
 };
+const layoutForHouseWorkbook = (value = "", type = "") => {
+  const full = layoutFull(value, type);
+  return full.replace(/0陽台$/, "");
+};
 const layoutShort = (value = "", type = "") => {
   const full = layoutFull(value, type);
   if (full === "土地") return "土地";
@@ -1232,7 +1236,7 @@ async function downloadColorWorkbook(record: RecordItem, personnel: Person[] = [
     } : {
       ...commonValues, F13: pingValue(record.registryBuildingPing || record.buildingPing), M13: pingValue(record.landSharePing || record.landPing), F14: pingValue(record.registryIndoorPing || record.indoorPing), M14: pingValue(record.buildingOtherPing || record.basementPing),
       F15: pingValue(record.mainBuildingPing), M15: record.parkingType || record.parking || "", F16: pingValue(record.auxiliaryBuildingPing), M16: record.parkingMethod || "", F17: pingValue(record.commonAreaPing), M17: record.parkingNo || "",
-      F19: typeShort(record.type), M19: record.buildingName || "", F20: `${record.unitsPerFloor || ""}戶`, M20: `${record.elevatorCount || ""}部`, F21: record.managementMethod || "", M21: !cleanNumber(record.managementFee) || Number(cleanNumber(record.managementFee)) === 0 ? "-/月" : `${cleanNumber(record.managementFee)}/月`, F22: layoutFull(record.layout || "", record.type),
+      F19: typeShort(record.type), M19: record.buildingName || "", F20: `${record.unitsPerFloor || ""}戶`, M20: `${record.elevatorCount || ""}部`, F21: record.managementMethod || "", M21: !cleanNumber(record.managementFee) || Number(cleanNumber(record.managementFee)) === 0 ? "-/月" : `${cleanNumber(record.managementFee)}/月`, F22: layoutForHouseWorkbook(record.layout || "", record.type),
       F23: record.titleFloor || floorParts[0] || "", M23: currentFloorValue(record.currentFloor || floorParts[1] || ""), F24: record.completionDate || record.builtYear || "", M24: `約${String(ageOf(record)).match(/(\d+(?:\.\d+)?)\s*年屋/)?.[1] || String(ageOf(record)).match(/(\d+(?:\.\d+)?)/)?.[1] || ""}年屋`, F25: record.direction || "", M25: record.currentState || "",
       F27: aboutMeter(record.road), M27: [record.coverage, record.far].filter(Boolean).join("/"), F28: aboutMeter(record.frontage), M28: aboutMeter(record.depth), F29: record.market || "", F30: record.park || "", F31: record.school || "",
       F33: taxValue(record.generalLandValueTax || ""), F34: taxValue(record.selfUseLandValueTax || ""), F35: "$- 依稅單為準", C37: noteParts[0], C38: noteParts[1], C39: noteParts[2], C40: noteParts[3], B41: cleanNotes, P44: developerContact,

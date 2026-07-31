@@ -40552,6 +40552,10 @@ ${String(ex)}`);
     if (!room && !hall && !bath && !balcony) return raw;
     return `${room || "0"}\u623F${hall || "0"}\u5EF3${bath || "0"}\u885B${balcony || "0"}\u967D\u53F0`;
   };
+  var layoutForHouseWorkbook = (value = "", type = "") => {
+    const full = layoutFull(value, type);
+    return full.replace(/0陽台$/, "");
+  };
   var layoutShort = (value = "", type = "") => {
     const full = layoutFull(value, type);
     if (full === "\u571F\u5730") return "\u571F\u5730";
@@ -43006,7 +43010,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
         M20: `${record.elevatorCount || ""}\u90E8`,
         F21: record.managementMethod || "",
         M21: !cleanNumber(record.managementFee) || Number(cleanNumber(record.managementFee)) === 0 ? "-/\u6708" : `${cleanNumber(record.managementFee)}/\u6708`,
-        F22: layoutFull(record.layout || "", record.type),
+        F22: layoutForHouseWorkbook(record.layout || "", record.type),
         F23: record.titleFloor || floorParts[0] || "",
         M23: currentFloorValue(record.currentFloor || floorParts[1] || ""),
         F24: record.completionDate || record.builtYear || "",
