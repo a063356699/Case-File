@@ -40738,7 +40738,14 @@ ${String(ex)}`);
     const b = person.replace(/\s/g, "");
     return !!a && !!b && (a.includes(b) || b.includes(a));
   };
+  var isImportedDashPlaceholder = (value) => /^[\s－—-]*$/.test(String(value ?? ""));
+  var clearImportedContractChangePlaceholders = (record) => {
+    const contractChangeKeys = ["contractChangeNo", "coverChangeNo", "coverChangeDate", "coverChangePurpose", "coverNoChange"];
+    const cleared = Object.fromEntries(contractChangeKeys.filter((key) => isImportedDashPlaceholder(record[key])).map((key) => [key, ""]));
+    return Object.keys(cleared).length ? { ...record, ...cleared } : record;
+  };
   var applySourceLayoutFixes = (records) => records.map((record) => {
+    record = clearImportedContractChangePlaceholders(record);
     const sourceBalcony = sourceBalconyFixes[String(record.propertyNo || "").trim().toUpperCase()];
     if (!sourceBalcony || typeShort(record.type) === "\u571F\u5730" || /^(?:LG|LA)/i.test(record.propertyNo || "")) return record;
     const balcony = sourceBalcony.match(/(\d+)\s*陽台/)?.[1];
@@ -43983,7 +43990,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     const percentText = record.coverBottomPercent ? `${escapeHtml(record.coverPercentSource || "\u4E3B\u7D04")}${escapeHtml(record.coverBottomPercent)}%` : "";
     const coverIsLand = typeShort(record.type) === "\u571F\u5730" || /^(?:LG|LA)/i.test(record.propertyNo || "");
     const coverZoningStatus = record.zoningDocumentStatus || (coverIsLand ? "" : "\u623F\u5C4B\u4E0D\u9700\u8981");
-    const coverContractRows = coverIsLand ? `<table class="contract-grid-v3"><colgroup><col style="width:25mm"><col style="width:11mm"><col style="width:11mm"><col style="width:11mm"><col style="width:58mm"><col></colgroup><tbody>
+    const coverContractRows = false ? `<table class="contract-grid-v3"><colgroup><col style="width:25mm"><col style="width:11mm"><col style="width:11mm"><col style="width:11mm"><col style="width:58mm"><col></colgroup><tbody>
       <tr style="height:9mm"><th rowspan="2">\u5951\u7D04\u7DE8\u865F</th><th colspan="3">\u5951\u7BA1</th><th rowspan="2">\u65E5\u671F\uFF0F\u59D4\u8A17\u8D77\u8A16\u65E5</th><td class="report">\u9032\u6848\u65E5\u671F\uFF1A\u3000${date("reportDate")}</td></tr>
       <tr style="height:9mm"><th>\u623F\u7BA1</th><th>\u7167\u7247</th><th>\u7D19\u672C</th><th>\u7528\u9014</th></tr>
       <tr style="height:12mm"><td>${value("propertyNo")}</td><td></td><td></td><td></td><td>${date("entrustStart")}\uFF5E${date("entrustEnd")}</td><td>\u958B\u50F9${value("price")}\u842C</td></tr>
@@ -43993,7 +44000,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       <tr style="height:9mm"><th rowspan="2">\u5951\u7D04\u7DE8\u865F</th><th rowspan="2">\u65E5\u671F\uFF0F\u59D4\u8A17\u8D77\u8A16\u65E5</th><td class="report">\u9032\u6848\u65E5\u671F\uFF1A\u3000${date("reportDate")}</td></tr>
       <tr style="height:9mm"><th>\u7528\u9014</th></tr>
       <tr style="height:12mm"><td>${value("propertyNo")}</td><td>${date("entrustStart")}\uFF5E${date("entrustEnd")}</td><td>\u958B\u50F9${value("price")}\u842C</td></tr>
-      <tr style="height:12mm"><td>${record.coverNoChange === "\u7121\u5951\u8B8A" ? "\u7121\u5951\u8B8A" : value("coverChangeNo")}</td><td>${record.coverNoChange === "\u7121\u5951\u8B8A" ? "-" : record.coverChangeDate ? date("coverChangeDate") : "-"}</td><td>${record.coverNoChange === "\u7121\u5951\u8B8A" ? "-" : record.coverChangePurpose ? value("coverChangePurpose") : "-"}</td></tr>
+      <tr style="height:12mm"><td>${record.coverNoChange === "\u7121\u5951\u8B8A" ? "\u7121\u5951\u8B8A" : isImportedDashPlaceholder(record.coverChangeNo) ? "\uFF0D" : value("coverChangeNo")}</td><td>${record.coverNoChange === "\u7121\u5951\u8B8A" || isImportedDashPlaceholder(record.coverChangeDate) ? "\uFF0D" : date("coverChangeDate")}</td><td>${record.coverNoChange === "\u7121\u5951\u8B8A" || isImportedDashPlaceholder(record.coverChangePurpose) ? "\uFF0D" : value("coverChangePurpose")}</td></tr>
       <tr style="height:10.8mm"><td></td><td></td><td></td></tr><tr style="height:10.8mm"><td></td><td></td><td></td></tr><tr style="height:10.8mm"><td></td><td></td><td></td></tr><tr style="height:10.8mm"><td></td><td></td><td></td></tr><tr style="height:10mm"><td></td><td></td><td></td></tr>
     </tbody></table>`;
     const coverV2 = `<div class="page intake-cover"><style>
@@ -44025,7 +44032,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     <div class="cover-agent-v3"><div class="agent-label">\u7D93\u7D00<br>\u71DF\u696D\u54E1</div><div class="agent-kind">\u958B\u3000\u767C</div><div class="agent-name">${value("developer")}</div><div class="agent-price"><b>\u5E95\u50F9\uFF1A</b><div class="agent-price-values"><span class="${/無底價/.test(record.coverBottomPrice || "") ? "no-price" : ""}">${bottomText}</span><span>${percentText}</span></div></div></div>
     <div class="contract-wrap"><div class="vertical-label">\u5951\u7D04\u7D00\u9304</div>${coverContractRows}</div>
     <div class="document-wrap"><div class="vertical-label document-label"><span>\u5167</span><span>\u9644</span><span>\u6587</span><span>\u4EF6</span><span>\u4E4B</span><span>\u6B63</span><span>\u672C</span></div><div class="document-content">
-      <div class="stars">\u2605\u4E3B\u7D04\u3000<span class="red">${value("propertyNo")}</span>\u3000\u2605\u5951\u8B8A\u3000<span class="red">${record.coverNoChange === "\u7121\u5951\u8B8A" ? "\u7121\u5951\u8B8A" : value("coverChangeNo")}</span></div>
+      <div class="stars">\u2605\u4E3B\u7D04\u3000<span class="red">${value("propertyNo")}</span>\u3000\u2605\u5951\u8B8A\u3000<span class="red">${record.coverNoChange === "\u7121\u5951\u8B8A" ? "\u7121\u5951\u8B8A" : isImportedDashPlaceholder(record.coverChangeNo) ? "\uFF0D" : value("coverChangeNo")}</span></div>
       <div class="stars">\u2605\u539F\u7A3F/\u8349\u7A3F\uFF1B</div>
       <div class="stars">\u2605\u571F\u5730\u6B0A\u72C0\xD7<span class="form-box">${escapeHtml(record.landTitleCount || "")}</span>\u5F35/\u5EFA\u7269\u6B0A\u72C0\xD7<span class="form-box">${escapeHtml(record.buildingTitleCount || "")}</span>\u5F35/<span class="form-box">${record.titleUndertaking === "\u6709\u5207\u7D50" ? "\u2713" : ""}</span>\u5207\u7D50</div>
       <div>\u25CE \u4F7F\u7528\u5206\u5340:\u5982\u679C\u92B7\u552E\u571F\u5730\u70BA\u7A7A\u767D*\u5FC5\u7533\u8ACB\u3002</div>

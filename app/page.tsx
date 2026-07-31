@@ -272,7 +272,14 @@ const layoutShort = (value = "", type = "") => {
   return [room, hall, bath].every(Boolean) ? [room, hall, bath].join(".") : full;
 };
 const nameMatches = (developer = "", person = "") => { const a = developer.replace(/\s/g, ""); const b = person.replace(/\s/g, ""); return !!a && !!b && (a.includes(b) || b.includes(a)); };
+const isImportedDashPlaceholder = (value: unknown) => /^[\s－—-]*$/.test(String(value ?? ""));
+const clearImportedContractChangePlaceholders = (record: RecordItem): RecordItem => {
+  const contractChangeKeys = ["contractChangeNo", "coverChangeNo", "coverChangeDate", "coverChangePurpose", "coverNoChange"];
+  const cleared = Object.fromEntries(contractChangeKeys.filter(key => isImportedDashPlaceholder(record[key])).map(key => [key, ""]));
+  return Object.keys(cleared).length ? { ...record, ...cleared } : record;
+};
 const applySourceLayoutFixes = (records: RecordItem[]) => records.map(record => {
+  record = clearImportedContractChangePlaceholders(record);
   const sourceBalcony = sourceBalconyFixes[String(record.propertyNo || "").trim().toUpperCase()];
   if (!sourceBalcony || typeShort(record.type) === "土地" || /^(?:LG|LA)/i.test(record.propertyNo || "")) return record;
   const balcony = sourceBalcony.match(/(\d+)\s*陽台/)?.[1];
@@ -1871,7 +1878,7 @@ function printRecordDocument(record: RecordItem, kind: "color" | "cover") {
   const percentText = record.coverBottomPercent ? `${escapeHtml(record.coverPercentSource || "主約")}${escapeHtml(record.coverBottomPercent)}%` : "";
   const coverIsLand = typeShort(record.type) === "土地" || /^(?:LG|LA)/i.test(record.propertyNo || "");
   const coverZoningStatus = record.zoningDocumentStatus || (coverIsLand ? "" : "房屋不需要");
-  const coverContractRows = coverIsLand ? `<table class="contract-grid-v3"><colgroup><col style="width:25mm"><col style="width:11mm"><col style="width:11mm"><col style="width:11mm"><col style="width:58mm"><col></colgroup><tbody>
+  const coverContractRows = false ? `<table class="contract-grid-v3"><colgroup><col style="width:25mm"><col style="width:11mm"><col style="width:11mm"><col style="width:11mm"><col style="width:58mm"><col></colgroup><tbody>
       <tr style="height:9mm"><th rowspan="2">契約編號</th><th colspan="3">契管</th><th rowspan="2">日期／委託起訖日</th><td class="report">進案日期：　${date("reportDate")}</td></tr>
       <tr style="height:9mm"><th>房管</th><th>照片</th><th>紙本</th><th>用途</th></tr>
       <tr style="height:12mm"><td>${value("propertyNo")}</td><td></td><td></td><td></td><td>${date("entrustStart")}～${date("entrustEnd")}</td><td>開價${value("price")}萬</td></tr>
@@ -1881,7 +1888,7 @@ function printRecordDocument(record: RecordItem, kind: "color" | "cover") {
       <tr style="height:9mm"><th rowspan="2">契約編號</th><th rowspan="2">日期／委託起訖日</th><td class="report">進案日期：　${date("reportDate")}</td></tr>
       <tr style="height:9mm"><th>用途</th></tr>
       <tr style="height:12mm"><td>${value("propertyNo")}</td><td>${date("entrustStart")}～${date("entrustEnd")}</td><td>開價${value("price")}萬</td></tr>
-      <tr style="height:12mm"><td>${record.coverNoChange === "無契變" ? "無契變" : value("coverChangeNo")}</td><td>${record.coverNoChange === "無契變" ? "-" : record.coverChangeDate ? date("coverChangeDate") : "-"}</td><td>${record.coverNoChange === "無契變" ? "-" : record.coverChangePurpose ? value("coverChangePurpose") : "-"}</td></tr>
+      <tr style="height:12mm"><td>${record.coverNoChange === "無契變" ? "無契變" : (isImportedDashPlaceholder(record.coverChangeNo) ? "－" : value("coverChangeNo"))}</td><td>${record.coverNoChange === "無契變" || isImportedDashPlaceholder(record.coverChangeDate) ? "－" : date("coverChangeDate")}</td><td>${record.coverNoChange === "無契變" || isImportedDashPlaceholder(record.coverChangePurpose) ? "－" : value("coverChangePurpose")}</td></tr>
       <tr style="height:10.8mm"><td></td><td></td><td></td></tr><tr style="height:10.8mm"><td></td><td></td><td></td></tr><tr style="height:10.8mm"><td></td><td></td><td></td></tr><tr style="height:10.8mm"><td></td><td></td><td></td></tr><tr style="height:10mm"><td></td><td></td><td></td></tr>
     </tbody></table>`;
   const coverV2 = `<div class="page intake-cover"><style>
@@ -1913,7 +1920,7 @@ function printRecordDocument(record: RecordItem, kind: "color" | "cover") {
     <div class="cover-agent-v3"><div class="agent-label">經紀<br>營業員</div><div class="agent-kind">開　發</div><div class="agent-name">${value("developer")}</div><div class="agent-price"><b>底價：</b><div class="agent-price-values"><span class="${/無底價/.test(record.coverBottomPrice || "") ? "no-price" : ""}">${bottomText}</span><span>${percentText}</span></div></div></div>
     <div class="contract-wrap"><div class="vertical-label">契約紀錄</div>${coverContractRows}</div>
     <div class="document-wrap"><div class="vertical-label document-label"><span>內</span><span>附</span><span>文</span><span>件</span><span>之</span><span>正</span><span>本</span></div><div class="document-content">
-      <div class="stars">★主約　<span class="red">${value("propertyNo")}</span>　★契變　<span class="red">${record.coverNoChange === "無契變" ? "無契變" : value("coverChangeNo")}</span></div>
+      <div class="stars">★主約　<span class="red">${value("propertyNo")}</span>　★契變　<span class="red">${record.coverNoChange === "無契變" ? "無契變" : (isImportedDashPlaceholder(record.coverChangeNo) ? "－" : value("coverChangeNo"))}</span></div>
       <div class="stars">★原稿/草稿；</div>
       <div class="stars">★土地權狀×<span class="form-box">${escapeHtml(record.landTitleCount || "")}</span>張/建物權狀×<span class="form-box">${escapeHtml(record.buildingTitleCount || "")}</span>張/<span class="form-box">${record.titleUndertaking === "有切結" ? "✓" : ""}</span>切結</div>
       <div>◎ 使用分區:如果銷售土地為空白*必申請。</div>
