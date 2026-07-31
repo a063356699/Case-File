@@ -43424,6 +43424,32 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
           const offset = transform && Array.from(transform.children).find((node) => node.localName === "off");
           if (offset) offset.setAttribute("y", String(Math.max(0, Number(offset.getAttribute("y") || "0") - up)));
         });
+        const houseCaptionIds = /* @__PURE__ */ new Set(["32", "34", "36"]);
+        Array.from(drawingDocument.documentElement.children).forEach((anchor) => {
+          const idNode = Array.from(anchor.getElementsByTagNameNS(xdrNs, "cNvPr")).find((node) => houseCaptionIds.has(node.getAttribute("id") || ""));
+          if (!idNode) return;
+          const transform = Array.from(anchor.getElementsByTagNameNS("http://schemas.openxmlformats.org/drawingml/2006/main", "xfrm"))[0];
+          const shapeExtent = transform && Array.from(transform.children).find((node) => node.localName === "ext");
+          const width = Number(shapeExtent?.getAttribute("cx") || "1256400");
+          const from = Array.from(anchor.children).find((node) => node.localName === "from");
+          if (from && anchor.localName === "twoCellAnchor") {
+            const replacement = drawingDocument.createElementNS(xdrNs, "xdr:oneCellAnchor");
+            replacement.appendChild(from.cloneNode(true));
+            const extent = drawingDocument.createElementNS(xdrNs, "xdr:ext");
+            extent.setAttribute("cx", String(width));
+            extent.setAttribute("cy", String(1.5 * 36e4));
+            replacement.appendChild(extent);
+            Array.from(anchor.children).filter((node) => !["from", "to", "pos", "ext"].includes(node.localName)).forEach((node) => replacement.appendChild(node.cloneNode(true)));
+            const replacementTransform = Array.from(replacement.getElementsByTagNameNS("http://schemas.openxmlformats.org/drawingml/2006/main", "xfrm"))[0];
+            const replacementExtent = replacementTransform && Array.from(replacementTransform.children).find((node) => node.localName === "ext");
+            if (replacementExtent) replacementExtent.setAttribute("cy", String(1.5 * 36e4));
+            anchor.parentNode?.replaceChild(replacement, anchor);
+          }
+          const target = anchor.localName === "twoCellAnchor" ? null : anchor;
+          const targetTransform = target && Array.from(target.getElementsByTagNameNS("http://schemas.openxmlformats.org/drawingml/2006/main", "xfrm"))[0];
+          const targetExtent = targetTransform && Array.from(targetTransform.children).find((node) => node.localName === "ext");
+          if (targetExtent) targetExtent.setAttribute("cy", String(1.5 * 36e4));
+        });
       }
       Array.from(drawingDocument.getElementsByTagNameNS("http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing", "clientData")).forEach((node) => {
         node.setAttribute("fLocksWithSheet", "0");
