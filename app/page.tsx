@@ -966,7 +966,7 @@ export default function Home() {
     </header>}
     {!internalView && <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
-      <button className={tab === "archive" ? "active" : ""} onClick={() => setTab("archive")}>封存 <span>{archived.length}</span>{pendingArchiveCleanup.length > 0 && <small className="archive-pending-count">待下架 {pendingArchiveCleanup.length}</small>}</button>
+      <button className={tab === "archive" ? "active" : ""} onClick={() => setTab("archive")}>封存{pendingArchiveCleanup.length > 0 && <small className="archive-pending-count">待下架 {pendingArchiveCleanup.length}</small>}</button>
       <button className={tab === "activity" ? "active" : ""} onClick={() => setTab("activity")}>每日物件動態</button>
       <button className={tab === "inventory" ? "active" : ""} onClick={() => setTab("inventory")}>業務庫存</button>
       <button className={tab === "tour" ? "active" : ""} onClick={() => setTab("tour")}>團看安排</button>
