@@ -248,6 +248,18 @@
 .ppt-empty{padding:24px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:10px;background:#fff}
 .ppt-picker-foot{display:flex!important;justify-content:flex-end!important;align-items:center!important}
 .ppt-picker-foot>span{margin-right:auto;color:var(--muted);font-weight:800}
+.ppt-week-selector select[size]{height:154px;overflow-y:auto;padding:4px 8px}
+.ppt-week-selector select[size] option{padding:6px 8px;border-radius:6px}
+.ppt-remove-pill{justify-self:center!important;min-width:34px!important;padding:3px 9px!important;border:1px solid #efb4c1!important;border-radius:999px!important;background:#fff6f8!important;color:#b23b55!important;font-size:11px!important;font-weight:800!important;line-height:1.25!important}
+.ppt-deferred-list{display:flex;flex-direction:column;gap:8px;padding:13px;border:1px solid #eccbd3;border-radius:11px;background:#fff8fa}
+.ppt-deferred-list h3{margin:0 0 2px;color:#a83c58;font-size:15px}
+.ppt-deferred-row{display:grid;grid-template-columns:minmax(260px,1fr) auto auto;align-items:center;gap:9px;padding:9px 11px;border:1px solid #efd7dd;border-radius:9px;background:#fff}
+.ppt-deferred-row>div{display:flex;min-width:0;flex-direction:column;gap:3px}
+.ppt-deferred-row>div b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ppt-deferred-row small{color:var(--muted)}
+.ppt-deferred-row button{padding:6px 12px;border:1px solid #bdc9c4;border-radius:999px;background:#fff;font-size:12px;font-weight:800;white-space:nowrap}
+.ppt-deferred-row button.selected{border-color:#1f5a4a;background:#1f5a4a;color:#fff}
+.ppt-deferred-row button.selected.skip{border-color:#8b6572;background:#8b6572}
 .ppt-image-button{border-color:#8e70b8!important;background:#f4effb!important;color:#5d408d!important;font-weight:900!important}
 .floor-lines{display:flex;flex-direction:column;align-items:center;line-height:1.3;white-space:normal}
 .notes-display {
@@ -675,8 +687,10 @@
 .archive-cleanup-website-row{padding:3px 2px!important}.archive-cleanup-website-row button{display:block!important;width:100%!important;margin:0!important;padding:6px 4px!important}.inventory-month-controls{display:flex;align-items:center;gap:9px;flex-wrap:wrap}.inventory-month-controls>b{font-size:18px;color:#283d35;white-space:nowrap}.inventory-month-controls>button{min-height:46px;padding:9px 17px;border-radius:12px;font-size:16px;font-weight:800;background:#fff}.inventory-month-controls>button.selected{background:#176044;color:#fff;border-color:#176044}.inventory-month{display:flex!important;align-items:center!important;gap:8px!important;margin:0!important;font-size:16px!important;font-weight:800!important}.inventory-month>span{white-space:nowrap}.inventory-month input{min-width:175px!important;height:46px!important;padding:8px 12px!important;border-radius:12px!important;font-size:17px!important;font-weight:800!important}
 .archive-cleanup-modal{width:min(1580px,99vw)!important}.archive-cleanup-table th:first-child,.archive-cleanup-table td:first-child{width:1%!important;min-width:0!important}.archive-cleanup-case-cell{white-space:nowrap!important;padding-left:8px!important;padding-right:8px!important}.archive-cleanup-na{color:#a1aaa5;font-size:13px}
 .archive-cleanup-case-cell .archive-cleanup-address{color:#2870a8;font-size:12px;margin-top:3px}
-.home-last-modified{margin-left:14px;padding-left:14px;border-left:1px solid #d7ddd9;color:#586761;font-size:14px;font-weight:600;white-space:nowrap}
+.add-property-stack{display:flex;flex-direction:column;align-items:center;gap:4px}.add-property-stack .primary{width:100%}.home-last-modified{color:#62aeca;font-size:15px;font-weight:700;line-height:1.2;white-space:nowrap}
 .showing-follow-up-filter{color:#c83268!important;border-color:#eba9c0!important;background:#fff6fa!important}.showing-follow-up-filter.selected{color:#fff!important;background:#d43b68!important;border-color:#d43b68!important}.showing-follow-up-manage{padding-left:9px!important;padding-right:9px!important}.showing-follow-up-modal{width:min(900px,96vw)!important}.showing-follow-up-form{display:grid;grid-template-columns:minmax(260px,2fr) 1fr 1fr auto;gap:10px;align-items:end;padding:18px 22px;background:#fff}.showing-follow-up-form label{display:flex;flex-direction:column;gap:5px}.showing-follow-up-form label span{font-size:12px;font-weight:700;color:#56645f}.showing-follow-up-form input,.showing-follow-up-form select{height:42px;border:1px solid #ccd2ce;border-radius:8px;background:#fff;padding:8px 10px}.showing-follow-up-list{padding:14px 22px;display:grid;gap:8px}.showing-follow-up-list>div{display:flex;justify-content:space-between;align-items:center;gap:15px;background:#fff;border:1px solid #ead2db;border-radius:10px;padding:12px 14px}.showing-follow-up-list section{display:flex;flex-direction:column;gap:3px}.showing-follow-up-list b{color:#17242a}.showing-follow-up-list small{color:#697570}.showing-follow-up-list em{color:#d43b68;font-style:normal;font-weight:700}.showing-follow-up-list span{font-size:12px;color:#85536a}.showing-follow-up-list>p{text-align:center;color:#728087;padding:24px}.showing-follow-up-list button{color:#b13b61;border-color:#e7b8c8}@media(max-width:800px){.showing-follow-up-form{grid-template-columns:1fr 1fr}.showing-follow-up-form label:first-child{grid-column:span 2}}
+.record-edit-grid>.edit-area{grid-column:span 20!important}.record-edit-grid>.edit-caseName{grid-column:span 45!important}.record-edit-grid>.edit-caseNameNote{grid-column:span 35!important}.record-edit-grid>.edit-showingFollowUpDueDate{grid-column:span 20!important;background:#fff1f6!important;border-color:#ebc1d0!important}.showing-follow-up-date-field small{color:#bd4068;font-size:11px}
+.showing-follow-up-table{display:grid;gap:0;padding:16px 20px 20px;background:#fff}.showing-follow-up-heading,.showing-follow-up-row{display:grid;grid-template-columns:minmax(250px,1.5fr) 120px minmax(220px,1fr) 110px;align-items:center;gap:10px}.showing-follow-up-heading{padding:9px 12px;border-radius:8px 8px 0 0;background:#e9efec;color:#304b42;text-align:center}.showing-follow-up-row{min-height:64px;padding:10px 12px;border:1px solid #e3e7e5;border-top:0;background:#fff}.showing-follow-up-row section{display:flex;min-width:0;flex-direction:column;gap:3px}.showing-follow-up-row section small{color:#6c7773}.showing-follow-up-row>strong{text-align:center;color:#c83268}.showing-follow-up-row>p{margin:0;white-space:pre-wrap;color:#3e4945}.showing-follow-up-row>div{display:flex;justify-content:center;gap:6px}.showing-follow-up-row button{padding:5px 9px;border-radius:999px;font-size:12px}.showing-follow-up-empty{padding:28px;text-align:center;color:#728087}@media(max-width:800px){.showing-follow-up-heading{display:none}.showing-follow-up-row{grid-template-columns:1fr}.showing-follow-up-row>strong,.showing-follow-up-row>div{text-align:left;justify-content:flex-start}}
 </style>
 </head>
 <body>
@@ -40319,6 +40333,7 @@ ${String(ex)}`);
     ["area", "\u5730\u5340"],
     ["caseName", "\u6848\u540D"],
     ["caseNameNote", "\u6848\u540D\u5F8C\u65B9\u5099\u8A3B"],
+    ["showingFollowUpDueDate", "\u66AB\u505C\u5E36\u770B\u8FFD\u8E64\u65E5\u671F"],
     ["address", "\u5730\u5740"],
     ["price", "\u958B\u50F9\uFF08\u842C\uFF09"],
     ["reducedPrice", "\u964D\u50F9/\u8ABF\u50F9(\u842C)"],
@@ -40428,6 +40443,7 @@ ${String(ex)}`);
     "area",
     "caseName",
     "caseNameNote",
+    "showingFollowUpDueDate",
     "address",
     "developer",
     "price",
@@ -40505,7 +40521,7 @@ ${String(ex)}`);
   ];
   var recordEditLabels = { price: "\u958B\u50F9\uFF08\u842C\uFF09", contractChangeNo: "\u5951\u8B8A\u7DE8\u865F", direction: "\u671D\u5411", builtYear: "\u5B8C\u5DE5\u5E74\u4EFD\uFF08\u6C11\u570B\uFF0F\u897F\u5143\uFF09", managementFee: "\u7BA1\u7406\u8CBB\uFF08/\u6708\uFF09", coverage: "\u5EFA\u853D\u7387%/\u5BB9\u7A4D\u7387%", notes: "\u5167\u90E8\u5099\u8A3B\u6B04", areaPaste: "\u623F\u7BA1\u9762\u7A4D\u8CC7\u6599\u8CBC\u4E32", attentionNotes: "\u5F69\u8272\u8868\u6CE8\u610F\u4E8B\u9805", windowAd: "\u6AE5\u7A97\uFF08\u5C08\uFF09", led: "LED\uFF08\u5C08\uFF09", price5168: "5168\u7DB2\uFF08\u5C08\uFF09", colorSheetHeader: "\u5F69\u8272\u8868\u88DC\u5145\u8CC7\u6599", coverHeader: "\u65B0\u9032\u8CC7\u6599\u5C01\u9762", websiteHeader: "\u7DB2\u7AD9\u7DE8\u865F" };
   var recordEditClass = (key) => `edit-cell edit-${key}`;
-  var dateKeys = /* @__PURE__ */ new Set(["entrustStart", "entrustEnd", "reportDate", "updateDate", "groupViewDate", "bookLocationDate", "salesBookDate", "coverChangeDate", "platform591Expiry", "price5168Expiry", "goldExposureExpiry"]);
+  var dateKeys = /* @__PURE__ */ new Set(["entrustStart", "entrustEnd", "reportDate", "updateDate", "groupViewDate", "showingFollowUpDueDate", "bookLocationDate", "salesBookDate", "coverChangeDate", "platform591Expiry", "price5168Expiry", "goldExposureExpiry"]);
   var selectOptions = {
     status: ["\u59D4\u8A17\u4E2D", "\u552E\u51FA\u4E0B\u67B6", "\u6210\u4EA4\u4E0B\u67B6", "\u4E0B\u67B6\u6D3D\u958B\u767C"],
     type: ["\u516C\u5BD3\uFF1A5\u6A13\u542B\u4EE5\u4E0B\uFF08\u7121\u96FB\u68AF\uFF09", "\u83EF\u5EC8\uFF1A10\u6A13\u542B\u4EE5\u4E0B\uFF08\u6709\u96FB\u68AF\uFF09", "\u5927\u6A13\uFF1A11\u6A13\u542B\u4EE5\u4E0A\uFF08\u6709\u96FB\u68AF\uFF09", "\u900F\u5929", "\u5EE0\u623F", "\u571F\u5730"],
@@ -40673,6 +40689,25 @@ ${String(ex)}`);
     return `${year - 1911}\u5E74${month}\u6708${day}\u65E5`;
   };
   var isPptWeek = (value = "", week = currentPptWeek()) => /^\d{4}-\d{2}-\d{2}$/.test(value) && value >= week.start && value <= week.end;
+  var pptStoredList = (value = "") => {
+    try {
+      const parsed = JSON.parse(value || "[]");
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  };
+  var pptStoredChoices = (value = "") => {
+    try {
+      const parsed = JSON.parse(value || "{}");
+      return parsed && typeof parsed === "object" ? parsed : {};
+    } catch {
+      return {};
+    }
+  };
+  var nextPptWeekStart = (start) => addDaysIso(start, 7);
+  var belongsToPptWeek = (record, week) => isPptWeek(record.reportDate, week) || pptStoredList(record._pptExtraWeeks).includes(week.start);
+  var excludedFromPptWeek = (record, weekStart) => pptStoredList(record._pptExcludedWeeks).includes(weekStart);
   var isCurrentPptWeek = (value = "") => isPptWeek(value, currentPptWeek());
   var pptIncluded = (record) => record.pptSelected === "1" || record.pptSelected !== "0" && isCurrentPptWeek(record.reportDate);
   var pptCategory = (record) => record.pptCategory || (isCurrentPptWeek(record.reportDate) ? "\u672C\u9031\u9032\u6848" : "\u81E8\u6642\u65B0\u589E");
@@ -41465,13 +41500,29 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
     };
     const shown = (tab === "archive" ? archived : sortActiveRecords(active)).filter((r) => (!showingFollowUpOnly || tab !== "active" || r.showingFollowUp === "\u66AB\u505C\u5E36\u770B\uFF0F\u7B49\u5F85\u696D\u52D9\u56DE\u8986") && (!websiteFilter || tab === "archive" || (websiteFilter === "all" ? requiredWebsiteKeys(r).some((key) => isWebsiteMissing(r, key)) : isWebsiteMissing(r, websiteFilter))) && (tab !== "active" || matchesAdvancedFilter(r)) && [r.propertyNo, r.area, r.caseName, r.address, r.developer].join(" ").toLowerCase().includes(query.toLowerCase()));
     const selectedPptWeek = pptWeekOf(pptWeekStart);
-    const pptWeekOptions = [.../* @__PURE__ */ new Set([currentPptWeek().start, ...records.map((record) => normalizeDateInput(record.reportDate || "")).filter((date) => /^\d{4}-\d{2}-\d{2}$/.test(date)).map((date) => pptWeekOf(date).start)])].sort((a, b) => b.localeCompare(a));
-    const weeklyPptRecords = sortPptRecords(records.filter((record) => isPptWeek(record.reportDate, selectedPptWeek)));
-    const selectedPptRecords = sortPptRecords(records.filter((record) => isPptWeek(record.reportDate, selectedPptWeek) || pptExtraIds.includes(record.id)));
+    const pptWeekOptions = [.../* @__PURE__ */ new Set([currentPptWeek().start, ...records.flatMap((record) => [normalizeDateInput(record.reportDate || ""), ...pptStoredList(record._pptExtraWeeks)]).filter((date) => /^\d{4}-\d{2}-\d{2}$/.test(date)).map((date) => pptWeekOf(date).start)])].sort((a, b) => b.localeCompare(a));
+    const weeklyPptRecords = sortPptRecords(records.filter((record) => belongsToPptWeek(record, selectedPptWeek) && !excludedFromPptWeek(record, selectedPptWeek.start)));
+    const deferredPptRecords = sortPptRecords(records.filter((record) => belongsToPptWeek(record, selectedPptWeek) && excludedFromPptWeek(record, selectedPptWeek.start)));
+    const selectedPptRecords = sortPptRecords(records.filter((record) => weeklyPptRecords.some((item) => item.id === record.id) || pptExtraIds.includes(record.id)));
     const flash = (text) => {
       setNotice(text);
       setTimeout(() => setNotice(""), 2600);
     };
+    const removeFromPptWeek = (record) => setRecords((previous) => previous.map((item) => {
+      if (item.id !== record.id) return item;
+      const excluded = [.../* @__PURE__ */ new Set([...pptStoredList(item._pptExcludedWeeks), selectedPptWeek.start])];
+      const choices = { ...pptStoredChoices(item._pptWeekChoices) };
+      delete choices[selectedPptWeek.start];
+      return { ...item, _pptExcludedWeeks: JSON.stringify(excluded), _pptWeekChoices: JSON.stringify(choices), lastModifiedAt: (/* @__PURE__ */ new Date()).toISOString() };
+    }));
+    const decideRemovedPpt = (record, choice) => setRecords((previous) => previous.map((item) => {
+      if (item.id !== record.id) return item;
+      const nextWeek = nextPptWeekStart(selectedPptWeek.start);
+      const extras = pptStoredList(item._pptExtraWeeks).filter((week) => choice === "next" || week !== nextWeek);
+      if (choice === "next" && !extras.includes(nextWeek)) extras.push(nextWeek);
+      const choices = { ...pptStoredChoices(item._pptWeekChoices), [selectedPptWeek.start]: choice };
+      return { ...item, _pptExtraWeeks: JSON.stringify(extras), _pptWeekChoices: JSON.stringify(choices), lastModifiedAt: (/* @__PURE__ */ new Date()).toISOString() };
+    }));
     const addShowingFollowUp = () => {
       if (!showingFollowUpRecordId) return flash("\u8ACB\u5148\u9078\u64C7\u59D4\u8A17\u4E2D\u6848\u4EF6");
       if (!normalizeDateInput(showingFollowUpStart)) return flash("\u8ACB\u586B\u5BEB\u66AB\u505C\u65E5\u671F");
@@ -42235,13 +42286,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
     const showingPublic = internalView || tab === "public";
     return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("main", { className: internalView ? "internal-public-app" : "", children: [
       !internalView && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { className: "topbar", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "brand", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", { children: "\u7269\u4EF6\u7BA1\u7406\u7E3D\u8868" }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "home-last-modified", children: [
-            "\u6700\u5F8C\u4FEE\u6539:",
-            latestModifiedAt ? displayModifiedAt(latestModifiedAt) : "\u5C1A\u7121\u7D00\u9304"
-          ] })
-        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", { children: "\u7269\u4EF6\u7BA1\u7406\u7E3D\u8868" }) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "ppt-export-button", onClick: () => {
             setPptExtraIds([]);
@@ -42258,7 +42303,13 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
             "\u{1F511} \u9470\u5319\u7E3D\u8868 ",
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: controlledKeyCount })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "primary", onClick: () => setEditing(blankRecord()), children: "\uFF0B \u65B0\u589E\u7269\u4EF6" })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "add-property-stack", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "primary", onClick: () => setEditing(blankRecord()), children: "\uFF0B \u65B0\u589E\u7269\u4EF6" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "home-last-modified", children: [
+              "\u6700\u5F8C\u4FEE\u6539:",
+              latestModifiedAt ? displayModifiedAt(latestModifiedAt) : "\u5C1A\u7121\u7D00\u9304"
+            ] })
+          ] })
         ] })
       ] }),
       !internalView && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("nav", { className: "nav", children: [
@@ -42360,11 +42411,10 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
             ] })
           ] }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "tools", children: tab === "active" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { className: `showing-follow-up-filter ${showingFollowUpOnly ? "selected" : ""}`, onClick: () => setShowingFollowUpOnly((value) => !value), children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { className: "showing-follow-up-filter", onClick: () => setShowingFollowUpOpen(true), children: [
               "\u5E36\u770B\u8FFD\u8E64 ",
               showingFollowUpRecords.length
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "showing-follow-up-manage", onClick: () => setShowingFollowUpOpen(true), children: "\uFF0B\u8A2D\u5B9A\u8FFD\u8E64" }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { className: missingDataRecords.length ? "missing-data-button has-items" : "missing-data-button", onClick: () => setMissingDataReminderOpen(true), children: [
               "\u5F85\u88DC\u8CC7\u6599 ",
               missingDataRecords.length
@@ -42405,56 +42455,43 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal-head", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u59D4\u8A17\u4E2D\u6848\u4EF6" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", { children: "\u5E36\u770B\u8FFD\u8E64\u8A2D\u5B9A" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h2", { children: [
+              "\u5E36\u770B\u8FFD\u8E64 ",
+              showingFollowUpRecords.length
+            ] })
           ] }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "close", onClick: () => setShowingFollowUpOpen(false), children: "\xD7" })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "showing-follow-up-form", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u9078\u64C7\u6848\u4EF6" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", { value: showingFollowUpRecordId, onChange: (event) => setShowingFollowUpRecordId(event.target.value), children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: "", children: "\u8ACB\u9078\u64C7\u59D4\u8A17\u4E2D\u6848\u4EF6" }),
-              sortActiveRecords(active).filter((record) => !record.showingFollowUp).map((record) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("option", { value: record.id, children: [
-                record.propertyNo,
-                "\u3000",
-                record.caseName
-              ] }, record.id))
-            ] })
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "showing-follow-up-table", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "showing-follow-up-heading", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u6848\u4EF6" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u8FFD\u8E64\u65E5\u671F" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u8A18\u4E8B\u5099\u8A3B" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u64CD\u4F5C" })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u66AB\u505C\u65E5\u671F" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: displayRocDate(showingFollowUpStart), onChange: (event) => setShowingFollowUpStart(event.target.value), onBlur: (event) => setShowingFollowUpStart(normalizeDateInput(event.target.value) || today()) })
-          ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u8FFD\u8E64\u65E5\u671F" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: displayRocDate(showingFollowUpDue), onChange: (event) => setShowingFollowUpDue(event.target.value), onBlur: (event) => setShowingFollowUpDue(normalizeDateInput(event.target.value)), placeholder: "\u5230\u671F\u7576\u5929\u63D0\u9192\u4E00\u6B21" })
-          ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "primary", onClick: addShowingFollowUp, children: "\u52A0\u5165\u8FFD\u8E64" })
-        ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "showing-follow-up-list", children: [
-          showingFollowUpRecords.map((record) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+          sortActiveRecords(showingFollowUpRecords).map((record) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "showing-follow-up-row", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", { children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: record.caseName || record.propertyNo }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { children: [
                 record.propertyNo,
                 "\u3000",
                 record.address
-              ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("em", { children: [
-                displayRocDate(record.showingFollowUpDate),
-                " \u66AB\u505C\u5E36\u770B\uFF0F\u7B49\u5F85\u696D\u52D9\u56DE\u8986"
-              ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
-                "\u8FFD\u8E64\u65E5\u671F\uFF1A",
-                displayRocDate(record.showingFollowUpDueDate)
               ] })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => clearShowingFollowUp(record), children: "\u89E3\u9664\u8FFD\u8E64" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: displayRocDate(record.showingFollowUpDueDate) || "\u2014" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: record.notes || "\u2014" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => {
+                setShowingFollowUpOpen(false);
+                setEditing(record);
+              }, children: "\u7DE8\u8F2F" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => clearShowingFollowUp(record), children: "\u89E3\u9664" })
+            ] })
           ] }, record.id)),
-          !showingFollowUpRecords.length && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "\u76EE\u524D\u6C92\u6709\u5E36\u770B\u8FFD\u8E64\u6848\u4EF6" })
+          !showingFollowUpRecords.length && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { className: "showing-follow-up-empty", children: "\u76EE\u524D\u6C92\u6709\u5E36\u770B\u8FFD\u8E64\u6848\u4EF6" })
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal-foot", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u6848\u4EF6\u6703\u6301\u7E8C\u4FDD\u7559\u5728\u59D4\u8A17\u4E2D\uFF1B\u53EA\u5728\u8FFD\u8E64\u65E5\u671F\u7576\u5929\u63D0\u9192\u4E00\u6B21" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u8ACB\u5728\u7DE8\u8F2F\u7269\u4EF6\u7684\u300C\u66AB\u505C\u5E36\u770B\u8FFD\u8E64\u65E5\u671F\u300D\u8A2D\u5B9A\u6216\u89E3\u9664" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => setShowingFollowUpOpen(false), children: "\u5B8C\u6210" })
         ] })
       ] }) }),
@@ -42813,7 +42850,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "ppt-picker-body", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "ppt-week-selector", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u5831\u544A\u9031\u671F" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("select", { value: pptWeekStart, onChange: (event) => {
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("select", { size: 5, value: pptWeekStart, onChange: (event) => {
               setPptWeekStart(event.target.value);
               setPptExtraIds([]);
             }, children: pptWeekOptions.map((start) => {
@@ -42839,7 +42876,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
               "\u5831\u544A"
             ] })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "ppt-meeting-note", children: "\u4EE5\u4E0A\u70BA\u661F\u671F\u4E00\u958B\u6703\u9032\u6848\u5831\u544A\u9806\u5E8F\uFF0C\u8ACB\u540C\u4EC1\u6E96\u5099\uFF1B\u6B77\u53F2\u9031\u671F\u6703\u6301\u7E8C\u4FDD\u7559\u3002" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "ppt-meeting-note", children: "\u9032\u6848\u9031\u671F\u56FA\u5B9A\u70BA\u661F\u671F\u516D\u81F3\u661F\u671F\u4E94\uFF0C\u4E0B\u4E00\u500B\u661F\u671F\u4E00\u5831\u544A\uFF1B\u6B77\u53F2\u9031\u671F\u6703\u6301\u7E8C\u4FDD\u7559\u3002" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "ppt-case-list", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "ppt-case-heading", children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u5E8F" }),
@@ -42855,13 +42892,30 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "ppt-case-address", children: chunkText(record.address || "\u2014", 20).map((line, lineIndex) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: line }, `${line}-${lineIndex}`)) }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: record.developer || "\u2014" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: displayRocDate(record.reportDate) || "\u2014" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "ppt-auto-mark", children: "\u9031\u671F\u4FDD\u7559" })
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "ppt-remove-pill", onClick: () => removeFromPptWeek(record), children: "\u522A" })
             ] }, record.id)),
             !weeklyPptRecords.length && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "ppt-empty", children: "\u9019\u500B\u65E5\u671F\u5340\u9593\u76EE\u524D\u6C92\u6709\u9032\u6848\u7269\u4EF6" })
           ] }),
+          deferredPptRecords.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "ppt-deferred-list", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { children: "\u672C\u9031\u5DF2\u79FB\u9664\uFF0F\u5F85\u6C7A\u5B9A" }),
+            deferredPptRecords.map((record) => {
+              const choice = pptStoredChoices(record._pptWeekChoices)[selectedPptWeek.start] || "";
+              return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "ppt-deferred-row", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: record.caseName || "\u672A\u547D\u540D\u6848\u4EF6" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { children: [
+                    record.propertyNo,
+                    "\u3000\u539F\u9031\u671F\u4FDD\u7559"
+                  ] })
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: choice === "next" ? "selected" : "", onClick: () => decideRemovedPpt(record, "next"), children: "\u4E0B\u6B21\u5831\u544A" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: choice === "skip" ? "selected skip" : "", onClick: () => decideRemovedPpt(record, "skip"), children: "\u78BA\u5B9A\u4E0D\u4E0APPT" })
+              ] }, record.id);
+            })
+          ] }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: "ppt-extra-toggle", onClick: () => setPptShowExtras((value) => !value), children: "\uFF0B \u9078\u64C7\u81E8\u6642\u52A0\u5165\u7269\u4EF6" }),
           pptShowExtras && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "ppt-extra-list", children: [
-            active.filter((record) => !isPptWeek(record.reportDate, selectedPptWeek)).map((record) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "ppt-case-row extra", children: [
+            active.filter((record) => !belongsToPptWeek(record, selectedPptWeek)).map((record) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "ppt-case-row extra", children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: pptExtraIds.includes(record.id), onChange: (event) => setPptExtraIds((previous) => event.target.checked ? [...previous, record.id] : previous.filter((id) => id !== record.id)) }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: record.caseName || "\u672A\u547D\u540D\u6848\u4EF6" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "ppt-case-address", children: chunkText(record.address || "\u2014", 20).map((line, lineIndex) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: line }, `${line}-${lineIndex}`)) }),
@@ -42869,7 +42923,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: displayRocDate(record.reportDate) || "\u7121\u9032\u6848\u65E5\u671F" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {})
             ] }, record.id)),
-            !active.some((record) => !isPptWeek(record.reportDate, selectedPptWeek)) && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "ppt-empty", children: "\u6C92\u6709\u5176\u4ED6\u53EF\u81E8\u6642\u52A0\u5165\u7684\u59D4\u8A17\u4E2D\u7269\u4EF6" })
+            !active.some((record) => !belongsToPptWeek(record, selectedPptWeek)) && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "ppt-empty", children: "\u6C92\u6709\u5176\u4ED6\u53EF\u81E8\u6642\u52A0\u5165\u7684\u59D4\u8A17\u4E2D\u7269\u4EF6" })
           ] })
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal-foot ppt-picker-foot", children: [
@@ -44680,6 +44734,16 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
   var thirdIntakeFields = /* @__PURE__ */ new Set(["\u9130\u8FD1\u570B\u5C0F", "\u9130\u8FD1\u570B\u4E2D", "\u9130\u8FD1\u9AD8\u4E2D", "\u9130\u8FD1\u5927\u5C08", "\u5E02\u5834/\u8CFC\u7269", "\u516C\u5712\u7DA0\u5730"]);
   var houseDetailFields = /* @__PURE__ */ new Set(["\u5EFA\u7BC9\u5B8C\u6210\u65E5\u671F", "\u683C\u5C40 (\u623F)", "\u683C\u5C40 (\u5EF3)", "\u683C\u5C40 (\u885B\u6D74)", "\u683C\u5C40 (\u967D\u53F0)", "\u6709\u7121\u96FB\u68AF", "\u6B0A\u72C0\u5C64\u6578", "\u900F\u5929\u8ACB\u5BEB", "\u5927\u6A13\u540D\u7A31", "\u96FB\u68AF\u6578", "\u6BCF\u5C64\u6236\u6578", "\u8B66\u885B\u7BA1\u7406", "\u7BA1\u7406\u8CBB", "\u8ECA\u4F4D", "\u8ECA\u4F4D\u7DE8\u865F"]);
   var intakeFieldClass = (key) => `field${fullIntakeFields.has(key) ? " full-field" : key === "\u6848\u540D" ? " case-field" : key === "\u7269\u4EF6(\u5B8C\u6574)\u5730\u5740" ? " address-field" : quarterIntakeFields.has(key) ? " quarter-field" : thirdIntakeFields.has(key) ? " third-field" : houseDetailFields.has(key) ? " house-detail-field" : ""}`;
+  var intakeDraftEditorTitle = (draft) => {
+    const address = intakeValue(draft.values, "\u7269\u4EF6(\u5B8C\u6574)\u5730\u5740").trim();
+    const withoutCity = address.replace(/^(?:臺灣省|台灣省)?[^縣市]{1,8}[縣市]/, "");
+    const areaMatch = withoutCity.match(/^(.{1,8}區|.{1,8}[鄉鎮市])/);
+    const area = areaMatch?.[1] || "\u672A\u586B\u5730\u5340";
+    const shortAddress = (areaMatch ? withoutCity.slice(area.length) : withoutCity).trim() || "\u672A\u586B\u5730\u5740";
+    const caseName = intakeValue(draft.values, "\u6848\u540D").trim() || "\u672A\u547D\u540D\u6848\u4EF6";
+    const developer = intakeValue(draft.values, "\u958B\u767C\uFF11/\u958B\u767C\uFF12").trim() || "\u672A\u586B\u958B\u767C";
+    return `${area}\uFF0D${caseName}\uFF0D${shortAddress}\uFF0D${developer}`;
+  };
   function IntakePanel({ raw, setRaw, drafts, draft, selectDraft, deleteDraft, analyze, updateValue, clear, confirmIntake }) {
     const [showEntered, setShowEntered] = (0, import_react.useState)(false);
     const printDraft = (id) => {
@@ -44766,10 +44830,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "modal-backdrop intake-modal-backdrop", onMouseDown: (event) => event.target === event.currentTarget && selectDraft(""), children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal intake-draft-modal", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "draft-editor-head", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("b", { children: [
-                "\u7DE8\u8F2F\uFF1A",
-                intakeValue(draft.values, "\u6848\u540D")
-              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: intakeDraftEditorTitle(draft) }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: draft.linkedRecordId ? "\u5DF2\u9032\u6848\uFF1B\u4FEE\u6539\u6703\u540C\u6B65\u66F4\u65B0\u7E3D\u8868" : "\u4FEE\u6539\u6703\u81EA\u52D5\u4FDD\u7559" })
             ] }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
@@ -46441,6 +46502,14 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
         ] })
       ] }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value, onChange: (event) => setRecord({ ...record, caseNameNote: event.target.value, caseNameNoteModifiedAt: (/* @__PURE__ */ new Date()).toISOString() }) })
+    ] });
+    if (fieldKey === "showingFollowUpDueDate") return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "field showing-follow-up-date-field", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: label }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", inputMode: "numeric", value: displayRocDate(value), onChange: (event) => setRecord({ ...record, showingFollowUpDueDate: event.target.value, showingFollowUp: event.target.value ? "\u66AB\u505C\u5E36\u770B\uFF0F\u7B49\u5F85\u696D\u52D9\u56DE\u8986" : "", showingFollowUpDate: event.target.value ? record.showingFollowUpDate || today() : "" }), onBlur: (event) => {
+        const date = normalizeDateInput(event.target.value);
+        setRecord({ ...record, showingFollowUpDueDate: date, showingFollowUp: date ? "\u66AB\u505C\u5E36\u770B\uFF0F\u7B49\u5F85\u696D\u52D9\u56DE\u8986" : "", showingFollowUpDate: date ? record.showingFollowUpDate || today() : "" });
+      }, placeholder: "\u4F8B\u5982 115/8/15" }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "\u6E05\u7A7A\u65E5\u671F\u5373\u89E3\u9664\u8FFD\u8E64" })
     ] });
     if (fieldKey === "completionDate") {
       const parsed = record.areaPaste ? parseAreaPaste(record.areaPaste, record) : record;
