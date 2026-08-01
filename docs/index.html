@@ -250,6 +250,7 @@
 .ppt-picker-foot>span{margin-right:auto;color:var(--muted);font-weight:800}
 .ppt-week-selector select[size]{height:154px;overflow-y:auto;padding:4px 8px}
 .ppt-week-selector select[size] option{padding:6px 8px;border-radius:6px}
+.ppt-week-selector{display:flex;align-items:center;gap:14px;color:#174f40}.ppt-week-selector>b{flex:0 0 auto}.ppt-week-dropdown{position:relative;flex:1}.ppt-week-current{display:flex;width:100%;min-height:44px;align-items:center;justify-content:space-between;border:1px solid #aebfb8;border-radius:9px;background:#fff;padding:8px 12px;color:#243d35;font-size:16px;font-weight:800;text-align:left}.ppt-week-current i{font-size:11px;font-style:normal;color:#63736d}.ppt-week-menu{position:absolute;z-index:20;top:calc(100% + 5px);left:0;right:0;max-height:220px;overflow-y:auto;padding:5px;border:1px solid #b8c6c0;border-radius:10px;background:#fff;box-shadow:0 12px 32px #162a2226}.ppt-week-menu button{display:block;width:100%;height:42px;border:0;border-radius:7px;background:#fff;padding:7px 10px;text-align:left;font-weight:750}.ppt-week-menu button:hover{background:#eef5f1;transform:none}.ppt-week-menu button.selected{background:#dcece5;color:#155540}
 .ppt-remove-pill{justify-self:center!important;min-width:34px!important;padding:3px 9px!important;border:1px solid #efb4c1!important;border-radius:999px!important;background:#fff6f8!important;color:#b23b55!important;font-size:11px!important;font-weight:800!important;line-height:1.25!important}
 .ppt-deferred-list{display:flex;flex-direction:column;gap:8px;padding:13px;border:1px solid #eccbd3;border-radius:11px;background:#fff8fa}
 .ppt-deferred-list h3{margin:0 0 2px;color:#a83c58;font-size:15px}
@@ -689,8 +690,9 @@
 .archive-cleanup-case-cell .archive-cleanup-address{color:#2870a8;font-size:12px;margin-top:3px}
 .add-property-stack{display:flex;flex-direction:column;align-items:center;gap:4px}.add-property-stack .primary{width:100%}.home-last-modified{color:#62aeca;font-size:15px;font-weight:700;line-height:1.2;white-space:nowrap}
 .showing-follow-up-filter{color:#c83268!important;border-color:#eba9c0!important;background:#fff6fa!important}.showing-follow-up-filter.selected{color:#fff!important;background:#d43b68!important;border-color:#d43b68!important}.showing-follow-up-manage{padding-left:9px!important;padding-right:9px!important}.showing-follow-up-modal{width:min(900px,96vw)!important}.showing-follow-up-form{display:grid;grid-template-columns:minmax(260px,2fr) 1fr 1fr auto;gap:10px;align-items:end;padding:18px 22px;background:#fff}.showing-follow-up-form label{display:flex;flex-direction:column;gap:5px}.showing-follow-up-form label span{font-size:12px;font-weight:700;color:#56645f}.showing-follow-up-form input,.showing-follow-up-form select{height:42px;border:1px solid #ccd2ce;border-radius:8px;background:#fff;padding:8px 10px}.showing-follow-up-list{padding:14px 22px;display:grid;gap:8px}.showing-follow-up-list>div{display:flex;justify-content:space-between;align-items:center;gap:15px;background:#fff;border:1px solid #ead2db;border-radius:10px;padding:12px 14px}.showing-follow-up-list section{display:flex;flex-direction:column;gap:3px}.showing-follow-up-list b{color:#17242a}.showing-follow-up-list small{color:#697570}.showing-follow-up-list em{color:#d43b68;font-style:normal;font-weight:700}.showing-follow-up-list span{font-size:12px;color:#85536a}.showing-follow-up-list>p{text-align:center;color:#728087;padding:24px}.showing-follow-up-list button{color:#b13b61;border-color:#e7b8c8}@media(max-width:800px){.showing-follow-up-form{grid-template-columns:1fr 1fr}.showing-follow-up-form label:first-child{grid-column:span 2}}
-.record-edit-grid>.edit-area{grid-column:span 20!important}.record-edit-grid>.edit-caseName{grid-column:span 45!important}.record-edit-grid>.edit-caseNameNote{grid-column:span 35!important}.record-edit-grid>.edit-showingFollowUpDueDate{grid-column:span 20!important;background:#fff1f6!important;border-color:#ebc1d0!important}.showing-follow-up-date-field small{color:#bd4068;font-size:11px}
-.showing-follow-up-table{display:grid;gap:0;padding:16px 20px 20px;background:#fff}.showing-follow-up-heading,.showing-follow-up-row{display:grid;grid-template-columns:minmax(250px,1.5fr) 120px minmax(220px,1fr) 110px;align-items:center;gap:10px}.showing-follow-up-heading{padding:9px 12px;border-radius:8px 8px 0 0;background:#e9efec;color:#304b42;text-align:center}.showing-follow-up-row{min-height:64px;padding:10px 12px;border:1px solid #e3e7e5;border-top:0;background:#fff}.showing-follow-up-row section{display:flex;min-width:0;flex-direction:column;gap:3px}.showing-follow-up-row section small{color:#6c7773}.showing-follow-up-row>strong{text-align:center;color:#c83268}.showing-follow-up-row>p{margin:0;white-space:pre-wrap;color:#3e4945}.showing-follow-up-row>div{display:flex;justify-content:center;gap:6px}.showing-follow-up-row button{padding:5px 9px;border-radius:999px;font-size:12px}.showing-follow-up-empty{padding:28px;text-align:center;color:#728087}@media(max-width:800px){.showing-follow-up-heading{display:none}.showing-follow-up-row{grid-template-columns:1fr}.showing-follow-up-row>strong,.showing-follow-up-row>div{text-align:left;justify-content:flex-start}}
+.record-edit-grid>.edit-area{grid-column:span 20!important}.record-edit-grid>.edit-caseName{grid-column:span 60!important}.record-edit-grid>.edit-caseNameNote{grid-column:span 20!important}.record-edit-grid>.edit-showingFollowUpDueDate{grid-column:span 20!important;background:#fff1f6!important;border-color:#ebc1d0!important}.showing-follow-up-date-field small{color:#bd4068;font-size:11px}
+.showing-follow-up-modal{width:min(1120px,96vw)!important}.showing-follow-up-table{display:grid;gap:0;padding:16px 20px 20px;background:#fff}.showing-follow-up-heading,.showing-follow-up-row{display:grid;grid-template-columns:minmax(250px,1.5fr) 120px 120px minmax(220px,1fr) 110px;align-items:center;gap:10px}.showing-follow-up-heading{padding:9px 12px;border-radius:8px 8px 0 0;background:#e9efec;color:#304b42;text-align:center}.showing-follow-up-row{min-height:64px;padding:10px 12px;border:1px solid #e3e7e5;border-top:0;background:#fff}.showing-follow-up-row section{display:flex;min-width:0;flex-direction:column;gap:3px}.showing-follow-up-row section small{color:#6c7773}.showing-follow-up-developer{text-align:center;white-space:pre-line}.showing-follow-up-row>strong{text-align:center;color:#c83268}.showing-follow-up-note{width:100%;min-width:0;border:1px solid #d3d9d5;border-radius:8px;background:#fff;padding:8px 10px}.showing-follow-up-note:focus{border-color:#c83268;outline:0;box-shadow:0 0 0 3px #c8326814}.showing-follow-up-row>div{display:flex;justify-content:center;gap:6px}.showing-follow-up-row button{padding:5px 9px;border-radius:999px;font-size:12px}.showing-follow-up-empty{padding:28px;text-align:center;color:#728087}@media(max-width:800px){.showing-follow-up-heading{display:none}.showing-follow-up-row{grid-template-columns:1fr}.showing-follow-up-row>strong,.showing-follow-up-row>div,.showing-follow-up-developer{text-align:left;justify-content:flex-start}}
+.topbar>.header-actions{flex-wrap:nowrap!important;overflow-x:auto;white-space:nowrap}.topbar>.header-actions>*{flex:0 0 auto}.home-last-modified{display:inline-flex;align-items:center;padding:8px 2px}.manual-intake-button{border-color:#d8c79d!important;background:#fff8e9!important;color:#76571c!important;border-radius:999px!important}
 </style>
 </head>
 <body>
@@ -40684,6 +40686,12 @@ ${String(ex)}`);
     return { start: isoLocalDate(start), end: isoLocalDate(end), meeting: isoLocalDate(meeting) };
   };
   var currentPptWeek = () => pptWeekOf(today());
+  var displayPptWeekDate = (iso = "") => {
+    const date = /* @__PURE__ */ new Date(`${iso}T00:00:00`);
+    if (!iso || Number.isNaN(date.getTime())) return "\u2014";
+    return `${date.getFullYear() - 1911}/${date.getMonth() + 1}/${date.getDate()}(${["\u65E5", "\u4E00", "\u4E8C", "\u4E09", "\u56DB", "\u4E94", "\u516D"][date.getDay()]})`;
+  };
+  var displayPptWeekLabel = (week) => `${displayPptWeekDate(week.start)}~${displayPptWeekDate(week.end)}\u65BC${displayPptWeekDate(week.meeting)}\u5831\u544A`;
   var pptMeetingDateLabel = (week = currentPptWeek()) => {
     const [year, month, day] = week.meeting.split("-").map(Number);
     return `${year - 1911}\u5E74${month}\u6708${day}\u65E5`;
@@ -40943,7 +40951,7 @@ ${String(ex)}`);
   };
   var stripRestoredDisplay = (value = "") => String(value || "").replace(/(?:\d{2,4}[.\/-]\d{1,2}[.\/-]\d{1,2}\s*)?重新上架/g, "").replace(/[　\s｜|·・—-]+$/g, "").trim();
   var archiveDisplayRecord = (record) => ({ ...record, caseName: stripRestoredDisplay(record.caseName), caseNameNote: stripRestoredDisplay(record.caseNameNote) });
-  var showingFollowUpDisplayRecord = (record) => record.showingFollowUp === "\u66AB\u505C\u5E36\u770B\uFF0F\u7B49\u5F85\u696D\u52D9\u56DE\u8986" ? { ...record, caseNameNote: [record.caseNameNote, `${displayRocDate(record.showingFollowUpDate)} \u66AB\u505C\u5E36\u770B\uFF0F\u7B49\u5F85\u696D\u52D9\u56DE\u8986`].filter(Boolean).join("\n") } : record;
+  var showingFollowUpDisplayRecord = (record) => record;
   var sortPptRecords = (items) => items.map((record, index) => ({ record, index })).sort((a, b) => {
     const priority = (record) => /王啟山|蔡宇育/.test(record.developer || "") ? 0 : 1;
     const priorityDiff = priority(a.record) - priority(b.record);
@@ -41301,6 +41309,7 @@ ${String(ex)}`);
     const [pptShowExtras, setPptShowExtras] = (0, import_react.useState)(false);
     const [pptExtraIds, setPptExtraIds] = (0, import_react.useState)([]);
     const [pptWeekStart, setPptWeekStart] = (0, import_react.useState)(currentPptWeek().start);
+    const [pptWeekMenuOpen, setPptWeekMenuOpen] = (0, import_react.useState)(false);
     const [tourItems, setTourItems] = (0, import_react.useState)([]);
     const [tourDate, setTourDate] = (0, import_react.useState)(today());
     const [tourTitle, setTourTitle] = (0, import_react.useState)(`${displayRocDate(today()).replace(/\//g, ".")}\u5718\u770B`);
@@ -42195,6 +42204,13 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       setIntakeRaw("");
       flash(`\u5DF2\u65B0\u589E ${saved.length} \u7B46\u9032\u6848\u8349\u7A3F`);
     };
+    const addManualIntakeDraft = () => {
+      const draft = { id: newId(), values: {}, propertyKind: "\u623F\u5C4B", createdAt: (/* @__PURE__ */ new Date()).toISOString(), raw: "\u624B\u52D5\u65B0\u589E\u4F8B\u5916\u6848\u4EF6" };
+      setIntakeDrafts((previous) => [draft, ...previous]);
+      selectedIntakeRef.current = draft.id;
+      setSelectedIntakeId(draft.id);
+      flash("\u5DF2\u5EFA\u7ACB\u4F8B\u5916\u6848\u4EF6\u8349\u7A3F\uFF0C\u78BA\u8A8D\u5F8C\u518D\u6309\u6B63\u5F0F\u9032\u6848");
+    };
     const updateIntakeValue = (needle, value) => {
       const target = intakeDrafts.find((draft) => draft.id === selectedIntakeId);
       if (!target) return;
@@ -42303,12 +42319,9 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
             "\u{1F511} \u9470\u5319\u7E3D\u8868 ",
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: controlledKeyCount })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "add-property-stack", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "primary", onClick: () => setEditing(blankRecord()), children: "\uFF0B \u65B0\u589E\u7269\u4EF6" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "home-last-modified", children: [
-              "\u6700\u5F8C\u4FEE\u6539:",
-              latestModifiedAt ? displayModifiedAt(latestModifiedAt) : "\u5C1A\u7121\u7D00\u9304"
-            ] })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "home-last-modified", children: [
+            "\u6700\u5F8C\u4FEE\u6539:",
+            latestModifiedAt ? displayModifiedAt(latestModifiedAt) : "\u5C1A\u7121\u7D00\u9304"
           ] })
         ] })
       ] }),
@@ -42347,7 +42360,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       !internalView && tab === "active" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PropertyBookReview, { records: active, submit: submitBookReviews }),
       !internalView && tab === "active" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(BusinessReportInbox, { records: active, resolve: resolveMonthlyPropertyReport, archive: (record, status) => setArchiveChoice({ record, status, date: today() }) }),
       showingPublic && publicUnlocked && publicScope === "mine" && publicPerson && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(MonthlyPropertyReport, { records: myProperties, person: publicPerson, submit: submitMonthlyPropertyReport }),
-      tab === "settings" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SettingsPanel, { settings, setSettings, supabasePush, supabasePull, cloudSession, supabaseSignIn, supabaseSignOut }) : tab === "intake" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(IntakePanel, { raw: intakeRaw, setRaw: setIntakeRaw, drafts: intakeDrafts, draft: intakeDraft, selectDraft: selectIntakeDraft, deleteDraft: removeIntakeDraft, analyze: analyzeIntake, updateValue: updateIntakeValue, clear: () => setIntakeRaw(""), confirmIntake }) : tab === "tour" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TourPlanner, { records, drafts: intakeDrafts, items: tourItems, setItems: setTourItems, editRecord: setEditing, updateDraftCaseName: updateIntakeDraftCaseName, tourDate, setTourDate, tourTitle, setTourTitle, notify: flash, complete: (date, recordIds, draftIds) => {
+      tab === "settings" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SettingsPanel, { settings, setSettings, supabasePush, supabasePull, cloudSession, supabaseSignIn, supabaseSignOut }) : tab === "intake" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(IntakePanel, { raw: intakeRaw, setRaw: setIntakeRaw, drafts: intakeDrafts, draft: intakeDraft, selectDraft: selectIntakeDraft, deleteDraft: removeIntakeDraft, analyze: analyzeIntake, addManualDraft: addManualIntakeDraft, updateValue: updateIntakeValue, clear: () => setIntakeRaw(""), confirmIntake }) : tab === "tour" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TourPlanner, { records, drafts: intakeDrafts, items: tourItems, setItems: setTourItems, editRecord: setEditing, updateDraftCaseName: updateIntakeDraftCaseName, tourDate, setTourDate, tourTitle, setTourTitle, notify: flash, complete: (date, recordIds, draftIds) => {
         setRecords((previous) => previous.map((record) => recordIds.includes(record.id) ? withTrackedUpdate(record, { ...record, groupViewDate: date, updateDate: today() }) : record));
         setIntakeDrafts((previous) => previous.map((draft) => draftIds.includes(draft.id) ? { ...draft, groupViewDate: date } : draft));
         setTourItems([]);
@@ -42465,8 +42478,9 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "showing-follow-up-table", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "showing-follow-up-heading", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u6848\u4EF6" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u958B\u767C" }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u8FFD\u8E64\u65E5\u671F" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u8A18\u4E8B\u5099\u8A3B" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u7D00\u9304" }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u64CD\u4F5C" })
           ] }),
           sortActiveRecords(showingFollowUpRecords).map((record) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "showing-follow-up-row", children: [
@@ -42478,8 +42492,9 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
                 record.address
               ] })
             ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "showing-follow-up-developer", children: record.developer || "\u2014" }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: displayRocDate(record.showingFollowUpDueDate) || "\u2014" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: record.notes || "\u2014" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { className: "showing-follow-up-note", type: "text", value: record.showingFollowUpNote || "", onChange: (event) => setRecords((previous) => previous.map((item) => item.id === record.id ? { ...item, showingFollowUpNote: event.target.value, lastModifiedAt: (/* @__PURE__ */ new Date()).toISOString() } : item)), placeholder: "\u8F38\u5165\u8FFD\u8E64\u7D00\u9304" }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => {
                 setShowingFollowUpOpen(false);
@@ -42491,7 +42506,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
           !showingFollowUpRecords.length && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { className: "showing-follow-up-empty", children: "\u76EE\u524D\u6C92\u6709\u5E36\u770B\u8FFD\u8E64\u6848\u4EF6" })
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal-foot", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u8ACB\u5728\u7DE8\u8F2F\u7269\u4EF6\u7684\u300C\u66AB\u505C\u5E36\u770B\u8FFD\u8E64\u65E5\u671F\u300D\u8A2D\u5B9A\u6216\u89E3\u9664" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u7D00\u9304\u70BA\u5E36\u770B\u8FFD\u8E64\u5C08\u7528\uFF0C\u4E0D\u6703\u5E36\u5165\u7269\u4EF6\u5099\u8A3B\u6B04" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => setShowingFollowUpOpen(false), children: "\u5B8C\u6210" })
         ] })
       ] }) }),
@@ -42848,33 +42863,26 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "close", onClick: () => setPptPickerOpen(false), children: "\xD7" })
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "ppt-picker-body", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "ppt-week-selector", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "ppt-week-selector", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u5831\u544A\u9031\u671F" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("select", { size: 5, value: pptWeekStart, onChange: (event) => {
-              setPptWeekStart(event.target.value);
-              setPptExtraIds([]);
-            }, children: pptWeekOptions.map((start) => {
-              const week = pptWeekOf(start);
-              return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("option", { value: start, children: [
-                displayRocDate(week.start),
-                "\uFF5E",
-                displayRocDate(week.end),
-                "\uFF08",
-                displayRocDate(week.meeting),
-                "\u5831\u544A\uFF09"
-              ] }, start);
-            }) })
-          ] }) }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "ppt-week-dropdown", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { type: "button", className: "ppt-week-current", onClick: () => setPptWeekMenuOpen((value) => !value), children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: displayPptWeekLabel(selectedPptWeek) }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("i", { children: pptWeekMenuOpen ? "\u25B2" : "\u25BC" })
+              ] }),
+              pptWeekMenuOpen && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "ppt-week-menu", children: pptWeekOptions.map((start) => {
+                const week = pptWeekOf(start);
+                return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: selectedPptWeek.start === week.start ? "selected" : "", onClick: () => {
+                  setPptWeekStart(week.start);
+                  setPptExtraIds([]);
+                  setPptWeekMenuOpen(false);
+                }, children: displayPptWeekLabel(week) }, week.start);
+              }) })
+            ] })
+          ] }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "ppt-week-range", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u672C\u9031\u9032\u6848" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
-              displayRocDate(selectedPptWeek.start),
-              "\uFF5E",
-              displayRocDate(selectedPptWeek.end),
-              "\u3000\u9810\u8A08",
-              displayRocDate(selectedPptWeek.meeting),
-              "\u5831\u544A"
-            ] })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: displayPptWeekLabel(selectedPptWeek) })
           ] }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "ppt-meeting-note", children: "\u9032\u6848\u9031\u671F\u56FA\u5B9A\u70BA\u661F\u671F\u516D\u81F3\u661F\u671F\u4E94\uFF0C\u4E0B\u4E00\u500B\u661F\u671F\u4E00\u5831\u544A\uFF1B\u6B77\u53F2\u9031\u671F\u6703\u6301\u7E8C\u4FDD\u7559\u3002" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "ppt-case-list", children: [
@@ -44744,7 +44752,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     const developer = intakeValue(draft.values, "\u958B\u767C\uFF11/\u958B\u767C\uFF12").trim() || "\u672A\u586B\u958B\u767C";
     return `${area}\uFF0D${caseName}\uFF0D${shortAddress}\uFF0D${developer}`;
   };
-  function IntakePanel({ raw, setRaw, drafts, draft, selectDraft, deleteDraft, analyze, updateValue, clear, confirmIntake }) {
+  function IntakePanel({ raw, setRaw, drafts, draft, selectDraft, deleteDraft, analyze, addManualDraft, updateValue, clear, confirmIntake }) {
     const [showEntered, setShowEntered] = (0, import_react.useState)(false);
     const printDraft = (id) => {
       selectDraft(id);
@@ -44771,7 +44779,10 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       ] })
     ] }, item.id);
     return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", { className: "content intake-page", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "list-head", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SectionTitle, { title: "\u9032\u6848\u8349\u7A3F", subtitle: "" }) }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "list-head", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SectionTitle, { title: "\u9032\u6848\u8349\u7A3F", subtitle: "" }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "manual-intake-button", onClick: addManualDraft, children: "\uFF0B \u624B\u52D5\u65B0\u589E\u6848\u4EF6" })
+      ] }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("article", { className: "panel paste-panel", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { className: "field", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("textarea", { className: "intake-raw", value: raw, onChange: (e) => setRaw(e.target.value), rows: 7 }) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "paste-actions", children: [
@@ -44830,7 +44841,10 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "modal-backdrop intake-modal-backdrop", onMouseDown: (event) => event.target === event.currentTarget && selectDraft(""), children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal intake-draft-modal", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "draft-editor-head", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: intakeDraftEditorTitle(draft) }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("b", { children: [
+                "\u3000\u6A94\u540D: ",
+                intakeDraftEditorTitle(draft)
+              ] }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: draft.linkedRecordId ? "\u5DF2\u9032\u6848\uFF1B\u4FEE\u6539\u6703\u540C\u6B65\u66F4\u65B0\u7E3D\u8868" : "\u4FEE\u6539\u6703\u81EA\u52D5\u4FDD\u7559" })
             ] }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
@@ -46815,7 +46829,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "empty", children: [
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u2302" }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { children: text }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "\u53EF\u4F7F\u7528\u53F3\u4E0A\u89D2\u300C\u65B0\u589E\u7269\u4EF6\u300D\u5EFA\u7ACB\u7B2C\u4E00\u7B46\u8CC7\u6599\u3002" })
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "\u65B0\u6848\u4EF6\u8ACB\u5148\u7531\u9032\u6848\u8349\u7A3F\u78BA\u8A8D\u5F8C\u6B63\u5F0F\u9032\u6848\u3002" })
     ] });
   }
 
