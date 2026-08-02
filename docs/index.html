@@ -818,6 +818,9 @@ button:hover,.file-button:hover{border-color:#9fbad0;box-shadow:0 2px 8px #7895a
 .public-expiry-filters{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px}
 .public-expiry-filters button{padding:7px 12px;border-radius:999px;font-size:13px;background:#fff}
 .public-expiry-filters button.selected{color:#fff;background:#de6b6b!important;border-color:#de6b6b!important}
+.public-table tbody tr:not(.area-group-row):nth-child(odd) td{background:#fff!important}
+.public-table tbody tr:not(.area-group-row):nth-child(even) td{background:#edf6fc!important}
+.public-table tbody tr:not(.area-group-row):hover td{background:#dfeefa!important}
 
 @media(max-width:700px){
   .public-shell{padding:14px 10px!important}
@@ -46304,7 +46307,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
   function PropertyTable({ records, columns, publicMode = false, dailyMode = false, archiveMode = false, activeLead = false, expiryAnnotation = false, showAreaGroups = false, onEdit, onArchive, onRestore, onRemove, onPptChange }) {
     const showPpt = !!onPptChange && !publicMode;
     const areaGroup = (record) => isRentalRecord(record) ? "\u79DF\u4EF6" : areaCategory(record);
-    const stickyCount = activeLead ? 7 : 4;
+    const stickyCount = publicMode ? 0 : activeLead ? 7 : 4;
     const displayedRecords = publicMode ? sortActiveRecords(records) : records;
     if (publicMode) {
       records = displayedRecords;
