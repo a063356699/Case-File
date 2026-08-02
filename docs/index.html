@@ -41342,7 +41342,10 @@ ${String(ex)}`);
     (0, import_react.useEffect)(() => {
       const closeTopModalWithEscape = (event) => {
         if (event.key !== "Escape") return;
-        const backdrops = [...document.querySelectorAll(".modal-backdrop, .qr-scanner-backdrop")].filter((element) => element.offsetParent !== null);
+        const backdrops = [...document.querySelectorAll(".modal-backdrop, .qr-scanner-backdrop")].filter((element) => {
+          const style = window.getComputedStyle(element);
+          return style.display !== "none" && style.visibility !== "hidden" && element.getClientRects().length > 0;
+        });
         const topBackdrop = backdrops[backdrops.length - 1];
         if (!topBackdrop) return;
         event.preventDefault();
