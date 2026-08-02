@@ -107,6 +107,42 @@ button:hover,.file-button:hover{border-color:#c08da0}
 .nav span{background:#f2e5e9;color:#745d65}
 .status.live{background:#eedfe4;color:#8b4058}
 .status.off{background:#eee7e9;color:#765b64}
+
+/* 明亮粉彩漸層主題 */
+:root{
+  --ink:#394454;
+  --muted:#748093;
+  --paper:#fbfaff;
+  --card:#ffffff;
+  --line:#e4e5ee;
+  --green:#8a72cf;
+  --green2:#eee9fa;
+  --gold:#e3a63c;
+  --red:#d84b5f;
+}
+body{background:linear-gradient(135deg,#fffafd 0%,#f8f7ff 45%,#f5fbff 100%) fixed;color:var(--ink)}
+.topbar{background:linear-gradient(105deg,#fff 0%,#fff5fa 35%,#f5f0ff 68%,#f1faff 100%)!important;border-bottom-color:#e9e2f0!important}
+.nav,.modal-head,.modal-foot,.public-head,.active-list-toolbar{background:#fff!important}
+button.primary,.primary,.ppt-export-button{background:linear-gradient(110deg,#ed8fb7 0%,#ad83dc 52%,#72aee0 100%)!important;border-color:transparent!important;color:#fff!important;box-shadow:0 4px 12px #a987c52b}
+.nav button.active{color:#8267c5!important}
+.nav button.active:after{background:linear-gradient(90deg,#f194ba,#ad83dc,#72aee0,#86cfb4)!important;height:4px}
+.brandmark,.login-icon{background:linear-gradient(135deg,#f29abc,#aa82d7,#79b3df)!important}
+.table-wrap,.panel,.supabase,.login-card,.draft-card,.intake-edit-grid,.intake-kind{background:#fff;border-color:#e4e5ee}
+.table-wrap th,.person-labels{background:#f1edf8!important;color:#566075!important;border-color:#dedbe8!important}
+.table-wrap th.sticky{background:#ece7f5!important}
+.table-wrap td,.table-wrap td.sticky{background:#fff}
+.table-wrap tbody tr:nth-child(even):not(.area-group-row) td{background:#fcfbff}
+.table-wrap tr:hover td{background:#f6f3ff!important}
+.area-group-row td,.table-wrap .area-group-row td{background:linear-gradient(90deg,#f9e7ef 0%,#eee5f8 45%,#e8f3fa 75%,#e8f6f0 100%)!important;color:#65577c!important;border-color:#ddd8eb!important}
+.search,.field input,.field select,.field textarea,.login-card input,button,.file-button{background:#fff!important;border-color:#dfe1eb;color:var(--ink)}
+button:hover,.file-button:hover{border-color:#bbaee0;box-shadow:0 3px 10px #9d86c21c}
+.scope-tabs button.selected,.pill-options button.selected,.intake-kind button.selected{background:linear-gradient(100deg,#e98db5,#a27fd4,#78add9)!important;border-color:transparent!important;color:#fff!important}
+.status.live,.kind-badge{background:#e9f5ef;color:#4b806b}
+.status.off{background:#f3edf1;color:#826876}
+.nav span{background:#f0edf8;color:#6f628a}
+.field input:focus,.field select:focus,.field textarea:focus,.login-card input:focus{border-color:#9c83d2;box-shadow:0 0 0 3px #a991db20}
+.modal-backdrop{background:#41475a80}
+.toast{background:#4b5365}
 .kind-badge{background:#eedfe4;color:#8b4058}
 .scope-tabs button.selected,.pill-options button.selected,.intake-kind button.selected{background:var(--green);border-color:var(--green);color:#fff}
 .field input:focus,.field select:focus,.field textarea:focus,.login-card input:focus{border-color:var(--green);box-shadow:0 0 0 3px #a94e6820}
