@@ -43689,12 +43689,43 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     ] });
   }
   function ContactDirectory({ people }) {
+    const contactOrder = [
+      "\u738B\u555F\u5C71",
+      "\u738B\u82E5\u82B8",
+      "\u738B\u4FDE\u4E91",
+      "\u738B\u59A4\u5BB8",
+      "\u6797\u7389\u74B0",
+      "\u6797\u986F\u660C",
+      "\u6797\u59FF\u5C91",
+      "\u6797\u4FCA\u5609",
+      "\u9673\u5E1D\u5143",
+      "\u9673\u73EE\u83C1",
+      "\u9673\u4FE1\u826F",
+      "\u90ED\u5EFA\u4F51",
+      "\u8B1D\u99A8\u5100",
+      "\u8521\u5B87\u80B2",
+      "\u7530\u5EAD\u5B87",
+      "\u5F35\u5C0F\u66FC",
+      "\u674E\u4EAB\u5DA7",
+      "\u694A\u5DE7\u7504",
+      "\u962E\u6C0F\u91D1\u6C34",
+      "\u67EF\u80B2\u5A77",
+      "\u4F59\u6C9B\u81FB",
+      "\u8449\u7FCA\u7DC1",
+      "\u5B8B\u559C\u8F1D",
+      "\u5433\u4F69\u73B2",
+      "\u9EC3\u6587\u6210",
+      "\u8CB7\u6DD1\u73B2",
+      "\u5289\u52DD\u4EC1",
+      "\u674E\u9E97\u5349"
+    ];
+    const phoneOverrides = { \u90ED\u5EFA\u4F51: "0938-839-308" };
     const bySequence = /* @__PURE__ */ new Map();
-    people.forEach((person, index) => {
-      const sequence = Number(person.sequence || index + 1);
-      if (sequence >= 1 && sequence <= 30 && !bySequence.has(sequence)) bySequence.set(sequence, person);
+    contactOrder.forEach((name, index) => {
+      const person = people.find((item) => item.name.trim() === name);
+      if (person) bySequence.set(index + 1, { ...person, sequence: String(index + 1), phone: phoneOverrides[name] || person.phone });
     });
-    const groupStarts = [1, 11, 21];
+    const groupStarts = [1, 12, 23];
     return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", { className: "contact-directory", children: [
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { children: "\u53F0\u6176\u6587\u5316\u5D07\u660E\u5E97\uFF5E\u540C\u4EC1\u901A\u8A0A\u9304\uFF5E" }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "contact-table-scroll", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("table", { children: [
@@ -43703,7 +43734,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "\u59D3\u540D" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "\u624B\u6A5F" })
         ] }, start)) }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("tbody", { children: Array.from({ length: 10 }, (_, row) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("tr", { children: groupStarts.map((start) => {
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("tbody", { children: Array.from({ length: 11 }, (_, row) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("tr", { children: groupStarts.map((start) => {
           const sequence = start + row;
           const person = bySequence.get(sequence);
           return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_react.Fragment, { children: [
