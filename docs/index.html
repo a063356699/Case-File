@@ -41024,6 +41024,7 @@ ${String(ex)}`);
     };
     return String(value || "").split(/[\/／,，、。]+/).map((name) => name.trim()).filter(Boolean).flatMap(expand);
   };
+  var developerFullNameText = (value = "", personnel = []) => developerNameLines(value, personnel).join("\u3001");
   var stripRestoredDisplay = (value = "") => String(value || "").replace(/(?:\d{2,4}[.\/-]\d{1,2}[.\/-]\d{1,2}\s*)?重新上架/g, "").replace(/[　\s｜|·・—-]+$/g, "").trim();
   var archiveDisplayRecord = (record) => ({ ...record, caseName: stripRestoredDisplay(record.caseName), caseNameNote: stripRestoredDisplay(record.caseNameNote) });
   var showingFollowUpDisplayRecord = (record) => record;
@@ -41409,6 +41410,32 @@ ${String(ex)}`);
     const cloudAutoPullRef = (0, import_react.useRef)("");
     const editingInitialRef = (0, import_react.useRef)("");
     const editingInitialIdRef = (0, import_react.useRef)("");
+    const personnelNameSignature = settings.personnel.map((person) => `${person.id}:${person.name}:${person.status}`).join("|");
+    const developerNormalizationSignature = records.map((record) => `${record.id}:${record.developer || ""}`).join("|");
+    const draftDeveloperSignature = intakeDrafts.map((draft) => `${draft.id}:${intakeValue(draft.values, "\u958B\u767C\uFF11/\u958B\u767C\uFF12")}`).join("|");
+    (0, import_react.useEffect)(() => {
+      const usablePeople = settings.personnel.filter((person) => String(person.name || "").trim());
+      if (!usablePeople.length) return;
+      setRecords((previous) => previous.map((record) => {
+        const developer = developerFullNameText(record.developer || "", usablePeople);
+        return developer && developer !== record.developer ? { ...record, developer } : record;
+      }));
+      setIntakeDrafts((previous) => previous.map((draft) => {
+        let changed = false;
+        const values = Object.fromEntries(Object.entries(draft.values).map(([key, value]) => {
+          if (!/開發/.test(key) || !String(value || "").trim()) return [key, value];
+          const fullName = developerFullNameText(String(value), usablePeople);
+          if (fullName && fullName !== value) changed = true;
+          return [key, fullName || value];
+        }));
+        return changed ? { ...draft, values } : draft;
+      }));
+      setEditing((previous) => {
+        if (!previous) return previous;
+        const developer = developerFullNameText(previous.developer || "", usablePeople);
+        return developer && developer !== previous.developer ? { ...previous, developer } : previous;
+      });
+    }, [personnelNameSignature, developerNormalizationSignature, draftDeveloperSignature]);
     (0, import_react.useEffect)(() => {
       if (!editing) {
         editingInitialRef.current = "";
@@ -41734,6 +41761,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       if (!editing) return;
       const normalizedEditing = normalizeRecordPings(clearImportedLandLabels({
         ...editing,
+        developer: developerFullNameText(editing.developer || "", settings.personnel) || editing.developer,
         ...Object.fromEntries([...dateKeys].map((key) => [key, normalizeDateInput(editing[key] || "")])),
         completionDate: normalizeDateInput(editing.completionDate || "")
       }));
@@ -43240,7 +43268,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       setTemporaryOpen(true);
     };
     const addTemporary = () => {
-      const normalizedDraft = normalizeRecordPings(temporaryDraft);
+      const normalizedDraft = normalizeRecordPings({ ...temporaryDraft, developer: developerFullNameText(temporaryDraft.developer || "") || temporaryDraft.developer });
       if (temporaryEditId) setItems(items.map((item) => item.id === temporaryEditId ? { ...item, data: { ...normalizedDraft } } : item));
       else setItems([...items, { id: newId(), sequence: "", temporary: true, data: { ...normalizedDraft } }]);
       setTemporaryOpen(false);
