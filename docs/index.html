@@ -41437,20 +41437,33 @@ ${String(ex)}`);
     const draftDeveloperSignature = intakeDrafts.map((draft) => `${draft.id}:${intakeValue(draft.values, "\u958B\u767C\uFF11/\u958B\u767C\uFF12")}`).join("|");
     (0, import_react.useEffect)(() => {
       const usablePeople = settings.personnel.filter((person) => String(person.name || "").trim());
-      setRecords((previous) => previous.map((record) => {
-        const developer = developerFullNameText(record.developer || "", usablePeople);
-        return developer && developer !== record.developer ? { ...record, developer } : record;
-      }));
-      setIntakeDrafts((previous) => previous.map((draft) => {
+      setRecords((previous) => {
         let changed = false;
-        const values = Object.fromEntries(Object.entries(draft.values).map(([key, value]) => {
-          if (!/開發/.test(key) || !String(value || "").trim()) return [key, value];
-          const fullName = developerFullNameText(String(value), usablePeople);
-          if (fullName && fullName !== value) changed = true;
-          return [key, fullName || value];
-        }));
-        return changed ? { ...draft, values } : draft;
-      }));
+        const next = previous.map((record) => {
+          const developer = developerFullNameText(record.developer || "", usablePeople);
+          if (developer && developer !== record.developer) {
+            changed = true;
+            return { ...record, developer };
+          }
+          return record;
+        });
+        return changed ? next : previous;
+      });
+      setIntakeDrafts((previous) => {
+        let anyChanged = false;
+        const next = previous.map((draft) => {
+          let changed = false;
+          const values = Object.fromEntries(Object.entries(draft.values).map(([key, value]) => {
+            if (!/開發/.test(key) || !String(value || "").trim()) return [key, value];
+            const fullName = developerFullNameText(String(value), usablePeople);
+            if (fullName && fullName !== value) changed = true;
+            return [key, fullName || value];
+          }));
+          if (changed) anyChanged = true;
+          return changed ? { ...draft, values } : draft;
+        });
+        return anyChanged ? next : previous;
+      });
       setEditing((previous) => {
         if (!previous) return previous;
         const developer = developerFullNameText(previous.developer || "", usablePeople);
@@ -47040,8 +47053,10 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     const updatePerson = (id, patch) => setSettings({ ...settings, personnel: settings.personnel.map((p) => p.id === id ? { ...p, ...patch } : p) });
     const removePerson = (id) => {
       if (!confirm("\u78BA\u5B9A\u522A\u9664\u9019\u4F4D\u4EBA\u54E1\uFF1F\u522A\u9664\u5F8C\u5E8F\u865F\u6703\u81EA\u52D5\u91CD\u65B0\u7DE8\u6392\u3002")) return;
+      const currentScrollTop = window.scrollY;
       const personnel = sortPeopleBySequence(settings.personnel.filter((person) => person.id !== id)).map((person, index) => ({ ...person, sequence: String(index + 1) }));
       setSettings({ ...settings, personnel });
+      requestAnimationFrame(() => requestAnimationFrame(() => window.scrollTo({ top: Math.min(currentScrollTop, Math.max(0, document.documentElement.scrollHeight - window.innerHeight)), behavior: "auto" })));
     };
     const addPerson = () => setSettings({ ...settings, personnel: [...settings.personnel, { id: newId(), sequence: String(settings.personnel.length + 1), name: "", nationalId: "", phone: "", role: "\u696D\u52D9", status: "\u5728\u8077" }] });
     const activePeople = sortPeopleBySequence(settings.personnel.filter((p) => p.status === "\u5728\u8077"));
