@@ -758,6 +758,13 @@ body.active-list-stuck .active-list-page{
 .active-lead-table .sticky-6{left:414px!important;width:5.3cm!important;min-width:5.3cm!important;max-width:5.3cm!important;box-shadow:7px 0 10px #1e35240b}
 .book-review-panel.book-review-collapsed{padding:6px 12px!important}.book-review-head{cursor:pointer}.book-review-collapsed .book-review-head{margin-bottom:0!important;min-height:0!important}.book-review-collapsed .book-review-title b{font-size:20px!important}.book-review-collapsed .book-review-actions{min-height:0!important}
 .book-review-settings-panel{margin-top:16px;padding:0!important;overflow:hidden}.book-review-settings-panel>summary{cursor:pointer;list-style:none;padding:18px 22px;font-size:18px;font-weight:800;color:#245e7d}.book-review-settings-panel>summary::-webkit-details-marker{display:none}.book-review-settings-panel>summary::after{content:"＋";float:right;color:#47728a}.book-review-settings-panel[open]>summary::after{content:"－"}.book-review-settings-panel>.form-grid{border-top:1px solid var(--line);padding:16px 22px!important}
+
+/* Collapsed setting cards should hug their single line of text. */
+.settings>.supabase>summary{padding:10px 18px!important;min-height:44px;align-items:center}
+.settings>.book-review-settings-panel>summary{padding:10px 18px!important;min-height:44px;display:block}
+.settings>.expiry-settings-panel:not(.expiry-open),.settings>.personnel-panel:not(.personnel-open){padding:10px 18px!important;min-height:44px}
+.settings>.personnel-panel:not(.personnel-open) .personnel-head{margin-bottom:0!important;min-height:24px}
+.settings>.expiry-settings-panel:not(.expiry-open) h3,.settings>.personnel-panel:not(.personnel-open) h3{min-height:24px;display:flex;align-items:center}
 </style>
 </head>
 <body>
