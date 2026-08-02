@@ -1265,6 +1265,12 @@ body{background:#f8fbfe!important;color:#405064!important}
   .internal-public-app .public-table td.col-notes .notes-display,.internal-public-app .public-table td.col-notes .natural-notes-display{display:block!important;visibility:visible!important;opacity:1!important;color:#111!important;font-size:12px!important;font-weight:400!important;line-height:1.3!important;white-space:pre-wrap!important;overflow:visible!important;text-overflow:clip!important}
 }
 
+/* Active list case names: keep the compact column, but show up to two 12-character lines. */
+.active-lead-table td.col-caseName{height:40px!important;max-height:44px!important;white-space:normal!important;overflow:hidden!important}
+.active-lead-table td.col-caseName .case-link{display:block!important;max-height:2.35em!important;overflow:hidden!important;white-space:normal!important;line-height:1.15!important;text-overflow:clip!important}
+.active-lead-table td.col-caseName .case-link .case-name-line{display:block!important;overflow:hidden!important;white-space:nowrap!important;text-overflow:clip!important;line-height:1.15!important}
+.active-lead-table td.col-caseName .case-link .case-name-line:nth-child(n+3){display:none!important}
+
 /* In landscape phone/tablet view, do not trap the property list in a short inner scroller. */
 @media (orientation:landscape) and (max-width:1200px){
   .internal-public-app .public-table{height:auto!important;max-height:none!important;overflow-x:auto!important;overflow-y:visible!important}
