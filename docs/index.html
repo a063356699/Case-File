@@ -756,6 +756,7 @@ body.active-list-stuck .active-list-page{
 .active-lead-table .sticky-5{left:358px!important;width:56px!important;min-width:56px!important;max-width:56px!important}
 .active-lead-table .sticky-6{left:414px!important;width:5.3cm!important;min-width:5.3cm!important;max-width:5.3cm!important;box-shadow:7px 0 10px #1e35240b}
 .book-review-panel.book-review-collapsed{padding:6px 12px!important}.book-review-head{cursor:pointer}.book-review-collapsed .book-review-head{margin-bottom:0!important;min-height:0!important}.book-review-collapsed .book-review-title b{font-size:20px!important}.book-review-collapsed .book-review-actions{min-height:0!important}
+.book-review-settings-panel{margin-top:16px;padding:0!important;overflow:hidden}.book-review-settings-panel>summary{cursor:pointer;list-style:none;padding:18px 22px;font-size:18px;font-weight:800;color:#245e7d}.book-review-settings-panel>summary::-webkit-details-marker{display:none}.book-review-settings-panel>summary::after{content:"＋";float:right;color:#47728a}.book-review-settings-panel[open]>summary::after{content:"－"}.book-review-settings-panel>.form-grid{border-top:1px solid var(--line);padding:16px 22px!important}
 </style>
 </head>
 <body>
@@ -47000,7 +47001,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       const personnelPanel = document.querySelector(".settings .personnel-panel");
       const head = personnelPanel?.querySelector(".personnel-head");
       if (!personnelPanel || !head) return;
-      personnelPanel.classList.remove("personnel-open");
+      personnelPanel.classList.add("personnel-open");
       const togglePanel = (event) => {
         if (event.target.closest("input,select,textarea,button,label")) return;
         personnelPanel.classList.toggle("personnel-open");
@@ -47076,8 +47077,8 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
           ] })
         ] })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("article", { className: "panel book-review-settings-panel", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { children: "\u7269\u4EF6\u672C\u78BA\u8A8D" }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("details", { className: "panel book-review-settings-panel", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("summary", { children: "\u7269\u4EF6\u672C\u78BA\u8A8D\u65E5\u671F" }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-grid", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "field", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u672C\u6B21\u78BA\u8A8D\u65E5\u671F" }),
@@ -47089,7 +47090,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
           ] })
         ] })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("article", { className: "panel personnel-panel", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("article", { className: "panel personnel-panel personnel-open", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "personnel-head", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { children: "\u4EBA\u54E1\u8A2D\u5B9A" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "primary", onClick: addPerson, children: "\uFF0B \u65B0\u589E\u4EBA\u54E1" })
