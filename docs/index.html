@@ -41347,6 +41347,28 @@ ${String(ex)}`);
     const cloudSyncBaselineRef = (0, import_react.useRef)("");
     const cloudSyncTimerRef = (0, import_react.useRef)(null);
     const cloudAutoPullRef = (0, import_react.useRef)("");
+    const editingInitialRef = (0, import_react.useRef)("");
+    const editingInitialIdRef = (0, import_react.useRef)("");
+    (0, import_react.useEffect)(() => {
+      if (!editing) {
+        editingInitialRef.current = "";
+        editingInitialIdRef.current = "";
+        return;
+      }
+      const editingKey = `${editing.id}|${editing._intakeDraftId || ""}`;
+      if (editingInitialIdRef.current !== editingKey) {
+        editingInitialIdRef.current = editingKey;
+        editingInitialRef.current = JSON.stringify(editing);
+      }
+    }, [editing?.id, editing?._intakeDraftId]);
+    const requestCloseEditing = () => {
+      if (!editing) return;
+      if (editingInitialRef.current && JSON.stringify(editing) !== editingInitialRef.current) {
+        alert("\u8CC7\u6599\u5DF2\u4FEE\u6539\uFF0C\u8ACB\u5148\u6309\u300C\u5132\u5B58\u7269\u4EF6\u300D\u5F8C\u518D\u95DC\u9589\u8996\u7A97\u3002");
+        return;
+      }
+      setEditing(null);
+    };
     (0, import_react.useEffect)(() => {
       const closeTopModalWithEscape = (event) => {
         if (event.key !== "Escape") return;
@@ -42843,7 +42865,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "modal-foot", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => setRestoreChoiceRecord(null), children: "\u53D6\u6D88" }) })
       ] }) }),
-      editing && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "modal-backdrop", onMouseDown: (e) => e.target === e.currentTarget && setEditing(null), children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal record-edit-modal", children: [
+      editing && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "modal-backdrop", onMouseDown: (e) => e.target === e.currentTarget && requestCloseEditing(), children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal record-edit-modal", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal-head", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "record-modal-title", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: editing._intakeDraftId ? "\u7DE8\u8F2F\u9032\u6848\u8349\u7A3F" : records.some((r) => r.id === editing.id) ? "\u7DE8\u8F2F\u6848\u4EF6" : "\u5EFA\u7ACB\u65B0\u7269\u4EF6" }),
@@ -42870,7 +42892,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
               }, children: "\u4E0B\u8F09\u5F69\u8272\u8868 Excel" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "record-print-button cover", type: "button", onClick: () => printRecordDocument(editing, "cover"), children: "\u5217\u5370\u65B0\u9032\u5C01\u9762" })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "close", onClick: () => setEditing(null), children: "\xD7" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "close", onClick: requestCloseEditing, children: "\xD7" })
           ] })
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "form-grid record-edit-grid", children: recordEditOrder.filter((key) => key !== "area").map((key) => {
