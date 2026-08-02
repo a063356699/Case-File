@@ -818,6 +818,9 @@ button:hover,.file-button:hover{border-color:#9fbad0;box-shadow:0 2px 8px #7895a
 .public-expiry-filters{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px}
 .public-expiry-filters button{padding:7px 12px;border-radius:999px;font-size:13px;background:#fff}
 .public-expiry-filters button.selected{color:#fff;background:#de6b6b!important;border-color:#de6b6b!important}
+.public-search-tools{display:flex;align-items:center;gap:8px;margin:0 0 12px}
+.public-search-tools .search{flex:1;max-width:560px}
+.public-search-tools .search input{width:100%}
 .public-table tbody tr:not(.area-group-row):nth-child(odd) td{background:#fff!important}
 .public-table tbody tr:not(.area-group-row):nth-child(even) td{background:#edf6fc!important}
 .public-table tbody tr:not(.area-group-row):hover td{background:#dfeefa!important}
@@ -832,6 +835,9 @@ button:hover,.file-button:hover{border-color:#9fbad0;box-shadow:0 2px 8px #7895a
   .scope-tabs button{width:100%;padding:8px 5px;font-size:13px;white-space:nowrap}
   .public-expiry-filters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
   .public-expiry-filters button{padding:7px 3px;font-size:11px;white-space:nowrap}
+  .public-search-tools{align-items:stretch}
+  .public-search-tools .search{min-width:0;max-width:none}
+  .public-search-tools>button{padding:7px 9px;white-space:nowrap;font-size:12px}
   .expiry-alert{padding:9px;gap:6px;max-height:150px;overflow:auto}
   .expiry-alert b{width:100%}
   .public-table{max-height:calc(100vh - 260px)!important;border-radius:8px}
@@ -41896,6 +41902,7 @@ ${String(ex)}`);
     const [publicPersonId, setPublicPersonId] = (0, import_react.useState)("");
     const [publicScope, setPublicScope] = (0, import_react.useState)("mine");
     const [publicExpiryFilter, setPublicExpiryFilter] = (0, import_react.useState)("all");
+    const [publicQuery, setPublicQuery] = (0, import_react.useState)("");
     const [password, setPassword] = (0, import_react.useState)("");
     const [notice, setNotice] = (0, import_react.useState)("");
     const [intakeRaw, setIntakeRaw] = (0, import_react.useState)("");
@@ -42964,10 +42971,12 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
     const myProperties = active.filter((r) => nameMatches(r.developer, publicPerson?.name || ""));
     const expiryAlerts = myProperties.filter((r) => daysUntil(r.entrustEnd) >= 0 && daysUntil(r.entrustEnd) <= 30);
     const publicBaseRecords = publicScope === "mine" ? myProperties : active;
-    const publicTableRecords = publicScope !== "mine" || publicExpiryFilter === "all" ? publicBaseRecords : publicBaseRecords.filter((record) => {
+    const publicExpiryRecords = publicScope !== "mine" || publicExpiryFilter === "all" ? publicBaseRecords : publicBaseRecords.filter((record) => {
       const remaining = daysUntil(record.entrustEnd);
       return remaining >= 0 && remaining <= Number(publicExpiryFilter);
     });
+    const normalizedPublicQuery = publicQuery.trim().toLowerCase();
+    const publicTableRecords = !normalizedPublicQuery ? publicExpiryRecords : publicExpiryRecords.filter((record) => [record.propertyNo, record.area, record.caseName, record.address, developerFullNameText(record.developer)].some((value) => String(value || "").toLowerCase().includes(normalizedPublicQuery)));
     const publicExpiry15Count = publicBaseRecords.filter((record) => {
       const remaining = daysUntil(record.entrustEnd);
       return remaining >= 0 && remaining <= 15;
@@ -43200,6 +43209,16 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
             "30\u5929\u5167\u5230\u671F ",
             publicExpiry30Count
           ] })
+        ] }),
+        (publicScope === "mine" || publicScope === "all") && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "public-search-tools", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "search", children: [
+            "\u2315",
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { value: publicQuery, onChange: (event) => setPublicQuery(event.target.value), placeholder: "\u641C\u5C0B\u7DE8\u865F\u3001\u5730\u5340\u3001\u6848\u540D\u3001\u5730\u5740\u3001\u958B\u767C\u2026" })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", onClick: () => {
+            setPublicQuery("");
+            setPublicExpiryFilter("all");
+          }, children: "\u6E05\u9664\u7BE9\u9078" })
         ] }),
         publicScope === "activity" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(DailyActivity, { records, compact: true }) : publicScope === "contacts" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ContactDirectory, { people: contactPeople }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
           publicScope === "mine" && expiryAlerts.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "expiry-alert", children: [
