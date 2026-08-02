@@ -42964,7 +42964,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
     const myProperties = active.filter((r) => nameMatches(r.developer, publicPerson?.name || ""));
     const expiryAlerts = myProperties.filter((r) => daysUntil(r.entrustEnd) >= 0 && daysUntil(r.entrustEnd) <= 30);
     const publicBaseRecords = publicScope === "mine" ? myProperties : active;
-    const publicTableRecords = publicExpiryFilter === "all" ? publicBaseRecords : publicBaseRecords.filter((record) => {
+    const publicTableRecords = publicScope !== "mine" || publicExpiryFilter === "all" ? publicBaseRecords : publicBaseRecords.filter((record) => {
       const remaining = daysUntil(record.entrustEnd);
       return remaining >= 0 && remaining <= Number(publicExpiryFilter);
     });
@@ -43190,7 +43190,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
             setPublicPersonId("");
           }, children: "\u9396\u5B9A\u756B\u9762" })
         ] }),
-        (publicScope === "mine" || publicScope === "all") && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "public-expiry-filters", children: [
+        publicScope === "mine" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "public-expiry-filters", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: publicExpiryFilter === "all" ? "selected" : "", onClick: () => setPublicExpiryFilter("all"), children: "\u5168\u90E8" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { className: publicExpiryFilter === "15" ? "selected" : "", onClick: () => setPublicExpiryFilter("15"), children: [
             "15\u5929\u5167\u5230\u671F ",
