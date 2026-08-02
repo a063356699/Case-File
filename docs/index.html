@@ -45920,10 +45920,14 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "\u7C73" })
       ] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: "\u2014" });
     }
-    if (["frontage", "depth"].includes(k)) return r[k] ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "two-line-value measure-value", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "measure-number", children: r[k].replace(/\s*米\s*$/, "") }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "\u7C73" })
-    ] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: "\u2014" });
+    if (["frontage", "depth"].includes(k)) {
+      const measure = String(r[k] || "").replace(/\s*米\s*$/, "").trim();
+      const isHouseZero = typeShort(r.type) !== "\u571F\u5730" && /^(?:0|0\.0+)$/.test(measure);
+      return isHouseZero ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: "-" }) : measure ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "two-line-value measure-value", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "measure-number", children: measure }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "\u7C73" })
+      ] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: "\u2014" });
+    }
     if (["coverage", "far"].includes(k)) return r[k] ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "two-line-value", children: [
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: r[k].replace(/\s*%\s*$/, "") }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "%" })
