@@ -41364,8 +41364,7 @@ ${String(ex)}`);
     const requestCloseEditing = () => {
       if (!editing) return;
       if (editingInitialRef.current && JSON.stringify(editing) !== editingInitialRef.current) {
-        alert("\u8CC7\u6599\u5DF2\u4FEE\u6539\uFF0C\u8ACB\u5148\u6309\u300C\u5132\u5B58\u7269\u4EF6\u300D\u5F8C\u518D\u95DC\u9589\u8996\u7A97\u3002");
-        return;
+        if (!confirm("\u8CC7\u6599\u5C1A\u672A\u5132\u5B58\uFF0C\u78BA\u5B9A\u8981\u76F4\u63A5\u95DC\u9589\u8996\u7A97\u55CE\uFF1F")) return;
       }
       setEditing(null);
     };
@@ -41393,7 +41392,9 @@ ${String(ex)}`);
       if (!/一般/.test(contract)) return;
       const defaultNoneKeys = ["platform591", "price5168", "led", "goldExposure", "windowAd"];
       const defaults = Object.fromEntries(defaultNoneKeys.map((key) => [`${key}None`, String(editing[key] || "").trim() ? editing[`${key}None`] || "" : "1"]));
-      setEditing({ ...editing, ...defaults, _generalWebsiteDefaultsApplied: "1" });
+      const nextEditing = { ...editing, ...defaults, _generalWebsiteDefaultsApplied: "1" };
+      editingInitialRef.current = JSON.stringify(nextEditing);
+      setEditing(nextEditing);
     }, [editing?.id, editing?.propertyNo, editing?._generalWebsiteDefaultsApplied]);
     (0, import_react.useEffect)(() => {
       try {
