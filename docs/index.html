@@ -42338,7 +42338,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
             });
             return [...map.values()];
           });
-          if (data.settings) setSettings((previous) => ({ ...previous, ...data.settings.bookReviewCurrentDate ? { bookReviewCurrentDate: data.settings.bookReviewCurrentDate } : {}, ...data.settings.bookReviewNextDate ? { bookReviewNextDate: data.settings.bookReviewNextDate } : {}, ...data.settings.personnel ? { personnel: mergeSuppliedPersonnel(data.settings.personnel) } : {} }));
+          if (data.settings) setSettings((previous) => ({ ...previous, ...data.settings.bookReviewCurrentDate ? { bookReviewCurrentDate: data.settings.bookReviewCurrentDate } : {}, ...data.settings.bookReviewNextDate ? { bookReviewNextDate: data.settings.bookReviewNextDate } : {}, ...Array.isArray(data.settings.personnel) && data.settings.personnel.length > 0 ? { personnel: mergeSuppliedPersonnel(data.settings.personnel) } : {} }));
           if (data.intake) {
             setIntakeRaw(data.intake.raw || "");
             setIntakeDrafts(data.intake.drafts || []);
