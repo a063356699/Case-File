@@ -46410,7 +46410,8 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     const [publicScrollLeft, setPublicScrollLeftState] = (0, import_react.useState)(0);
     const setPublicScrollLeft = (value) => setPublicScrollLeftState(value > 0 ? value + 81 : 0);
     const [hoveredPublicCase, setHoveredPublicCase] = (0, import_react.useState)("");
-    const [hoveredPublicCaseTop, setHoveredPublicCaseTop] = (0, import_react.useState)(0);
+    const [hoveredPublicCaseTop, setHoveredPublicCaseTopState] = (0, import_react.useState)(0);
+    const setHoveredPublicCaseTop = (value) => setHoveredPublicCaseTopState(Math.max(0, (value - 6) * zoom / 100 + 6));
     (0, import_react.useEffect)(() => {
       if (!publicMode) return;
       const rows = Array.from(document.querySelectorAll(".public-table tbody tr:not(.area-group-row)"));
@@ -46429,7 +46430,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
         };
       });
       return () => cleanups.forEach((cleanup) => cleanup());
-    }, [publicMode, records]);
+    }, [publicMode, records, zoom]);
     const showPpt = !!onPptChange && !publicMode;
     const areaGroup = (record) => isRentalRecord(record) ? "\u79DF\u4EF6" : areaCategory(record);
     const stickyCount = publicMode ? 0 : activeLead ? 7 : 4;
