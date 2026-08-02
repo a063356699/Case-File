@@ -45931,6 +45931,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     const nextCheckDate = normalizeDateInput(settings.bookReviewNextDate || "") || "2026-09-30";
     const reviewCycle = today() >= cycleStart ? `book-${cycleStart}` : "";
     const dueRecords = reviewCycle ? records.filter((record) => normalizeDateInput(record.bookLocationDate || "") !== today()) : [];
+    const [reviewOpen, setReviewOpen] = (0, import_react.useState)(false);
     const [values, setValues] = (0, import_react.useState)({});
     const [scannerOpen, setScannerOpen] = (0, import_react.useState)(false);
     const [scannedId, setScannedId] = (0, import_react.useState)("");
@@ -46050,7 +46051,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     const statusOf = (record) => record.bookLocationType || "\u67B6\u4E0A";
     const bookAreaOrder = ["\u5317\u5340", "\u6771\u5340", "\u4E2D\u897F\u5340", "\u5357\u5340", "\u6C38\u5EB7\u5340", "\u5B89\u5E73\u5340", "\u4EC1\u5FB7\u5340", "\u5B89\u5357\u5340", "\u5176\u4ED6\u5340", "\u5916\u7E23\u5E02"];
     const groupedDueRecords = bookAreaOrder.map((area) => ({ area, items: dueRecords.filter((record) => areaCategory(record) === area) })).filter((group) => group.items.length);
-    return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", { className: "book-review-panel", children: [
+    return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", { className: `book-review-panel ${reviewOpen ? "book-review-open" : "book-review-collapsed"}`, children: [
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "book-review-head", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "book-review-title", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u7269\u4EF6\u672C\u78BA\u8A8D" }),
@@ -46066,50 +46067,55 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
             dueRecords.length,
             " \u7B46\u5F85\u78BA\u8A8D"
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => {
-            setScanMessage("");
-            setScannerOpen(true);
-          }, children: "\u6383\u63CFQR Code" }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "file-button", children: [
-            "\u4E0A\u50B3QR\u5716\u7247",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "file", accept: "image/*", capture: "environment", onChange: (event) => {
-              decodeImage(event.target.files?.[0]);
-              event.target.value = "";
-            } })
-          ] })
-        ] })
-      ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "book-review-list", children: groupedDueRecords.map((group) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_react.Fragment, { children: [
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "book-review-area", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: group.area }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { children: [
-            group.items.length,
-            "\u7B46"
-          ] })
-        ] }),
-        group.items.map((record) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { id: `book-review-${record.id}`, className: "book-review-row", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: record.caseName || record.propertyNo }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { className: "book-record-line", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: record.propertyNo }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: record.address || "\u672A\u586B\u5730\u5740" })
+          reviewOpen && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => {
+              setScanMessage("");
+              setScannerOpen(true);
+            }, children: "\u6383\u63CFQR Code" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "file-button", children: [
+              "\u4E0A\u50B3QR\u5716\u7247",
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "file", accept: "image/*", capture: "environment", onChange: (event) => {
+                decodeImage(event.target.files?.[0]);
+                event.target.value = "";
+              } })
             ] })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "book-review-side", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { className: "book-current-note", children: [
-              displayRocDate(record.bookLocationDate || "") || "\u672A\u586B\u65E5\u671F",
-              "\u3000",
-              record.bookLocationType || "\u672A\u586B\u4F4D\u7F6E"
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "book-review-toggle", onClick: () => setReviewOpen((open) => !open), children: reviewOpen ? "\u6536\u5408" : "\u5C55\u958B" })
+        ] })
+      ] }),
+      reviewOpen && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "book-review-list", children: groupedDueRecords.map((group) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_react.Fragment, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "book-review-area", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: group.area }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { children: [
+              group.items.length,
+              "\u7B46"
+            ] })
+          ] }),
+          group.items.map((record) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { id: `book-review-${record.id}`, className: "book-review-row", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: record.caseName || record.propertyNo }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { className: "book-record-line", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: record.propertyNo }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: record.address || "\u672A\u586B\u5730\u5740" })
+              ] })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { className: "book-scan-status", children: "\u5F85\u78BA\u8A8D" })
-          ] })
-        ] }, record.id))
-      ] }, group.area)) }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "book-review-foot", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
-        "\u672C\u6B21\u5DF2\u6383\u63CF ",
-        scannedIds.length,
-        " \u7B46"
-      ] }) }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "book-review-side", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { className: "book-current-note", children: [
+                displayRocDate(record.bookLocationDate || "") || "\u672A\u586B\u65E5\u671F",
+                "\u3000",
+                record.bookLocationType || "\u672A\u586B\u4F4D\u7F6E"
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { className: "book-scan-status", children: "\u5F85\u78BA\u8A8D" })
+            ] })
+          ] }, record.id))
+        ] }, group.area)) }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "book-review-foot", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+          "\u672C\u6B21\u5DF2\u6383\u63CF ",
+          scannedIds.length,
+          " \u7B46"
+        ] }) })
+      ] }),
       scannerOpen && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "qr-scanner-backdrop", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "qr-scanner-modal", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u9023\u7E8C\u6383\u63CF\u7269\u4EF6QR Code" }),
