@@ -40742,8 +40742,10 @@ ${String(ex)}`);
     return roc ? `${Number(roc[1])}/${Number(roc[2])}/${Number(roc[3])}` : text;
   };
   var normalizeDateInput = (v = "") => {
-    const text = v.trim();
+    let text = v.trim();
     if (!text) return "";
+    const embeddedDate = text.match(/\d{2,4}[.\/-]\d{1,2}[.\/-]\d{1,2}/)?.[0];
+    if (embeddedDate) text = embeddedDate;
     if (/^\d{4}-\d{2}-\d{2}$/.test(text)) return validDate(text) ? text : text;
     const parts = text.replace(/[.\-]/g, "/").split("/").map(Number);
     let year, month, day;
@@ -40892,6 +40894,9 @@ ${String(ex)}`);
   };
   var applySourceLayoutFixes = (records) => records.map((record) => {
     record = moveRestoredTextToCaseNote(clearImportedLandLabels(clearImportedContractChangePlaceholders(record)));
+    const normalizedReportDate = normalizeDateInput(String(record.reportDate || ""));
+    const normalizedUpdateDate = normalizeDateInput(String(record.updateDate || ""));
+    record = { ...record, ...validDate(normalizedReportDate) ? { reportDate: normalizedReportDate } : {}, ...validDate(normalizedUpdateDate) ? { updateDate: normalizedUpdateDate } : {} };
     if (String(record.propertyNo || "").trim().toUpperCase() === "LG0107941" && String(record.depth || "").replace(/\s/g, "") !== "45.8") record = { ...record, depth: "45.8" };
     if (String(record.propertyNo || "").trim().toUpperCase() === "LG0113338" && String(record.depth || "").replace(/\s/g, "") !== "33.5") record = { ...record, depth: "33.5" };
     if (String(record.propertyNo || "").trim().toUpperCase() === "EG0390636") record = { ...record, parkingOwnership: "\u56FA\u5B9A\u8ECA\u4F4D", parkingMethod: "\u5761\u9053/\u5E73\u9762", parkingNo: "B1 7\u865F", parking: "\u5761\u9053/\u5E73\u9762B1 7\u865F" };
@@ -46852,9 +46857,9 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", inputMode: "numeric", value: displayRocDate(value), onChange: (e) => set(normalizeCompleteDateInput(e.target.value)), onBlur: (e) => set(normalizeDateInput(e.target.value)), placeholder: "\u4F8B\u5982 115/7/29" }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: record.lastModifiedAt ? `\u6700\u5F8C\u4FEE\u6539:${displayModifiedAt(record.lastModifiedAt)}` : "\u5C1A\u7121\u4FEE\u6539\u6642\u9593" })
     ] });
-    if (dateKeys.has(fieldKey)) return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: `field ${value && !validDate(value) ? "invalid" : ""}`, children: [
+    if (dateKeys.has(fieldKey)) return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: `field ${value && !validDate(normalizeDateInput(value)) ? "invalid" : ""}`, children: [
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: label }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", inputMode: "numeric", placeholder: "\u4F8B\u5982 7/24", value: displayRocDate(value), onChange: (e) => set(normalizeCompleteDateInput(e.target.value)), onBlur: (e) => set(normalizeDateInput(e.target.value)) }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", inputMode: "numeric", placeholder: "\u4F8B\u5982 7/24", value: displayRocDate(normalizeDateInput(value)), onChange: (e) => set(normalizeCompleteDateInput(e.target.value)), onBlur: (e) => set(normalizeDateInput(e.target.value)) }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "\u53EF\u8F38\u5165 7/24\uFF0C\u81EA\u52D5\u8F49\u70BA\u6C11\u570B\u65E5\u671F" })
     ] });
     return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "field", children: [
