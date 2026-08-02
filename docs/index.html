@@ -41378,6 +41378,7 @@ ${String(ex)}`);
     const [cloudSession, setCloudSession] = (0, import_react.useState)(null);
     const [tab, setTab] = (0, import_react.useState)("active");
     const [query, setQuery] = (0, import_react.useState)("");
+    const [archiveQuery, setArchiveQuery] = (0, import_react.useState)("");
     const [missingDataReminderOpen, setMissingDataReminderOpen] = (0, import_react.useState)(false);
     const [websiteFilter, setWebsiteFilter] = (0, import_react.useState)("");
     const [showingFollowUpOnly, setShowingFollowUpOnly] = (0, import_react.useState)(false);
@@ -41739,7 +41740,8 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       const photoMatch = !f.photoInfo || (f.photoInfo === "filled" ? !!(String(r.photoInfo || "").trim() || r.photos?.length) : !(String(r.photoInfo || "").trim() || r.photos?.length));
       return includes("propertyNo") && includes("caseName") && includes("address") && (!f.type || typeShort(r.type) === f.type) && includes("direction") && includes("zoning") && includes("developer") && includes("key") && includes("currentState") && includes("salesBook") && (!f.rooms || new RegExp(`${f.rooms}\\s*\u623F`).test(layout)) && (!f.halls || new RegExp(`${f.halls}\\s*\u5EF3`).test(layout)) && (!f.baths || new RegExp(`${f.baths}\\s*\u885B`).test(layout)) && floorMatch && parkingMatch && photoMatch && websiteMatch && filterDateInRange(r.entrustStart, f.entrustStartFrom, f.entrustStartTo) && filterDateInRange(r.entrustEnd, f.entrustEndFrom, f.entrustEndTo) && filterDateInRange(r.reportDate, f.reportFrom, f.reportTo) && filterDateInRange(r.updateDate, f.updateFrom, f.updateTo) && filterDateInRange(r.groupViewDate, f.groupFrom, f.groupTo) && filterDateInRange(r.bookLocationDate, f.bookFrom, f.bookTo) && filterDateInRange(r.salesBookDate, f.salesFrom, f.salesTo) && filterInRange(r.price, f.priceFrom, f.priceTo, true) && filterInRange(ageOf(r), f.ageFrom, f.ageTo) && filterInRange(r.indoorPing, f.indoorFrom, f.indoorTo) && filterInRange(r.landPing, f.landFrom, f.landTo) && filterInRange(r.buildingPing, f.buildingFrom, f.buildingTo) && filterInRange(r.road, f.roadFrom, f.roadTo) && filterInRange(r.frontage, f.frontageFrom, f.frontageTo) && filterInRange(r.depth, f.depthFrom, f.depthTo);
     };
-    const shown = (tab === "archive" ? archived : sortActiveRecords(active)).filter((r) => (!showingFollowUpOnly || tab !== "active" || r.showingFollowUp === "\u66AB\u505C\u5E36\u770B\uFF0F\u7B49\u5F85\u696D\u52D9\u56DE\u8986") && (!websiteFilter || tab === "archive" || (websiteFilter === "missing_sales_book_date" ? !r.salesBookDate : websiteFilter === "missing_book_location_date" ? !r.bookLocationDate : websiteFilter === "missing_photo_info" ? !r.photoInfo && !r.photos?.length : websiteFilter === "all" ? requiredWebsiteKeys(r).some((key) => isWebsiteMissing(r, key)) : isWebsiteMissing(r, websiteFilter))) && (tab !== "active" || matchesAdvancedFilter(r)) && [r.propertyNo, r.area, r.caseName, r.address, r.developer].join(" ").toLowerCase().includes(query.toLowerCase()));
+    const currentListQuery = tab === "archive" ? archiveQuery : query;
+    const shown = (tab === "archive" ? archived : sortActiveRecords(active)).filter((r) => (!showingFollowUpOnly || tab !== "active" || r.showingFollowUp === "\u66AB\u505C\u5E36\u770B\uFF0F\u7B49\u5F85\u696D\u52D9\u56DE\u8986") && (!websiteFilter || tab === "archive" || (websiteFilter === "missing_sales_book_date" ? !r.salesBookDate : websiteFilter === "missing_book_location_date" ? !r.bookLocationDate : websiteFilter === "missing_photo_info" ? !r.photoInfo && !r.photos?.length : websiteFilter === "all" ? requiredWebsiteKeys(r).some((key) => isWebsiteMissing(r, key)) : isWebsiteMissing(r, websiteFilter))) && (tab !== "active" || matchesAdvancedFilter(r)) && [r.propertyNo, r.area, r.caseName, r.address, r.developer].join(" ").toLowerCase().includes(currentListQuery.toLowerCase()));
     const defaultSelectedPptWeek = pptWeekOf(pptWeekStart);
     const selectedPptWeek = { start: pptCustomStart || defaultSelectedPptWeek.start, end: pptCustomEnd || defaultSelectedPptWeek.end, meeting: pptCustomMeeting || defaultSelectedPptWeek.meeting };
     const resetPptCustomWeek = () => {
@@ -42697,8 +42699,9 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SectionTitle, { title: tab === "archive" ? "\u5C01\u5B58\u7269\u4EF6" : "\u59D4\u8A17\u4E2D\u7269\u4EF6", subtitle: tab === "archive" ? "\u5230\u671F\u8207\u5DF2\u4E0B\u67B6\u7269\u4EF6\u7D00\u9304" : "" }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "search", children: [
               "\u2315",
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { value: query, onChange: (e) => setQuery(e.target.value), placeholder: "\u641C\u5C0B\u7DE8\u865F\u3001\u5730\u5340\u3001\u6848\u540D\u3001\u5730\u5740\u2026" })
-            ] })
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { value: currentListQuery, onChange: (e) => tab === "archive" ? setArchiveQuery(e.target.value) : setQuery(e.target.value), placeholder: "\u641C\u5C0B\u7DE8\u865F\u3001\u5730\u5340\u3001\u6848\u540D\u3001\u5730\u5740\u2026" })
+            ] }),
+            tab === "archive" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "clear-filter-button", onClick: () => setArchiveQuery(""), children: "\u6E05\u9664\u7BE9\u9078" })
           ] }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "tools", children: tab === "active" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { className: "showing-follow-up-filter", onClick: () => setShowingFollowUpOpen(true), children: [
