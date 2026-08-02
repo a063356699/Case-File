@@ -705,6 +705,7 @@
 body.active-list-stuck .active-list-toolbar{position:fixed!important;left:var(--active-list-left,34px)!important;top:var(--active-toolbar-top,122px)!important;width:var(--active-list-width,calc(100vw - 68px))!important;margin:0!important}
 body.active-list-stuck .active-list-page>.active-lead-table{position:fixed!important;left:var(--active-list-left,34px)!important;top:var(--active-table-top,200px)!important;bottom:0!important;width:var(--active-list-width,calc(100vw - 68px))!important;max-height:none!important;margin:0!important}
 .active-lead-table td.col-key .key-cell-value{font-size:13px;line-height:1.12}.active-lead-table td.col-key .key-cell-value.key-text-medium{font-size:11px}.active-lead-table td.col-key .key-cell-value.key-text-long{font-size:9.5px;line-height:1.05}
+.active-lead-table td.col-parking .parking-list-value{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;line-height:1.05!important}.active-lead-table td.col-parking .parking-list-value>span{display:block!important;color:#111!important;font-weight:400!important;margin:0!important}.active-lead-table td.col-parking .parking-list-value>small{display:block!important;color:#66736d!important;font-size:10px!important;font-weight:400!important;margin-top:2px!important}.active-lead-table tr:has(td.col-parking .parking-list-value>small) td{height:38px!important;max-height:38px!important}
 .record-edit-grid>.edit-parkingOwnership,.record-edit-grid>.edit-parkingMethod,.record-edit-grid>.edit-parkingNo{grid-column:span 40!important}.record-edit-grid>.edit-parkingOwnership .pill-options,.record-edit-grid>.edit-parkingMethod .pill-options{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.record-edit-grid>.edit-parkingOwnership .pill-options button,.record-edit-grid>.edit-parkingMethod .pill-options button{min-width:0;padding:7px 5px;text-align:center}
 .record-edit-grid>.edit-parkingOwnership .pill-options{grid-template-columns:repeat(4,minmax(0,1fr))!important}
 </style>
@@ -45853,12 +45854,18 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     if (k === "layout") return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: layoutShort(r.layout, r.type) || "\u2014" });
     if (k === "parking") {
       if (typeShort(r.type) === "\u571F\u5730" || /^(?:LG|LA)/i.test(String(r.propertyNo || ""))) return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, {});
-      const parking = parkingShort(r.parking);
-      const parts = parking.match(/^(坡平|昇平)(.+)$/);
-      return parts ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "two-line-value", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: parts[1] }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: parts[2] })
-      ] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: parking || "\u2014" });
+      const ownership = String(r.parkingOwnership || "").trim();
+      if (ownership === "\u7121\u8ECA\u4F4D" || /無車位/.test(String(r.parking || ""))) return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: "\u7121\u8ECA\u4F4D" });
+      const combined = String(r.parking || "");
+      const method = String(r.parkingMethod || r.parkingType || "").trim() || ["\u5761\u9053/\u5E73\u9762", "\u5761\u9053/\u6A5F\u68B0", "\u6607\u964D/\u5E73\u9762", "\u6607\u964D/\u6A5F\u68B0", "\u5EAD\u9662", "\u8ECA\u5EAB", "\u5E73\u79FB/\u6A5F\u68B0"].find((value) => combined.includes(value)) || "";
+      const methodShort = { "\u5761\u9053/\u5E73\u9762": "\u5761\u5E73", "\u5761\u9053/\u6A5F\u68B0": "\u5761\u6A5F", "\u6607\u964D/\u5E73\u9762": "\u6607\u5E73", "\u6607\u964D/\u6A5F\u68B0": "\u6607\u6A5F", "\u5EAD\u9662": "\u5EAD\u9662", "\u8ECA\u5EAB": "\u8ECA\u4F4D", "\u5E73\u79FB/\u6A5F\u68B0": "\u5E73\u6A5F" };
+      const shortType = methodShort[method] || method;
+      const parkingNo = String(r.parkingNo || "").trim().replace(/號$/g, "");
+      if (!shortType && !parkingNo) return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: parkingShort(combined) || "\u2014" });
+      return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "two-line-value parking-list-value", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: shortType || "\u2014" }),
+        parkingNo && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: parkingNo })
+      ] });
     }
     if (k === "indoorPing") return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: String(r.registryIndoorPing || r.indoorPing || "").replace(/\s*坪\s*$/, "").trim() || "\u2014" });
     if (["buildingPing", "landPing"].includes(k)) return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: String(r[k] || "").replace(/\s*坪\s*$/, "").trim() || "\u2014" });
@@ -46660,8 +46667,8 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       zoningDocumentStatus: ["\u623F\u5C4B\u4E0D\u9700\u8981", "\u571F\u5730\u5DF2\u9644\u6B63\u5F0F\u5206\u5340", "\u8B04\u672C\u5DF2\u6A19\u793A\u4E0D\u7528\u9644"],
       authorizationStatus: ["\u7121\u9700\u8981", "\u5DF2\u9644\u4E0A\u6B78\u6A94"],
       authorizationCopyType: ["\u5F71\u672C", "\u6B63\u672C"],
-      parkingOwnership: ["\u7121\u8ECA\u4F4D", "\u505C\u81EA\u6709\u5730", "\u56FA\u5B9A\u8ECA\u4F4D", "\u8ECA\u4F4D\u53E6\u79DF", "\u62BD\u7C64\u6C7A\u5B9A", "\u5148\u5230\u5148\u505C", "\u6392\u968A\u7B49\u5019"],
-      parkingMethod: ["\u5761\u9053/\u5E73\u9762", "\u5761\u9053/\u6A5F\u68B0", "\u6607\u964D/\u5E73\u9762", "\u6607\u964D/\u6A5F\u68B0", "\u5EAD\u9662", "\u5E73\u79FB/\u6A5F\u68B0"]
+      parkingOwnership: ["\u7121\u8ECA\u4F4D", "\u505C\u81EA\u6709\u5730", "\u56FA\u5B9A\u8ECA\u4F4D", "\u8ECA\u4F4D\u53E6\u79DF", "\u62BD\u7C64\u6C7A\u5B9A", "\u5148\u5230\u5148\u505C"],
+      parkingMethod: ["\u5761\u9053/\u5E73\u9762", "\u5761\u9053/\u6A5F\u68B0", "\u6607\u964D/\u5E73\u9762", "\u6607\u964D/\u6A5F\u68B0", "\u5EAD\u9662", "\u8ECA\u5EAB", "\u5E73\u79FB/\u6A5F\u68B0"]
     };
     if (pillChoices[fieldKey]) {
       const displayedValue = fieldKey === "parkingMethod" && !value && pillChoices.parkingMethod.includes(record.parkingType || "") ? record.parkingType : value;
