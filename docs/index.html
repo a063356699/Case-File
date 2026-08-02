@@ -47081,7 +47081,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       const personnelPanel = document.querySelector(".settings .personnel-panel");
       const head = personnelPanel?.querySelector(".personnel-head");
       if (!personnelPanel || !head) return;
-      personnelPanel.classList.add("personnel-open");
+      personnelPanel.classList.remove("personnel-open");
       const togglePanel = (event) => {
         if (event.target.closest("input,select,textarea,button,label")) return;
         personnelPanel.classList.toggle("personnel-open");
