@@ -1251,6 +1251,13 @@ body{background:#f8fbfe!important;color:#405064!important}
 /* Notes: half a point smaller than the prior version, with more width. */
 .active-lead-table th.col-notes,.active-lead-table td.col-notes{width:110px!important;min-width:110px!important;max-width:110px!important}
 .active-lead-table td.col-notes,.active-lead-table td.col-notes .notes-display,.active-lead-table td.col-notes .natural-notes-display{font-size:11px!important;line-height:1.2!important}
+
+.internal-public-app .public-table td.col-notes .notes-display{white-space:pre-wrap!important}
+
+/* In landscape phone/tablet view, do not trap the property list in a short inner scroller. */
+@media (orientation:landscape) and (max-width:1200px){
+  .internal-public-app .public-table{height:auto!important;max-height:none!important;overflow-x:auto!important;overflow-y:visible!important}
+}
 </style>
 </head>
 <body>
@@ -46696,16 +46703,8 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: rawFee && !fee ? "\u7121" : !fee ? "\u2014" : /^(?:無|\$?0(?:\.0+)?(?:元)?)$/.test(fee) ? "\u7121" : `${fee}/\u6708` });
     }
     if (k === "notes") {
-      const naturalNoteText = displayNoteSegments(r.notes).join("\uFF1B ");
-      return naturalNoteText ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "notes-display natural-notes-display", children: naturalNoteText }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, {});
-      const meaningful = String(r.notes || "").split(/[；;]/).map((value) => value.trim()).filter((value) => value && !/^(?:0|無)$/.test(value));
-      const lines = meaningful.flatMap((value, segmentIndex) => {
-        const chars = Array.from(value);
-        const chunks = Array.from({ length: Math.ceil(chars.length / 20) }, (_, index) => chars.slice(index * 20, index * 20 + 20).join(""));
-        if (segmentIndex < meaningful.length - 1 && chunks.length) chunks[chunks.length - 1] += "\uFF1B";
-        return chunks;
-      });
-      return lines.length ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "floor-lines notes-display", children: lines.map((line, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: line }, `${line}-${index}`)) }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, {});
+      const internalNoteText = String(r.notes || "").trim();
+      return internalNoteText ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "notes-display natural-notes-display", children: internalNoteText }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, {});
     }
     return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: cellValue(r, k) || "\u2014" });
   }
