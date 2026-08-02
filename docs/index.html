@@ -40899,6 +40899,7 @@ ${String(ex)}`);
     record = { ...record, ...validDate(normalizedReportDate) ? { reportDate: normalizedReportDate } : {}, ...validDate(normalizedUpdateDate) ? { updateDate: normalizedUpdateDate } : {} };
     if (String(record.propertyNo || "").trim().toUpperCase() === "LG0107941" && String(record.depth || "").replace(/\s/g, "") !== "45.8") record = { ...record, depth: "45.8" };
     if (String(record.propertyNo || "").trim().toUpperCase() === "LG0113338" && String(record.depth || "").replace(/\s/g, "") !== "33.5") record = { ...record, depth: "33.5" };
+    if (String(record.propertyNo || "").trim().toUpperCase() === "LG0118365" && String(record.depth || "").trim()) record = { ...record, depth: "" };
     if (String(record.propertyNo || "").trim().toUpperCase() === "EG0390636") record = { ...record, parkingOwnership: "\u56FA\u5B9A\u8ECA\u4F4D", parkingMethod: "\u5761\u9053/\u5E73\u9762", parkingNo: "B1 7\u865F", parking: "\u5761\u9053/\u5E73\u9762B1 7\u865F" };
     if (String(record.propertyNo || "").trim().toUpperCase() === "EG0438672") record = { ...record, parkingOwnership: "\u7121\u8ECA\u4F4D", parkingMethod: "", parkingType: "", parkingNo: "", parking: "\u7121\u8ECA\u4F4D" };
     const sourceBalcony = sourceBalconyFixes[String(record.propertyNo || "").trim().toUpperCase()];
