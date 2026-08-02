@@ -745,12 +745,12 @@ body.active-list-stuck .active-list-page>.active-lead-table{
 }
 .active-lead-table table>thead th.sticky{z-index:43!important}
 .active-lead-table .sticky-0{left:0!important;width:42px!important;min-width:42px!important;max-width:42px!important}
-.active-lead-table .sticky-1{left:42px!important;width:90px!important;min-width:90px!important;max-width:90px!important}
-.active-lead-table .sticky-2{left:132px!important;width:104px!important;min-width:104px!important;max-width:104px!important}
-.active-lead-table .sticky-3{left:236px!important;width:80px!important;min-width:80px!important;max-width:80px!important}
-.active-lead-table .sticky-4{left:316px!important;width:80px!important;min-width:80px!important;max-width:80px!important}
-.active-lead-table .sticky-5{left:396px!important;width:56px!important;min-width:56px!important;max-width:56px!important}
-.active-lead-table .sticky-6{left:452px!important;width:5.3cm!important;min-width:5.3cm!important;max-width:5.3cm!important;box-shadow:7px 0 10px #1e35240b}
+.active-lead-table .sticky-1{left:42px!important;width:52px!important;min-width:52px!important;max-width:52px!important;padding-left:3px!important;padding-right:3px!important;text-align:center!important}
+.active-lead-table .sticky-2{left:94px!important;width:104px!important;min-width:104px!important;max-width:104px!important}
+.active-lead-table .sticky-3{left:198px!important;width:80px!important;min-width:80px!important;max-width:80px!important}
+.active-lead-table .sticky-4{left:278px!important;width:80px!important;min-width:80px!important;max-width:80px!important}
+.active-lead-table .sticky-5{left:358px!important;width:56px!important;min-width:56px!important;max-width:56px!important}
+.active-lead-table .sticky-6{left:414px!important;width:5.3cm!important;min-width:5.3cm!important;max-width:5.3cm!important;box-shadow:7px 0 10px #1e35240b}
 .book-review-panel.book-review-collapsed{padding:6px 12px!important}.book-review-head{cursor:pointer}.book-review-collapsed .book-review-head{margin-bottom:0!important;min-height:0!important}.book-review-collapsed .book-review-title b{font-size:20px!important}.book-review-collapsed .book-review-actions{min-height:0!important}
 </style>
 </head>
@@ -45856,6 +45856,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: labels[column] });
   }
   function CellContent({ record: r, column: k }) {
+    if (k === "type") return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: typeShort(r.type) || "\u2014" });
     if (k === "direction") return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: directionShort(r.direction) || "\u2014" });
     if (k === "dailyHide") return r._dailyHideKey ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "daily-hide-button", type: "button", title: "\u4E0D\u986F\u793A\u65BC\u524D\u53F0\u6BCF\u65E5\u7269\u4EF6\u52D5\u614B", onClick: () => window.dispatchEvent(new CustomEvent("hide-daily-item", { detail: r._dailyHideKey })), children: "\u522A" }) : null;
     if (k === "propertyNo" && r._dailyHideKey) return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "daily-property-number", children: [
