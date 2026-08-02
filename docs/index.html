@@ -40902,6 +40902,7 @@ ${String(ex)}`);
     if (String(record.propertyNo || "").trim().toUpperCase() === "LG0113338" && String(record.depth || "").replace(/\s/g, "") !== "33.5") record = { ...record, depth: "33.5" };
     if (String(record.propertyNo || "").trim().toUpperCase() === "LG0118365" && String(record.depth || "").trim()) record = { ...record, depth: "" };
     if (String(record.propertyNo || "").trim().toUpperCase() === "EG0464136") record = { ...record, road: "6", frontage: "32", depth: "80" };
+    if (String(record.propertyNo || "").trim().toUpperCase() === "LA0063144") record = { ...record, zoning: "\u5546\u696D\u5340", coverage: "60/80", far: "360/320", coverageCombined: "60/360\u300180/320" };
     if (String(record.propertyNo || "").trim().toUpperCase() === "EG0390636") record = { ...record, parkingOwnership: "\u56FA\u5B9A\u8ECA\u4F4D", parkingMethod: "\u5761\u9053/\u5E73\u9762", parkingNo: "B1 7\u865F", parking: "\u5761\u9053/\u5E73\u9762B1 7\u865F" };
     if (String(record.propertyNo || "").trim().toUpperCase() === "EG0438672") record = { ...record, parkingOwnership: "\u7121\u8ECA\u4F4D", parkingMethod: "", parkingType: "", parkingNo: "", parking: "\u7121\u8ECA\u4F4D" };
     const sourceBalcony = sourceBalconyFixes[String(record.propertyNo || "").trim().toUpperCase()];
@@ -45890,10 +45891,13 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       const lines = Array.from({ length: Math.ceil(chars.length / 5) }, (_, index) => chars.slice(index * 5, index * 5 + 5).join(""));
       return lines.length ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "floor-lines", children: lines.map((line, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: line }, `${line}-${index}`)) }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: "\u2014" });
     }
-    if (k === "coverageFar") return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "coverage-far-value", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: r.coverage ? `${r.coverage.replace(/\s*%\s*$/, "")}%` : "\u2014" }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: r.far ? `${r.far.replace(/\s*%\s*$/, "")}%` : "\u2014" })
-    ] });
+    if (k === "coverageFar") {
+      const pairs = String(r.coverageCombined || "").split(/[、,，\n]+/).map((value) => value.trim()).filter((value) => /^\d+(?:\.\d+)?[\/／]\d+(?:\.\d+)?$/.test(value));
+      return pairs.length > 1 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "coverage-far-value coverage-pair-value", children: pairs.map((pair, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: pair.replace("\uFF0F", "/") }, `${pair}-${index}`)) }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "coverage-far-value", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: r.coverage ? `${r.coverage.replace(/\s*%\s*$/, "")}%` : "\u2014" }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: r.far ? `${r.far.replace(/\s*%\s*$/, "")}%` : "\u2014" })
+      ] });
+    }
     if (k === "age") {
       const text = ageOf(r);
       const parts = text.match(/^(.*?建)（(.*)）$/);
@@ -46787,15 +46791,16 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { value: contractFromNo(record.propertyNo) || value, readOnly: true, placeholder: "\u4F9D\u7269\u4EF6\u7DE8\u865F\u81EA\u52D5\u5224\u65B7" })
     ] });
     if (fieldKey === "coverage") {
-      const storedParts = String(record.coverageCombined || "").split(/[／/]/);
-      const combinedValue = record.coverageCombined && storedParts[0] === String(record.coverage || "") && (storedParts[1] || "") === String(record.far || "") ? record.coverageCombined : [record.coverage, record.far].filter(Boolean).join("/");
+      const combinedValue = record.coverageCombined || [record.coverage, record.far].filter(Boolean).join("/");
       return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "field coverage-combined-field", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u5EFA\u853D\u7387%/\u5BB9\u7A4D\u7387%" }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", inputMode: "decimal", value: combinedValue, onChange: (event) => {
           const raw = event.target.value.replace(/／/g, "/");
-          const [coverage = "", far = ""] = raw.split("/");
-          setRecord({ ...record, coverageCombined: raw, coverage: coverage.trim(), far: far.trim() });
-        }, placeholder: "\u4F8B\u5982 60/240" })
+          const pairs = raw.split(/[、,，\n]+/).map((value2) => value2.trim()).filter(Boolean).map((value2) => value2.split("/"));
+          const coverage = pairs.map((pair) => pair[0] || "").filter(Boolean).join("/");
+          const far = pairs.map((pair) => pair[1] || "").filter(Boolean).join("/");
+          setRecord({ ...record, coverageCombined: raw, coverage, far });
+        }, placeholder: "\u4F8B\u5982 60/240\uFF1B\u5169\u7D44\u53EF\u8F38\u5165 60/360\u300180/320" })
       ] });
     }
     if (["platform591", "price5168", "goldExposure"].includes(fieldKey)) {
