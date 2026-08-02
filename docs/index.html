@@ -1102,6 +1102,28 @@ body{background:#f8fbfe!important;color:#405064!important}
 .active-lead-table td.col-key .key-cell-value.key-text-medium{font-size:9.5px!important}
 .active-lead-table td.col-key .key-cell-value.key-text-long{font-size:8.5px!important;line-height:1.02!important}
 .active-lead-table td.col-notes,.active-lead-table td.col-notes .notes-display,.active-lead-table td.col-notes .natural-notes-display{font-size:11.5px!important;line-height:1.2!important}
+
+/* Book review opens as a dialog instead of expanding the home page. */
+.book-review-panel.book-review-open{
+  position:fixed!important;
+  left:50%!important;
+  top:50%!important;
+  transform:translate(-50%,-50%)!important;
+  z-index:110!important;
+  width:min(1500px,94vw)!important;
+  max-height:90vh!important;
+  margin:0!important;
+  padding:16px!important;
+  overflow:auto!important;
+  background:#eef6fb!important;
+  box-shadow:0 0 0 100vmax #536a7b66,0 24px 70px #24374655!important;
+}
+.book-review-open .book-review-list{max-height:calc(90vh - 125px)!important}
+.book-review-open .book-review-head{position:sticky;top:-16px;z-index:3;background:#eef6fb;padding:12px 4px;margin-top:-12px}
+
+/* Notes: half a point smaller than the prior version, with more width. */
+.active-lead-table th.col-notes,.active-lead-table td.col-notes{width:110px!important;min-width:110px!important;max-width:110px!important}
+.active-lead-table td.col-notes,.active-lead-table td.col-notes .notes-display,.active-lead-table td.col-notes .natural-notes-display{font-size:11px!important;line-height:1.2!important}
 </style>
 </head>
 <body>
