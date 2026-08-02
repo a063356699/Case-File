@@ -678,6 +678,7 @@
 .clear-filter-button{background:#fff;border-color:#b9cfc4;color:#176044}.active-lead-table{max-height:calc(100vh - 205px)}.active-lead-table th{padding-top:7px!important;padding-bottom:7px!important}.active-lead-table td{height:34px!important;padding-top:4px!important;padding-bottom:4px!important}.active-lead-table .area-group-row td{height:28px!important;padding-top:4px!important;padding-bottom:4px!important}
 .archive-cleanup-case .archive-cleanup-meta{font-size:11px;color:#66736d;white-space:nowrap;font-weight:500}
 .active-lead-table{max-height:calc(100vh - 155px)!important}.active-lead-table th{height:38px!important;padding:5px 6px!important}.active-lead-table td,.active-lead-table td.col-caseName{height:26px!important;max-height:26px!important;padding:3px 6px!important;line-height:1.1!important;vertical-align:middle!important}.active-lead-table td.col-caseName{overflow:hidden!important}.active-lead-table td.col-caseName .case-link,.active-lead-table td.col-caseName .case-link span,.active-lead-table .case-name-line{display:block!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;line-height:1.1!important}.active-lead-table td.col-caseName .restore-case-annotation{display:none!important}.active-lead-table .two-line-value{display:block!important;line-height:1.1!important}.active-lead-table .two-line-value>*:not(:first-child){display:none!important}.active-lead-table .area-group-row td{height:22px!important;max-height:22px!important;padding:3px 7px!important;line-height:1!important}
+.active-lead-table td.col-price .two-line-value{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important}.active-lead-table td.col-price .two-line-value>.price-reduction{display:block!important;color:#ff0000!important;font-size:12px!important;font-weight:900!important;margin-top:1px!important}.active-lead-table tr:has(td.col-price .price-reduction) td{height:38px!important;max-height:38px!important}
 .list-title-search{display:flex;align-items:center;gap:16px;min-width:0}.list-title-search .section-title{flex:0 0 auto}.list-title-search .search{margin-top:0}@media(max-width:800px){.list-title-search{width:100%;flex-wrap:wrap;gap:9px}.list-title-search .search{width:100%}}
 .active-lead-table th.col-caseName,.active-lead-table td.col-caseName{text-align:center!important}.active-lead-table td.col-caseName .case-link{display:block!important;width:100%!important;max-width:100%!important;margin:0 auto!important;text-align:center!important}.active-lead-table td.col-caseName .case-link span,.active-lead-table td.col-caseName .case-name-line{display:block!important;width:100%!important;text-align:center!important}
 .active-lead-table th.col-reportDate,.active-lead-table td.col-reportDate,.active-lead-table th.col-updateDate,.active-lead-table td.col-updateDate{width:92px!important;min-width:92px!important;max-width:92px!important}
@@ -698,6 +699,7 @@
 .showing-follow-up-modal>.modal-foot{justify-content:flex-end!important}.showing-follow-up-modal>.modal-foot>span{display:none!important}
 .topbar>.header-actions{flex-wrap:nowrap!important;overflow-x:auto;white-space:nowrap}.topbar>.header-actions>*{flex:0 0 auto}.home-last-modified{display:inline-flex;align-items:center;padding:8px 2px}.manual-intake-button{border-color:#d8c79d!important;background:#fff8e9!important;color:#76571c!important;border-radius:999px!important}
 .topbar{display:flex!important;align-items:center!important;gap:18px!important;padding-left:20px!important;padding-right:20px!important;min-height:88px!important}.topbar>.brand{flex:0 0 auto!important}.topbar>.nav{order:1!important;flex:1 1 auto!important;min-width:0!important;height:68px!important;padding:0!important;gap:18px!important;border:0!important;overflow-x:auto!important;background:transparent!important}.topbar>.header-actions{order:2!important;position:relative!important;display:flex!important;flex:0 0 auto!important;flex-direction:row!important;align-items:flex-end!important;align-self:stretch!important;gap:8px!important;padding-top:28px!important;overflow:visible!important}.topbar>.header-actions button,.topbar>.header-actions .file-button{white-space:nowrap!important}.topbar .home-last-modified{position:absolute!important;right:0!important;top:4px!important;inset-block-end:auto!important;order:99!important;height:auto!important;margin:0!important;padding:0!important;line-height:20px!important;font-size:13px!important}.topbar>.header-actions .key-tag{margin:0!important}.topbar+.system-expiry-reminder{margin-top:0}@media(max-width:1100px){.topbar>.brand{display:none!important}.topbar>.nav{gap:12px!important}.topbar>.header-actions{gap:6px!important}.topbar>.header-actions button,.topbar>.header-actions .file-button{font-size:12px!important;padding:7px 8px!important}}
+.modal{width:min(1120px,94vw);max-height:90vh}.modal-head{min-height:76px}.modal-head .close{flex:0 0 48px;width:48px;height:48px;display:grid;place-items:center;padding:0}
 </style>
 </head>
 <body>
@@ -41338,6 +41340,21 @@ ${String(ex)}`);
     const cloudSyncTimerRef = (0, import_react.useRef)(null);
     const cloudAutoPullRef = (0, import_react.useRef)("");
     (0, import_react.useEffect)(() => {
+      const closeTopModalWithEscape = (event) => {
+        if (event.key !== "Escape") return;
+        const backdrops = [...document.querySelectorAll(".modal-backdrop, .qr-scanner-backdrop")].filter((element) => element.offsetParent !== null);
+        const topBackdrop = backdrops[backdrops.length - 1];
+        if (!topBackdrop) return;
+        event.preventDefault();
+        event.stopPropagation();
+        const closeButton = topBackdrop.querySelector("button.close, .modal-head button[aria-label='\u95DC\u9589']");
+        if (closeButton) closeButton.click();
+        else topBackdrop.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+      };
+      window.addEventListener("keydown", closeTopModalWithEscape, true);
+      return () => window.removeEventListener("keydown", closeTopModalWithEscape, true);
+    }, []);
+    (0, import_react.useEffect)(() => {
       if (!editing || editing._generalWebsiteDefaultsApplied === "1") return;
       const contract = contractFromNo(editing.propertyNo) || editing.contractType || "";
       if (!/一般/.test(contract)) return;
@@ -42068,7 +42085,34 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       intake: { raw: intakeRaw, drafts: intakeDrafts, selectedId: selectedIntakeId },
       tour: { date: tourDate, title: tourTitle, items: tourItems }
     });
-    const cloudHeaders = () => ({ apikey: settings.supabaseKey, Authorization: `Bearer ${cloudSession?.accessToken || ""}`, "Content-Type": "application/json" });
+    const cloudTokenExpiresSoon = (token = "") => {
+      try {
+        const encoded = token.split(".")[1] || "";
+        const normalized = encoded.replace(/-/g, "+").replace(/_/g, "/").padEnd(Math.ceil(encoded.length / 4) * 4, "=");
+        const payload = JSON.parse(atob(normalized));
+        return !payload.exp || Number(payload.exp) * 1e3 <= Date.now() + 6e4;
+      } catch {
+        return true;
+      }
+    };
+    const refreshCloudSession = async (force = false) => {
+      const current = cloudSession;
+      if (!current?.accessToken) return null;
+      if (!force && !cloudTokenExpiresSoon(current.accessToken)) return current;
+      if (!current.refreshToken || !settings.supabaseUrl || !settings.supabaseKey) return null;
+      try {
+        const res = await fetch(`${settings.supabaseUrl.replace(/\/$/, "")}/auth/v1/token?grant_type=refresh_token`, { method: "POST", headers: { apikey: settings.supabaseKey, "Content-Type": "application/json" }, body: JSON.stringify({ refresh_token: current.refreshToken }) });
+        const data = await res.json();
+        if (!res.ok || !data.access_token) return null;
+        const next = { accessToken: data.access_token, refreshToken: data.refresh_token || current.refreshToken, email: data.user?.email || current.email };
+        setCloudSession(next);
+        localStorage.setItem(CLOUD_SESSION_KEY, JSON.stringify(next));
+        return next;
+      } catch {
+        return null;
+      }
+    };
+    const cloudHeaders = (session = cloudSession) => ({ apikey: settings.supabaseKey, Authorization: `Bearer ${session?.accessToken || ""}`, "Content-Type": "application/json" });
     const supabasePush = async (quiet = false) => {
       if (!cloudSession?.accessToken) {
         if (!quiet) flash("\u8ACB\u5148\u767B\u5165\u96F2\u7AEF\u5E33\u865F");
@@ -42079,8 +42123,10 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
         return false;
       }
       try {
+        const session = await refreshCloudSession();
+        if (!session) throw new Error("cloud session expired");
         const url = `${settings.supabaseUrl.replace(/\/$/, "")}/rest/v1/${settings.supabaseTable}`;
-        const res = await fetch(url, { method: "POST", headers: { ...cloudHeaders(), Prefer: "resolution=merge-duplicates,return=minimal" }, body: JSON.stringify({ id: settings.supabaseRecord, data: cloudData(), updated_at: (/* @__PURE__ */ new Date()).toISOString() }) });
+        const res = await fetch(url, { method: "POST", headers: { ...cloudHeaders(session), Prefer: "resolution=merge-duplicates,return=minimal" }, body: JSON.stringify({ id: settings.supabaseRecord, data: cloudData(), updated_at: (/* @__PURE__ */ new Date()).toISOString() }) });
         if (!res.ok) throw new Error(await res.text());
         if (!quiet) flash("\u96F2\u7AEF\u540C\u6B65\u5B8C\u6210");
         return true;
@@ -42092,8 +42138,10 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
     const supabasePull = async (automatic = false) => {
       if (!cloudSession?.accessToken) return flash("\u8ACB\u5148\u767B\u5165\u96F2\u7AEF\u5E33\u865F");
       try {
+        const session = await refreshCloudSession();
+        if (!session) throw new Error("cloud session expired");
         const url = `${settings.supabaseUrl.replace(/\/$/, "")}/rest/v1/${settings.supabaseTable}?id=eq.${encodeURIComponent(settings.supabaseRecord)}&select=data`;
-        const res = await fetch(url, { headers: cloudHeaders() });
+        const res = await fetch(url, { headers: cloudHeaders(session) });
         const rows = await res.json();
         const data = rows[0]?.data;
         if (!res.ok || !data?.records) throw new Error();
@@ -45991,7 +46039,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       scannerOpen && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "qr-scanner-backdrop", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "qr-scanner-modal", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u9023\u7E8C\u6383\u63CF\u7269\u4EF6QR Code" }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => setScannerOpen(false), children: "\xD7" })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "close", onClick: () => setScannerOpen(false), children: "\xD7" })
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("video", { ref: videoRef, playsInline: true, muted: true }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("strong", { className: "qr-scan-count", children: [
