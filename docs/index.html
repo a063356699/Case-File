@@ -939,6 +939,57 @@ body{background:#f8fbfe!important;color:#405064!important}
 .table-wrap th,.table-wrap th.sticky,.person-labels,.active-lead-table table>thead th,.active-lead-table table>thead th.sticky{background:#e5f2fa!important;color:#4c6478!important;border-color:#cfdfeb!important;box-shadow:0 1px 0 #a9c8dc!important}.table-wrap td,.table-wrap td.sticky{background:#fff!important}.table-wrap tbody tr:nth-child(even):not(.area-group-row) td{background:#fbfdff!important}.table-wrap tr:hover td{background:#eef7fd!important}
 .area-group-row td,.table-wrap .area-group-row td,.active-lead-table .area-group-row td{background:#edf6fc!important;color:#3f7194!important;border-color:#d1e4f0!important}.status.live,.kind-badge{background:#e8f4fc!important;color:#46799e!important}.status.off{background:#f3f1ec!important;color:#756c5f!important}
 .field input:focus,.field select:focus,.field textarea:focus,.login-card input:focus{border-color:#78add1!important;box-shadow:0 0 0 3px #78add120!important}.modal-backdrop{background:#536a7b66!important}.toast{background:#536b7e!important}
+
+/* Two-row management header: title/actions above, section tabs below. */
+.topbar{
+  display:grid!important;
+  grid-template-columns:auto 1fr!important;
+  grid-template-rows:auto auto!important;
+  align-items:end!important;
+  column-gap:18px!important;
+  row-gap:.5cm!important;
+  min-height:0!important;
+  height:auto!important;
+  padding:10px 20px 8px!important;
+}
+.topbar>.brand{
+  grid-column:1!important;
+  grid-row:1!important;
+  align-self:end!important;
+  display:flex!important;
+}
+.topbar>.brand h1{
+  margin:0!important;
+  font-size:23px!important;
+  line-height:1.2!important;
+  letter-spacing:.04em!important;
+  color:#304d69!important;
+}
+.topbar>.header-actions{
+  grid-column:2!important;
+  grid-row:1!important;
+  justify-self:end!important;
+  align-self:end!important;
+  height:auto!important;
+  min-height:0!important;
+  padding-top:25px!important;
+}
+.topbar>.nav{
+  grid-column:1 / -1!important;
+  grid-row:2!important;
+  position:static!important;
+  order:initial!important;
+  width:100%!important;
+  min-width:0!important;
+  height:34px!important;
+  min-height:34px!important;
+  align-self:start!important;
+  margin:0!important;
+}
+@media(max-width:1100px){
+  .topbar>.brand{display:flex!important}
+  .topbar>.brand h1{font-size:20px!important}
+}
 </style>
 </head>
 <body>
@@ -42808,7 +42859,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
     const showingPublic = internalView || tab === "public";
     return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("main", { className: internalView ? "internal-public-app" : "", children: [
       !internalView && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { className: "topbar", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", { children: "\u7269\u4EF6\u7BA1\u7406\u7E3D\u8868" }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", { children: "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F" }) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "ppt-export-button", onClick: () => {
             setPptExtraIds([]);
