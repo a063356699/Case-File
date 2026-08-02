@@ -734,6 +734,10 @@ body.active-list-stuck .active-list-page>.active-lead-table{
   margin:0!important;
   z-index:44!important;
   overflow:auto!important;
+  overscroll-behavior:contain!important;
+}
+body.active-list-stuck .active-list-page{
+  min-height:calc(100vh + var(--active-toolbar-top,125px))!important;
 }
 .active-lead-table table>thead{position:static!important}
 .active-lead-table table>thead th{
@@ -41466,7 +41470,9 @@ ${String(ex)}`);
         const headerBottom = Math.max(topbar?.getBoundingClientRect().bottom || 0, nav?.getBoundingClientRect().bottom || 0);
         const toolbarHeight = toolbar.getBoundingClientRect().height;
         if (!document.body.classList.contains("active-list-stuck")) toolbarAnchor = toolbar.getBoundingClientRect().top + window.scrollY;
-        const shouldStick = window.scrollY >= toolbarAnchor - headerBottom;
+        const alreadyStuck = document.body.classList.contains("active-list-stuck");
+        const stickPoint = toolbarAnchor - headerBottom;
+        const shouldStick = alreadyStuck ? window.scrollY > Math.max(0, stickPoint - 40) : window.scrollY >= stickPoint;
         document.documentElement.style.setProperty("--active-toolbar-top", `${Math.round(headerBottom)}px`);
         document.documentElement.style.setProperty("--active-table-top", `${Math.round(headerBottom + toolbarHeight)}px`);
         if (content) {
