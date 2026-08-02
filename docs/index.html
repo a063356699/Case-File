@@ -143,6 +143,52 @@ button:hover,.file-button:hover{border-color:#bbaee0;box-shadow:0 3px 10px #9d86
 .field input:focus,.field select:focus,.field textarea:focus,.login-card input:focus{border-color:#9c83d2;box-shadow:0 0 0 3px #a991db20}
 .modal-backdrop{background:#41475a80}
 .toast{background:#4b5365}
+
+/* 淡色主題：不使用綠色與粉紫色 */
+:root{
+  --ink:#3f4d5d;
+  --muted:#758292;
+  --paper:#f7f9fb;
+  --card:#ffffff;
+  --line:#dfe5eb;
+  --green:#658fb5;
+  --green2:#e8f1f8;
+  --gold:#dba348;
+  --red:#d65353;
+}
+body{background:#f7f9fb;color:var(--ink)}
+.topbar,.modal-head,.modal-foot,.public-head,.active-list-toolbar{background:#fff!important}
+.nav{background:#fff!important;gap:8px;padding:7px 34px;height:56px;align-items:stretch}
+.nav button{border:1px solid transparent!important;border-radius:9px!important;padding:0 12px!important;color:#586779!important}
+.nav button:nth-child(1){background:#eaf3fa!important}
+.nav button:nth-child(2){background:#faece5!important}
+.nav button:nth-child(3){background:#fff5d9!important}
+.nav button:nth-child(4){background:#edf1f5!important}
+.nav button:nth-child(5){background:#f9efe1!important}
+.nav button:nth-child(6){background:#e8f4fb!important}
+.nav button:nth-child(7){background:#f6f1e8!important}
+.nav button:nth-child(8){background:#eef2f6!important}
+.nav button.active{color:#3f6f98!important;border-color:#bed4e6!important;box-shadow:0 2px 8px #7895ab1a}
+.nav button.active:after{background:#78a9cf!important;height:3px;left:10px;right:10px}
+.nav span{background:#fff!important;color:#687686;border:1px solid #dfe5eb}
+.nav button:nth-child(2) span{background:#fff1ed!important;color:#bd4e43;border-color:#f0cbc4}
+.brandmark,.login-icon{background:#7fa7c8!important}
+button.primary,.primary,.ppt-export-button{background:#6f98bd!important;border-color:#6f98bd!important;color:#fff!important;box-shadow:none}
+.scope-tabs button.selected,.pill-options button.selected,.intake-kind button.selected{background:#779fc2!important;border-color:#779fc2!important;color:#fff!important}
+.table-wrap,.panel,.supabase,.login-card,.draft-card,.intake-edit-grid,.intake-kind{background:#fff;border-color:#dfe5eb}
+.table-wrap th,.person-labels{background:#eaf1f6!important;color:#586878!important;border-color:#d7e0e8!important}
+.table-wrap th.sticky{background:#e5edf3!important}
+.table-wrap td,.table-wrap td.sticky{background:#fff}
+.table-wrap tbody tr:nth-child(even):not(.area-group-row) td{background:#fbfcfd}
+.table-wrap tr:hover td{background:#f2f7fb!important}
+.area-group-row td,.table-wrap .area-group-row td{background:#edf3f7!important;color:#526c80!important;border-color:#d8e3eb!important}
+.status.live,.kind-badge{background:#e8f1f8;color:#527895}
+.status.off{background:#f2eee9;color:#7d7064}
+.search,.field input,.field select,.field textarea,.login-card input,button,.file-button{background:#fff!important;border-color:#dce3e9;color:var(--ink)}
+button:hover,.file-button:hover{border-color:#9fbad0;box-shadow:0 2px 8px #7895ab18}
+.field input:focus,.field select:focus,.field textarea:focus,.login-card input:focus{border-color:#7fa8c8;box-shadow:0 0 0 3px #7fa8c81d}
+.modal-backdrop{background:#46546273}
+.toast{background:#526273}
 .kind-badge{background:#eedfe4;color:#8b4058}
 .scope-tabs button.selected,.pill-options button.selected,.intake-kind button.selected{background:var(--green);border-color:var(--green);color:#fff}
 .field input:focus,.field select:focus,.field textarea:focus,.login-card input:focus{border-color:var(--green);box-shadow:0 0 0 3px #a94e6820}
@@ -41080,11 +41126,12 @@ ${String(ex)}`);
     const outside = address.match(/^(.{2,3}?)(?:市|縣)(.{1,4}?)(?:區|鄉|鎮|市)/);
     return outside ? `${outside[1]}${outside[2]}` : "";
   };
+  var salesBookDateCorrections = /* @__PURE__ */ new Set(["EG0522899", "EG0522916", "LG0132934", "EG0522910", "EG0522911", "EG0522912", "EG0522915", "EG0522908"]);
   var applySourceLayoutFixes = (records) => records.map((record) => {
     record = moveRestoredTextToCaseNote(clearImportedLandLabels(clearImportedContractChangePlaceholders(record)));
     const normalizedReportDate = normalizeDateInput(String(record.reportDate || ""));
     const normalizedUpdateDate = normalizeDateInput(String(record.updateDate || ""));
-    record = { ...record, ...!String(record.area || "").trim() && districtFromAddress(record.address) ? { area: districtFromAddress(record.address) } : {}, ...validDate(normalizedReportDate) ? { reportDate: normalizedReportDate } : {}, ...validDate(normalizedUpdateDate) ? { updateDate: normalizedUpdateDate } : {} };
+    record = { ...record, ...!String(record.area || "").trim() && districtFromAddress(record.address) ? { area: districtFromAddress(record.address) } : {}, ...salesBookDateCorrections.has(String(record.propertyNo || "").trim()) && !record.salesBookDate ? { salesBookDate: "2026-07-31", salesBook: "\u88FD\u4F5C" } : {}, ...validDate(normalizedReportDate) ? { reportDate: normalizedReportDate } : {}, ...validDate(normalizedUpdateDate) ? { updateDate: normalizedUpdateDate } : {} };
     if (String(record.propertyNo || "").trim().toUpperCase() === "LG0107941" && String(record.depth || "").replace(/\s/g, "") !== "45.8") record = { ...record, depth: "45.8" };
     if (String(record.propertyNo || "").trim().toUpperCase() === "LG0113338" && String(record.depth || "").replace(/\s/g, "") !== "33.5") record = { ...record, depth: "33.5" };
     if (String(record.propertyNo || "").trim().toUpperCase() === "LG0118365" && String(record.depth || "").trim()) record = { ...record, depth: "" };
