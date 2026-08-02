@@ -80,6 +80,40 @@
 .excel-print .direction-line{width:100%;column-gap:0!important}.excel-print .direction-line>span{display:block;width:100%;text-align:center;overflow:hidden;text-overflow:ellipsis}.excel-print .direction-line>span+span{border-left:1px solid transparent}
 .excel-print .basic-cell,.excel-print .print-data-cell{grid-template-columns:24mm minmax(0,1fr)!important}.excel-print .basic-cell>b,.excel-print .print-data-cell>b{font-size:7.5pt!important;letter-spacing:-.08em}.excel-print .basic-lines .layout-line{grid-template-columns:24mm minmax(0,1fr)!important}.excel-print .direction-line{grid-template-columns:24mm repeat(3,minmax(0,1fr))}.excel-print .direction-label{font-size:7.5pt}.excel-print .vertical-title{font-size:9pt}.excel-print .print-right-row{display:grid;grid-template-columns:20mm minmax(0,1fr);align-items:start;margin:0 0 2.2mm!important}.excel-print .print-right-row>b{font-size:8pt;font-weight:400;white-space:nowrap;text-align:justify;text-align-last:justify}.excel-print .print-right-row>span{font-size:11pt;font-weight:600;padding-left:1.5mm;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.excel-print .hero-price>span{font-size:18pt;letter-spacing:.12em}.excel-print .excel-approval{height:22mm!important;min-height:22mm!important;grid-template-rows:22mm!important;background:linear-gradient(to bottom,transparent 6mm,#000 6mm,#000 calc(6mm + 1px),transparent calc(6mm + 1px))}.excel-print .excel-approval>span{height:22mm}.excel-print .excel-approval b{margin-top:6.5mm}.print-document .excel-print{padding-bottom:1mm!important}.excel-print .legal-note{margin-top:.3mm}
 @media print{.print-document .excel-print{padding-bottom:1mm!important}}
+
+/* 全站主題：奶茶米＋煙燻粉＋酒紅 */
+:root{
+  --ink:#493a3d;
+  --muted:#806f72;
+  --paper:#f7f1e8;
+  --card:#fffcf7;
+  --line:#e4d6d2;
+  --green:#9b4f5f;
+  --green2:#eedde0;
+  --gold:#d29a3a;
+  --red:#c43d46;
+}
+body{background:var(--paper);color:var(--ink)}
+.topbar,.nav,.modal-head,.modal-foot,.public-head,.active-list-toolbar{background:#fffcf7}
+.modal-backdrop{background:#3f2c3199}
+button,.file-button,.search,.field input,.field select,.field textarea,.login-card input{border-color:#dccdca;background:#fffdfa;color:var(--ink)}
+button:hover,.file-button:hover{border-color:#b98b94}
+.table-wrap,.panel,.supabase,.login-card,.draft-card,.intake-edit-grid,.intake-kind{background:#fffcf7;border-color:var(--line)}
+.table-wrap th,.person-labels{background:#eee4dc!important;color:#69575a;border-color:#d9c8c4!important}
+.table-wrap th.sticky{background:#e8d9d6!important}
+.table-wrap td,.table-wrap td.sticky{background:#fffdfa}
+.table-wrap tr:hover td{background:#fdf4f1}
+.area-group-row td,.table-wrap .area-group-row td{background:#eedde0!important;color:#713c48!important;border-color:#d8bfc5!important}
+.nav span{background:#f0e4e2;color:#735f63}
+.status.live{background:#eedde0;color:#7f3e4d}
+.status.off{background:#eee6e2;color:#76575d}
+.kind-badge{background:#eedde0;color:#7f3e4d}
+.scope-tabs button.selected,.pill-options button.selected,.intake-kind button.selected{background:var(--green);border-color:var(--green);color:#fff}
+.field input:focus,.field select:focus,.field textarea:focus,.login-card input:focus{border-color:var(--green);box-shadow:0 0 0 3px #9b4f5f20}
+.warning{background:#fff1d7;color:#76521f}
+.expiry-alert{background:#fff0e2;border-color:#e5c59b;color:#765019}
+.former-people,.former-people .person-row{background:#f4ece6}
+.toast{background:#493a3d}
 .excel-print .basic-cell>b,.excel-print .print-data-cell>b{font-size:10.5pt!important;letter-spacing:0!important}.excel-print .basic-cell>i,.excel-print .print-data-cell>i{font-size:12pt!important;font-weight:400!important}.excel-print .layout-line>i{font-size:15pt!important;font-weight:400!important}.excel-print .direction-label{font-size:10.5pt!important}.excel-print .print-right-row>b{font-size:10.5pt!important}.excel-print .print-right-row>span{font-size:11pt!important;font-weight:400!important}.excel-print .excel-approval{transform:translateY(-8mm)}.excel-print .legal-note{transform:translateY(-8mm)}
 .excel-print .direction-line{display:flex!important;align-items:center!important;gap:3mm!important;width:100%}.excel-print .direction-label{flex:0 0 24mm;text-align:left!important}.excel-print .direction-line>span{display:inline-block!important;width:auto!important;flex:0 0 auto;text-align:left;overflow:visible}.excel-print .direction-line>span+span{border:0}.excel-print .basic-cell>i,.excel-print .print-data-cell>i,.excel-print .print-right-row>span{text-align:center}.excel-print .area-lines{min-height:18mm}.excel-print .addition-lines{min-height:16mm}.excel-print .parking-lines{min-height:18mm}.excel-print .basic-lines{min-height:56mm}.excel-print .environment-lines{min-height:14mm}.excel-print .features-section{min-height:24mm}.excel-print .feature-lines p{min-height:5.5mm!important}.excel-print .excel-approval,.excel-print .legal-note{transform:none!important}
 .excel-print .basic-cell>i,.excel-print .print-data-cell>i,.excel-print .print-right-row>span{text-align:left!important;padding-left:1.5mm!important}.excel-print .layout-line>i{text-align:left!important}.excel-print .direction-line>span{text-align:left!important}
@@ -765,6 +799,18 @@ body.active-list-stuck .active-list-page{
 .settings>.expiry-settings-panel:not(.expiry-open),.settings>.personnel-panel:not(.personnel-open){padding:10px 18px!important;min-height:44px}
 .settings>.personnel-panel:not(.personnel-open) .personnel-head{margin-bottom:0!important;min-height:24px}
 .settings>.expiry-settings-panel:not(.expiry-open) h3,.settings>.personnel-panel:not(.personnel-open) h3{min-height:24px;display:flex;align-items:center}
+
+/* 奶茶主題最終覆寫 */
+.topbar,.nav,.modal-head,.modal-foot,.public-head,.active-list-toolbar{background:#fffcf7!important}
+.table-wrap,.panel,.supabase,.login-card,.draft-card,.intake-edit-grid,.intake-kind{background:#fffcf7;border-color:#e4d6d2}
+.table-wrap th,.person-labels{background:#eee4dc!important;color:#69575a!important;border-color:#d9c8c4!important}
+.table-wrap th.sticky{background:#e8d9d6!important}
+.table-wrap td,.table-wrap td.sticky{background:#fffdfa}
+.table-wrap tr:hover td{background:#fdf4f1!important}
+.area-group-row td,.table-wrap .area-group-row td{background:#eedde0!important;color:#713c48!important;border-color:#d8bfc5!important}
+.nav span{background:#f0e4e2;color:#735f63}
+.status.live,.kind-badge{background:#eedde0;color:#7f3e4d}
+.status.off{background:#eee6e2;color:#76575d}
 </style>
 </head>
 <body>
