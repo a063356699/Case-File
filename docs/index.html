@@ -40885,6 +40885,7 @@ ${String(ex)}`);
   };
   var applySourceLayoutFixes = (records) => records.map((record) => {
     record = moveRestoredTextToCaseNote(clearImportedLandLabels(clearImportedContractChangePlaceholders(record)));
+    if (String(record.propertyNo || "").trim().toUpperCase() === "LG0107941" && String(record.depth || "").replace(/\s/g, "") !== "45.8") record = { ...record, depth: "45.8" };
     const sourceBalcony = sourceBalconyFixes[String(record.propertyNo || "").trim().toUpperCase()];
     if (!sourceBalcony || typeShort(record.type) === "\u571F\u5730" || /^(?:LG|LA)/i.test(record.propertyNo || "")) return record;
     const balcony = sourceBalcony.match(/(\d+)\s*陽台/)?.[1];
@@ -45850,8 +45851,8 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       const ownership = String(r.parkingOwnership || "").trim();
       if (ownership === "\u7121\u8ECA\u4F4D" || /無車位/.test(String(r.parking || ""))) return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: "\u7121\u8ECA\u4F4D" });
       const combined = String(r.parking || "");
-      const method = String(r.parkingMethod || r.parkingType || "").trim() || ["\u5761\u9053/\u5E73\u9762", "\u5761\u9053/\u6A5F\u68B0", "\u6607\u964D/\u5E73\u9762", "\u6607\u964D/\u6A5F\u68B0", "\u5EAD\u9662", "\u8ECA\u5EAB", "\u5E73\u79FB/\u6A5F\u68B0"].find((value) => combined.includes(value)) || "";
-      const methodShort = { "\u5761\u9053/\u5E73\u9762": "\u5761\u5E73", "\u5761\u9053/\u6A5F\u68B0": "\u5761\u6A5F", "\u6607\u964D/\u5E73\u9762": "\u6607\u5E73", "\u6607\u964D/\u6A5F\u68B0": "\u6607\u6A5F", "\u5EAD\u9662": "\u5EAD\u9662", "\u8ECA\u5EAB": "\u8ECA\u4F4D", "\u5E73\u79FB/\u6A5F\u68B0": "\u5E73\u6A5F" };
+      const method = String(r.parkingMethod || r.parkingType || "").trim() || ["\u5761\u9053/\u5E73\u9762", "\u5761\u9053/\u6A5F\u68B0", "\u6607\u964D/\u5E73\u9762", "\u6607\u964D/\u6A5F\u68B0", "\u7368\u7ACB\u8ECA\u5EAB", "\u5EAD\u9662", "\u8ECA\u5EAB", "\u5E73\u79FB/\u6A5F\u68B0"].find((value) => combined.includes(value)) || "";
+      const methodShort = { "\u5761\u9053/\u5E73\u9762": "\u5761\u5E73", "\u5761\u9053/\u6A5F\u68B0": "\u5761\u6A5F", "\u6607\u964D/\u5E73\u9762": "\u6607\u5E73", "\u6607\u964D/\u6A5F\u68B0": "\u6607\u6A5F", "\u7368\u7ACB\u8ECA\u5EAB": "\u8ECA\u5EAB", "\u5EAD\u9662": "\u5EAD\u9662", "\u8ECA\u5EAB": "\u8ECA\u4F4D", "\u5E73\u79FB/\u6A5F\u68B0": "\u5E73\u6A5F" };
       const shortType = methodShort[method] || method;
       const parkingNo = String(r.parkingNo || "").trim().replace(/號$/g, "");
       if (!shortType && !parkingNo) return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: parkingShort(combined) || "\u2014" });
