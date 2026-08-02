@@ -1121,6 +1121,23 @@ body{background:#f8fbfe!important;color:#405064!important}
 .book-review-open .book-review-list{max-height:calc(90vh - 125px)!important}
 .book-review-open .book-review-head{position:sticky;top:-16px;z-index:3;background:#eef6fb;padding:12px 4px;margin-top:-12px}
 
+/* At review time show a one-line reminder dialog first; click it for the full list. */
+.book-review-panel.book-review-collapsed{
+  position:fixed!important;
+  left:50%!important;
+  top:50%!important;
+  transform:translate(-50%,-50%)!important;
+  z-index:110!important;
+  width:min(900px,92vw)!important;
+  margin:0!important;
+  padding:10px 14px!important;
+  background:#eef6fb!important;
+  box-shadow:0 0 0 100vmax #536a7b66,0 20px 60px #24374655!important;
+}
+.book-review-collapsed .book-review-head{margin:0!important;min-height:42px!important}
+.book-review-collapsed .book-review-title b{font-size:20px!important}
+.book-review-collapsed .book-review-actions strong{font-size:16px!important}
+
 /* Notes: half a point smaller than the prior version, with more width. */
 .active-lead-table th.col-notes,.active-lead-table td.col-notes{width:110px!important;min-width:110px!important;max-width:110px!important}
 .active-lead-table td.col-notes,.active-lead-table td.col-notes .notes-display,.active-lead-table td.col-notes .natural-notes-display{font-size:11px!important;line-height:1.2!important}
