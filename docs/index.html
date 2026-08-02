@@ -691,7 +691,7 @@
 .archive-cleanup-case-cell .archive-cleanup-address{color:#2870a8;font-size:12px;margin-top:3px}
 .archive-cleanup-case-cell .archive-cleanup-status{color:#d43b68!important;font-weight:800!important}
 .ppt-picker-body>.ppt-week-selector{margin-top:92px}.ppt-custom-period{position:fixed;z-index:96;top:calc(5vh + 105px);left:50%;transform:translateX(-50%);display:grid;grid-template-columns:1fr 1fr 1fr auto;align-items:end;gap:10px;width:min(1030px,90vw);padding:10px 14px;border:1px solid #c9d9d2;border-radius:10px;background:#f7faf8;box-shadow:0 5px 16px #18382b16}.ppt-custom-period label{display:flex;min-width:0;flex-direction:column;gap:4px}.ppt-custom-period label span{color:#53645e;font-size:11px;font-weight:700}.ppt-custom-period input{width:100%;height:38px;border:1px solid #b8c6c0;border-radius:8px;background:#fff;padding:7px 9px}.ppt-custom-period button{height:38px;white-space:nowrap}@media(max-width:800px){.ppt-custom-period{grid-template-columns:1fr 1fr}.ppt-picker-body>.ppt-week-selector{margin-top:180px}}
-.missing-data-reminder-modal .expiry-reminder-list{display:block;padding:12px 18px}.missing-data-reminder-modal .missing-data-reminder-row{min-height:50px;margin:0;border:0;border-bottom:1px solid #dfe4e1;border-radius:0;background:#fff;padding:9px 10px}.missing-data-reminder-modal .missing-data-reminder-row:first-child{border-top:1px solid #dfe4e1}.missing-data-reminder-modal .missing-data-reminder-row b{color:#17242a!important;font-size:15px!important}.missing-data-reminder-modal .missing-data-reminder-row span{font-size:12px!important}.missing-data-reminder-modal .missing-data-reminder-row button{padding:6px 10px;font-size:12px}
+.missing-data-reminder-modal{width:min(920px,94vw)}.missing-data-table-wrap{max-height:58vh;overflow:auto;padding:12px 18px}.missing-data-table{width:100%;border-collapse:collapse;table-layout:fixed;background:#fff}.missing-data-table th,.missing-data-table td{border:1px solid #d9e1dd;padding:10px 12px;text-align:center;vertical-align:middle;color:#17242a}.missing-data-table th{background:#e7efeb;font-size:15px}.missing-data-table th:first-child,.missing-data-table td:first-child{width:18%}.missing-data-table th:nth-child(2),.missing-data-table td:nth-child(2){width:52%}.missing-data-table th:last-child,.missing-data-table td:last-child{width:30%}.missing-data-case-link{border:0;background:transparent;padding:0;color:#17242a;font-size:15px;font-weight:700;text-align:center;cursor:pointer}.missing-data-case-link:hover{color:#156b58;text-decoration:underline}.missing-data-table td:last-child{color:#d14763;font-weight:700}
 .add-property-stack{display:flex;flex-direction:column;align-items:center;gap:4px}.add-property-stack .primary{width:100%}.home-last-modified{color:#3f51b5;font-size:15px;font-weight:700;line-height:1.2;white-space:nowrap}
 .showing-follow-up-filter{color:#c83268!important;border-color:#eba9c0!important;background:#fff6fa!important}.showing-follow-up-filter.selected{color:#fff!important;background:#d43b68!important;border-color:#d43b68!important}.showing-follow-up-manage{padding-left:9px!important;padding-right:9px!important}.showing-follow-up-modal{width:min(900px,96vw)!important}.showing-follow-up-form{display:grid;grid-template-columns:minmax(260px,2fr) 1fr 1fr auto;gap:10px;align-items:end;padding:18px 22px;background:#fff}.showing-follow-up-form label{display:flex;flex-direction:column;gap:5px}.showing-follow-up-form label span{font-size:12px;font-weight:700;color:#56645f}.showing-follow-up-form input,.showing-follow-up-form select{height:42px;border:1px solid #ccd2ce;border-radius:8px;background:#fff;padding:8px 10px}.showing-follow-up-list{padding:14px 22px;display:grid;gap:8px}.showing-follow-up-list>div{display:flex;justify-content:space-between;align-items:center;gap:15px;background:#fff;border:1px solid #ead2db;border-radius:10px;padding:12px 14px}.showing-follow-up-list section{display:flex;flex-direction:column;gap:3px}.showing-follow-up-list b{color:#17242a}.showing-follow-up-list small{color:#697570}.showing-follow-up-list em{color:#d43b68;font-style:normal;font-weight:700}.showing-follow-up-list span{font-size:12px;color:#85536a}.showing-follow-up-list>p{text-align:center;color:#728087;padding:24px}.showing-follow-up-list button{color:#b13b61;border-color:#e7b8c8}@media(max-width:800px){.showing-follow-up-form{grid-template-columns:1fr 1fr}.showing-follow-up-form label:first-child{grid-column:span 2}}
 .record-edit-grid>.edit-area{grid-column:span 20!important}.record-edit-grid>.edit-caseName{grid-column:span 80!important}.record-edit-grid>.edit-caseNameNote{grid-column:span 20!important}.record-edit-grid>.edit-showingFollowUpDueDate{grid-column:span 20!important;background:#fff1f6!important;border-color:#ebc1d0!important}.showing-follow-up-date-field small{color:#bd4068;font-size:11px}
@@ -42594,7 +42594,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
           ] }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "tools", children: tab === "active" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { className: "showing-follow-up-filter", onClick: () => setShowingFollowUpOpen(true), children: [
-              "\u5E36\u770B\u8FFD\u8E64 ",
+              "\u66AB\u505C\u5E36\u770B ",
               showingFollowUpRecords.length
             ] }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { className: missingDataRecords.length ? "missing-data-button has-items" : "missing-data-button", onClick: () => setMissingDataReminderOpen(true), children: [
@@ -42722,25 +42722,23 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
           ] }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "close", onClick: () => setMissingDataReminderOpen(false), children: "\xD7" })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "expiry-reminder-list", children: [
-          missingDataRecords.map((record) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "expiry-reminder-row missing-data-reminder-row", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: record.caseName || record.propertyNo || "\u672A\u547D\u540D\u6848\u4EF6" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
-                record.propertyNo || "\u2014",
-                "\u3000\u5C1A\u7F3A\uFF1A",
-                missingDataOf(record).join("\u3001")
-              ] })
-            ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => {
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "missing-data-table-wrap", children: missingDataRecords.length ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("table", { className: "missing-data-table", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("thead", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "\u7269\u4EF6\u7DE8\u865F" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "\u6848\u540D" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "\u7F3A" })
+          ] }) }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("tbody", { children: missingDataRecords.map((record) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: record.propertyNo || "\u2014" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "missing-data-case-link", onClick: () => {
               setMissingDataReminderOpen(false);
               setEditing(record);
-            }, children: "\u524D\u5F80\u88DC\u8CC7\u6599" })
-          ] }, record.id)),
-          !missingDataRecords.length && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "contact-empty", children: "\u6240\u6709\u59D4\u8A17\u4E2D\u7269\u4EF6\u8CC7\u6599\u5747\u5DF2\u88DC\u9F4A\u3002" })
-        ] }),
+            }, children: record.caseName || "\u672A\u547D\u540D\u6848\u4EF6" }) }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: missingDataOf(record).join("\u3000") })
+          ] }, record.id)) })
+        ] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "contact-empty", children: "\u6240\u6709\u59D4\u8A17\u4E2D\u7269\u4EF6\u8CC7\u6599\u5747\u5DF2\u88DC\u9F4A\u3002" }) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal-foot", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u4ECD\u6709\u5F85\u88DC\u8CC7\u6599\u6642\uFF0C\u6BCF\u5929\u7B2C\u4E00\u6B21\u958B\u555F\u6703\u63D0\u9192\u4E00\u6B21" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u9EDE\u9078\u6848\u540D\u53EF\u76F4\u63A5\u524D\u5F80\u88DC\u8CC7\u6599\uFF1B\u4ECD\u6709\u5F85\u88DC\u8CC7\u6599\u6642\uFF0C\u6BCF\u5929\u7B2C\u4E00\u6B21\u958B\u555F\u6703\u63D0\u9192\u4E00\u6B21" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => setMissingDataReminderOpen(false), children: "\u7A0D\u5F8C\u8655\u7406" })
         ] })
       ] }) }),
