@@ -824,26 +824,30 @@ button:hover,.file-button:hover{border-color:#9fbad0;box-shadow:0 2px 8px #7895a
 .public-zoom-tools{display:flex;align-items:center;gap:5px;margin-left:auto;white-space:nowrap}
 .public-zoom-tools button{padding:7px 9px;font-size:12px}
 .public-zoom-tools b{min-width:46px;text-align:center;color:#456882;font-size:12px}
-.public-floating-case-name{position:sticky;left:8px;top:8px;z-index:40;width:max-content;max-width:min(360px,75vw);height:0;overflow:visible;transform:translateY(10px);padding:6px 10px;border:1px solid #efb1c1;border-radius:8px;background:#fff5f8;color:#b72e55;font-size:12px;font-weight:700;line-height:1.3;box-shadow:0 5px 16px #43576b2b;pointer-events:none;white-space:normal}
+.public-table{position:relative}
+.public-floating-case-name{position:absolute;z-index:40;width:max-content;max-width:min(360px,75vw);padding:5px 9px;border:1px solid #e2c65b;border-radius:7px;background:#fff1a8;color:#111;font-size:12px;font-weight:700;line-height:1.3;box-shadow:0 4px 12px #43576b26;pointer-events:none;white-space:normal}
 .public-table tbody tr:not(.area-group-row):nth-child(odd) td{background:#fff!important}
 .public-table tbody tr:not(.area-group-row):nth-child(even) td{background:#edf6fc!important}
 .public-table tbody tr:not(.area-group-row):hover td{background:#dfeefa!important}
 
 @media(max-width:700px){
-  .public-shell{padding:14px 10px!important}
-  .public-head{align-items:stretch!important;gap:10px;flex-direction:column}
+  .public-shell{padding:7px 7px!important}
+  .public-head{align-items:stretch!important;gap:3px;flex-direction:column;margin-bottom:5px!important}
   .public-head>button{align-self:flex-end;padding:7px 11px}
-  .logged-person{font-size:13px}
-  .public-head h2{font-size:23px}
-  .scope-tabs{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px!important}
-  .scope-tabs button{width:100%;padding:8px 5px;font-size:13px;white-space:nowrap}
-  .public-expiry-filters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
-  .public-expiry-filters button{padding:7px 3px;font-size:11px;white-space:nowrap}
-  .public-search-tools{align-items:stretch}
+  .logged-person{font-size:11px;margin-bottom:0!important}
+  .public-head h2{font-size:19px;line-height:1.1}
+  .scope-tabs{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px!important;margin-top:5px!important}
+  .scope-tabs button{width:100%;padding:6px 2px;font-size:11px;white-space:nowrap;border-radius:7px}
+  .public-expiry-filters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;margin-bottom:5px!important}
+  .public-expiry-filters button{padding:5px 2px;font-size:10px;white-space:nowrap}
+  .public-search-tools{align-items:center;margin-bottom:5px!important;gap:4px!important}
   .public-search-tools .search{min-width:0;max-width:none}
-  .public-search-tools>button{padding:7px 9px;white-space:nowrap;font-size:12px}
-  .public-search-tools{flex-wrap:wrap}
-  .public-zoom-tools{width:100%;justify-content:flex-end;margin-left:0}
+  .public-search-tools .search input{padding:6px 3px;font-size:11px}
+  .public-search-tools>button{padding:6px 6px;white-space:nowrap;font-size:10px}
+  .public-search-tools{flex-wrap:nowrap}
+  .public-zoom-tools{width:auto;justify-content:flex-end;margin-left:0;gap:2px}
+  .public-zoom-tools button{padding:6px 4px;font-size:10px}
+  .public-zoom-tools b{min-width:34px;font-size:10px}
   .expiry-alert{padding:9px;gap:6px;max-height:150px;overflow:auto}
   .expiry-alert b{width:100%}
   .public-table{max-height:calc(100vh - 260px)!important;border-radius:8px}
@@ -42143,6 +42147,38 @@ ${String(ex)}`);
       if (internalView) setTab("public");
     }, [internalView]);
     (0, import_react.useEffect)(() => {
+      if (!internalView) return;
+      try {
+        const saved = JSON.parse(localStorage.getItem("case-file-public-daily-login") || "{}");
+        if (saved.date === today() && saved.personId) {
+          setPublicPersonId(saved.personId);
+          setPublicScope("mine");
+          setPublicUnlocked(true);
+        } else {
+          localStorage.removeItem("case-file-public-daily-login");
+        }
+      } catch {
+        localStorage.removeItem("case-file-public-daily-login");
+      }
+    }, [internalView]);
+    (0, import_react.useEffect)(() => {
+      if (!internalView || !publicUnlocked) return;
+      const timer = window.setInterval(() => {
+        try {
+          const saved = JSON.parse(localStorage.getItem("case-file-public-daily-login") || "{}");
+          if (saved.date !== today()) {
+            localStorage.removeItem("case-file-public-daily-login");
+            setPublicUnlocked(false);
+            setPublicPersonId("");
+          }
+        } catch {
+          setPublicUnlocked(false);
+          setPublicPersonId("");
+        }
+      }, 6e4);
+      return () => window.clearInterval(timer);
+    }, [internalView, publicUnlocked]);
+    (0, import_react.useEffect)(() => {
       if (internalView) document.title = "\u9023\u57CE\u5167\u90E8\u7E3D\u8868 \u8ACB\u52FF\u5916\u6D41";
     }, [internalView]);
     (0, import_react.useEffect)(() => {
@@ -42950,6 +42986,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       setPublicScope("mine");
       setPassword("");
     };
+    const rememberPublicLogin = (personId) => localStorage.setItem("case-file-public-daily-login", JSON.stringify({ date: today(), personId }));
     const unlock = async () => {
       const normalizeLoginId = (value = "") => value.trim().replace(/\s+/g, "").toUpperCase();
       const activePeople = settings.personnel.filter((p) => (p.status || "\u5728\u8077") === "\u5728\u8077" && normalizeLoginId(p.nationalId));
@@ -42959,6 +42996,8 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
         setPublicPersonId(person.id);
         setPublicScope("mine");
         setPublicUnlocked(true);
+        rememberPublicLogin(person.id);
+        setPassword("");
         return;
       }
       if (!loginId) return flash("\u8ACB\u8F38\u5165\u8EAB\u5206\u8B49\u5B57\u865F");
@@ -42973,6 +43012,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
         setPublicPersonId(data.personId);
         setPublicScope("mine");
         setPublicUnlocked(true);
+        rememberPublicLogin(data.personId);
         setPassword("");
       } catch {
         flash("\u76EE\u524D\u7121\u6CD5\u9023\u63A5\u96F2\u7AEF\uFF0C\u8ACB\u78BA\u8A8D\u7DB2\u8DEF\u5F8C\u518D\u8A66\u4E00\u6B21");
@@ -46340,6 +46380,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
   function PropertyTable({ records, columns, publicMode = false, dailyMode = false, archiveMode = false, activeLead = false, expiryAnnotation = false, showAreaGroups = false, zoom = 100, onEdit, onArchive, onRestore, onRemove, onPptChange }) {
     const [publicScrollLeft, setPublicScrollLeft] = (0, import_react.useState)(0);
     const [hoveredPublicCase, setHoveredPublicCase] = (0, import_react.useState)("");
+    const [hoveredPublicCaseTop, setHoveredPublicCaseTop] = (0, import_react.useState)(0);
     const showPpt = !!onPptChange && !publicMode;
     const areaGroup = (record) => isRentalRecord(record) ? "\u79DF\u4EF6" : areaCategory(record);
     const stickyCount = publicMode ? 0 : activeLead ? 7 : 4;
@@ -46349,7 +46390,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       showAreaGroups = true;
     }
     return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: `table-wrap ${publicMode ? "public-table" : ""} ${dailyMode ? "daily-table" : ""} ${activeLead ? "active-lead-table" : ""}`, style: publicMode ? { zoom: zoom / 100 } : void 0, onScroll: (event) => publicMode && setPublicScrollLeft(event.currentTarget.scrollLeft), children: [
-      publicMode && publicScrollLeft > 80 && hoveredPublicCase && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "public-floating-case-name", children: hoveredPublicCase }),
+      publicMode && publicScrollLeft > 80 && hoveredPublicCase && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "public-floating-case-name", style: { left: publicScrollLeft + 8, top: hoveredPublicCaseTop }, children: hoveredPublicCase }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("table", { children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("thead", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { children: [
           columns.map((k, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { className: `${i < stickyCount ? `sticky sticky-${i}` : ""} col-${k}`, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ColumnLabel, { column: k }) }, k)),
@@ -46375,7 +46416,12 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
           const expiryDays = daysUntil(r.entrustEnd);
           return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_react.Fragment, { children: [
             showAreaGroups && (recordIndex === 0 || areaGroup(records[recordIndex - 1]) !== areaGroup(r)) && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("tr", { className: "area-group-row", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { colSpan: columns.length + (showPpt ? 2 : 0), children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: areaGroup(r) }) }) }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { onMouseEnter: () => publicMode && setHoveredPublicCase(r.caseName || r.propertyNo || "\u672A\u547D\u540D\u6848\u4EF6"), onMouseLeave: () => publicMode && setHoveredPublicCase(""), children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { onMouseEnter: (event) => {
+              if (publicMode) {
+                setHoveredPublicCase(r.caseName || r.propertyNo || "\u672A\u547D\u540D\u6848\u4EF6");
+                setHoveredPublicCaseTop(event.currentTarget.offsetTop + 6);
+              }
+            }, onMouseLeave: () => publicMode && setHoveredPublicCase(""), children: [
               columns.map((k, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { className: `${i < stickyCount ? `sticky sticky-${i}` : ""} col-${k} ${dateKeys.has(k) && k !== "groupViewDate" && !validDate(r[k]) ? "date-error" : ""} ${dailyMode && isHighlighted(k) ? "daily-updated-cell" : ""}`, children: k === "caseName" && publicMode ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "public-case-name", children: chunkText(r.caseName || "\u2014", 10).map((line, lineIndex) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: line }, `${line}-${lineIndex}`)) }),
                 r.caseNameNote && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "case-name-note", children: r.caseNameNote }),
