@@ -1253,6 +1253,8 @@ body{background:#f8fbfe!important;color:#405064!important}
 .active-lead-table td.col-notes,.active-lead-table td.col-notes .notes-display,.active-lead-table td.col-notes .natural-notes-display{font-size:11px!important;line-height:1.2!important}
 
 .internal-public-app .public-table td.col-notes .notes-display{white-space:pre-wrap!important}
+.internal-public-app .public-floating-case-name{transform:translateX(-81px)}
+.internal-public-app .public-table{height:auto!important;max-height:none!important;min-height:0!important;overflow-x:auto!important;overflow-y:visible!important}
 
 /* In landscape phone/tablet view, do not trap the property list in a short inner scroller. */
 @media (orientation:landscape) and (max-width:1200px){
@@ -46403,9 +46405,29 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     ] }) });
   }
   function PropertyTable({ records, columns, publicMode = false, dailyMode = false, archiveMode = false, activeLead = false, expiryAnnotation = false, showAreaGroups = false, zoom = 100, onEdit, onArchive, onRestore, onRemove, onPptChange }) {
-    const [publicScrollLeft, setPublicScrollLeft] = (0, import_react.useState)(0);
+    const [publicScrollLeft, setPublicScrollLeftState] = (0, import_react.useState)(0);
+    const setPublicScrollLeft = (value) => setPublicScrollLeftState(value > 0 ? value + 81 : 0);
     const [hoveredPublicCase, setHoveredPublicCase] = (0, import_react.useState)("");
     const [hoveredPublicCaseTop, setHoveredPublicCaseTop] = (0, import_react.useState)(0);
+    (0, import_react.useEffect)(() => {
+      if (!publicMode) return;
+      const rows = Array.from(document.querySelectorAll(".public-table tbody tr:not(.area-group-row)"));
+      const cleanups = rows.map((row, index) => {
+        const activate = () => {
+          const record = records[index];
+          if (!record) return;
+          setHoveredPublicCase(record.caseName || record.propertyNo || "\u672A\u547D\u540D\u6848\u4EF6");
+          setHoveredPublicCaseTop(row.offsetTop + 6);
+        };
+        row.addEventListener("touchstart", activate, { passive: true });
+        row.addEventListener("pointerdown", activate, { passive: true });
+        return () => {
+          row.removeEventListener("touchstart", activate);
+          row.removeEventListener("pointerdown", activate);
+        };
+      });
+      return () => cleanups.forEach((cleanup) => cleanup());
+    }, [publicMode, records]);
     const showPpt = !!onPptChange && !publicMode;
     const areaGroup = (record) => isRentalRecord(record) ? "\u79DF\u4EF6" : areaCategory(record);
     const stickyCount = publicMode ? 0 : activeLead ? 7 : 4;
