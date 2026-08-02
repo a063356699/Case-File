@@ -700,6 +700,7 @@
 .topbar>.header-actions{flex-wrap:nowrap!important;overflow-x:auto;white-space:nowrap}.topbar>.header-actions>*{flex:0 0 auto}.home-last-modified{display:inline-flex;align-items:center;padding:8px 2px}.manual-intake-button{border-color:#d8c79d!important;background:#fff8e9!important;color:#76571c!important;border-radius:999px!important}
 .topbar{display:flex!important;align-items:center!important;gap:18px!important;padding-left:20px!important;padding-right:20px!important;min-height:88px!important}.topbar>.brand{flex:0 0 auto!important}.topbar>.nav{order:1!important;flex:1 1 auto!important;min-width:0!important;height:68px!important;padding:0!important;gap:18px!important;border:0!important;overflow-x:auto!important;background:transparent!important}.topbar>.header-actions{order:2!important;position:relative!important;display:flex!important;flex:0 0 auto!important;flex-direction:row!important;align-items:flex-end!important;align-self:stretch!important;gap:8px!important;padding-top:28px!important;overflow:visible!important}.topbar>.header-actions button,.topbar>.header-actions .file-button{white-space:nowrap!important}.topbar .home-last-modified{position:absolute!important;right:0!important;top:4px!important;inset-block-end:auto!important;order:99!important;height:auto!important;margin:0!important;padding:0!important;line-height:20px!important;font-size:13px!important}.topbar>.header-actions .key-tag{margin:0!important}.topbar+.system-expiry-reminder{margin-top:0}@media(max-width:1100px){.topbar>.brand{display:none!important}.topbar>.nav{gap:12px!important}.topbar>.header-actions{gap:6px!important}.topbar>.header-actions button,.topbar>.header-actions .file-button{font-size:12px!important;padding:7px 8px!important}}
 .modal{width:min(1120px,94vw);max-height:90vh}.modal-head{min-height:76px}.modal-head .close{flex:0 0 48px;width:48px;height:48px;display:grid;place-items:center;padding:0}
+.active-list-toolbar{position:sticky;top:88px;z-index:28;margin-left:-8px;margin-right:-8px;padding:10px 8px 12px;background:var(--paper);box-shadow:0 8px 14px rgba(23,36,42,.08)}
 </style>
 </head>
 <body>
@@ -42497,7 +42498,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
           } })
         ] })
       ] }) }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", { className: `content ${tab === "archive" ? "archive-list-page" : "active-list-page"}`, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "list-head", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "list-head active-list-toolbar", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "list-title-search", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SectionTitle, { title: tab === "archive" ? "\u5C01\u5B58\u7269\u4EF6" : "\u59D4\u8A17\u4E2D\u7269\u4EF6", subtitle: tab === "archive" ? "\u5230\u671F\u8207\u5DF2\u4E0B\u67B6\u7269\u4EF6\u7D00\u9304" : "" }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "search", children: [
