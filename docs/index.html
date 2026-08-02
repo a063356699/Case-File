@@ -974,6 +974,8 @@ body{background:#f8fbfe!important;color:#405064!important}
   min-height:0!important;
   padding-top:25px!important;
   padding-bottom:0!important;
+  position:relative!important;
+  z-index:5!important;
 }
 .topbar>.nav{
   grid-column:1 / -1!important;
@@ -986,7 +988,10 @@ body{background:#f8fbfe!important;color:#405064!important}
   min-height:34px!important;
   align-self:start!important;
   margin:0!important;
+  z-index:1!important;
+  pointer-events:none!important;
 }
+.topbar>.nav button{pointer-events:auto!important}
 
 /* Floor values must never inherit the red secondary-line style used by prices. */
 .active-lead-table td.col-floor,
