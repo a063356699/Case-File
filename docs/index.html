@@ -707,7 +707,7 @@ body.active-list-stuck .active-list-page>.active-lead-table{position:relative!im
 .active-lead-table td.col-key .key-cell-value{font-size:13px;line-height:1.12}.active-lead-table td.col-key .key-cell-value.key-text-medium{font-size:11px}.active-lead-table td.col-key .key-cell-value.key-text-long{font-size:9.5px;line-height:1.05}
 .active-lead-table td.col-parking .parking-list-value{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;line-height:1.05!important}.active-lead-table td.col-parking .parking-list-value>span{display:block!important;color:#111!important;font-weight:400!important;margin:0!important}.active-lead-table td.col-parking .parking-list-value>small{display:block!important;color:#66736d!important;font-size:10px!important;font-weight:400!important;margin-top:2px!important}.active-lead-table tr:has(td.col-parking .parking-list-value>small) td{height:38px!important;max-height:38px!important}
 .record-edit-grid>.edit-parkingOwnership,.record-edit-grid>.edit-parkingMethod,.record-edit-grid>.edit-parkingNo{grid-column:span 40!important}.record-edit-grid>.edit-parkingOwnership .pill-options,.record-edit-grid>.edit-parkingMethod .pill-options{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.record-edit-grid>.edit-parkingOwnership .pill-options button,.record-edit-grid>.edit-parkingMethod .pill-options button{min-width:0;padding:7px 5px;text-align:center}
-.record-edit-grid>.edit-parkingOwnership .pill-options{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+.record-edit-grid>.edit-parkingOwnership .pill-options{grid-template-columns:repeat(3,minmax(0,1fr))!important}.record-edit-grid>.edit-parkingMethod .pill-options{grid-template-columns:repeat(4,minmax(0,1fr))!important}
 </style>
 </head>
 <body>
@@ -40893,6 +40893,7 @@ ${String(ex)}`);
   var applySourceLayoutFixes = (records) => records.map((record) => {
     record = moveRestoredTextToCaseNote(clearImportedLandLabels(clearImportedContractChangePlaceholders(record)));
     if (String(record.propertyNo || "").trim().toUpperCase() === "LG0107941" && String(record.depth || "").replace(/\s/g, "") !== "45.8") record = { ...record, depth: "45.8" };
+    if (String(record.propertyNo || "").trim().toUpperCase() === "EG0390636") record = { ...record, parkingOwnership: "\u56FA\u5B9A\u8ECA\u4F4D", parkingMethod: "\u5761\u9053/\u5E73\u9762", parkingNo: "B1 7\u865F", parking: "\u5761\u9053/\u5E73\u9762B1 7\u865F" };
     const sourceBalcony = sourceBalconyFixes[String(record.propertyNo || "").trim().toUpperCase()];
     if (!sourceBalcony || typeShort(record.type) === "\u571F\u5730" || /^(?:LG|LA)/i.test(record.propertyNo || "")) return record;
     const balcony = sourceBalcony.match(/(\d+)\s*陽台/)?.[1];
