@@ -1215,6 +1215,10 @@ body{background:#f8fbfe!important;color:#405064!important}
 .internal-public-app .scope-tabs button:nth-child(2).selected{background:#70a9d3!important;border-color:#5c98c5!important;color:#fff!important}
 .internal-public-app .scope-tabs button:nth-child(3).selected{background:#e68f65!important;border-color:#d97c50!important;color:#fff!important}
 .internal-public-app .scope-tabs button:nth-child(4).selected{background:#9a80c9!important;border-color:#856bb6!important;color:#fff!important}
+.internal-public-app .public-table th.col-caseName,.internal-public-app .public-table td.col-caseName{width:260px!important;min-width:260px!important;max-width:260px!important;padding-left:10px!important;padding-right:10px!important;overflow:visible!important;text-overflow:clip!important;white-space:normal!important}
+.internal-public-app .public-table .public-case-name{width:100%;overflow:visible!important}
+.internal-public-app .public-table th.col-notes,.internal-public-app .public-table td.col-notes{width:150px!important;min-width:150px!important;max-width:150px!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important}
+.internal-public-app .public-table td.col-notes .notes-display{display:block!important;width:100%;font-size:11px!important;font-weight:400!important;line-height:1.25!important;white-space:normal!important;overflow-wrap:anywhere!important}
 .archive-list-page .sticky-0{left:0!important;width:80px!important;min-width:80px!important;max-width:80px!important}
 .archive-list-page .sticky-1{left:80px!important;width:90px!important;min-width:90px!important;max-width:90px!important}
 .archive-list-page .sticky-2{left:170px!important;width:180px!important;min-width:180px!important;max-width:180px!important}
@@ -41084,7 +41088,7 @@ ${String(ex)}`);
   };
   var activeColumns = ["displaySequence", "type", "propertyNo", "entrustStart", "entrustEnd", "area", "caseName", "address", "price", "direction", "age", "floor", "layout", "indoorPing", "buildingPing", "landPing", "parking", "managementFee", "key", "currentState", "road", "frontage", "depth", "zoning", "coverageFar", "developer", "notes", "reportDate", "updateDate", "groupViewDate", "bookLocation", "salesBook", "photoInfo", "platform591", "yes319", "houseinfor", "windowAd", "led", "homeWeb", "price5168", "goldExposure"];
   var archiveColumns = ["propertyNo", "entrustPeriod", "caseName", "address", "price", "key", "housingRemoval", "bookLocation", "salesBook", "photoInfo", "platform591", "yes319", "houseinfor", "windowAd", "led", "homeWeb", "price5168", "goldExposure"];
-  var publicColumns = ["propertyNo", "area", "caseName", "address", "price", "direction", "age", "floor", "layout", "indoorPing", "buildingPing", "landPing", "parking", "managementFee", "key", "currentState", "road", "frontage", "depth", "zoning", "coverageFar", "developer", "reportDate", "updateDate", "groupViewDate", "photoInfo"];
+  var publicColumns = ["propertyNo", "area", "caseName", "address", "price", "direction", "age", "floor", "layout", "indoorPing", "buildingPing", "landPing", "parking", "managementFee", "key", "currentState", "road", "frontage", "depth", "zoning", "coverageFar", "developer", "notes", "reportDate", "updateDate", "groupViewDate", "photoInfo"];
   var dailyColumns = publicColumns.filter((column) => !["propertyNo", "photoInfo", "contractType", "status"].includes(column));
   var labels = Object.fromEntries(fields);
   Object.assign(labels, { age: "\u5C4B\u9F61", bookLocation: "\u7269\u4EF6\u672C\u4F4D\u7F6E", housingRemoval: "\u623F\u7BA1\u4E0B\u67B6", entrustPeriod: "\u59D4\u8A17\u671F\u9593", archived: "\u5C01\u5B58\u65E5\u671F", coverageFar: "\u5EFA\u853D\u7387\uFF0F\u5BB9\u7A4D\u7387" });
@@ -41932,7 +41936,7 @@ ${String(ex)}`);
     const [publicScope, setPublicScope] = (0, import_react.useState)("mine");
     const [publicExpiryFilter, setPublicExpiryFilter] = (0, import_react.useState)("all");
     const [publicQuery, setPublicQuery] = (0, import_react.useState)("");
-    const [publicZoom, setPublicZoom] = (0, import_react.useState)(100);
+    const [publicZoom, setPublicZoom] = (0, import_react.useState)(() => typeof window !== "undefined" && window.innerWidth <= 1100 ? 50 : 100);
     const [password, setPassword] = (0, import_react.useState)("");
     const [notice, setNotice] = (0, import_react.useState)("");
     const [intakeRaw, setIntakeRaw] = (0, import_react.useState)("");
