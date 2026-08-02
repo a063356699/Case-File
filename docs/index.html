@@ -833,10 +833,11 @@ button:hover,.file-button:hover{border-color:#9fbad0;box-shadow:0 2px 8px #7895a
 @media(max-width:700px){
   .public-shell{padding:7px 7px!important}
   .public-head{align-items:stretch!important;gap:3px;flex-direction:column;margin-bottom:5px!important}
+  .public-head>div{display:flex;align-items:center;gap:5px;min-width:0}
   .public-head>button{align-self:flex-end;padding:7px 11px}
-  .logged-person{font-size:11px;margin-bottom:0!important}
-  .public-head h2{font-size:19px;line-height:1.1}
-  .scope-tabs{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px!important;margin-top:5px!important}
+  .logged-person{font-size:10px;margin:0!important;white-space:nowrap}
+  .public-head h2{display:none}
+  .scope-tabs{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:3px!important;margin:0!important;flex:1;min-width:0}
   .scope-tabs button{width:100%;padding:6px 2px;font-size:11px;white-space:nowrap;border-radius:7px}
   .public-expiry-filters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;margin-bottom:5px!important}
   .public-expiry-filters button{padding:5px 2px;font-size:10px;white-space:nowrap}
@@ -850,7 +851,7 @@ button:hover,.file-button:hover{border-color:#9fbad0;box-shadow:0 2px 8px #7895a
   .public-zoom-tools b{min-width:34px;font-size:10px}
   .expiry-alert{padding:9px;gap:6px;max-height:150px;overflow:auto}
   .expiry-alert b{width:100%}
-  .public-table{max-height:calc(100vh - 260px)!important;border-radius:8px}
+  .public-table{height:calc(100vh - 145px)!important;max-height:calc(100vh - 145px)!important;border-radius:8px}
   .public-table table{font-size:11px!important}
   .public-table th{font-size:10px!important;padding:8px 5px!important}
   .public-table td{padding:7px 5px!important;height:46px!important}
@@ -43266,7 +43267,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
             setPublicExpiryFilter("all");
           }, children: "\u6E05\u9664\u7BE9\u9078" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "public-zoom-tools", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", onClick: () => setPublicZoom((value) => Math.max(75, value - 10)), children: "\uFF0D\u7E2E\u5C0F" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", onClick: () => setPublicZoom((value) => Math.max(25, value - 10)), children: "\uFF0D\u7E2E\u5C0F" }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("b", { children: [
               publicZoom,
               "%"
@@ -46389,9 +46390,9 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       records = displayedRecords;
       showAreaGroups = true;
     }
-    return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: `table-wrap ${publicMode ? "public-table" : ""} ${dailyMode ? "daily-table" : ""} ${activeLead ? "active-lead-table" : ""}`, style: publicMode ? { zoom: zoom / 100 } : void 0, onScroll: (event) => publicMode && setPublicScrollLeft(event.currentTarget.scrollLeft), children: [
+    return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: `table-wrap ${publicMode ? "public-table" : ""} ${dailyMode ? "daily-table" : ""} ${activeLead ? "active-lead-table" : ""}`, onScroll: (event) => publicMode && setPublicScrollLeft(event.currentTarget.scrollLeft), children: [
       publicMode && publicScrollLeft > 80 && hoveredPublicCase && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "public-floating-case-name", style: { left: publicScrollLeft + 8, top: hoveredPublicCaseTop }, children: hoveredPublicCase }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("table", { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("table", { style: publicMode ? { zoom: zoom / 100 } : void 0, children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("thead", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { children: [
           columns.map((k, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { className: `${i < stickyCount ? `sticky sticky-${i}` : ""} col-${k}`, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ColumnLabel, { column: k }) }, k)),
           showPpt && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
