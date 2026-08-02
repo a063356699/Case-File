@@ -40768,7 +40768,12 @@ ${String(ex)}`);
     const [year, month, day] = week.meeting.split("-").map(Number);
     return `${year - 1911}\u5E74${month}\u6708${day}\u65E5`;
   };
-  var isPptWeek = (value = "", week = currentPptWeek()) => /^\d{4}-\d{2}-\d{2}$/.test(value) && value >= week.start && value <= week.end;
+  var isPptWeek = (value = "", week = currentPptWeek()) => {
+    const date = normalizeDateInput(String(value || ""));
+    const start = normalizeDateInput(String(week.start || ""));
+    const end = normalizeDateInput(String(week.end || ""));
+    return !!date && !!start && !!end && date >= start && date <= end;
+  };
   var pptStoredList = (value = "") => {
     try {
       const parsed = JSON.parse(value || "[]");
@@ -41743,7 +41748,11 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
     const currentListQuery = tab === "archive" ? archiveQuery : query;
     const shown = (tab === "archive" ? archived : sortActiveRecords(active)).filter((r) => (!showingFollowUpOnly || tab !== "active" || r.showingFollowUp === "\u66AB\u505C\u5E36\u770B\uFF0F\u7B49\u5F85\u696D\u52D9\u56DE\u8986") && (!websiteFilter || tab === "archive" || (websiteFilter === "missing_sales_book_date" ? !r.salesBookDate : websiteFilter === "missing_book_location_date" ? !r.bookLocationDate : websiteFilter === "missing_photo_info" ? !r.photoInfo && !r.photos?.length : websiteFilter === "all" ? requiredWebsiteKeys(r).some((key) => isWebsiteMissing(r, key)) : isWebsiteMissing(r, websiteFilter))) && (tab !== "active" || matchesAdvancedFilter(r)) && [r.propertyNo, r.area, r.caseName, r.address, r.developer].join(" ").toLowerCase().includes(currentListQuery.toLowerCase()));
     const defaultSelectedPptWeek = pptWeekOf(pptWeekStart);
-    const selectedPptWeek = { start: pptCustomStart || defaultSelectedPptWeek.start, end: pptCustomEnd || defaultSelectedPptWeek.end, meeting: pptCustomMeeting || defaultSelectedPptWeek.meeting };
+    const selectedPptWeek = {
+      start: normalizeDateInput(pptCustomStart) || defaultSelectedPptWeek.start,
+      end: normalizeDateInput(pptCustomEnd) || defaultSelectedPptWeek.end,
+      meeting: normalizeDateInput(pptCustomMeeting) || defaultSelectedPptWeek.meeting
+    };
     const resetPptCustomWeek = () => {
       setPptCustomStart("");
       setPptCustomEnd("");
