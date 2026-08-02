@@ -41037,11 +41037,18 @@ ${String(ex)}`);
     const caseNameNote = [existingNote, ...additions].filter(Boolean).join("\u3000");
     return { ...record, caseName: cleanCaseName, caseNameNote, caseNameNoteModifiedAt: record.caseNameNoteModifiedAt || (/* @__PURE__ */ new Date()).toISOString() };
   };
+  var districtFromAddress = (value = "") => {
+    const address = String(value || "").replace(/臺/g, "\u53F0").trim();
+    const tainan = address.match(/^台南市(.{1,4}?區)/)?.[1];
+    if (tainan) return tainan;
+    const outside = address.match(/^(.{2,3}?)(?:市|縣)(.{1,4}?)(?:區|鄉|鎮|市)/);
+    return outside ? `${outside[1]}${outside[2]}` : "";
+  };
   var applySourceLayoutFixes = (records) => records.map((record) => {
     record = moveRestoredTextToCaseNote(clearImportedLandLabels(clearImportedContractChangePlaceholders(record)));
     const normalizedReportDate = normalizeDateInput(String(record.reportDate || ""));
     const normalizedUpdateDate = normalizeDateInput(String(record.updateDate || ""));
-    record = { ...record, ...validDate(normalizedReportDate) ? { reportDate: normalizedReportDate } : {}, ...validDate(normalizedUpdateDate) ? { updateDate: normalizedUpdateDate } : {} };
+    record = { ...record, ...!String(record.area || "").trim() && districtFromAddress(record.address) ? { area: districtFromAddress(record.address) } : {}, ...validDate(normalizedReportDate) ? { reportDate: normalizedReportDate } : {}, ...validDate(normalizedUpdateDate) ? { updateDate: normalizedUpdateDate } : {} };
     if (String(record.propertyNo || "").trim().toUpperCase() === "LG0107941" && String(record.depth || "").replace(/\s/g, "") !== "45.8") record = { ...record, depth: "45.8" };
     if (String(record.propertyNo || "").trim().toUpperCase() === "LG0113338" && String(record.depth || "").replace(/\s/g, "") !== "33.5") record = { ...record, depth: "33.5" };
     if (String(record.propertyNo || "").trim().toUpperCase() === "LG0118365" && String(record.depth || "").trim()) record = { ...record, depth: "" };
@@ -41070,7 +41077,7 @@ ${String(ex)}`);
   var areaCategory = (record) => {
     const address = String(record.address || "").trim();
     if (!address.includes("\u53F0\u5357\u5E02")) return "\u5916\u7E23\u5E02";
-    const district = address.match(/台南市([^市縣區]{1,4}區)/)?.[1] || "";
+    const district = districtFromAddress(address);
     return ["\u5317\u5340", "\u6771\u5340", "\u4E2D\u897F\u5340", "\u5357\u5340", "\u6C38\u5EB7\u5340", "\u5B89\u5E73\u5340", "\u4EC1\u5FB7\u5340", "\u5B89\u5357\u5340"].includes(district) ? district : "\u5176\u4ED6\u5340";
   };
   var activeGroupKeyFixed = (record) => {
@@ -46002,9 +46009,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: r.propertyNo || "\u2014" })
     ] });
     if (k === "area") {
-      const address = String(r.address || "").trim();
-      const match = address.match(/^(.{2,3}?)(?:市|縣)([^市縣區]{1,4})區/);
-      const district = match ? match[1] === "\u53F0\u5357" ? `${match[2]}\u5340` : `${match[1]}${match[2]}` : address.match(/^([^市縣區]{1,4}區)/)?.[1] || "";
+      const district = districtFromAddress(r.address) || String(r.area || "").trim();
       const lineSize = Array.from(district).length === 4 ? 2 : 4;
       return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "area-lines", children: chunkText(district, lineSize).map((line, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: line }, `${line}-${index}`)) });
     }
