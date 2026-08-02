@@ -41863,7 +41863,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
         a.remove();
       }, 3e3);
     };
-    const exportJson = () => download(`\u7269\u4EF6\u7E3D\u8868_${today()}.json`, new Blob([JSON.stringify({ version: 2, exportedAt: (/* @__PURE__ */ new Date()).toISOString(), settings: { personnel: settings.personnel, bookReviewCurrentDate: settings.bookReviewCurrentDate, bookReviewNextDate: settings.bookReviewNextDate }, records }, null, 2)], { type: "application/json" }));
+    const exportJson = () => download(`\u7269\u4EF6\u7E3D\u8868_${today()}.json`, new Blob([JSON.stringify({ version: 2, exportedAt: (/* @__PURE__ */ new Date()).toISOString(), settings: { personnel: settings.personnel, bookReviewCurrentDate: settings.bookReviewCurrentDate, bookReviewNextDate: settings.bookReviewNextDate, expiry591: settings.expiry591, expiry5168: settings.expiry5168, brokerExpiry: settings.brokerExpiry }, records }, null, 2)], { type: "application/json" }));
     const importJson = (e) => {
       const file = e.target.files?.[0];
       if (!file) return;
@@ -41931,8 +41931,9 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
                 savedSettings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}");
               } catch {
               }
-              localStorage.setItem(SETTINGS_KEY, JSON.stringify({ ...savedSettings, ...Array.isArray(data.settings.personnel) ? { personnel: mergeSuppliedPersonnel(data.settings.personnel) } : {}, ...data.settings.bookReviewCurrentDate ? { bookReviewCurrentDate: data.settings.bookReviewCurrentDate } : {}, ...data.settings.bookReviewNextDate ? { bookReviewNextDate: data.settings.bookReviewNextDate } : {} }));
+              localStorage.setItem(SETTINGS_KEY, JSON.stringify({ ...savedSettings, ...Array.isArray(data.settings.personnel) ? { personnel: mergeSuppliedPersonnel(data.settings.personnel) } : {}, ...data.settings.bookReviewCurrentDate ? { bookReviewCurrentDate: data.settings.bookReviewCurrentDate } : {}, ...data.settings.bookReviewNextDate ? { bookReviewNextDate: data.settings.bookReviewNextDate } : {}, ...data.settings.expiry591 ? { expiry591: data.settings.expiry591 } : {}, ...data.settings.expiry5168 ? { expiry5168: data.settings.expiry5168 } : {}, ...data.settings.brokerExpiry ? { brokerExpiry: data.settings.brokerExpiry } : {} }));
             }
+            localStorage.setItem("property-desk-import-prefer-local-once", "1");
             localStorage.setItem("property-desk-official-merge-2026-07-30-v6", "1");
             localStorage.setItem("property-desk-app-restore-216-v3", "1");
             alert(`JSON \u532F\u5165\u5B8C\u6210\uFF0C\u5171 ${nextRecords.length} \u7B46\uFF0C\u73FE\u5728\u91CD\u65B0\u8F09\u5165\u3002`);
@@ -42264,7 +42265,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
     };
     const cloudData = () => ({
       records: records.map(({ photos, ...record }) => record),
-      settings: { personnel: settings.personnel, bookReviewCurrentDate: settings.bookReviewCurrentDate, bookReviewNextDate: settings.bookReviewNextDate },
+      settings: { personnel: settings.personnel, bookReviewCurrentDate: settings.bookReviewCurrentDate, bookReviewNextDate: settings.bookReviewNextDate, expiry591: settings.expiry591, expiry5168: settings.expiry5168, brokerExpiry: settings.brokerExpiry },
       intake: { raw: intakeRaw, drafts: intakeDrafts, selectedId: selectedIntakeId },
       tour: { date: tourDate, title: tourTitle, items: tourItems }
     });
@@ -42338,7 +42339,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
             });
             return [...map.values()];
           });
-          if (data.settings) setSettings((previous) => ({ ...previous, ...data.settings.bookReviewCurrentDate ? { bookReviewCurrentDate: data.settings.bookReviewCurrentDate } : {}, ...data.settings.bookReviewNextDate ? { bookReviewNextDate: data.settings.bookReviewNextDate } : {}, ...Array.isArray(data.settings.personnel) && data.settings.personnel.length > 0 ? { personnel: mergeSuppliedPersonnel(data.settings.personnel) } : {} }));
+          if (data.settings) setSettings((previous) => ({ ...previous, ...data.settings.bookReviewCurrentDate ? { bookReviewCurrentDate: data.settings.bookReviewCurrentDate } : {}, ...data.settings.bookReviewNextDate ? { bookReviewNextDate: data.settings.bookReviewNextDate } : {}, ...data.settings.expiry591 ? { expiry591: data.settings.expiry591 } : {}, ...data.settings.expiry5168 ? { expiry5168: data.settings.expiry5168 } : {}, ...data.settings.brokerExpiry ? { brokerExpiry: data.settings.brokerExpiry } : {}, ...Array.isArray(data.settings.personnel) && data.settings.personnel.length > 0 ? { personnel: mergeSuppliedPersonnel(data.settings.personnel) } : {} }));
           if (data.intake) {
             setIntakeRaw(data.intake.raw || "");
             setIntakeDrafts(data.intake.drafts || []);
@@ -42379,7 +42380,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       localStorage.removeItem(CLOUD_SESSION_KEY);
       flash("\u5DF2\u767B\u51FA\u96F2\u7AEF\u5E33\u865F");
     };
-    const cloudSnapshot = JSON.stringify({ records, personnel: settings.personnel, intakeRaw, intakeDrafts, selectedIntakeId, tourDate, tourTitle, tourItems });
+    const cloudSnapshot = JSON.stringify({ records, personnel: settings.personnel, expiry591: settings.expiry591, expiry5168: settings.expiry5168, brokerExpiry: settings.brokerExpiry, intakeRaw, intakeDrafts, selectedIntakeId, tourDate, tourTitle, tourItems });
     (0, import_react.useEffect)(() => {
       if (!cloudSyncBaselineRef.current) {
         cloudSyncBaselineRef.current = cloudSnapshot;
@@ -42401,6 +42402,10 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       const pullKey = `${settings.supabaseUrl}|${settings.supabaseTable}|${settings.supabaseRecord}|${cloudSession.email || "signed-in"}`;
       if (cloudAutoPullRef.current === pullKey) return;
       cloudAutoPullRef.current = pullKey;
+      if (localStorage.getItem("property-desk-import-prefer-local-once") === "1") {
+        localStorage.removeItem("property-desk-import-prefer-local-once");
+        return;
+      }
       void supabasePull(true);
     }, [cloudSession?.accessToken, cloudSession?.email, settings.supabaseUrl, settings.supabaseKey, settings.supabaseTable, settings.supabaseRecord]);
     const openPublic = () => {
