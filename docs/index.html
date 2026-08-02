@@ -1001,6 +1001,40 @@ body{background:#f8fbfe!important;color:#405064!important}
   color:#17242a!important;
   font-weight:400!important;
 }
+
+/* Keep the primary active-property fields (sequence through notes) in one screen. */
+.active-lead-table table{font-size:11px!important}
+.active-lead-table th{font-size:10.5px!important;padding-left:2px!important;padding-right:2px!important}
+.active-lead-table td{padding-left:2px!important;padding-right:2px!important}
+.active-lead-table th.col-displaySequence,.active-lead-table td.col-displaySequence{width:30px!important;min-width:30px!important;max-width:30px!important}
+.active-lead-table th.col-type,.active-lead-table td.col-type{width:42px!important;min-width:42px!important;max-width:42px!important}
+.active-lead-table th.col-propertyNo,.active-lead-table td.col-propertyNo{width:72px!important;min-width:72px!important;max-width:72px!important;font-size:10px!important}
+.active-lead-table th.col-entrustStart,.active-lead-table td.col-entrustStart,.active-lead-table th.col-entrustEnd,.active-lead-table td.col-entrustEnd{width:62px!important;min-width:62px!important;max-width:62px!important}
+.active-lead-table th.col-area,.active-lead-table td.col-area{width:44px!important;min-width:44px!important;max-width:44px!important}
+.active-lead-table th.col-caseName,.active-lead-table td.col-caseName{width:150px!important;min-width:150px!important;max-width:150px!important}
+.active-lead-table th.col-address,.active-lead-table td.col-address{width:170px!important;min-width:170px!important;max-width:170px!important;white-space:normal!important;line-height:1.15!important}
+.active-lead-table th.col-price,.active-lead-table td.col-price{width:48px!important;min-width:48px!important;max-width:48px!important}
+.active-lead-table th.col-direction,.active-lead-table td.col-direction{width:36px!important;min-width:36px!important;max-width:36px!important}
+.active-lead-table th.col-age,.active-lead-table td.col-age{width:46px!important;min-width:46px!important;max-width:46px!important}
+.active-lead-table th.col-floor,.active-lead-table td.col-floor{width:38px!important;min-width:38px!important;max-width:38px!important}
+.active-lead-table th.col-layout,.active-lead-table td.col-layout{width:44px!important;min-width:44px!important;max-width:44px!important}
+.active-lead-table th.col-indoorPing,.active-lead-table td.col-indoorPing,.active-lead-table th.col-buildingPing,.active-lead-table td.col-buildingPing,.active-lead-table th.col-landPing,.active-lead-table td.col-landPing{width:48px!important;min-width:48px!important;max-width:48px!important}
+.active-lead-table th.col-parking,.active-lead-table td.col-parking{width:48px!important;min-width:48px!important;max-width:48px!important}
+.active-lead-table th.col-managementFee,.active-lead-table td.col-managementFee{width:60px!important;min-width:60px!important;max-width:60px!important}
+.active-lead-table th.col-key,.active-lead-table td.col-key{width:50px!important;min-width:50px!important;max-width:50px!important}
+.active-lead-table th.col-currentState,.active-lead-table td.col-currentState{width:40px!important;min-width:40px!important;max-width:40px!important}
+.active-lead-table th.col-road,.active-lead-table td.col-road,.active-lead-table th.col-frontage,.active-lead-table td.col-frontage,.active-lead-table th.col-depth,.active-lead-table td.col-depth{width:35px!important;min-width:35px!important;max-width:35px!important}
+.active-lead-table th.col-zoning,.active-lead-table td.col-zoning{width:60px!important;min-width:60px!important;max-width:60px!important;white-space:normal!important}
+.active-lead-table th.col-coverageFar,.active-lead-table td.col-coverageFar{width:70px!important;min-width:70px!important;max-width:70px!important;white-space:normal!important}
+.active-lead-table th.col-developer,.active-lead-table td.col-developer{width:62px!important;min-width:62px!important;max-width:62px!important}
+.active-lead-table th.col-notes,.active-lead-table td.col-notes{width:90px!important;min-width:90px!important;max-width:90px!important;white-space:normal!important;line-height:1.15!important}
+.active-lead-table .sticky-0{left:0!important;width:30px!important;min-width:30px!important;max-width:30px!important}
+.active-lead-table .sticky-1{left:30px!important;width:42px!important;min-width:42px!important;max-width:42px!important}
+.active-lead-table .sticky-2{left:72px!important;width:72px!important;min-width:72px!important;max-width:72px!important}
+.active-lead-table .sticky-3{left:144px!important;width:62px!important;min-width:62px!important;max-width:62px!important}
+.active-lead-table .sticky-4{left:206px!important;width:62px!important;min-width:62px!important;max-width:62px!important}
+.active-lead-table .sticky-5{left:268px!important;width:44px!important;min-width:44px!important;max-width:44px!important}
+.active-lead-table .sticky-6{left:312px!important;width:150px!important;min-width:150px!important;max-width:150px!important}
 @media(max-width:1100px){
   .topbar>.brand{display:flex!important}
   .topbar>.brand h1{font-size:20px!important}
@@ -46143,6 +46177,11 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     if (column === "price") return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
       "\u7E3D\u50F9",
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "\uFF08\u842C\uFF09" })
+    ] });
+    if (column === "coverageFar") return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+      "\u5EFA\u853D\u7387",
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("br", {}),
+      "\u5BB9\u7A4D\u7387"
     ] });
     if (column === "reportDate") return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
       "\u9032\u6848\u5831\u4EF6",
