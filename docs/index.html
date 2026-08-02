@@ -1101,6 +1101,7 @@ body{background:#f8fbfe!important;color:#405064!important}
 .active-lead-table td.col-key,.active-lead-table td.col-key .key-cell-value{font-size:10.5px!important;line-height:1.08!important}
 .active-lead-table td.col-key .key-cell-value.key-text-medium{font-size:9.5px!important}
 .active-lead-table td.col-key .key-cell-value.key-text-long{font-size:8.5px!important;line-height:1.02!important}
+.active-lead-table td.col-notes,.active-lead-table td.col-notes .notes-display,.active-lead-table td.col-notes .natural-notes-display{font-size:11.5px!important;line-height:1.2!important}
 </style>
 </head>
 <body>
@@ -46454,7 +46455,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     ] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: "\u2014" });
     if (k === "managementFee") {
       const rawFee = String(r.managementFee || "").trim();
-      const fee = rawFee.replace(/\s*[\/／]\s*月\s*$/, "").trim();
+      const fee = rawFee.replace(/元/g, "").replace(/\s*[\/／]\s*月\s*$/, "").trim();
       return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: rawFee && !fee ? "\u7121" : !fee ? "\u2014" : /^(?:無|\$?0(?:\.0+)?(?:元)?)$/.test(fee) ? "\u7121" : `${fee}/\u6708` });
     }
     if (k === "notes") {
