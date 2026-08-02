@@ -41393,6 +41393,10 @@ ${String(ex)}`);
           document.documentElement.style.setProperty("--active-list-width", `${Math.round(bounds.width)}px`);
         }
         document.body.classList.toggle("active-list-stuck", shouldStick);
+        if (shouldStick) {
+          const actualToolbarBottom = toolbar.getBoundingClientRect().bottom;
+          document.documentElement.style.setProperty("--active-table-top", `${Math.ceil(actualToolbarBottom)}px`);
+        }
       };
       const frame = requestAnimationFrame(updateStickyListOffsets);
       const observer = new ResizeObserver(updateStickyListOffsets);
