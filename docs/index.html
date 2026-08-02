@@ -40611,13 +40611,6 @@ ${String(ex)}`);
     const elapsed = Math.floor((Date.parse(`${today()}T00:00:00`) - Date.parse(`${BOOK_REVIEW_START}T00:00:00`)) / 864e5);
     return elapsed < 0 ? "" : `global-${Math.floor(elapsed / 60)}`;
   };
-  var bookReviewCycleStart = () => {
-    const elapsed = Math.floor((Date.parse(`${today()}T00:00:00`) - Date.parse(`${BOOK_REVIEW_START}T00:00:00`)) / 864e5);
-    if (elapsed < 0) return "";
-    const date = /* @__PURE__ */ new Date(`${BOOK_REVIEW_START}T00:00:00`);
-    date.setDate(date.getDate() + Math.floor(elapsed / 60) * 60);
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-  };
   var addDaysIso = (iso, days) => {
     if (!iso) return "";
     const date = /* @__PURE__ */ new Date(`${iso}T00:00:00`);
@@ -41292,7 +41285,7 @@ ${String(ex)}`);
   function Home() {
     const [internalView] = (0, import_react.useState)(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("view") === "internal");
     const [records, setRecords] = (0, import_react.useState)([]);
-    const [settings, setSettings] = (0, import_react.useState)({ personnel: [], supabaseUrl: CASE_FILE_SUPABASE_URL, supabaseKey: CASE_FILE_SUPABASE_PUBLISHABLE_KEY, supabaseTable: CASE_FILE_SUPABASE_TABLE, supabaseRecord: "main" });
+    const [settings, setSettings] = (0, import_react.useState)({ personnel: [], supabaseUrl: CASE_FILE_SUPABASE_URL, supabaseKey: CASE_FILE_SUPABASE_PUBLISHABLE_KEY, supabaseTable: CASE_FILE_SUPABASE_TABLE, supabaseRecord: "main", bookReviewCurrentDate: "2026-07-30", bookReviewNextDate: "2026-09-30" });
     developerPersonnelForDisplay = settings.personnel;
     const [cloudSession, setCloudSession] = (0, import_react.useState)(null);
     const [tab, setTab] = (0, import_react.useState)("active");
@@ -41750,7 +41743,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
         a.remove();
       }, 3e3);
     };
-    const exportJson = () => download(`\u7269\u4EF6\u7E3D\u8868_${today()}.json`, new Blob([JSON.stringify({ version: 2, exportedAt: (/* @__PURE__ */ new Date()).toISOString(), settings: { personnel: settings.personnel }, records }, null, 2)], { type: "application/json" }));
+    const exportJson = () => download(`\u7269\u4EF6\u7E3D\u8868_${today()}.json`, new Blob([JSON.stringify({ version: 2, exportedAt: (/* @__PURE__ */ new Date()).toISOString(), settings: { personnel: settings.personnel, bookReviewCurrentDate: settings.bookReviewCurrentDate, bookReviewNextDate: settings.bookReviewNextDate }, records }, null, 2)], { type: "application/json" }));
     const importJson = (e) => {
       const file = e.target.files?.[0];
       if (!file) return;
@@ -41812,13 +41805,13 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
               nextRecords = [...map.values()];
             }
             localStorage.setItem(STORAGE_KEY, JSON.stringify(nextRecords));
-            if (!Array.isArray(data) && Array.isArray(data.settings?.personnel)) {
+            if (!Array.isArray(data) && data.settings) {
               let savedSettings = {};
               try {
                 savedSettings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}");
               } catch {
               }
-              localStorage.setItem(SETTINGS_KEY, JSON.stringify({ ...savedSettings, personnel: mergeSuppliedPersonnel(data.settings.personnel) }));
+              localStorage.setItem(SETTINGS_KEY, JSON.stringify({ ...savedSettings, ...Array.isArray(data.settings.personnel) ? { personnel: mergeSuppliedPersonnel(data.settings.personnel) } : {}, ...data.settings.bookReviewCurrentDate ? { bookReviewCurrentDate: data.settings.bookReviewCurrentDate } : {}, ...data.settings.bookReviewNextDate ? { bookReviewNextDate: data.settings.bookReviewNextDate } : {} }));
             }
             localStorage.setItem("property-desk-official-merge-2026-07-30-v6", "1");
             localStorage.setItem("property-desk-app-restore-216-v3", "1");
@@ -42151,7 +42144,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
     };
     const cloudData = () => ({
       records: records.map(({ photos, ...record }) => record),
-      settings: { personnel: settings.personnel },
+      settings: { personnel: settings.personnel, bookReviewCurrentDate: settings.bookReviewCurrentDate, bookReviewNextDate: settings.bookReviewNextDate },
       intake: { raw: intakeRaw, drafts: intakeDrafts, selectedId: selectedIntakeId },
       tour: { date: tourDate, title: tourTitle, items: tourItems }
     });
@@ -42225,7 +42218,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
             });
             return [...map.values()];
           });
-          if (data.settings?.personnel) setSettings((previous) => ({ ...previous, personnel: mergeSuppliedPersonnel(data.settings.personnel) }));
+          if (data.settings) setSettings((previous) => ({ ...previous, ...data.settings.bookReviewCurrentDate ? { bookReviewCurrentDate: data.settings.bookReviewCurrentDate } : {}, ...data.settings.bookReviewNextDate ? { bookReviewNextDate: data.settings.bookReviewNextDate } : {}, ...data.settings.personnel ? { personnel: mergeSuppliedPersonnel(data.settings.personnel) } : {} }));
           if (data.intake) {
             setIntakeRaw(data.intake.raw || "");
             setIntakeDrafts(data.intake.drafts || []);
@@ -42503,7 +42496,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
           item.date < today() ? "\uFF08\u5DF2\u5230\u671F\uFF09" : item.leadDays === 30 ? "\uFF0830\u5929\u5167\uFF09" : "\uFF08\u660E\u5929\u5230\u671F\uFF09"
         ] }, item.label))
       ] }),
-      !internalView && tab === "active" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PropertyBookReview, { records: active, submit: submitBookReviews }),
+      !internalView && tab === "active" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PropertyBookReview, { records: active, settings, submit: submitBookReviews }),
       !internalView && tab === "active" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(BusinessReportInbox, { records: active, resolve: resolveMonthlyPropertyReport, archive: (record, status) => setArchiveChoice({ record, status, date: today() }) }),
       showingPublic && publicUnlocked && publicScope === "mine" && publicPerson && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(MonthlyPropertyReport, { records: myProperties, person: publicPerson, submit: submitMonthlyPropertyReport }),
       tab === "settings" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SettingsPanel, { settings, setSettings, supabasePush, supabasePull, cloudSession, supabaseSignIn, supabaseSignOut }) : tab === "intake" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(IntakePanel, { raw: intakeRaw, setRaw: setIntakeRaw, drafts: intakeDrafts, draft: intakeDraft, selectDraft: selectIntakeDraft, deleteDraft: removeIntakeDraft, analyze: analyzeIntake, addManualDraft: addManualIntakeDraft, updateValue: updateIntakeValue, clear: () => setIntakeRaw(""), confirmIntake }) : tab === "tour" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TourPlanner, { records, drafts: intakeDrafts, items: tourItems, setItems: setTourItems, editRecord: setEditing, updateDraftCaseName: updateIntakeDraftCaseName, tourDate, setTourDate, tourTitle, setTourTitle, notify: flash, complete: (date, recordIds, draftIds) => {
@@ -45932,8 +45925,10 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     }
     return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: cellValue(r, k) || "\u2014" });
   }
-  function PropertyBookReview({ records, submit }) {
-    const reviewCycle = bookReviewCycleKey(), cycleStart = bookReviewCycleStart(), nextCheckDate = addDaysIso(cycleStart, 60);
+  function PropertyBookReview({ records, settings, submit }) {
+    const cycleStart = normalizeDateInput(settings.bookReviewCurrentDate || "") || "2026-07-30";
+    const nextCheckDate = normalizeDateInput(settings.bookReviewNextDate || "") || "2026-09-30";
+    const reviewCycle = today() >= cycleStart ? `book-${cycleStart}` : "";
     const dueRecords = reviewCycle ? records.filter((record) => normalizeDateInput(record.bookLocationDate || "") !== today()) : [];
     const [values, setValues] = (0, import_react.useState)({});
     const [scannerOpen, setScannerOpen] = (0, import_react.useState)(false);
@@ -46959,6 +46954,19 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => void supabaseSignIn(cloudEmail, cloudPassword, false), children: "\u767B\u5165" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "primary", onClick: () => void supabaseSignIn(cloudEmail, cloudPassword, true), children: "\u7B2C\u4E00\u6B21\u4F7F\u7528\uFF1A\u8A3B\u518A\u96F2\u7AEF\u5E33\u865F" })
             ] })
+          ] })
+        ] })
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("article", { className: "panel book-review-settings-panel", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { children: "\u7269\u4EF6\u672C\u78BA\u8A8D" }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-grid", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "field", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u672C\u6B21\u78BA\u8A8D\u65E5\u671F" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", inputMode: "numeric", value: displayRocDate(settings.bookReviewCurrentDate || "2026-07-30"), onChange: (e) => set("bookReviewCurrentDate", e.target.value), onBlur: (e) => set("bookReviewCurrentDate", normalizeDateInput(e.target.value) || "2026-07-30"), placeholder: "115/7/30" })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "field", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u4E0B\u6B21\u78BA\u8A8D\u65E5\u671F" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", inputMode: "numeric", value: displayRocDate(settings.bookReviewNextDate || "2026-09-30"), onChange: (e) => set("bookReviewNextDate", e.target.value), onBlur: (e) => set("bookReviewNextDate", normalizeDateInput(e.target.value) || "2026-09-30"), placeholder: "115/9/30" })
           ] })
         ] })
       ] }),
