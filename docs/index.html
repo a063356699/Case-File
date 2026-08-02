@@ -40706,6 +40706,38 @@ ${String(ex)}`);
     };
   };
   var suppliedPersonnel = [];
+  var contactDirectoryOrder = [
+    "\u738B\u555F\u5C71",
+    "\u738B\u82E5\u82B8",
+    "\u738B\u4FDE\u4E91",
+    "\u738B\u59A4\u5BB8",
+    "\u6797\u7389\u74B0",
+    "\u6797\u986F\u660C",
+    "\u6797\u59FF\u5C91",
+    "\u6797\u4FCA\u5609",
+    "\u9673\u5E1D\u5143",
+    "\u9673\u73EE\u83C1",
+    "\u9673\u4FE1\u826F",
+    "\u90ED\u5EFA\u4F51",
+    "\u8B1D\u99A8\u5100",
+    "\u8521\u5B87\u80B2",
+    "\u7530\u5EAD\u5B87",
+    "\u5F35\u5C0F\u66FC",
+    "\u674E\u4EAB\u5DA7",
+    "\u694A\u5DE7\u7504",
+    "\u962E\u6C0F\u91D1\u6C34",
+    "\u67EF\u80B2\u5A77",
+    "\u4F59\u6C9B\u81FB",
+    "\u8449\u7FCA\u7DC1",
+    "\u5B8B\u559C\u8F1D",
+    "\u5433\u4F69\u73B2",
+    "\u9EC3\u6587\u6210",
+    "\u8CB7\u6DD1\u73B2",
+    "\u5289\u52DD\u4EC1",
+    "\u674E\u9E97\u5349"
+  ];
+  var contactDirectorySequence = new Map(contactDirectoryOrder.map((name, index) => [name, String(index + 1)]));
+  var contactDirectoryPhoneOverrides = { \u90ED\u5EFA\u4F51: "0938-839-308" };
   var mergeSuppliedPersonnel = (people) => {
     const remaining = people.slice();
     const supplied = suppliedPersonnel.map((entry) => {
@@ -40713,7 +40745,11 @@ ${String(ex)}`);
       const existing = index >= 0 ? remaining.splice(index, 1)[0] : void 0;
       return { ...existing || {}, id: existing?.id || `staff-${entry.nationalId}`, ...entry, role: ["\u674E\u9E97\u5349", "\u65BD\u7D39\u8587"].includes(entry.name) ? "\u79D8\u66F8" : existing?.role || "\u696D\u52D9", status: "\u5728\u8077" };
     });
-    return [...supplied, ...remaining];
+    return [...supplied, ...remaining].map((person) => ({
+      ...person,
+      sequence: contactDirectorySequence.get(person.name.trim()) || person.sequence,
+      phone: contactDirectoryPhoneOverrides[person.name.trim()] || person.phone
+    }));
   };
   var recordUpdateHistory = (record) => {
     try {
@@ -43689,41 +43725,10 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     ] });
   }
   function ContactDirectory({ people }) {
-    const contactOrder = [
-      "\u738B\u555F\u5C71",
-      "\u738B\u82E5\u82B8",
-      "\u738B\u4FDE\u4E91",
-      "\u738B\u59A4\u5BB8",
-      "\u6797\u7389\u74B0",
-      "\u6797\u986F\u660C",
-      "\u6797\u59FF\u5C91",
-      "\u6797\u4FCA\u5609",
-      "\u9673\u5E1D\u5143",
-      "\u9673\u73EE\u83C1",
-      "\u9673\u4FE1\u826F",
-      "\u90ED\u5EFA\u4F51",
-      "\u8B1D\u99A8\u5100",
-      "\u8521\u5B87\u80B2",
-      "\u7530\u5EAD\u5B87",
-      "\u5F35\u5C0F\u66FC",
-      "\u674E\u4EAB\u5DA7",
-      "\u694A\u5DE7\u7504",
-      "\u962E\u6C0F\u91D1\u6C34",
-      "\u67EF\u80B2\u5A77",
-      "\u4F59\u6C9B\u81FB",
-      "\u8449\u7FCA\u7DC1",
-      "\u5B8B\u559C\u8F1D",
-      "\u5433\u4F69\u73B2",
-      "\u9EC3\u6587\u6210",
-      "\u8CB7\u6DD1\u73B2",
-      "\u5289\u52DD\u4EC1",
-      "\u674E\u9E97\u5349"
-    ];
-    const phoneOverrides = { \u90ED\u5EFA\u4F51: "0938-839-308" };
     const bySequence = /* @__PURE__ */ new Map();
-    contactOrder.forEach((name, index) => {
+    contactDirectoryOrder.forEach((name, index) => {
       const person = people.find((item) => item.name.trim() === name);
-      if (person) bySequence.set(index + 1, { ...person, sequence: String(index + 1), phone: phoneOverrides[name] || person.phone });
+      if (person) bySequence.set(index + 1, { ...person, sequence: String(index + 1), phone: contactDirectoryPhoneOverrides[name] || person.phone });
     });
     const groupStarts = [1, 12, 23];
     return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", { className: "contact-directory", children: [
