@@ -709,6 +709,7 @@ body.active-list-stuck .active-list-page>.active-lead-table{position:sticky!impo
 .active-lead-table table>thead{position:sticky!important;top:0!important;z-index:35!important;background:#e5ebe6!important}.active-lead-table table>thead>tr{position:relative!important;z-index:35!important}.active-lead-table table>thead th{background:#e5ebe6!important;box-shadow:0 1px 0 #8fa69e!important}
 .record-edit-grid>.edit-parkingOwnership,.record-edit-grid>.edit-parkingMethod,.record-edit-grid>.edit-parkingNo{grid-column:span 40!important}.record-edit-grid>.edit-parkingOwnership .pill-options,.record-edit-grid>.edit-parkingMethod .pill-options{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.record-edit-grid>.edit-parkingOwnership .pill-options button,.record-edit-grid>.edit-parkingMethod .pill-options button{min-width:0;padding:7px 5px;text-align:center}
 .record-edit-grid>.edit-parkingOwnership .pill-options{grid-template-columns:repeat(3,minmax(0,1fr))!important}.record-edit-grid>.edit-parkingMethod .pill-options{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+.active-lead-table td.col-road .road-lines>.measure-number,.active-lead-table td.col-frontage .measure-value>.measure-number,.active-lead-table td.col-depth .measure-value>.measure-number{display:block!important}.active-lead-table tr:has(td.col-road .measure-number:nth-child(2)) td,.active-lead-table tr:has(td.col-frontage .measure-number:nth-child(2)) td,.active-lead-table tr:has(td.col-depth .measure-number:nth-child(2)) td{height:50px!important;max-height:50px!important}
 </style>
 </head>
 <body>
@@ -40903,6 +40904,7 @@ ${String(ex)}`);
     if (String(record.propertyNo || "").trim().toUpperCase() === "LG0118365" && String(record.depth || "").trim()) record = { ...record, depth: "" };
     if (String(record.propertyNo || "").trim().toUpperCase() === "EG0464136") record = { ...record, road: "6", frontage: "32", depth: "80" };
     if (String(record.propertyNo || "").trim().toUpperCase() === "LA0063144") record = { ...record, zoning: "\u5546\u696D\u5340", coverage: "60/80", far: "360/320", coverageCombined: "60/360\u300180/320" };
+    if (String(record.propertyNo || "").trim().toUpperCase() === "LA0064339") record = { ...record, depth: "61.5/66.8" };
     if (String(record.propertyNo || "").trim().toUpperCase() === "EG0390636") record = { ...record, parkingOwnership: "\u56FA\u5B9A\u8ECA\u4F4D", parkingMethod: "\u5761\u9053/\u5E73\u9762", parkingNo: "B1 7\u865F", parking: "\u5761\u9053/\u5E73\u9762B1 7\u865F" };
     if (String(record.propertyNo || "").trim().toUpperCase() === "EG0438672") record = { ...record, parkingOwnership: "\u7121\u8ECA\u4F4D", parkingMethod: "", parkingType: "", parkingNo: "", parking: "\u7121\u8ECA\u4F4D" };
     const sourceBalcony = sourceBalconyFixes[String(record.propertyNo || "").trim().toUpperCase()];
