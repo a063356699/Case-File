@@ -814,8 +814,29 @@ button:hover,.file-button:hover{border-color:#9fbad0;box-shadow:0 2px 8px #7895a
 .business-report-title-row{display:flex;align-items:center;gap:9px;flex-wrap:wrap}.business-report-developer-filter{display:flex;gap:4px;flex-wrap:wrap}.business-report-developer-filter button{border:1px solid #ecc5b8;border-radius:999px;padding:3px 8px;background:#fff;color:#9a4135;font-size:11px;font-weight:750}.business-report-developer-filter button.selected{background:#9a4135;border-color:#9a4135;color:#fff}
 .book-record-line{display:flex!important;align-items:center;gap:6px;min-width:0;color:#526a75!important;font-size:11px!important;font-weight:400!important;line-height:1.35;white-space:nowrap}.book-record-line span:first-child{flex:none}.book-record-line span:last-child{min-width:0;overflow:hidden;text-overflow:ellipsis}.book-review-side{display:flex;flex:none;flex-direction:column;align-items:flex-end;justify-content:center;gap:2px}.book-current-note{display:block!important;margin:0!important;color:#2878ad!important;font-size:11px!important;font-weight:400!important;line-height:1.25;white-space:nowrap}
 .internal-public-app .login-card p{color:#0066cc}
-.internal-public-app .login-card small{display:block;margin-top:8px;font-size:0;color:#c93636;line-height:1.5}
-.internal-public-app .login-card small::after{content:"連城不動產開發有限公司物件資料屬公司重要資訊，僅限內部使用；未經授權，禁止外傳、外流、轉載或提供他人使用。";font-size:11px;font-weight:400}
+.internal-public-app .login-card small{display:block;margin-top:8px;font-size:11px;color:#c93636;line-height:1.5;font-weight:400}
+.public-expiry-filters{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px}
+.public-expiry-filters button{padding:7px 12px;border-radius:999px;font-size:13px;background:#fff}
+.public-expiry-filters button.selected{color:#fff;background:#de6b6b!important;border-color:#de6b6b!important}
+
+@media(max-width:700px){
+  .public-shell{padding:14px 10px!important}
+  .public-head{align-items:stretch!important;gap:10px;flex-direction:column}
+  .public-head>button{align-self:flex-end;padding:7px 11px}
+  .logged-person{font-size:13px}
+  .public-head h2{font-size:23px}
+  .scope-tabs{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px!important}
+  .scope-tabs button{width:100%;padding:8px 5px;font-size:13px;white-space:nowrap}
+  .public-expiry-filters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+  .public-expiry-filters button{padding:7px 3px;font-size:11px;white-space:nowrap}
+  .expiry-alert{padding:9px;gap:6px;max-height:150px;overflow:auto}
+  .expiry-alert b{width:100%}
+  .public-table{max-height:calc(100vh - 260px)!important;border-radius:8px}
+  .public-table table{font-size:11px!important}
+  .public-table th{font-size:10px!important;padding:8px 5px!important}
+  .public-table td{padding:7px 5px!important;height:46px!important}
+  .login-card{padding:24px 18px!important;margin:22px auto!important}
+}
 .website-list-value .website-inline-note{display:block!important;margin-top:2px!important;color:#2878ad!important;font-size:11px!important;font-weight:500!important;line-height:1.25!important;white-space:nowrap!important}
 .daily-table td.col-area,.daily-table th.col-area{vertical-align:middle!important;text-align:center!important}.daily-table td.col-area .area-lines{height:100%;min-height:0!important;justify-content:center!important;align-items:center!important;text-align:center!important}
 .public-table td.col-area,.public-table th.col-area{vertical-align:middle!important;text-align:center!important}.public-table td.col-area .area-lines{height:100%;min-height:0!important;justify-content:center!important;align-items:center!important;text-align:center!important}
@@ -41871,6 +41892,7 @@ ${String(ex)}`);
     const [publicUnlocked, setPublicUnlocked] = (0, import_react.useState)(false);
     const [publicPersonId, setPublicPersonId] = (0, import_react.useState)("");
     const [publicScope, setPublicScope] = (0, import_react.useState)("mine");
+    const [publicExpiryFilter, setPublicExpiryFilter] = (0, import_react.useState)("all");
     const [password, setPassword] = (0, import_react.useState)("");
     const [notice, setNotice] = (0, import_react.useState)("");
     const [intakeRaw, setIntakeRaw] = (0, import_react.useState)("");
@@ -42938,6 +42960,19 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
     const contactPeople = sortPeopleBySequence(settings.personnel.filter((person) => person.status === "\u5728\u8077" && person.name.trim() && String(person.phone || "").trim()));
     const myProperties = active.filter((r) => nameMatches(r.developer, publicPerson?.name || ""));
     const expiryAlerts = myProperties.filter((r) => daysUntil(r.entrustEnd) >= 0 && daysUntil(r.entrustEnd) <= 30);
+    const publicBaseRecords = publicScope === "mine" ? myProperties : active;
+    const publicTableRecords = publicExpiryFilter === "all" ? publicBaseRecords : publicBaseRecords.filter((record) => {
+      const remaining = daysUntil(record.entrustEnd);
+      return remaining >= 0 && remaining <= Number(publicExpiryFilter);
+    });
+    const publicExpiry15Count = publicBaseRecords.filter((record) => {
+      const remaining = daysUntil(record.entrustEnd);
+      return remaining >= 0 && remaining <= 15;
+    }).length;
+    const publicExpiry30Count = publicBaseRecords.filter((record) => {
+      const remaining = daysUntil(record.entrustEnd);
+      return remaining >= 0 && remaining <= 30;
+    }).length;
     const intakeDraft = intakeDrafts.find((d) => d.id === selectedIntakeId) || null;
     const analyzeIntake = () => {
       const parsed = parseIntakes(intakeRaw);
@@ -43125,7 +43160,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "\u8ACB\u8F38\u5165\u696D\u52D9\u4EBA\u54E1\u8EAB\u5206\u8B49\u5B57\u865F\u9032\u5165" }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "password", value: password, onChange: (e) => setPassword(e.target.value), onKeyDown: (e) => e.key === "Enter" && unlock(), placeholder: "\u8ACB\u8F38\u5165\u5BC6\u78BC" }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "primary wide", onClick: unlock, children: "\u9032\u5165\u5167\u90E8\u7E3D\u8868" }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "\u5BC6\u78BC\u53EF\u7531\u7BA1\u7406\u7AEF\u300C\u8A2D\u5B9A\u300D\u4FEE\u6539" })
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "\u9023\u57CE\u4E0D\u52D5\u7522\u958B\u767C\u6709\u9650\u516C\u53F8\u7269\u4EF6\u8CC7\u6599\u5C6C\u516C\u53F8\u91CD\u8981\u8CC7\u8A0A\uFF0C\u50C5\u9650\u5167\u90E8\u4F7F\u7528\uFF1B\u672A\u7D93\u6388\u6B0A\uFF0C\u7981\u6B62\u5916\u50B3\u3001\u5916\u6D41\u3001\u8F49\u8F09\u6216\u63D0\u4F9B\u4ED6\u4EBA\u4F7F\u7528\u3002" })
       ] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "public-head", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
@@ -43152,6 +43187,17 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
             setPublicPersonId("");
           }, children: "\u9396\u5B9A\u756B\u9762" })
         ] }),
+        (publicScope === "mine" || publicScope === "all") && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "public-expiry-filters", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: publicExpiryFilter === "all" ? "selected" : "", onClick: () => setPublicExpiryFilter("all"), children: "\u5168\u90E8" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { className: publicExpiryFilter === "15" ? "selected" : "", onClick: () => setPublicExpiryFilter("15"), children: [
+            "15\u5929\u5167\u5230\u671F ",
+            publicExpiry15Count
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { className: publicExpiryFilter === "30" ? "selected" : "", onClick: () => setPublicExpiryFilter("30"), children: [
+            "30\u5929\u5167\u5230\u671F ",
+            publicExpiry30Count
+          ] })
+        ] }),
         publicScope === "activity" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(DailyActivity, { records, compact: true }) : publicScope === "contacts" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ContactDirectory, { people: contactPeople }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
           publicScope === "mine" && expiryAlerts.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "expiry-alert", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u59D4\u8A17\u5230\u671F\u63D0\u9192" }),
@@ -43163,7 +43209,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
               daysUntil(r.entrustEnd) <= 15 ? "\uFF0815\u5929\u5167\uFF09" : "\uFF0830\u5929\u5167\uFF09"
             ] }, r.id))
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PropertyTable, { records: publicScope === "mine" ? myProperties : active, columns: publicColumns, publicMode: true, expiryAnnotation: publicScope === "mine", onEdit: () => {
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PropertyTable, { records: publicTableRecords, columns: publicColumns, publicMode: true, expiryAnnotation: publicScope === "mine", onEdit: () => {
           }, onArchive: () => {
           }, onRestore: () => {
           }, onRemove: () => {
