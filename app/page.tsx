@@ -10,7 +10,7 @@ import { sourceBalconyFixes } from "./source-balcony-fixes";
 type RecordItem = Record<string, string> & { id: string; photos: string[]; archived?: string };
 type AdvancedFilter = Record<string, string>;
 type Person = { id: string; sequence?: string; name: string; nationalId: string; phone?: string; role?: "業務" | "秘書"; status: "在職" | "離職" };
-type Settings = { personnel: Person[]; staffName?: string; staffId?: string; supabaseUrl: string; supabaseKey: string; supabaseTable: string; supabaseRecord: string; expiry591?: string; expiry5168?: string; brokerExpiry?: string };
+type Settings = { personnel: Person[]; staffName?: string; staffId?: string; supabaseUrl: string; supabaseKey: string; supabaseTable: string; supabaseRecord: string; expiry591?: string; expiry5168?: string; brokerExpiry?: string; bookReviewCurrentDate?: string; bookReviewNextDate?: string };
 type CloudSession = { accessToken: string; refreshToken?: string; email?: string };
 type IntakeData = { id: string; values: Record<string, string>; propertyKind: "房屋" | "純土地"; createdAt: string; raw?: string; linkedRecordId?: string; enteredAt?: string; groupViewDate?: string };
 type TourItem = { id: string; recordId?: string; sequence: string; temporary?: boolean; data: RecordItem };
@@ -32,7 +32,7 @@ const newId = () => globalThis.crypto?.randomUUID?.() || `id-${Date.now()}-${Mat
 
 const fields = [
   ["propertyNo", "物件編號"], ["type", "種類"], ["contractType", "契種"], ["status", "物件狀態"],
-  ["area", "地區"], ["caseName", "案名"], ["caseNameNote", "案名後方備註"], ["address", "地址"], ["price", "開價（萬）"], ["reducedPrice", "降價/調價(萬)"],
+  ["area", "地區"], ["caseName", "案名"], ["caseNameNote", "案名後方備註"], ["showingFollowUpDueDate", "暫停帶看追蹤日期"], ["address", "地址"], ["price", "開價（萬）"], ["reducedPrice", "降價/調價(萬)"],
   ["direction", "朝向"], ["builtYear", "完工年份（民國／西元）"], ["floor", "樓層"], ["layout", "格局"],
   ["indoorPing", "室內坪"], ["buildingPing", "建坪"], ["landPing", "地坪"], ["parking", "車位"],
   ["managementFee", "管理費（／月）"], ["key", "鑰匙"], ["currentState", "現況"], ["road", "臨路（米）"],
@@ -58,7 +58,7 @@ const fields = [
 const recordEditOrder = [
   "propertyNo", "type", "contractType", "status", "currentState", "key",
   "entrustStart", "entrustEnd", "contractChangeNo", "reportDate", "updateDate", "groupViewDate",
-  "area", "caseName", "caseNameNote", "address",
+  "area", "caseName", "caseNameNote", "showingFollowUpDueDate", "address",
   "developer", "price", "completionDate", "direction",
   "buildingPing", "indoorPing", "landPing", "road", "frontage", "depth", "zoning", "coverage",
   "titleFloor", "currentFloor", "layout", "managementMethod", "managementFee",
@@ -68,29 +68,30 @@ const recordEditOrder = [
   "landSharePing", "registryBuildingPing", "registryIndoorPing", "buildingOtherPing", "mainBuildingPing",
   "auxiliaryBuildingPing", "commonAreaPing", "basementPing",
   "buildingName", "unitsPerFloor", "elevatorCount", "generalLandValueTax", "selfUseLandValueTax",
-  "parkingOwnership", "parkingType", "parkingMethod", "parkingNo",
+  "parkingOwnership", "parkingMethod", "parkingNo",
   "market", "park", "school", "feature1", "feature2", "feature3", "feature4", "attentionNotes",
   "coverHeader", "coverBottomPrice", "coverBottomSource", "coverBottomPercent", "coverPercentSource", "coverChangeNo", "coverChangeDate", "coverNoChange", "coverChangePurpose",
   "landTitleCount", "buildingTitleCount", "titleUndertaking", "zoningDocumentStatus", "authorizationStatus", "authorizationCopyType",
   "websiteHeader",
   "yes319", "houseinfor", "homeWeb", "platform591", "price5168", "windowAd", "led", "goldExposure",
 ] as const;
-const recordEditLabels: Record<string, string> = { price: "開價（萬）", contractChangeNo: "契變編號", direction: "朝向", builtYear: "完工年份（民國／西元）", managementFee: "管理費（/月）", coverage: "建蔽率%/容積率%", notes: "內部備註欄", areaPaste: "房管面積資料貼串", attentionNotes: "彩色表注意事項", windowAd: "櫥窗（專）", led: "LED（專）", price5168: "5168網（專）", colorSheetHeader: "彩色表補充資料", coverHeader: "新進資料封面", websiteHeader: "網站編號" };
+const recordEditLabels: Record<string, string> = { price: "開價（萬）", contractChangeNo: "契變編號", direction: "朝向", builtYear: "完工年份（民國／西元）", managementFee: "管理費（/月）", coverage: "建蔽率%/容積率%", parkingMethod: "車位型態", notes: "內部備註欄", areaPaste: "房管面積資料貼串", attentionNotes: "彩色表注意事項", windowAd: "櫥窗（專）", led: "LED（專）", price5168: "5168網（專）", colorSheetHeader: "彩色表補充資料", coverHeader: "新進資料封面", websiteHeader: "網站編號" };
 const recordEditClass = (key: string) => `edit-cell edit-${key}`;
 
-const dateKeys = new Set(["entrustStart", "entrustEnd", "reportDate", "updateDate", "groupViewDate", "bookLocationDate", "salesBookDate", "coverChangeDate", "platform591Expiry", "price5168Expiry", "goldExposureExpiry"]);
+const dateKeys = new Set(["entrustStart", "entrustEnd", "reportDate", "updateDate", "groupViewDate", "showingFollowUpDueDate", "bookLocationDate", "salesBookDate", "coverChangeDate", "platform591Expiry", "price5168Expiry", "goldExposureExpiry"]);
 const selectOptions: Record<string, string[]> = {
   status: ["委託中", "售出下架", "成交下架", "下架洽開發"],
   type: ["公寓：5樓含以下（無電梯）", "華廈：10樓含以下（有電梯）", "大樓：11樓含以上（有電梯）", "透天", "廠房", "土地"],
   currentState: ["空屋", "自住", "出租中"],
 };
 
-const activeColumns = ["propertyNo", "entrustStart", "entrustEnd", "area", "caseName", "address", "type", "price", "direction", "age", "floor", "layout", "indoorPing", "buildingPing", "landPing", "parking", "managementFee", "key", "currentState", "road", "frontage", "depth", "zoning", "coverageFar", "developer", "reportDate", "updateDate", "groupViewDate", "bookLocation", "salesBook", "notes", "photoInfo", "platform591", "yes319", "houseinfor", "windowAd", "led", "homeWeb", "price5168", "goldExposure"];
+const activeColumns = ["displaySequence", "type", "propertyNo", "entrustStart", "entrustEnd", "area", "caseName", "address", "price", "direction", "age", "floor", "layout", "indoorPing", "buildingPing", "landPing", "parking", "managementFee", "key", "currentState", "road", "frontage", "depth", "zoning", "coverageFar", "developer", "notes", "reportDate", "updateDate", "groupViewDate", "bookLocation", "salesBook", "photoInfo", "platform591", "yes319", "houseinfor", "windowAd", "led", "homeWeb", "price5168", "goldExposure"];
 const archiveColumns = ["propertyNo", "entrustPeriod", "caseName", "address", "price", "key", "housingRemoval", "bookLocation", "salesBook", "photoInfo", "platform591", "yes319", "houseinfor", "windowAd", "led", "homeWeb", "price5168", "goldExposure"];
-const publicColumns = ["propertyNo", "area", "caseName", "address", "price", "direction", "age", "floor", "layout", "indoorPing", "buildingPing", "landPing", "parking", "managementFee", "key", "currentState", "road", "frontage", "depth", "zoning", "coverageFar", "developer", "reportDate", "updateDate", "groupViewDate", "photoInfo"];
+const publicColumns = ["propertyNo", "area", "caseName", "address", "price", "direction", "age", "floor", "layout", "indoorPing", "buildingPing", "landPing", "parking", "managementFee", "key", "currentState", "road", "frontage", "depth", "zoning", "coverageFar", "developer", "notes", "reportDate", "updateDate", "groupViewDate", "photoInfo"];
 const dailyColumns = publicColumns.filter(column => !["propertyNo", "photoInfo", "contractType", "status"].includes(column));
 const labels: Record<string, string> = Object.fromEntries(fields);
 Object.assign(labels, { age: "屋齡", bookLocation: "物件本位置", housingRemoval: "房管下架", entrustPeriod: "委託期間", archived: "封存日期", coverageFar: "建蔽率／容積率" });
+labels.displaySequence = "序";
 
 const archiveWebsiteTasks = [
   ["platform591", "591"], ["price5168", "5168"], ["goldExposure", "黃金曝光"], ["windowAd", "櫥窗（專）"],
@@ -102,10 +103,30 @@ const archiveCleanupTasks = (record: RecordItem) => [
   { key: "salesBookDownDate", label: "銷售本下架" },
   ...archiveWebsiteTasks.filter(([field]) => record.bookLocationType !== "旁5" && record[`${field}None`] !== "1" && String(record[field] || "").trim() && record[field] !== "旁5").map(([field, label]) => ({ key: `${field}DownDate`, label: `${label}下架` })),
 ];
+const dealCompletionTasks = [
+  ["dealCardsPrintedDate", "列印紅卡、粉卡"],
+  ["dealFacebookPostedDate", "臉書PO網"],
+  ["dealPerformanceReportedDate", "房管報業績"],
+  ["dealSellerPayoutAppliedDate", "申請賣方出款"],
+  ["dealPropertyCompletedDate", "成交物件製作"],
+] as const;
 
 const blankRecord = (): RecordItem => ({ ...Object.fromEntries(fields.map(([k]) => [k, ""])), id: newId(), photos: [], status: "委託中", bookLocationType: "架上", salesBook: "製作" });
 const blankAdvancedFilter = (): AdvancedFilter => Object.fromEntries(["propertyNo", "entrustStartFrom", "entrustStartTo", "entrustEndFrom", "entrustEndTo", "caseName", "address", "type", "priceFrom", "priceTo", "direction", "ageFrom", "ageTo", "floor", "rooms", "halls", "baths", "indoorFrom", "indoorTo", "landFrom", "landTo", "buildingFrom", "buildingTo", "parking", "key", "currentState", "roadFrom", "roadTo", "frontageFrom", "frontageTo", "depthFrom", "depthTo", "zoning", "developer", "reportFrom", "reportTo", "updateFrom", "updateTo", "groupFrom", "groupTo", "bookFrom", "bookTo", "salesBook", "salesFrom", "salesTo", "photoInfo", "platform591", "yes319", "houseinfor", "windowAd", "led", "homeWeb", "price5168", "goldExposure"].map(key => [key, ""]));
 const filterNumber = (value: unknown, last = false) => { const values = String(value ?? "").replace(/,/g, "").match(/-?\d+(?:\.\d+)?/g) || []; const text = last ? values.at(-1) : values[0]; return text === undefined ? NaN : Number(text); };
+const pingFieldKeys = ["indoorPing", "buildingPing", "landPing", "registryBuildingPing", "registryIndoorPing", "mainBuildingPing", "auxiliaryBuildingPing", "commonAreaPing", "buildingOtherPing", "basementPing", "landSharePing"] as const;
+const formatPingValue = (value: unknown) => {
+  const text = String(value ?? "").trim();
+  if (!text) return "";
+  const matched = text.match(/^(-?\d+(?:\.\d+)?)\s*(?:坪)?$/);
+  if (!matched) return text;
+  const number = Number(matched[1]);
+  return Number.isFinite(number) ? String(Math.round((number + Number.EPSILON) * 1000) / 1000) : text;
+};
+const normalizeRecordPings = (record: RecordItem): RecordItem => ({
+  ...record,
+  ...Object.fromEntries(pingFieldKeys.map(key => [key, formatPingValue(record[key])])),
+});
 const filterInRange = (value: unknown, from = "", to = "", last = false) => { const number = filterNumber(value, last); return (!from || (Number.isFinite(number) && number >= Number(from))) && (!to || (Number.isFinite(number) && number <= Number(to))); };
 const filterDateInRange = (value: unknown, from = "", to = "") => { const date = normalizeDateInput(String(value || "")); const start = normalizeDateInput(from) || from; const end = normalizeDateInput(to) || to; return (!start || (date && date >= start)) && (!end || (date && date <= end)); };
 const today = () => { const value = new Date(); return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(value.getDate()).padStart(2, "0")}`; };
@@ -135,6 +156,13 @@ const parseAreaPaste = (raw: string, record: RecordItem): RecordItem => {
   };
 };
 const suppliedPersonnel: Array<Pick<Person, "sequence" | "name" | "nationalId" | "phone">> = [];
+const contactDirectoryOrder = [
+  "王啟山", "王若芸", "王俞云", "王妤宸", "林玉環", "林顯昌", "林姿岑", "林俊嘉", "陳帝元", "陳珮菁", "陳信良",
+  "郭建佑", "謝馨儀", "蔡宇育", "田庭宇", "張小曼", "李享嶧", "楊巧甄", "阮氏金水", "柯育婷", "余沛臻", "葉翊緁",
+  "宋喜輝", "吳佩玲", "黃文成", "買淑玲", "劉勝仁", "李麗卉",
+];
+const contactDirectorySequence = new Map(contactDirectoryOrder.map((name, index) => [name, String(index + 1)]));
+const contactDirectoryPhoneOverrides: Record<string, string> = { 郭建佑: "0938-839-308" };
 const mergeSuppliedPersonnel = (people: Person[]) => {
   const remaining = people.slice();
   const supplied = suppliedPersonnel.map(entry => {
@@ -142,12 +170,17 @@ const mergeSuppliedPersonnel = (people: Person[]) => {
     const existing = index >= 0 ? remaining.splice(index, 1)[0] : undefined;
     return { ...(existing || {}), id: existing?.id || `staff-${entry.nationalId}`, ...entry, role: ["李麗卉", "施紹薇"].includes(entry.name) ? "秘書" as const : existing?.role || "業務" as const, status: "在職" as const };
   });
-  return [...supplied, ...remaining];
+  return [...supplied, ...remaining].map(person => ({
+    ...person,
+    sequence: contactDirectorySequence.get(person.name.trim()) || person.sequence,
+    phone: contactDirectoryPhoneOverrides[person.name.trim()] || person.phone,
+  }));
 };
 const recordUpdateHistory = (record: RecordItem): Record<string, string[]> => { try { return JSON.parse(record._updateHistory || "{}"); } catch { return {}; } };
 const dailyUpdateFields = (record: RecordItem, date: string) => (recordUpdateHistory(record)[date] || []).filter(key => key !== "groupViewDate");
 const websiteTrackingKeys = new Set(["platform591", "platform591Expiry", "platform591None", "price5168", "price5168Expiry", "price5168None", "goldExposure", "goldExposureExpiry", "goldExposureNone", "yes319", "yes319None", "houseinfor", "houseinforNone", "homeWeb", "homeWebNone", "windowAd", "windowAdNone", "led", "ledNone"]);
 const displayModifiedAt = (value = "") => { if (!value) return ""; const date = new Date(value); if (Number.isNaN(date.getTime())) return value; return `${date.getFullYear() - 1911}/${date.getMonth() + 1}/${date.getDate()} ${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`; };
+const displayHomeModifiedAt = (value = "") => { if (!value) return ""; const date = new Date(value); if (Number.isNaN(date.getTime())) return value; const weekdays = ["日", "一", "二", "三", "四", "五", "六"]; return `${date.getFullYear() - 1911}年${date.getMonth() + 1}月${date.getDate()}日 星期${weekdays[date.getDay()]} ${String(date.getHours()).padStart(2, "0")}點${String(date.getMinutes()).padStart(2, "0")}分${String(date.getSeconds()).padStart(2, "0")}秒`; };
 const withTrackedUpdate = (previous: RecordItem, next: RecordItem, date = today()) => {
   const ignored = new Set(["id", "updateDate", "lastModifiedAt", "groupViewDate", "_updateHistory", "_dailyAnnotation", "_dailyHighlight"]);
   const changed = Object.keys(next).filter(key => !ignored.has(key) && !websiteTrackingKeys.has(key) && String(previous[key] || "") !== String(next[key] || ""));
@@ -156,15 +189,38 @@ const withTrackedUpdate = (previous: RecordItem, next: RecordItem, date = today(
   history[date] = [...new Set([...(history[date] || []), ...changed])];
   return { ...next, updateDate: date, lastModifiedAt: new Date().toISOString(), _updateHistory: JSON.stringify(history) };
 };
-const currentPptWeek = () => { const now = new Date(); now.setHours(0, 0, 0, 0); const start = new Date(now); start.setDate(now.getDate() - ((now.getDay() + 1) % 7)); const end = new Date(start); end.setDate(start.getDate() + 6); const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; return { start: iso(start), end: iso(end) }; };
-const pptMeetingDateLabel = () => { const [year, month, day] = currentPptWeek().end.split("-").map(Number); const meeting = new Date(year, month - 1, day); meeting.setDate(meeting.getDate() + 3); return `${meeting.getFullYear() - 1911}年${meeting.getMonth() + 1}月${meeting.getDate()}日`; };
-const isCurrentPptWeek = (value = "") => { const { start, end } = currentPptWeek(); return /^\d{4}-\d{2}-\d{2}$/.test(value) && value >= start && value <= end; };
+const isoLocalDate = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+const pptWeekOf = (anchor = today()) => { const parsed = /^\d{4}-\d{2}-\d{2}$/.test(anchor) ? new Date(`${anchor}T00:00:00`) : new Date(); parsed.setHours(0, 0, 0, 0); const start = new Date(parsed); start.setDate(parsed.getDate() - ((parsed.getDay() + 1) % 7)); const end = new Date(start); end.setDate(start.getDate() + 6); const meeting = new Date(end); meeting.setDate(end.getDate() + 3); return { start: isoLocalDate(start), end: isoLocalDate(end), meeting: isoLocalDate(meeting) }; };
+const currentPptWeek = () => pptWeekOf(today());
+const displayPptWeekDate = (iso = "") => { const date = new Date(`${iso}T00:00:00`); if (!iso || Number.isNaN(date.getTime())) return "—"; return `${date.getFullYear() - 1911}/${date.getMonth() + 1}/${date.getDate()}(${["日", "一", "二", "三", "四", "五", "六"][date.getDay()]})`; };
+const displayPptWeekLabel = (week: ReturnType<typeof pptWeekOf>) => `${displayPptWeekDate(week.start)} ~ ${displayPptWeekDate(week.end)}於 ${displayPptWeekDate(week.meeting)} 報告`;
+const pptMeetingDateLabel = (week = currentPptWeek()) => { const [year, month, day] = week.meeting.split("-").map(Number); return `${year - 1911}年${month}月${day}日`; };
+const isPptWeek = (value = "", week = currentPptWeek()) => {
+  const date = normalizeDateInput(String(value || ""));
+  const start = normalizeDateInput(String(week.start || ""));
+  const end = normalizeDateInput(String(week.end || ""));
+  return !!date && !!start && !!end && date >= start && date <= end;
+};
+const pptStoredList = (value = "") => { try { const parsed = JSON.parse(value || "[]"); return Array.isArray(parsed) ? parsed : []; } catch { return []; } };
+const pptStoredChoices = (value = "") => { try { const parsed = JSON.parse(value || "{}"); return parsed && typeof parsed === "object" ? parsed : {}; } catch { return {}; } };
+const nextPptWeekStart = (start: string) => addDaysIso(start, 7);
+const belongsToPptWeek = (record: RecordItem, week: ReturnType<typeof pptWeekOf>) => isPptWeek(record.reportDate, week) || pptStoredList(record._pptExtraWeeks).includes(week.start);
+const excludedFromPptWeek = (record: RecordItem, weekStart: string) => pptStoredList(record._pptExcludedWeeks).includes(weekStart);
+const isCurrentPptWeek = (value = "") => isPptWeek(value, currentPptWeek());
 const pptIncluded = (record: RecordItem) => record.pptSelected === "1" || (record.pptSelected !== "0" && isCurrentPptWeek(record.reportDate));
 const pptCategory = (record: RecordItem) => record.pptCategory || (isCurrentPptWeek(record.reportDate) ? "本週進案" : "臨時新增");
 const validDate = (v = "") => !v || /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(v));
-const displayRocDate = (v = "") => { const m = v.match(/^(\d{4})-(\d{2})-(\d{2})$/); return m ? `${Number(m[1]) - 1911}/${Number(m[2])}/${Number(m[3])}` : v; };
+const displayRocDate = (v = "") => {
+  const text = String(v || "").trim();
+  const iso = text.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (iso) return `${Number(iso[1]) - 1911}/${Number(iso[2])}/${Number(iso[3])}`;
+  const roc = text.match(/^(\d{2,3})[.\/-](\d{1,2})[.\/-](\d{1,2})$/);
+  return roc ? `${Number(roc[1])}/${Number(roc[2])}/${Number(roc[3])}` : text;
+};
 const normalizeDateInput = (v = "") => {
-  const text = v.trim(); if (!text) return "";
+  let text = v.trim(); if (!text) return "";
+  const embeddedDate = text.match(/\d{2,4}[.\/-]\d{1,2}[.\/-]\d{1,2}/)?.[0];
+  if (embeddedDate) text = embeddedDate;
   if (/^\d{4}-\d{2}-\d{2}$/.test(text)) return validDate(text) ? text : text;
   const parts = text.replace(/[.\-]/g, "/").split("/").map(Number);
   let year: number, month: number, day: number;
@@ -191,7 +247,7 @@ const ageOf = (r: RecordItem) => {
 const locationOf = (r: RecordItem) => `${r.bookLocationDate ? r.bookLocationDate.slice(5).replace("-", "/") : ""}${r.bookLocationType || "架上"}`;
 const contractFromNo = (value: string) => ({ EG: "房屋一般約", EA: "房屋專約", LG: "土地一般約", LA: "土地專約", EB: "租賃一般約", EC: "租賃專約", RG: "預售一般約", RA: "預售專約" }[value.trim().toUpperCase().slice(0, 2)] || "");
 const typeShort = (value = "") => value.includes("廠房") || value.includes("廠辦") ? "廠房" : value.includes("透天") ? "透天" : value.includes("公寓") ? "公寓" : value.includes("華廈") || value.includes("華厦") || value.includes("華夏") ? "華廈" : value.includes("大樓") ? "大樓" : value.includes("土地") ? "土地" : value;
-const parkingShort = (value = "") => { if (!value) return ""; if (value.includes("無車位") || value.includes("無產權")) return "無"; if (value.includes("獨立車庫")) return "車庫"; const mechanical = value.match(/昇降[／/]機械\s*(.*)$/); if (mechanical) { const suffix = mechanical[1].replace(/[（(]\s*上層\s*[）)]/g, "上").replace(/[（(]\s*下層\s*[）)]/g, "下").replace(/號$/g, "").replace(/^[、，,：:\s]+/, ""); return `昇機${suffix}`; } const parts = value.split(/[／/]/).map(part => part.trim()).filter(Boolean); const number = (parts[parts.length - 1] || "").replace(/號$/, ""); if (value.includes("昇降") && value.includes("平面")) return `昇平${number}`; if (value.includes("坡道") && value.includes("平面")) return `坡平${number}`; return value; };
+const parkingShort = (value = "") => { if (!value) return ""; if (value.includes("無車位") || value.includes("無產權")) return "無"; if (value.includes("獨立車庫")) return "車庫"; const mechanical = value.match(/昇降[／/]機械\s*(.*)$/); if (mechanical) { const suffix = mechanical[1].replace(/[（(]\s*上層\s*[）)]/g, "上").replace(/[（(]\s*下層\s*[）)]/g, "下").replace(/號$/g, "").replace(/^[、，,：:\s]+/, ""); return `昇機${suffix}`; } const horizontalOrRampMechanical = value.match(/(平移|坡道)[／/]機械\s*(.*)$/); if (horizontalOrRampMechanical) { const suffix = horizontalOrRampMechanical[2].replace(/號$/g, "").replace(/^[、，,：:\s]+/, ""); return `${horizontalOrRampMechanical[1] === "平移" ? "平機" : "坡機"}${suffix}`; } const parts = value.split(/[／/]/).map(part => part.trim()).filter(Boolean); const number = (parts[parts.length - 1] || "").replace(/號$/, ""); if (value.includes("昇降") && value.includes("平面")) return `昇平${number}`; if (value.includes("坡道") && value.includes("平面")) return `坡平${number}`; return value; };
 const floorShort = (value = "") => {
   if (!value) return "";
   const normalized = value
@@ -285,13 +341,43 @@ const clearImportedContractChangePlaceholders = (record: RecordItem): RecordItem
   const cleared = Object.fromEntries(contractChangeKeys.filter(key => isImportedDashPlaceholder(record[key])).map(key => [key, ""]));
   return Object.keys(cleared).length ? { ...record, ...cleared } : record;
 };
+const normalizeCompleteDateInput = (value = "") => /^\d{2,4}[.\/-]\d{1,2}[.\/-]\d{2}$/.test(value.trim()) ? normalizeDateInput(value) : value;
 const clearImportedLandLabels = (record: RecordItem): RecordItem => {
   const landOnly = (value: unknown) => /^(?:土地|建地)+$/.test(String(value ?? "").replace(/[\s／/]/g, ""));
   const cleared = Object.fromEntries(["titleFloor", "currentFloor", "floor", "layout"].filter(key => landOnly(record[key])).map(key => [key, ""]));
   return Object.keys(cleared).length ? { ...record, ...cleared } : record;
 };
+const moveRestoredTextToCaseNote = (record: RecordItem): RecordItem => {
+  const caseName = String(record.caseName || "");
+  const restoredTexts = [...caseName.matchAll(/(?:\d{2,4}[.\/-]\d{1,2}[.\/-]\d{1,2}\s*)?重新上架/g)].map(match => match[0].trim());
+  if (!restoredTexts.length) return record;
+  const cleanCaseName = caseName.replace(/(?:\d{2,4}[.\/-]\d{1,2}[.\/-]\d{1,2}\s*)?重新上架/g, "").replace(/[　\s｜|·・—-]+$/g, "").trim();
+  const existingNote = String(record.caseNameNote || "").trim();
+  const additions = restoredTexts.filter(text => !existingNote.includes(text));
+  const caseNameNote = [existingNote, ...additions].filter(Boolean).join("　");
+  return { ...record, caseName: cleanCaseName, caseNameNote, caseNameNoteModifiedAt: record.caseNameNoteModifiedAt || new Date().toISOString() };
+};
+const districtFromAddress = (value = "") => {
+  const address = String(value || "").replace(/臺/g, "台").trim();
+  const tainan = address.match(/^台南市(.{1,4}?區)/)?.[1];
+  if (tainan) return tainan;
+  const outside = address.match(/^(.{2,3}?)(?:市|縣)(.{1,4}?)(?:區|鄉|鎮|市)/);
+  return outside ? `${outside[1]}${outside[2]}` : "";
+};
+const salesBookDateCorrections = new Set(["EG0522899", "EG0522916", "LG0132934", "EG0522910", "EG0522911", "EG0522912", "EG0522915", "EG0522908"]);
 const applySourceLayoutFixes = (records: RecordItem[]) => records.map(record => {
-  record = clearImportedLandLabels(clearImportedContractChangePlaceholders(record));
+  record = moveRestoredTextToCaseNote(clearImportedLandLabels(clearImportedContractChangePlaceholders(record)));
+  const normalizedReportDate = normalizeDateInput(String(record.reportDate || ""));
+  const normalizedUpdateDate = normalizeDateInput(String(record.updateDate || ""));
+  record = { ...record, ...(!String(record.area || "").trim() && districtFromAddress(record.address) ? { area: districtFromAddress(record.address) } : {}), ...(salesBookDateCorrections.has(String(record.propertyNo || "").trim()) && !record.salesBookDate ? { salesBookDate: "2026-07-31", salesBook: "製作" } : {}), ...(validDate(normalizedReportDate) ? { reportDate: normalizedReportDate } : {}), ...(validDate(normalizedUpdateDate) ? { updateDate: normalizedUpdateDate } : {}) };
+  if (String(record.propertyNo || "").trim().toUpperCase() === "LG0107941" && String(record.depth || "").replace(/\s/g, "") !== "45.8") record = { ...record, depth: "45.8" };
+  if (String(record.propertyNo || "").trim().toUpperCase() === "LG0113338" && String(record.depth || "").replace(/\s/g, "") !== "33.5") record = { ...record, depth: "33.5" };
+  if (String(record.propertyNo || "").trim().toUpperCase() === "LG0118365" && String(record.depth || "").trim()) record = { ...record, depth: "" };
+  if (String(record.propertyNo || "").trim().toUpperCase() === "EG0464136") record = { ...record, road: "6", frontage: "32", depth: "80" };
+  if (String(record.propertyNo || "").trim().toUpperCase() === "LA0063144") record = { ...record, zoning: "商業區", coverage: "60/80", far: "360/320", coverageCombined: "60/360、80/320" };
+  if (String(record.propertyNo || "").trim().toUpperCase() === "LA0064339") record = { ...record, depth: "61.5/66.8" };
+  if (String(record.propertyNo || "").trim().toUpperCase() === "EG0390636") record = { ...record, parkingOwnership: "固定車位", parkingMethod: "坡道/平面", parkingNo: "B1 7號", parking: "坡道/平面B1 7號" };
+  if (String(record.propertyNo || "").trim().toUpperCase() === "EG0438672") record = { ...record, parkingOwnership: "無車位", parkingMethod: "", parkingType: "", parkingNo: "", parking: "無車位" };
   const sourceBalcony = sourceBalconyFixes[String(record.propertyNo || "").trim().toUpperCase()];
   if (!sourceBalcony || typeShort(record.type) === "土地" || /^(?:LG|LA)/i.test(record.propertyNo || "")) return record;
   const balcony = sourceBalcony.match(/(\d+)\s*陽台/)?.[1];
@@ -317,7 +403,7 @@ const activeGroupKey = (record: RecordItem) => {
 const areaCategory = (record: RecordItem) => {
   const address = String(record.address || "").trim();
   if (!address.includes("台南市")) return "外縣市";
-  const district = address.match(/台南市([^市縣區]{1,4}區)/)?.[1] || "";
+  const district = districtFromAddress(address);
   return ["北區", "東區", "中西區", "南區", "永康區", "安平區", "仁德區", "安南區"].includes(district) ? district : "其他區";
 };
 const activeGroupKeyFixed = (record: RecordItem) => {
@@ -335,8 +421,42 @@ const sortActiveRecords = (items: RecordItem[]) => items.map((record, index) => 
   const date = String(a.record.reportDate || "9999-12-31").localeCompare(String(b.record.reportDate || "9999-12-31"), "zh-TW", { numeric: true });
   return date || a.index - b.index;
 }).map(item => item.record);
-const chunkText = (value = "", size = 16) => { const actualSize = size === 20 ? 25 : size === 15 ? 12 : size; const chars = Array.from(value); return Array.from({ length: Math.ceil(chars.length / actualSize) }, (_, index) => chars.slice(index * actualSize, index * actualSize + actualSize).join("")); };
-const developerNameLines = (value = "") => String(value || "").split(/[\/／,，、。]+/).map(name => name.trim()).filter(Boolean).map(name => name === "王總" ? "王啟山" : name);
+const chunkText = (value = "", size = 16) => { const actualSize = size === 20 ? 25 : size === 15 || size === 10 ? 12 : size; const chars = Array.from(value); return Array.from({ length: Math.ceil(chars.length / actualSize) }, (_, index) => chars.slice(index * actualSize, index * actualSize + actualSize).join("")); };
+let developerPersonnelForDisplay: Person[] = [];
+const knownDeveloperFullNames = ["王啟山", "王若芸", "王俞云", "王妤宸", "林玉環", "林顯昌", "林姿岑", "林俊嘉", "陳帝元", "陳珮菁", "陳信良", "郭建佑", "謝馨儀", "蔡宇育", "田庭宇", "吳佩玲", "黃文成", "買淑玲", "劉勝仁", "張小曼", "李享嶧", "阮氏金水", "宋喜輝", "柯育婷", "李麗卉", "施紹薇", "余沛臻", "葉翊緁", "楊巧甄"];
+const developerNameLines = (value = "", personnel: Person[] = []) => {
+  const rawConfiguredPeople = personnel.length ? personnel : developerPersonnelForDisplay;
+  const knownAliases = new Set(knownDeveloperFullNames.map(name => Array.from(name).slice(-2).join("")));
+  const configuredPeople = rawConfiguredPeople.filter(person => { const name = String(person.name || "").trim(); return Array.from(name).length >= 3 || !knownAliases.has(name); });
+  const configuredNames = new Set(configuredPeople.map(person => String(person.name || "").trim()).filter(Boolean));
+  const fallbackPeople = knownDeveloperFullNames.filter(name => !configuredNames.has(name)).map((name, index) => ({ id: `known-developer-${index}`, name, status: "在職" } as Person));
+  const people = [...configuredPeople, ...fallbackPeople];
+  const aliases = people.flatMap(person => { const full = String(person.name || "").trim(); const chars = Array.from(full); return full ? [{ token: full, full }, ...(chars.length >= 3 ? [{ token: chars.slice(-2).join(""), full }] : [])] : []; });
+  const expand = (segment: string) => {
+    if (segment === "王總") return ["王啟山"];
+    const chars = Array.from(segment); const names: string[] = []; let index = 0;
+    while (index < chars.length) {
+      const remaining = chars.slice(index).join("");
+      const candidates = aliases.filter(item => remaining.startsWith(item.token)).sort((a, b) => Array.from(b.token).length - Array.from(a.token).length);
+      if (candidates.length) {
+        const longest = Array.from(candidates[0].token).length;
+        const sameToken = candidates.filter(item => Array.from(item.token).length === longest && item.token === candidates[0].token);
+        const fullNames = [...new Set(sameToken.map(item => item.full))];
+        names.push(fullNames.length === 1 ? fullNames[0] : candidates[0].token);
+        index += longest;
+      } else {
+        names.push(chars.slice(index, index + 2).join(""));
+        index += Math.min(2, chars.length - index);
+      }
+    }
+    return names;
+  };
+  return String(value || "").split(/[\/／,，、。]+/).map(name => name.trim()).filter(Boolean).flatMap(expand);
+};
+const developerFullNameText = (value = "", personnel: Person[] = []) => developerNameLines(value, personnel).join("、");
+const stripRestoredDisplay = (value = "") => String(value || "").replace(/(?:\d{2,4}[.\/-]\d{1,2}[.\/-]\d{1,2}\s*)?重新上架/g, "").replace(/[　\s｜|·・—-]+$/g, "").trim();
+const archiveDisplayRecord = (record: RecordItem): RecordItem => ({ ...record, caseName: stripRestoredDisplay(record.caseName), caseNameNote: stripRestoredDisplay(record.caseNameNote) });
+const showingFollowUpDisplayRecord = (record: RecordItem): RecordItem => record;
 const sortPptRecords = (items: RecordItem[]) => items.map((record, index) => ({ record, index })).sort((a, b) => {
   const priority = (record: RecordItem) => /王啟山|蔡宇育/.test(record.developer || "") ? 0 : 1;
   const priorityDiff = priority(a.record) - priority(b.record); if (priorityDiff) return priorityDiff;
@@ -403,11 +523,13 @@ const directionShort = (value = "") => {
 const displayNoteSegments = (value = "") => String(value || "").split(/[；;]/).map(part => part.trim()).filter(part => part && !/^(?:0|無)$/.test(part)).map(part => part.includes("開發%") && !/^中人[:：]/.test(part) ? `中人:${part}` : part);
 const websiteCellDisplay = (record: RecordItem, key: string) => {
   const raw = String(record[key] || "").trim();
+  const down = record[`${key}DownDate`] ? `${displayRocDate(record[`${key}DownDate`])}下架` : "";
+  const price5168Listed = key === "price5168" ? raw.match(/^(\d{3,4}[.\/-]\d{1,2}[.\/-]\d{1,2})\s*(上)$/) : null;
+  if (price5168Listed) return { value: price5168Listed[1], notes: [price5168Listed[2], down].filter(Boolean) };
   const expiryKey = key === "platform591" ? "platform591Expiry" : key === "price5168" ? "price5168Expiry" : key === "goldExposure" ? "goldExposureExpiry" : "";
   const detectedExpiry = expiryKey ? websiteEffectiveDate(raw) : "";
   const expiryDate = expiryKey ? (record[expiryKey] || detectedExpiry) : "";
   const expiry = expiryDate ? `${displayRocDate(expiryDate)}到期` : "";
-  const down = record[`${key}DownDate`] ? `${displayRocDate(record[`${key}DownDate`])}下架` : "";
   const visibleRaw = raw.replace(/有效期\s*[:：]?\s*\d{3,4}[.\/-]\d{1,2}[.\/-]\d{1,2}/g, "").replace(/\d{3,4}[.\/-]\d{1,2}[.\/-]\d{1,2}\s*刊登到期/g, "").replace(/[\s,，;；]+$/g, "").trim();
   if (!visibleRaw || /^(?:無|旁5)$/i.test(visibleRaw)) return expiryDate ? { value: displayRocDate(expiryDate), notes: ["到期", down].filter(Boolean) } : { value: visibleRaw || "—", notes: [down].filter(Boolean) };
   const lines = visibleRaw.split(/\r?\n/).map(value => value.trim()).filter(Boolean);
@@ -443,7 +565,7 @@ function intakeToRecord(intake: IntakeData, existing?: RecordItem): RecordItem {
 
 function recordToIntake(record: RecordItem): IntakeData {
   const values: Record<string, string> = {
-    "時間戳記": new Date().toLocaleString("zh-TW"), "表單填寫人": "", "開發１/開發２": record.developer,
+    "時間戳記": new Date().toLocaleString("zh-TW"), "表單填寫人": "", "開發１/開發２": developerFullNameText(record.developer),
     "委託主約編號:": record.propertyNo, "委託開始 日期": displayRocDate(record.entrustStart), "委託結束 日期": displayRocDate(record.entrustEnd),
     "案名": record.caseName, "物件(完整)地址": record.address, "(物件)現況": record.currentState, "鑰匙位置": record.key,
     "物件型態": record.type, "契約開價 (萬)": record.price, "總建坪": record.buildingPing, "室內坪=(主建物+附屬建物)": record.indoorPing,
@@ -460,7 +582,7 @@ function recordToIntake(record: RecordItem): IntakeData {
 function syncRecordToDraftValues(draft: IntakeData, record: RecordItem): Record<string, string> {
   const values = { ...draft.values };
   const setValue = (needle: string, value: string, fallback = needle) => { const key = Object.keys(values).find(name => name.includes(needle)) || fallback; values[key] = value || ""; };
-  setValue("開發１/開發２", record.developer, "開發１/開發２"); setValue("委託主約編號", record.propertyNo, "委託主約編號:");
+  setValue("開發１/開發２", developerFullNameText(record.developer), "開發１/開發２"); setValue("委託主約編號", record.propertyNo, "委託主約編號:");
   setValue("委託開始", displayRocDate(record.entrustStart), "委託開始 日期"); setValue("委託結束", displayRocDate(record.entrustEnd), "委託結束 日期");
   setValue("案名", record.caseName); setValue("物件(完整)地址", record.address); setValue("(物件)現況", record.currentState); setValue("鑰匙位置", record.key);
   setValue("物件型態", record.type); setValue("契約開價", record.price, "契約開價 (萬)"); setValue("朝向", record.direction, "朝向 [房屋朝]"); setValue("總建坪", record.buildingPing); setValue("室內坪", record.indoorPing);
@@ -487,24 +609,35 @@ const sample: RecordItem = {
 export default function Home() {
   const [internalView] = useState(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("view") === "internal");
   const [records, setRecords] = useState<RecordItem[]>([]);
-  const [settings, setSettings] = useState<Settings>({ personnel: [], supabaseUrl: CASE_FILE_SUPABASE_URL, supabaseKey: CASE_FILE_SUPABASE_PUBLISHABLE_KEY, supabaseTable: CASE_FILE_SUPABASE_TABLE, supabaseRecord: "main" });
+  const [settings, setSettings] = useState<Settings>({ personnel: [], supabaseUrl: CASE_FILE_SUPABASE_URL, supabaseKey: CASE_FILE_SUPABASE_PUBLISHABLE_KEY, supabaseTable: CASE_FILE_SUPABASE_TABLE, supabaseRecord: "main", bookReviewCurrentDate: "2026-07-30", bookReviewNextDate: "2026-09-30" });
+  developerPersonnelForDisplay = settings.personnel;
   const [cloudSession, setCloudSession] = useState<CloudSession | null>(null);
   const [tab, setTab] = useState<"active" | "archive" | "activity" | "inventory" | "tour" | "keys" | "public" | "settings" | "intake">("active");
   const [query, setQuery] = useState("");
+  const [archiveQuery, setArchiveQuery] = useState("");
   const [missingDataReminderOpen, setMissingDataReminderOpen] = useState(false);
   const [websiteFilter, setWebsiteFilter] = useState("");
+  const [showingFollowUpOnly, setShowingFollowUpOnly] = useState(false);
+  const [showingFollowUpOpen, setShowingFollowUpOpen] = useState(false);
+  const [showingFollowUpRecordId, setShowingFollowUpRecordId] = useState("");
+  const [showingFollowUpStart, setShowingFollowUpStart] = useState(today());
+  const [showingFollowUpDue, setShowingFollowUpDue] = useState("");
   const [advancedFilterOpen, setAdvancedFilterOpen] = useState(false);
   const [advancedFilter, setAdvancedFilter] = useState<AdvancedFilter>(() => blankAdvancedFilter());
   const [editing, setEditing] = useState<RecordItem | null>(null);
   const [expiryReminderOpen, setExpiryReminderOpen] = useState(false);
   const [websitePoReminderOpen, setWebsitePoReminderOpen] = useState(false);
   const [archiveCleanupReminderOpen, setArchiveCleanupReminderOpen] = useState(false);
+  const [dealCompletionReminderOpen, setDealCompletionReminderOpen] = useState(false);
   const [printEditor, setPrintEditor] = useState<{ kind: "color"; data: RecordItem } | null>(null);
   const [restoreChoiceRecord, setRestoreChoiceRecord] = useState<RecordItem | null>(null);
   const [archiveChoice, setArchiveChoice] = useState<{ record: RecordItem; status: string; date: string } | null>(null);
   const [publicUnlocked, setPublicUnlocked] = useState(false);
   const [publicPersonId, setPublicPersonId] = useState("");
   const [publicScope, setPublicScope] = useState<"activity" | "mine" | "all" | "contacts">("mine");
+  const [publicExpiryFilter, setPublicExpiryFilter] = useState<"all" | "15" | "30">("all");
+  const [publicQuery, setPublicQuery] = useState("");
+  const [publicZoom, setPublicZoom] = useState(() => typeof window !== "undefined" && window.innerWidth <= 1100 ? 50 : 100);
   const [password, setPassword] = useState("");
   const [notice, setNotice] = useState("");
   const [intakeRaw, setIntakeRaw] = useState("");
@@ -513,6 +646,13 @@ export default function Home() {
   const [pptPickerOpen, setPptPickerOpen] = useState(false);
   const [pptShowExtras, setPptShowExtras] = useState(false);
   const [pptExtraIds, setPptExtraIds] = useState<string[]>([]);
+  const [pptWeekStart, setPptWeekStart] = useState(currentPptWeek().start);
+  const [pptWeekMenuOpen, setPptWeekMenuOpen] = useState(false);
+  const [pptCustomStart, setPptCustomStart] = useState("");
+  const [pptCustomEnd, setPptCustomEnd] = useState("");
+  const [pptCustomMeeting, setPptCustomMeeting] = useState("");
+  useEffect(() => { setPptCustomStart(""); setPptCustomEnd(""); setPptCustomMeeting(""); }, [pptWeekStart]);
+  useEffect(() => { if (!pptPickerOpen) { setPptCustomStart(""); setPptCustomEnd(""); setPptCustomMeeting(""); } }, [pptPickerOpen]);
   const [tourItems, setTourItems] = useState<TourItem[]>([]);
   const [tourDate, setTourDate] = useState(today());
   const [tourTitle, setTourTitle] = useState(`${displayRocDate(today()).replace(/\//g, ".")}團看`);
@@ -520,7 +660,111 @@ export default function Home() {
   const cloudSyncBaselineRef = useRef("");
   const cloudSyncTimerRef = useRef<number | null>(null);
   const cloudAutoPullRef = useRef("");
-  const cloudLastPullRef = useRef(0);
+  const editingInitialRef = useRef("");
+  const editingInitialIdRef = useRef("");
+  const personnelNameSignature = settings.personnel.map(person => `${person.id}:${person.name}:${person.status}`).join("|");
+  const developerNormalizationSignature = records.map(record => `${record.id}:${record.developer || ""}`).join("|");
+  const draftDeveloperSignature = intakeDrafts.map(draft => `${draft.id}:${intakeValue(draft.values, "開發１/開發２")}`).join("|");
+
+  useEffect(() => {
+    const usablePeople = settings.personnel.filter(person => String(person.name || "").trim());
+    setRecords(previous => { let changed = false; const next = previous.map(record => {
+      const developer = developerFullNameText(record.developer || "", usablePeople);
+      if (developer && developer !== record.developer) { changed = true; return { ...record, developer }; }
+      return record;
+    }); return changed ? next : previous; });
+    setIntakeDrafts(previous => { let anyChanged = false; const next = previous.map(draft => {
+      let changed = false;
+      const values = Object.fromEntries(Object.entries(draft.values).map(([key, value]) => {
+        if (!/開發/.test(key) || !String(value || "").trim()) return [key, value];
+        const fullName = developerFullNameText(String(value), usablePeople);
+        if (fullName && fullName !== value) changed = true;
+        return [key, fullName || value];
+      }));
+      if (changed) anyChanged = true;
+      return changed ? { ...draft, values } : draft;
+    }); return anyChanged ? next : previous; });
+    setEditing(previous => {
+      if (!previous) return previous;
+      const developer = developerFullNameText(previous.developer || "", usablePeople);
+      return developer && developer !== previous.developer ? { ...previous, developer } : previous;
+    });
+  }, [personnelNameSignature, developerNormalizationSignature, draftDeveloperSignature]);
+
+  useEffect(() => {
+    if (!editing) {
+      editingInitialRef.current = "";
+      editingInitialIdRef.current = "";
+      return;
+    }
+    const editingKey = `${editing.id}|${editing._intakeDraftId || ""}`;
+    if (editingInitialIdRef.current !== editingKey) {
+      editingInitialIdRef.current = editingKey;
+      editingInitialRef.current = JSON.stringify(editing);
+    }
+  }, [editing?.id, editing?._intakeDraftId]);
+
+  const requestCloseEditing = () => {
+    if (!editing) return;
+    if (editingInitialRef.current && JSON.stringify(editing) !== editingInitialRef.current) {
+      if (!confirm("資料尚未儲存，確定要直接關閉視窗嗎？")) return;
+    }
+    setEditing(null);
+  };
+
+  useEffect(() => {
+    let toolbarAnchor = 0;
+    const updateStickyListOffsets = () => {
+      const topbar = document.querySelector<HTMLElement>(".topbar");
+      const nav = document.querySelector<HTMLElement>(".topbar > .nav, body > .nav");
+      const toolbar = document.querySelector<HTMLElement>(".active-list-toolbar");
+      const content = document.querySelector<HTMLElement>(".active-list-page");
+      if (!toolbar) return;
+      const headerBottom = Math.max(topbar?.getBoundingClientRect().bottom || 0, nav?.getBoundingClientRect().bottom || 0);
+      const toolbarHeight = toolbar.getBoundingClientRect().height;
+      if (!document.body.classList.contains("active-list-stuck")) toolbarAnchor = toolbar.getBoundingClientRect().top + window.scrollY;
+      const alreadyStuck = document.body.classList.contains("active-list-stuck");
+      const stickPoint = toolbarAnchor - headerBottom;
+      const shouldStick = alreadyStuck ? window.scrollY > Math.max(0, stickPoint - 40) : window.scrollY >= stickPoint;
+      document.documentElement.style.setProperty("--active-toolbar-top", `${Math.round(headerBottom)}px`);
+      document.documentElement.style.setProperty("--active-table-top", `${Math.round(headerBottom + toolbarHeight)}px`);
+      if (content) {
+        const bounds = content.getBoundingClientRect();
+        document.documentElement.style.setProperty("--active-list-left", `${Math.round(bounds.left)}px`);
+        document.documentElement.style.setProperty("--active-list-width", `${Math.round(bounds.width)}px`);
+      }
+      document.body.classList.toggle("active-list-stuck", shouldStick);
+      if (shouldStick) {
+        const actualToolbarBottom = toolbar.getBoundingClientRect().bottom;
+        document.documentElement.style.setProperty("--active-table-top", `${Math.ceil(actualToolbarBottom)}px`);
+      }
+    };
+    const frame = requestAnimationFrame(updateStickyListOffsets);
+    const observer = new ResizeObserver(updateStickyListOffsets);
+    [document.querySelector(".topbar"), document.querySelector(".topbar > .nav, body > .nav"), document.querySelector(".active-list-toolbar")].forEach(element => element && observer.observe(element));
+    window.addEventListener("resize", updateStickyListOffsets);
+    window.addEventListener("scroll", updateStickyListOffsets, { passive: true });
+    return () => { cancelAnimationFrame(frame); observer.disconnect(); window.removeEventListener("resize", updateStickyListOffsets); window.removeEventListener("scroll", updateStickyListOffsets); document.body.classList.remove("active-list-stuck"); };
+  }, [tab]);
+
+  useEffect(() => {
+    const closeTopModalWithEscape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      const backdrops = [...document.querySelectorAll<HTMLElement>(".modal-backdrop, .qr-scanner-backdrop")].filter(element => {
+        const style = window.getComputedStyle(element);
+        return style.display !== "none" && style.visibility !== "hidden" && element.getClientRects().length > 0;
+      });
+      const topBackdrop = backdrops[backdrops.length - 1];
+      if (!topBackdrop) return;
+      event.preventDefault();
+      event.stopPropagation();
+      const closeButton = topBackdrop.querySelector<HTMLButtonElement>("button.close, .modal-head button[aria-label='關閉']");
+      if (closeButton) closeButton.click();
+      else topBackdrop.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+    };
+    window.addEventListener("keydown", closeTopModalWithEscape, true);
+    return () => window.removeEventListener("keydown", closeTopModalWithEscape, true);
+  }, []);
 
   useEffect(() => {
     if (!editing || editing._generalWebsiteDefaultsApplied === "1") return;
@@ -528,7 +772,9 @@ export default function Home() {
     if (!/一般/.test(contract)) return;
     const defaultNoneKeys = ["platform591", "price5168", "led", "goldExposure", "windowAd"];
     const defaults = Object.fromEntries(defaultNoneKeys.map(key => [`${key}None`, String(editing[key] || "").trim() ? editing[`${key}None`] || "" : "1"]));
-    setEditing({ ...editing, ...defaults, _generalWebsiteDefaultsApplied: "1" });
+    const nextEditing = { ...editing, ...defaults, _generalWebsiteDefaultsApplied: "1" };
+    editingInitialRef.current = JSON.stringify(nextEditing);
+    setEditing(nextEditing);
   }, [editing?.id, editing?.propertyNo, editing?._generalWebsiteDefaultsApplied]);
 
   useEffect(() => {
@@ -536,7 +782,7 @@ export default function Home() {
       const saved = localStorage.getItem(STORAGE_KEY);
       let loadedRecords: RecordItem[] = saved ? JSON.parse(saved) : [sample];
       const officialRecords = ((window as any).__PROPERTY_OFFICIAL_RECORDS__ || []) as RecordItem[]; const appRestoreMarker = "property-desk-app-restore-216-v3"; if (officialRecords.length && localStorage.getItem(appRestoreMarker) !== "1") { const keyOf = (record: RecordItem) => String(record.propertyNo || record.id || "").trim(); const merged = new Map(officialRecords.map(record => [keyOf(record), record])); loadedRecords.forEach(record => { const key = keyOf(record); if (!key) return; const base = merged.get(key) || {} as RecordItem; const next = { ...base, ...record }; if (!String(next.bookLocationDate || "").trim() && String(base.bookLocationDate || "").trim()) next.bookLocationDate = base.bookLocationDate; if (!String(next.bookLocationType || "").trim() && String(base.bookLocationType || "").trim()) next.bookLocationType = base.bookLocationType; merged.set(key, next); }); loadedRecords = [...merged.values()]; localStorage.setItem(STORAGE_KEY, JSON.stringify(loadedRecords)); localStorage.setItem(appRestoreMarker, "1"); }
-      loadedRecords = applySourceLayoutFixes(loadedRecords).map(record => ({ ...record, salesBook: record.salesBook || "製作" }));
+      loadedRecords = applySourceLayoutFixes(loadedRecords).map(record => normalizeRecordPings({ ...record, salesBook: record.salesBook || "製作" }));
       const savedSettings = localStorage.getItem(SETTINGS_KEY); setSettings(s => { const old = savedSettings ? JSON.parse(savedSettings) : {}; const personnel = old.personnel || (old.staffName || old.staffId ? [{ id: newId(), name: old.staffName || "", nationalId: old.staffId || "", status: "在職" }] : []); return { ...s, ...old, supabaseUrl: old.supabaseUrl || CASE_FILE_SUPABASE_URL, supabaseKey: old.supabaseKey || CASE_FILE_SUPABASE_PUBLISHABLE_KEY, supabaseTable: old.supabaseTable === "property_app_state" || !old.supabaseTable ? CASE_FILE_SUPABASE_TABLE : old.supabaseTable, supabaseRecord: old.supabaseRecord || "main", personnel: mergeSuppliedPersonnel(personnel) }; });
       const savedCloudSession = localStorage.getItem(CLOUD_SESSION_KEY); if (savedCloudSession) setCloudSession(JSON.parse(savedCloudSession));
       const savedIntake = localStorage.getItem(INTAKE_KEY); if (savedIntake) { const saved = JSON.parse(savedIntake); const drafts: IntakeData[] = saved.drafts || (saved.parsed ? [{ ...saved.parsed, raw: saved.raw || "" }] : []); if (!localStorage.getItem(PHOTO_INTAKE_CLEANUP_KEY)) { const legacyPhotoValues = new Map(drafts.filter(draft => draft.linkedRecordId).map(draft => [draft.linkedRecordId!, new Set(Object.entries(draft.values).filter(([key, value]) => value && (key.includes("進案文件") || key.includes("當下進案文件"))).map(([, value]) => value.trim()))])); loadedRecords = loadedRecords.map(record => { const values = legacyPhotoValues.get(record.id); const current = String(record.photoInfo || "").split(/[／/]/).map(value => value.trim()).filter(Boolean); return values && current.length && current.every(value => values.has(value)) ? { ...record, photoInfo: "" } : record; }); localStorage.setItem(PHOTO_INTAKE_CLEANUP_KEY, "1"); } const linkedDrafts = new Map(drafts.filter(draft => draft.linkedRecordId).map(draft => [draft.linkedRecordId!, draft])); loadedRecords = loadedRecords.map(record => { const draft = linkedDrafts.get(record.id); return draft ? intakeToRecord(draft, record) : record; }); setIntakeDrafts(drafts); setSelectedIntakeId(saved.selectedId || drafts[0]?.id || ""); setIntakeRaw(saved.raw || ""); }
@@ -546,18 +792,75 @@ export default function Home() {
   }, []);
   useEffect(() => { if (internalView) setTab("public"); }, [internalView]);
   useEffect(() => {
+    if (!internalView) return;
+    try {
+      const saved = JSON.parse(localStorage.getItem("case-file-public-daily-login") || "{}");
+      if (saved.date === today() && saved.personId) {
+        setPublicPersonId(saved.personId);
+        setPublicScope("mine");
+        setPublicUnlocked(true);
+      } else {
+        localStorage.removeItem("case-file-public-daily-login");
+      }
+    } catch { localStorage.removeItem("case-file-public-daily-login"); }
+  }, [internalView]);
+  useEffect(() => {
+    if (!internalView || !publicUnlocked) return;
+    const timer = window.setInterval(() => {
+      try {
+        const saved = JSON.parse(localStorage.getItem("case-file-public-daily-login") || "{}");
+        if (saved.date !== today()) {
+          localStorage.removeItem("case-file-public-daily-login");
+          setPublicUnlocked(false);
+          setPublicPersonId("");
+        }
+      } catch {
+        setPublicUnlocked(false);
+        setPublicPersonId("");
+      }
+    }, 60000);
+    return () => window.clearInterval(timer);
+  }, [internalView, publicUnlocked]);
+  useEffect(() => {
     if (internalView) document.title = "連城內部總表 請勿外流";
   }, [internalView]);
   useEffect(() => { if (records.length) localStorage.setItem(STORAGE_KEY, JSON.stringify(records)); }, [records]);
+  useEffect(() => {
+    const syncAcrossTabs = (event: StorageEvent) => {
+      if (event.key === STORAGE_KEY && event.newValue) {
+        try { setRecords(applySourceLayoutFixes(JSON.parse(event.newValue)).map(normalizeRecordPings)); } catch {}
+      }
+      if (event.key === SETTINGS_KEY && event.newValue) {
+        try { const next = JSON.parse(event.newValue); setSettings(previous => ({ ...previous, ...next, personnel: mergeSuppliedPersonnel(next.personnel || previous.personnel) })); } catch {}
+      }
+    };
+    window.addEventListener("storage", syncAcrossTabs);
+    return () => window.removeEventListener("storage", syncAcrossTabs);
+  }, []);
   useEffect(() => { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); }, [settings]);
   useEffect(() => { localStorage.setItem(INTAKE_KEY, JSON.stringify({ raw: intakeRaw, drafts: intakeDrafts, selectedId: selectedIntakeId })); }, [intakeRaw, intakeDrafts, selectedIntakeId]);
   useEffect(() => { localStorage.setItem(TOUR_KEY, JSON.stringify({ date: tourDate, title: tourTitle, items: tourItems })); }, [tourDate, tourTitle, tourItems]);
 
   const archived = useMemo(() => records.filter(r => r.archived || isExpired(r) || r.status !== "委託中"), [records]);
   const active = useMemo(() => records.filter(r => !r.archived && !isExpired(r) && (r.status || "委託中") === "委託中"), [records]);
-  const latestModifiedAt = useMemo(() => records.map(record => record.lastModifiedAt || "").filter(Boolean).sort().at(-1) || "", [records]);
+  const latestModifiedAt = records.reduce((latest, record) => {
+    const candidate = String(record.lastModifiedAt || record.caseNameNoteModifiedAt || record.reducedPriceModifiedAt || "");
+    if (!candidate || Number.isNaN(new Date(candidate).getTime())) return latest;
+    return !latest || new Date(candidate).getTime() > new Date(latest).getTime() ? candidate : latest;
+  }, "");
+  const showingFollowUpRecords = active.filter(record => record.showingFollowUp === "暫停帶看／等待業務回覆");
+  useEffect(() => {
+    const dueToday = showingFollowUpRecords.filter(record => normalizeDateInput(record.showingFollowUpDueDate || "") === today());
+    const reminderKey = `property-desk-showing-follow-up-${today()}`;
+    if (!dueToday.length || localStorage.getItem(reminderKey) === "1") return;
+    localStorage.setItem(reminderKey, "1");
+    setTimeout(() => alert(`今日有 ${dueToday.length} 筆帶看追蹤到期：\n${dueToday.map(record => record.caseName || record.propertyNo).join("\n")}`), 100);
+  }, [showingFollowUpRecords.map(record => `${record.id}:${record.showingFollowUpDueDate}`).join("|")]);
+  const controlledKeyCount = new Set(records.map(record => String(record.key || "").match(/公司\s*[#＃]?\s*(\d+)/)?.[1]).filter(Boolean)).size;
   const pendingArchiveCleanup = archived.map(record => ({ record, tasks: archiveCleanupTasks(record).filter(task => !record[task.key]) })).filter(item => item.record.archived && item.tasks.length > 0);
   useEffect(() => { if (pendingArchiveCleanup.length) setArchiveCleanupReminderOpen(true); else setArchiveCleanupReminderOpen(false); }, [pendingArchiveCleanup.map(item => `${item.record.id}:${item.tasks.map(task => task.key).join(",")}`).join("|")]);
+  const pendingDealCompletion = archived.map(record => ({ record, tasks: dealCompletionTasks.filter(([key]) => !record[key]) })).filter(item => item.record.archived && item.record.status === "成交下架" && item.tasks.length > 0);
+  useEffect(() => { if (pendingDealCompletion.length) setDealCompletionReminderOpen(true); else setDealCompletionReminderOpen(false); }, [pendingDealCompletion.map(item => `${item.record.id}:${item.tasks.map(([key]) => key).join(",")}`).join("|")]);
   const missingDataOf = (record: RecordItem) => [!record.bookLocationDate ? "物件本日期" : "", (!record.salesBookDate || !record.salesBook) ? "銷售本" : "", (!record.photoInfo && !record.photos?.length) ? "照片" : ""].filter(Boolean);
   const missingDataRecords = active.filter(record => missingDataOf(record).length > 0);
   useEffect(() => { if (!missingDataRecords.length) return; const date = today(); if (localStorage.getItem(MISSING_REMINDER_DATE_KEY) !== date) { localStorage.setItem(MISSING_REMINDER_DATE_KEY, date); setMissingDataReminderOpen(true); } }, [missingDataRecords.map(record => `${record.id}:${missingDataOf(record).join(",")}`).join("|")]);
@@ -592,11 +895,48 @@ export default function Home() {
     const photoMatch = !f.photoInfo || (f.photoInfo === "filled" ? !!(String(r.photoInfo || "").trim() || r.photos?.length) : !(String(r.photoInfo || "").trim() || r.photos?.length));
     return includes("propertyNo") && includes("caseName") && includes("address") && (!f.type || typeShort(r.type) === f.type) && includes("direction") && includes("zoning") && includes("developer") && includes("key") && includes("currentState") && includes("salesBook") && (!f.rooms || new RegExp(`${f.rooms}\\s*房`).test(layout)) && (!f.halls || new RegExp(`${f.halls}\\s*廳`).test(layout)) && (!f.baths || new RegExp(`${f.baths}\\s*衛`).test(layout)) && floorMatch && parkingMatch && photoMatch && websiteMatch && filterDateInRange(r.entrustStart, f.entrustStartFrom, f.entrustStartTo) && filterDateInRange(r.entrustEnd, f.entrustEndFrom, f.entrustEndTo) && filterDateInRange(r.reportDate, f.reportFrom, f.reportTo) && filterDateInRange(r.updateDate, f.updateFrom, f.updateTo) && filterDateInRange(r.groupViewDate, f.groupFrom, f.groupTo) && filterDateInRange(r.bookLocationDate, f.bookFrom, f.bookTo) && filterDateInRange(r.salesBookDate, f.salesFrom, f.salesTo) && filterInRange(r.price, f.priceFrom, f.priceTo, true) && filterInRange(ageOf(r), f.ageFrom, f.ageTo) && filterInRange(r.indoorPing, f.indoorFrom, f.indoorTo) && filterInRange(r.landPing, f.landFrom, f.landTo) && filterInRange(r.buildingPing, f.buildingFrom, f.buildingTo) && filterInRange(r.road, f.roadFrom, f.roadTo) && filterInRange(r.frontage, f.frontageFrom, f.frontageTo) && filterInRange(r.depth, f.depthFrom, f.depthTo);
   };
-  const shown = (tab === "archive" ? archived : sortActiveRecords(active)).filter(r => (!websiteFilter || tab === "archive" || (websiteFilter === "all" ? requiredWebsiteKeys(r).some(key => isWebsiteMissing(r, key)) : isWebsiteMissing(r, websiteFilter))) && (tab !== "active" || matchesAdvancedFilter(r)) && [r.propertyNo, r.area, r.caseName, r.address, r.developer].join(" ").toLowerCase().includes(query.toLowerCase()));
-  const weeklyPptRecords = sortPptRecords(active.filter(record => isCurrentPptWeek(record.reportDate)));
-  const selectedPptRecords = sortPptRecords(active.filter(record => isCurrentPptWeek(record.reportDate) || pptExtraIds.includes(record.id)));
+  const currentListQuery = tab === "archive" ? archiveQuery : query;
+  const shown = (tab === "archive" ? archived : sortActiveRecords(active)).filter(r => (!showingFollowUpOnly || tab !== "active" || r.showingFollowUp === "暫停帶看／等待業務回覆") && (!websiteFilter || tab === "archive" || (websiteFilter === "missing_sales_book_date" ? !r.salesBookDate : websiteFilter === "missing_book_location_date" ? !r.bookLocationDate : websiteFilter === "missing_photo_info" ? (!r.photoInfo && !r.photos?.length) : websiteFilter === "all" ? requiredWebsiteKeys(r).some(key => isWebsiteMissing(r, key)) : isWebsiteMissing(r, websiteFilter))) && (tab !== "active" || matchesAdvancedFilter(r)) && [r.propertyNo, r.area, r.caseName, r.address, r.developer].join(" ").toLowerCase().includes(currentListQuery.toLowerCase()));
+  const defaultSelectedPptWeek = pptWeekOf(pptWeekStart);
+  const selectedPptWeek = {
+    start: normalizeDateInput(pptCustomStart) || defaultSelectedPptWeek.start,
+    end: normalizeDateInput(pptCustomEnd) || defaultSelectedPptWeek.end,
+    meeting: normalizeDateInput(pptCustomMeeting) || defaultSelectedPptWeek.meeting,
+  };
+  const resetPptCustomWeek = () => { setPptCustomStart(""); setPptCustomEnd(""); setPptCustomMeeting(""); };
+  const pptCurrentStart = currentPptWeek().start;
+  const standardPptWeeks = Array.from({ length: 24 }, (_, index) => addDaysIso(pptCurrentStart, index * -7));
+  const pptWeekOptions = [...new Set([...standardPptWeeks, ...records.flatMap(record => [normalizeDateInput(record.reportDate || ""), ...pptStoredList(record._pptExtraWeeks)]).filter(date => /^\d{4}-\d{2}-\d{2}$/.test(date)).map(date => pptWeekOf(date).start).filter(start => start <= pptCurrentStart)])].sort((a, b) => b.localeCompare(a));
+  const weeklyPptRecords = sortPptRecords(records.filter(record => belongsToPptWeek(record, selectedPptWeek) && !excludedFromPptWeek(record, selectedPptWeek.start)));
+  const deferredPptRecords = sortPptRecords(records.filter(record => belongsToPptWeek(record, selectedPptWeek) && excludedFromPptWeek(record, selectedPptWeek.start)));
+  const selectedPptRecords = sortPptRecords(records.filter(record => weeklyPptRecords.some(item => item.id === record.id) || pptExtraIds.includes(record.id)));
 
   const flash = (text: string) => { setNotice(text); setTimeout(() => setNotice(""), 2600); };
+  const removeFromPptWeek = (record: RecordItem) => setRecords(previous => previous.map(item => {
+    if (item.id !== record.id) return item;
+    const excluded = [...new Set([...pptStoredList(item._pptExcludedWeeks), selectedPptWeek.start])];
+    const choices = { ...pptStoredChoices(item._pptWeekChoices) }; delete choices[selectedPptWeek.start];
+    return { ...item, _pptExcludedWeeks: JSON.stringify(excluded), _pptWeekChoices: JSON.stringify(choices), lastModifiedAt: new Date().toISOString() };
+  }));
+  const decideRemovedPpt = (record: RecordItem, choice: "next" | "skip") => setRecords(previous => previous.map(item => {
+    if (item.id !== record.id) return item;
+    const nextWeek = nextPptWeekStart(selectedPptWeek.start);
+    const extras = pptStoredList(item._pptExtraWeeks).filter((week: string) => choice === "next" || week !== nextWeek);
+    if (choice === "next" && !extras.includes(nextWeek)) extras.push(nextWeek);
+    const choices = { ...pptStoredChoices(item._pptWeekChoices), [selectedPptWeek.start]: choice };
+    return { ...item, _pptExtraWeeks: JSON.stringify(extras), _pptWeekChoices: JSON.stringify(choices), lastModifiedAt: new Date().toISOString() };
+  }));
+  const addShowingFollowUp = () => {
+    if (!showingFollowUpRecordId) return flash("請先選擇委託中案件");
+    if (!normalizeDateInput(showingFollowUpStart)) return flash("請填寫暫停日期");
+    if (!normalizeDateInput(showingFollowUpDue)) return flash("請填寫追蹤日期");
+    setRecords(previous => previous.map(record => record.id === showingFollowUpRecordId ? { ...record, showingFollowUp: "暫停帶看／等待業務回覆", showingFollowUpDate: normalizeDateInput(showingFollowUpStart), showingFollowUpDueDate: normalizeDateInput(showingFollowUpDue), lastModifiedAt: new Date().toISOString() } : record));
+    setShowingFollowUpRecordId(""); setShowingFollowUpStart(today()); setShowingFollowUpDue(""); flash("已加入帶看追蹤");
+  };
+  const clearShowingFollowUp = (record: RecordItem) => {
+    setRecords(previous => previous.map(item => item.id === record.id ? { ...item, showingFollowUp: "", showingFollowUpDate: "", showingFollowUpDueDate: "", lastModifiedAt: new Date().toISOString() } : item));
+    flash("已解除帶看追蹤，案件仍保留委託中");
+  };
   const updateEditingRecord = (next: RecordItem) => setEditing(previous => {
     if (!previous) return next;
     const ignored = new Set(["id", "lastModifiedAt", "groupViewDate", "_updateHistory", "_dailyAnnotation", "_dailyHighlight"]);
@@ -606,11 +946,12 @@ export default function Home() {
   });
   const saveRecord = () => {
     if (!editing) return;
-    const normalizedEditing = clearImportedLandLabels({
+    const normalizedEditing = normalizeRecordPings(clearImportedLandLabels({
       ...editing,
+      developer: developerFullNameText(editing.developer || "", settings.personnel) || editing.developer,
       ...Object.fromEntries([...dateKeys].map(key => [key, normalizeDateInput(editing[key] || "")])),
       completionDate: normalizeDateInput(editing.completionDate || ""),
-    });
+    }));
     const keyNumber = String(editing.key || "").match(/公司\s*[#＃]?\s*(\d+)/)?.[1];
     const allowedKeyNumbers = new Set([1, 2, 3, 5, 6, 7, 8, 17, 18, 19, 20, 21, 22, 23, 24, 33, 34, 35, 36, 37, 38, 39, 49, 50, 51, 52, 53, 55, 56, 65, 66, 67, 68, 69, 70, 71, 72, 81, 82, 83, 85, 86, 87, 88]);
     if (keyNumber && !allowedKeyNumbers.has(Number(keyNumber))) { alert(`鑰匙編號公司#${keyNumber}不在鑰匙總表的有效標號內，請重新輸入。`); return; }
@@ -633,10 +974,11 @@ export default function Home() {
     setEditing(null); flash("物件已儲存");
   };
   const archiveRecord = (r: RecordItem, status = "下架洽開發", archiveDate = today()) => {
-    const cleanupKeys = ["housingDownDate", "bookDownDate", "salesBookDownDate", ...archiveWebsiteTasks.map(([field]) => `${field}DownDate`)];
+    const cleanupKeys = ["housingDownDate", "bookDownDate", "salesBookDownDate", ...archiveWebsiteTasks.map(([field]) => `${field}DownDate`), ...dealCompletionTasks.map(([key]) => key)];
     setRecords(prev => prev.map(x => x.id === r.id ? { ...x, status, archived: normalizeDateInput(archiveDate) || today(), _archiveActionDate: today(), ...Object.fromEntries(cleanupKeys.map(key => [key, ""])) } : x)); setArchiveChoice(null); flash("已移至封存，並建立下架待辦");
   };
   const completeArchiveCleanup = (record: RecordItem, key: string) => setRecords(previous => previous.map(item => item.id === record.id ? { ...item, [key]: today() } : item));
+  const completeDealTask = (record: RecordItem, key: string) => setRecords(previous => previous.map(item => item.id === record.id ? { ...item, [key]: today() } : item));
   const requestArchive = (record: RecordItem, status: string) => setArchiveChoice({ record, status, date: status === "到期下架" ? nextDate(record.entrustEnd) : today() });
   const restoreRecord = (r: RecordItem, reopened = true) => {
     const cleanupKeys = ["housingDownDate", "bookDownDate", "salesBookDownDate", ...archiveWebsiteTasks.map(([field]) => `${field}DownDate`)];
@@ -651,7 +993,7 @@ export default function Home() {
   };
 
   const download = (name: string, blob: Blob) => { const a = document.createElement("a"); const url = URL.createObjectURL(blob); a.href = url; a.download = name; a.style.display = "none"; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 3000); };
-  const exportJson = () => download(`物件總表_${today()}.json`, new Blob([JSON.stringify({ version: 2, exportedAt: new Date().toISOString(), settings: { personnel: settings.personnel }, records }, null, 2)], { type: "application/json" }));
+  const exportJson = () => download(`物件總表_${today()}.json`, new Blob([JSON.stringify({ version: 2, exportedAt: new Date().toISOString(), settings: { personnel: settings.personnel, bookReviewCurrentDate: settings.bookReviewCurrentDate, bookReviewNextDate: settings.bookReviewNextDate, expiry591: settings.expiry591, expiry5168: settings.expiry5168, brokerExpiry: settings.brokerExpiry }, records }, null, 2)], { type: "application/json" }));
   const importJson = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]; if (!file) return;
     const reader = new FileReader(); reader.onload = () => { try {
@@ -686,7 +1028,7 @@ export default function Home() {
         });
         localStorage.setItem(STORAGE_KEY, JSON.stringify(nextRecords)); alert(`售屋資料表補齊完成：${changed} 件有新增欄位，原本已填資料均已保留。`); location.reload(); return;
       }
-      const fullBackup = !Array.isArray(data) && Number(data.version || 0) >= 2 && Array.isArray(data.records); const replaceExisting = fullBackup || (!Array.isArray(data) && data.replaceExisting === true); const message = replaceExisting ? `將以備份中的 ${list.length} 筆資料取代 Edge 目前物件，確定嗎？` : `將匯入 ${list.length} 筆資料，並與現有資料合併，確定嗎？`; if (confirm(message)) { const normalized = applySourceLayoutFixes(list.map((r: RecordItem) => ({ ...blankRecord(), ...r, id: r.id || newId(), photos: Array.isArray(r.photos) ? r.photos : [] }))); let nextRecords = normalized; if (!replaceExisting) { const map = new Map(records.map(r => [r.id, r])); normalized.forEach((r: RecordItem) => map.set(r.id, r)); nextRecords = [...map.values()]; } localStorage.setItem(STORAGE_KEY, JSON.stringify(nextRecords)); if (!Array.isArray(data) && Array.isArray(data.settings?.personnel)) { let savedSettings: any = {}; try { savedSettings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}"); } catch {} localStorage.setItem(SETTINGS_KEY, JSON.stringify({ ...savedSettings, personnel: mergeSuppliedPersonnel(data.settings.personnel) })); } localStorage.setItem("property-desk-official-merge-2026-07-30-v6", "1"); localStorage.setItem("property-desk-app-restore-216-v3", "1"); alert(`JSON 匯入完成，共 ${nextRecords.length} 筆，現在重新載入。`); location.reload(); }
+      const fullBackup = !Array.isArray(data) && Number(data.version || 0) >= 2 && Array.isArray(data.records); const replaceExisting = fullBackup || (!Array.isArray(data) && data.replaceExisting === true); const message = replaceExisting ? `將以備份中的 ${list.length} 筆資料取代 Edge 目前物件，確定嗎？` : `將匯入 ${list.length} 筆資料，並與現有資料合併，確定嗎？`; if (confirm(message)) { const normalized = applySourceLayoutFixes(list.map((r: RecordItem) => ({ ...blankRecord(), ...r, id: r.id || newId(), photos: Array.isArray(r.photos) ? r.photos : [] }))); let nextRecords = normalized; if (!replaceExisting) { const map = new Map(records.map(r => [r.id, r])); normalized.forEach((r: RecordItem) => map.set(r.id, r)); nextRecords = [...map.values()]; } localStorage.setItem(STORAGE_KEY, JSON.stringify(nextRecords)); if (!Array.isArray(data) && data.settings) { let savedSettings: any = {}; try { savedSettings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}"); } catch {} localStorage.setItem(SETTINGS_KEY, JSON.stringify({ ...savedSettings, ...(Array.isArray(data.settings.personnel) ? { personnel: mergeSuppliedPersonnel(data.settings.personnel) } : {}), ...(data.settings.bookReviewCurrentDate ? { bookReviewCurrentDate: data.settings.bookReviewCurrentDate } : {}), ...(data.settings.bookReviewNextDate ? { bookReviewNextDate: data.settings.bookReviewNextDate } : {}), ...(data.settings.expiry591 ? { expiry591: data.settings.expiry591 } : {}), ...(data.settings.expiry5168 ? { expiry5168: data.settings.expiry5168 } : {}), ...(data.settings.brokerExpiry ? { brokerExpiry: data.settings.brokerExpiry } : {}) })); } localStorage.setItem("property-desk-import-prefer-local-once", "1"); localStorage.setItem("property-desk-official-merge-2026-07-30-v6", "1"); localStorage.setItem("property-desk-app-restore-216-v3", "1"); alert(`JSON 匯入完成，共 ${nextRecords.length} 筆，現在重新載入。`); location.reload(); }
     } catch (error) {
       console.error("JSON import failed", error);
       const detail = error instanceof Error ? error.message : String(error || "");
@@ -719,10 +1061,10 @@ export default function Home() {
     context.fillStyle = "#dcece6"; context.fillRect(margin, tableTop, tableWidth, headerHeight); context.strokeStyle = "#78988d"; context.lineWidth = 2; context.strokeRect(margin, tableTop, tableWidth, headerHeight);
     context.font = 'bold 30px "Microsoft JhengHei", sans-serif'; context.fillStyle = "#173f35"; ["序", "案名", "地址", "開發"].forEach((label, index) => context.fillText(label, (columns[index] + columns[index + 1]) / 2, tableTop + headerHeight / 2));
     let y = tableTop + headerHeight;
-    selectedPptRecords.forEach((record, index) => { const rowHeight = rowHeights[index]; context.fillStyle = index % 2 ? "#f7faf8" : "#ffffff"; context.fillRect(margin, y, tableWidth, rowHeight); context.strokeStyle = "#a7bbb4"; context.strokeRect(margin, y, tableWidth, rowHeight); columns.slice(1, -1).forEach(x => { context.beginPath(); context.moveTo(x, y); context.lineTo(x, y + rowHeight); context.stroke(); }); context.fillStyle = "#1f2926"; setFittedFont(String(index + 1), columns[1] - columns[0] - 8, 30); context.fillText(String(index + 1), (columns[0] + columns[1]) / 2, y + rowHeight / 2); const caseName = record.caseName || "未命名案件"; setFittedFont(caseName, columns[2] - columns[1] - 8, 32, true); context.fillText(caseName, (columns[1] + columns[2]) / 2, y + rowHeight / 2); const addressLines = chunkText(record.address || "—", 20); addressLines.forEach((line, lineIndex) => { setFittedFont(line, columns[3] - columns[2] - 8, 30); context.fillText(line, (columns[2] + columns[3]) / 2, y + rowHeight / 2 + (lineIndex - (addressLines.length - 1) / 2) * 34); }); const developer = record.developer || "—"; setFittedFont(developer, columns[4] - columns[3] - 8, 30); context.fillText(developer, (columns[3] + columns[4]) / 2, y + rowHeight / 2); y += rowHeight; });
+    selectedPptRecords.forEach((record, index) => { const rowHeight = rowHeights[index]; context.fillStyle = index % 2 ? "#f7faf8" : "#ffffff"; context.fillRect(margin, y, tableWidth, rowHeight); context.strokeStyle = "#a7bbb4"; context.strokeRect(margin, y, tableWidth, rowHeight); columns.slice(1, -1).forEach(x => { context.beginPath(); context.moveTo(x, y); context.lineTo(x, y + rowHeight); context.stroke(); }); context.fillStyle = "#1f2926"; setFittedFont(String(index + 1), columns[1] - columns[0] - 8, 30); context.fillText(String(index + 1), (columns[0] + columns[1]) / 2, y + rowHeight / 2); const caseName = record.caseName || "未命名案件"; setFittedFont(caseName, columns[2] - columns[1] - 8, 32, true); context.fillText(caseName, (columns[1] + columns[2]) / 2, y + rowHeight / 2); const addressLines = chunkText(record.address || "—", 20); addressLines.forEach((line, lineIndex) => { setFittedFont(line, columns[3] - columns[2] - 8, 30); context.fillText(line, (columns[2] + columns[3]) / 2, y + rowHeight / 2 + (lineIndex - (addressLines.length - 1) / 2) * 34); }); const developer = developerFullNameText(record.developer) || "—"; setFittedFont(developer, columns[4] - columns[3] - 8, 30); context.fillText(developer, (columns[3] + columns[4]) / 2, y + rowHeight / 2); y += rowHeight; });
     context.textAlign = "left"; let standardY = standardsTop;
     standards.forEach(line => { if (line === "土地") { standardY += 18; context.fillStyle = "#173f35"; context.font = 'bold 30px "Microsoft JhengHei", sans-serif'; } else if (line.startsWith("(必)")) { context.fillStyle = "#b32929"; context.font = 'bold 28px "Microsoft JhengHei", sans-serif'; } else { context.fillStyle = "#222222"; context.font = '25px "Microsoft JhengHei", sans-serif'; } context.fillText(line, 8, standardY); standardY += 39; });
-    canvas.toBlob(blob => { if (!blob) return flash("圖片產生失敗"); download(`公告${pptMeetingDateLabel()}開會星期一PPT.png`, blob); flash(`已產生圖片，共 ${selectedPptRecords.length} 筆物件`); }, "image/png");
+    canvas.toBlob(blob => { if (!blob) return flash("圖片產生失敗"); download(`公告${pptMeetingDateLabel(selectedPptWeek)}開會星期一PPT.png`, blob); flash(`已產生圖片，共 ${selectedPptRecords.length} 筆物件`); }, "image/png");
   };
   const exportPptLegacy = async () => {
     const selected = selectedPptRecords;
@@ -743,7 +1085,7 @@ export default function Home() {
       slide.addShape(pptx.ShapeType.rect, { x: 5.95, y: 4.35, w: 3.8, h: 2.55, line: { color: "4E5D58", width: 1.3 }, fill: { color: "FFFFFF" } });
       slide.addText("開發", { x: .42, y: 1.68, w: .75, h: .42, fontFace: "Microsoft JhengHei", fontSize: 16, bold: true, color: "111111", align: "right", margin: 0 });
       slide.addText("：", { x: 1.17, y: 1.68, w: .18, h: .42, fontFace: "Microsoft JhengHei", fontSize: 16, bold: true, color: "111111", margin: 0 });
-      slide.addText(record.developer || "—", { x: 1.35, y: 1.6, w: 1.55, h: .55, fontFace: "Microsoft JhengHei", fontSize: 21, bold: true, color: "1648D8", align: "center", margin: 0, fit: "shrink", fill: { color: "FCE9D9" }, line: { color: "D6A77B", width: .8 } });
+      slide.addText(developerFullNameText(record.developer) || "—", { x: 1.35, y: 1.6, w: 1.55, h: .55, fontFace: "Microsoft JhengHei", fontSize: 21, bold: true, color: "1648D8", align: "center", margin: 0, fit: "shrink", fill: { color: "FCE9D9" }, line: { color: "D6A77B", width: .8 } });
       slide.addText(land ? "開價" : "委託總價", { x: 3.05, y: 1.68, w: 1, h: .42, fontFace: "Microsoft JhengHei", fontSize: 15, bold: true, color: "111111", align: "right", margin: 0, fit: "shrink" });
       slide.addText("：", { x: 4.05, y: 1.68, w: .2, h: .42, fontFace: "Microsoft JhengHei", fontSize: 15, bold: true, color: "111111", margin: 0 });
       slide.addText(`${record.reducedPrice || record.price || "—"}${record.reducedPrice && record.price ? `（原${record.price}）` : ""}`, { x: 4.25, y: 1.56, w: 1.12, h: .62, fontFace: "Microsoft JhengHei", fontSize: 27, bold: true, color: "E02020", align: "center", margin: 0, fit: "shrink" });
@@ -770,7 +1112,7 @@ export default function Home() {
       slide.addText(`物件編號：${record.propertyNo || "—"}`, { x: 3.6, y: 6.88, w: 2.8, h: .34, fontFace: "Microsoft JhengHei", fontSize: 12, bold: true, color: "333333", align: "center", margin: 0 });
       if (typeShort(record.type) === "土地" || /^(LG|LA)/i.test(record.propertyNo || "")) { const blankOne = pptx.addSlide(); blankOne.background = { color: "FFFFFF" }; const blankTwo = pptx.addSlide(); blankTwo.background = { color: "FFFFFF" }; }
     });
-    try { const pptBlob = await pptx.write({ outputType: "blob" }) as Blob; download(`${pptMeetingDateLabel()}開會PPT.pptx`, pptBlob); setPptPickerOpen(false); flash(`已產生 PPT，共 ${selected.length} 筆物件`); } catch (error) { console.error(error); flash("PPT 產生失敗，請重新整理後再試一次"); }
+    try { const pptBlob = await pptx.write({ outputType: "blob" }) as Blob; download(`${pptMeetingDateLabel(selectedPptWeek)}開會PPT.pptx`, pptBlob); setPptPickerOpen(false); flash(`已產生 PPT，共 ${selected.length} 筆物件`); } catch (error) { console.error(error); flash("PPT 產生失敗，請重新整理後再試一次"); }
   };
   const exportPpt = async () => {
     const selected = selectedPptRecords;
@@ -817,7 +1159,7 @@ export default function Home() {
       slide.addShape(pptx.ShapeType.line, { x: 0, y: .84, w: 10, h: 0, line: { color: frameColor, width: 1 } });
       slide.addShape(pptx.ShapeType.rect, { x: 0, y: .87, w: 2.756, h: land ? .94 : .787, line: { color: "FCE9D9", transparency: 100 }, fill: { color: "FCE9D9" } });
       slide.addText("開發", { x: .06, y: land ? 1.14 : 1.07, w: .58, h: .35, fontFace: font, fontSize: 15, bold: true, color: "000000", align: "center", margin: 0, breakLine: false });
-      slide.addText(record.developer || "", { x: .66, y: land ? 1.08 : 1.0, w: 2.09, h: .52, fontFace: font, fontSize: 19, bold: true, color: "0000FF", align: "center", valign: "mid", margin: 0, fit: "shrink", breakLine: false });
+      slide.addText(developerFullNameText(record.developer) || "", { x: .66, y: land ? 1.08 : 1.0, w: 2.09, h: .52, fontFace: font, fontSize: 19, bold: true, color: "0000FF", align: "center", valign: "mid", margin: 0, fit: "shrink", breakLine: false });
       slide.addText(land ? "開價" : "委託總價", { x: 2.76, y: land ? 1.15 : 1.08, w: 1.12, h: .38, fontFace: font, fontSize: 18, color: "000000", align: "right", margin: 0, breakLine: false });
       slide.addText("：", { x: 3.9, y: land ? 1.15 : 1.08, w: .2, h: .38, fontFace: font, fontSize: 18, margin: 0 });
       slide.addText([{ text: price || "", options: { fontFace: font, fontSize: 37, bold: true, color: "E00000" } }, { text: "萬", options: { fontFace: font, fontSize: 16, color: "000000", breakLine: false } }], { x: 4.1, y: .89, w: 1.8, h: .72, fontFace: font, align: "center", valign: "mid", margin: 0, fit: "shrink", breakLine: false });
@@ -853,92 +1195,77 @@ export default function Home() {
       slide.addShape(pptx.ShapeType.rect, { x: rightX, y: 4.15, w: 3.94, h: 3.15, line: { color: "FFFFFF", transparency: 100 }, fill: { color: "FFFFFF", transparency: 100 } });
       if (land) { const blankOne = pptx.addSlide(); blankOne.background = { color: "FFFFFF" }; const blankTwo = pptx.addSlide(); blankTwo.background = { color: "FFFFFF" }; }
     });
-    try { const pptBlob = await pptx.write({ outputType: "blob" }) as Blob; download(`${pptMeetingDateLabel()}開會PPT.pptx`, pptBlob); setPptPickerOpen(false); flash(`已產生 PPT，共 ${selected.length} 筆物件`); } catch (error) { console.error(error); flash("PPT 產生失敗，請再試一次"); }
+    try { const pptBlob = await pptx.write({ outputType: "blob" }) as Blob; download(`${pptMeetingDateLabel(selectedPptWeek)}開會PPT.pptx`, pptBlob); setPptPickerOpen(false); flash(`已產生 PPT，共 ${selected.length} 筆物件`); } catch (error) { console.error(error); flash("PPT 產生失敗，請再試一次"); }
   };
   // Cloud backup intentionally excludes locally stored photo payloads.
   // Textual photo notes stay with the record, while real images remain on this computer.
   const cloudData = () => ({
     records: records.map(({ photos, ...record }) => record),
-    settings: { personnel: settings.personnel },
+    settings: { personnel: settings.personnel, bookReviewCurrentDate: settings.bookReviewCurrentDate, bookReviewNextDate: settings.bookReviewNextDate, expiry591: settings.expiry591, expiry5168: settings.expiry5168, brokerExpiry: settings.brokerExpiry },
     intake: { raw: intakeRaw, drafts: intakeDrafts, selectedId: selectedIntakeId },
     tour: { date: tourDate, title: tourTitle, items: tourItems },
   });
-  const cloudHeaders = (accessToken = cloudSession?.accessToken || "") => ({ apikey: settings.supabaseKey, Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" });
-  const refreshCloudSession = async (): Promise<CloudSession | null> => {
-    const refreshToken = cloudSession?.refreshToken;
-    if (!refreshToken || !settings.supabaseUrl || !settings.supabaseKey) return null;
+  const cloudTokenExpiresSoon = (token = "") => {
     try {
-      const res = await fetch(`${settings.supabaseUrl.replace(/\/$/, "")}/auth/v1/token?grant_type=refresh_token`, {
-        method: "POST",
-        headers: { apikey: settings.supabaseKey, "Content-Type": "application/json" },
-        body: JSON.stringify({ refresh_token: refreshToken }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data?.access_token) return null;
-      const session: CloudSession = {
-        accessToken: data.access_token,
-        refreshToken: data.refresh_token || refreshToken,
-        email: data.user?.email || cloudSession?.email,
-      };
-      setCloudSession(session);
-      localStorage.setItem(CLOUD_SESSION_KEY, JSON.stringify(session));
-      return session;
-    } catch (error) {
-      console.error("Supabase token refresh failed", error);
-      return null;
-    }
+      const encoded = token.split(".")[1] || "";
+      const normalized = encoded.replace(/-/g, "+").replace(/_/g, "/").padEnd(Math.ceil(encoded.length / 4) * 4, "=");
+      const payload = JSON.parse(atob(normalized));
+      return !payload.exp || Number(payload.exp) * 1000 <= Date.now() + 60000;
+    } catch { return true; }
   };
+  const refreshCloudSession = async (force = false) => {
+    const current = cloudSession;
+    if (!current?.accessToken) return null;
+    if (!force && !cloudTokenExpiresSoon(current.accessToken)) return current;
+    if (!current.refreshToken || !settings.supabaseUrl || !settings.supabaseKey) return null;
+    try {
+      const res = await fetch(`${settings.supabaseUrl.replace(/\/$/, "")}/auth/v1/token?grant_type=refresh_token`, { method: "POST", headers: { apikey: settings.supabaseKey, "Content-Type": "application/json" }, body: JSON.stringify({ refresh_token: current.refreshToken }) });
+      const data = await res.json();
+      if (!res.ok || !data.access_token) return null;
+      const next = { accessToken: data.access_token, refreshToken: data.refresh_token || current.refreshToken, email: data.user?.email || current.email };
+      setCloudSession(next);
+      localStorage.setItem(CLOUD_SESSION_KEY, JSON.stringify(next));
+      return next;
+    } catch { return null; }
+  };
+  const cloudHeaders = (session = cloudSession) => ({ apikey: settings.supabaseKey, Authorization: `Bearer ${session?.accessToken || ""}`, "Content-Type": "application/json" });
   const supabasePush = async (quiet = false) => {
     if (!cloudSession?.accessToken) { if (!quiet) flash("請先登入雲端帳號"); return false; }
     if (!settings.supabaseUrl || !settings.supabaseKey) { if (!quiet) flash("請先填入 Supabase Publishable key"); return false; }
     try {
+      const session = await refreshCloudSession();
+      if (!session) throw new Error("cloud session expired");
       const url = `${settings.supabaseUrl.replace(/\/$/, "")}/rest/v1/${settings.supabaseTable}`;
-      const body = JSON.stringify({ id: settings.supabaseRecord, data: cloudData(), updated_at: new Date().toISOString() });
-      const request = (accessToken?: string) => fetch(url, { method: "POST", headers: { ...cloudHeaders(accessToken), Prefer: "resolution=merge-duplicates,return=minimal" }, body });
-      let res = await request();
-      if (res.status === 401) {
-        const session = await refreshCloudSession();
-        if (session) res = await request(session.accessToken);
-      }
-      if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
+      const res = await fetch(url, { method: "POST", headers: { ...cloudHeaders(session), Prefer: "resolution=merge-duplicates,return=minimal" }, body: JSON.stringify({ id: settings.supabaseRecord, data: cloudData(), updated_at: new Date().toISOString() }) });
+      if (!res.ok) throw new Error(await res.text());
       if (!quiet) flash("雲端同步完成");
       return true;
-    } catch (error) { console.error("Supabase push failed", error); if (!quiet) flash("雲端同步失敗，請重新登入後再試"); return false; }
+    } catch { if (!quiet) flash("雲端同步失敗，請檢查登入與設定"); return false; }
   };
   const supabasePull = async (automatic = false) => {
     if (!cloudSession?.accessToken) return flash("請先登入雲端帳號");
     try {
+      const session = await refreshCloudSession();
+      if (!session) throw new Error("cloud session expired");
       const url = `${settings.supabaseUrl.replace(/\/$/, "")}/rest/v1/${settings.supabaseTable}?id=eq.${encodeURIComponent(settings.supabaseRecord)}&select=data`;
-      const request = (accessToken?: string) => fetch(url, { headers: cloudHeaders(accessToken) });
-      let res = await request();
-      if (res.status === 401) {
-        const session = await refreshCloudSession();
-        if (session) res = await request(session.accessToken);
-      }
-      const rows = await res.json(); const data = rows[0]?.data;
+      const res = await fetch(url, { headers: cloudHeaders(session) }); const rows = await res.json(); const data = rows[0]?.data;
       if (!res.ok || !data?.records) throw new Error();
       if (automatic || confirm("雲端資料將與本機資料合併，本機已修改但尚未同步的同一筆資料將以雲端版本為準。確定嗎？")) {
-        // This came from the cloud, so it must not trigger another upload.
-        cloudSyncBaselineRef.current = "";
-        cloudLastPullRef.current = Date.now();
         setRecords(prev => {
-          // Property numbers are shared across computers; generated local ids are not.
-          // Merge by property number so a cloud record replaces the same local case.
-          const keyOf = (record: RecordItem) => String(record.propertyNo || record.id || "").trim();
-          const map = new Map(prev.map(record => [keyOf(record), record]));
-          data.records.forEach((record: RecordItem) => {
-            const key = keyOf(record);
-            const local = map.get(key);
-            map.set(key, { ...local, ...record, id: record.id || local?.id || newId(), photos: record.photos || local?.photos || [] });
+          const map = new Map(prev.map(r => [r.id, r]));
+          data.records.forEach((r: RecordItem) => {
+            const normalized = normalizeRecordPings(applySourceLayoutFixes([r])[0]);
+            const local = map.get(normalized.id);
+            map.set(normalized.id, { ...local, ...normalized, photos: normalized.photos || local?.photos || [] });
           });
           return [...map.values()];
         });
-        if (data.settings?.personnel) setSettings(previous => ({ ...previous, personnel: mergeSuppliedPersonnel(data.settings.personnel) }));
+        if (data.settings) setSettings(previous => ({ ...previous, ...(data.settings.bookReviewCurrentDate ? { bookReviewCurrentDate: data.settings.bookReviewCurrentDate } : {}), ...(data.settings.bookReviewNextDate ? { bookReviewNextDate: data.settings.bookReviewNextDate } : {}), ...(data.settings.expiry591 ? { expiry591: data.settings.expiry591 } : {}), ...(data.settings.expiry5168 ? { expiry5168: data.settings.expiry5168 } : {}), ...(data.settings.brokerExpiry ? { brokerExpiry: data.settings.brokerExpiry } : {}), ...(Array.isArray(data.settings.personnel) && data.settings.personnel.length > 0 ? { personnel: mergeSuppliedPersonnel(data.settings.personnel) } : {}) }));
         if (data.intake) { setIntakeRaw(data.intake.raw || ""); setIntakeDrafts(data.intake.drafts || []); setSelectedIntakeId(data.intake.selectedId || ""); }
         if (data.tour) { setTourDate(data.tour.date || today()); setTourTitle(data.tour.title || ""); setTourItems(data.tour.items || []); }
-        if (!automatic) flash("雲端資料已合併到本機");
+        flash(automatic ? "已自動同步最新雲端資料" : "雲端資料已合併到本機");
       }
-    } catch { flash("雲端讀取失敗，請檢查登入與設定"); }
+    } catch { flash(automatic ? "自動同步失敗，請檢查雲端登入" : "雲端讀取失敗，請檢查登入與設定"); }
   };
   const supabaseSignIn = async (email: string, password: string, signUp = false) => {
     if (!settings.supabaseKey) return flash("請先貼上 Supabase Publishable key");
@@ -952,7 +1279,7 @@ export default function Home() {
     } catch { flash(signUp ? "註冊失敗，請檢查 Email 與密碼" : "登入失敗，請檢查 Email 與密碼"); }
   };
   const supabaseSignOut = () => { setCloudSession(null); localStorage.removeItem(CLOUD_SESSION_KEY); flash("已登出雲端帳號"); };
-  const cloudSnapshot = JSON.stringify({ records, personnel: settings.personnel, intakeRaw, intakeDrafts, selectedIntakeId, tourDate, tourTitle, tourItems });
+  const cloudSnapshot = JSON.stringify({ records, personnel: settings.personnel, expiry591: settings.expiry591, expiry5168: settings.expiry5168, brokerExpiry: settings.brokerExpiry, intakeRaw, intakeDrafts, selectedIntakeId, tourDate, tourTitle, tourItems });
   useEffect(() => {
     if (!cloudSyncBaselineRef.current) { cloudSyncBaselineRef.current = cloudSnapshot; return; }
     if (cloudSyncBaselineRef.current === cloudSnapshot) return;
@@ -963,31 +1290,62 @@ export default function Home() {
     return () => { if (cloudSyncTimerRef.current) window.clearTimeout(cloudSyncTimerRef.current); };
   }, [cloudSnapshot, cloudSession?.accessToken, settings.supabaseKey]);
   useEffect(() => {
-    if (!cloudSession?.accessToken || !settings.supabaseKey) return;
-    const sessionKey = `${cloudSession.email || "account"}:${settings.supabaseRecord}`;
-    const pullWhenNeeded = () => {
-      if (Date.now() - cloudLastPullRef.current < 5000) return;
-      void supabasePull(true);
-    };
-    if (cloudAutoPullRef.current !== sessionKey) {
-      cloudAutoPullRef.current = sessionKey;
-      pullWhenNeeded();
-    }
-    const onVisible = () => { if (document.visibilityState === "visible") pullWhenNeeded(); };
-    window.addEventListener("focus", pullWhenNeeded);
-    document.addEventListener("visibilitychange", onVisible);
-    return () => {
-      window.removeEventListener("focus", pullWhenNeeded);
-      document.removeEventListener("visibilitychange", onVisible);
-    };
-  }, [cloudSession?.accessToken, cloudSession?.email, settings.supabaseKey, settings.supabaseRecord]);
+    if (!cloudSession?.accessToken || !settings.supabaseUrl || !settings.supabaseKey) return;
+    const pullKey = `${settings.supabaseUrl}|${settings.supabaseTable}|${settings.supabaseRecord}|${cloudSession.email || "signed-in"}`;
+    if (cloudAutoPullRef.current === pullKey) return;
+    cloudAutoPullRef.current = pullKey;
+    if (localStorage.getItem("property-desk-import-prefer-local-once") === "1") { localStorage.removeItem("property-desk-import-prefer-local-once"); return; }
+    void supabasePull(true);
+  }, [cloudSession?.accessToken, cloudSession?.email, settings.supabaseUrl, settings.supabaseKey, settings.supabaseTable, settings.supabaseRecord]);
 
   const openPublic = () => { setTab("public"); setPublicUnlocked(false); setPublicPersonId(""); setPublicScope("mine"); setPassword(""); };
-  const unlock = () => { const activePeople = settings.personnel.filter(p => p.status === "在職" && p.nationalId); if (!activePeople.length) return flash("請先在設定新增人員與身分證字號"); const person = activePeople.find(p => password.toUpperCase() === p.nationalId.toUpperCase()); if (person) { setPublicPersonId(person.id); setPublicScope("mine"); setPublicUnlocked(true); } else flash("密碼錯誤"); };
+  const rememberPublicLogin = (personId: string) => localStorage.setItem("case-file-public-daily-login", JSON.stringify({ date: today(), personId }));
+  const unlock = async () => {
+    const normalizeLoginId = (value = "") => value.trim().replace(/\s+/g, "").toUpperCase();
+    const activePeople = settings.personnel.filter(p => (p.status || "在職") === "在職" && normalizeLoginId(p.nationalId));
+    const loginId = normalizeLoginId(password);
+    const person = activePeople.find(p => loginId === normalizeLoginId(p.nationalId));
+    if (person) { setPublicPersonId(person.id); setPublicScope("mine"); setPublicUnlocked(true); rememberPublicLogin(person.id); setPassword(""); return; }
+    if (!loginId) return flash("請輸入身分證字號");
+    try {
+      const response = await fetch(`${CASE_FILE_SUPABASE_URL}/rest/v1/rpc/case_file_front_login`, { method: "POST", headers: { apikey: CASE_FILE_SUPABASE_PUBLISHABLE_KEY, "Content-Type": "application/json" }, body: JSON.stringify({ p_national_id: loginId }) });
+      const data = await response.json();
+      if (!response.ok || !data?.personId || !Array.isArray(data.records)) return flash("身分證字號錯誤，或人員目前不是在職");
+      const nextRecords = applySourceLayoutFixes(data.records).map((record: RecordItem) => normalizeRecordPings({ ...record, photos: [] }));
+      const nextPeople = (Array.isArray(data.personnel) ? data.personnel : []).map((entry: Partial<Person>) => ({ ...entry, id: entry.id || newId(), name: entry.name || "", nationalId: "", status: entry.status || "在職" })) as Person[];
+      setRecords(nextRecords);
+      setSettings(previous => ({ ...previous, personnel: nextPeople }));
+      setPublicPersonId(data.personId);
+      setPublicScope("mine");
+      setPublicUnlocked(true);
+      rememberPublicLogin(data.personId);
+      setPassword("");
+    } catch { flash("目前無法連接雲端，請確認網路後再試一次"); }
+  };
   const publicPerson = settings.personnel.find(p => p.id === publicPersonId);
   const contactPeople = sortPeopleBySequence(settings.personnel.filter(person => person.status === "在職" && person.name.trim() && String(person.phone || "").trim()));
   const myProperties = active.filter(r => nameMatches(r.developer, publicPerson?.name || ""));
   const expiryAlerts = myProperties.filter(r => daysUntil(r.entrustEnd) >= 0 && daysUntil(r.entrustEnd) <= 30);
+  const publicBaseRecords = publicScope === "mine" ? myProperties : active;
+  const publicExpiryRecords = publicScope !== "mine" || publicExpiryFilter === "all"
+    ? publicBaseRecords
+    : publicBaseRecords.filter(record => {
+        const remaining = daysUntil(record.entrustEnd);
+        return remaining >= 0 && remaining <= Number(publicExpiryFilter);
+      });
+  const normalizedPublicQuery = publicQuery.trim().toLowerCase();
+  const publicTableRecords = !normalizedPublicQuery
+    ? publicExpiryRecords
+    : publicExpiryRecords.filter(record => [record.propertyNo, record.area, record.caseName, record.address, developerFullNameText(record.developer)]
+        .some(value => String(value || "").toLowerCase().includes(normalizedPublicQuery)));
+  const publicExpiry15Count = publicBaseRecords.filter(record => {
+    const remaining = daysUntil(record.entrustEnd);
+    return remaining >= 0 && remaining <= 15;
+  }).length;
+  const publicExpiry30Count = publicBaseRecords.filter(record => {
+    const remaining = daysUntil(record.entrustEnd);
+    return remaining >= 0 && remaining <= 30;
+  }).length;
   const intakeDraft = intakeDrafts.find(d => d.id === selectedIntakeId) || null;
   const analyzeIntake = () => {
     const parsed = parseIntakes(intakeRaw); if (!parsed.length) return flash("無法辨識資料，請貼上業務回應的一列資料");
@@ -1000,12 +1358,19 @@ export default function Home() {
     if (duplicateNames.length && !confirm(`發現相同案件：${duplicateNames.join("、")}\n資料已存在草稿或總表，仍要再次加入嗎？`)) return;
     const saved = parsed.map(item => ({ ...item, raw: intakeRaw })); setIntakeDrafts(prev => [...saved.reverse(), ...prev]); setSelectedIntakeId(""); selectedIntakeRef.current = ""; setIntakeRaw(""); flash(`已新增 ${saved.length} 筆進案草稿`);
   };
+  const addManualIntakeDraft = () => {
+    const draft: IntakeData = { id: newId(), values: {}, propertyKind: "房屋", createdAt: new Date().toISOString(), raw: "手動新增例外案件" };
+    setIntakeDrafts(previous => [draft, ...previous]);
+    selectedIntakeRef.current = draft.id;
+    setSelectedIntakeId(draft.id);
+    flash("已建立例外案件草稿，確認後再按正式進案");
+  };
   const updateIntakeValue = (needle: string, value: string) => {
     const target = intakeDrafts.find(draft => draft.id === selectedIntakeId); if (!target) return;
     const values = { ...target.values }; const key = Object.keys(values).find(k => k.includes(needle)) || needle; values[key] = value;
     const updated: IntakeData = { ...target, values, propertyKind: needle === "物件型態" ? (value.includes("土地") ? "純土地" : "房屋") : target.propertyKind };
     setIntakeDrafts(prev => prev.map(draft => draft.id === updated.id ? updated : draft));
-    if (updated.linkedRecordId) setRecords(prev => prev.map(record => record.id === updated.linkedRecordId ? intakeToRecord(updated, record) : record));
+    if (updated.linkedRecordId) setRecords(prev => prev.map(record => record.id === updated.linkedRecordId ? normalizeRecordPings(intakeToRecord(updated, record)) : record));
   };
   const selectIntakeDraft = (id: string) => { selectedIntakeRef.current = id; setSelectedIntakeId(id); };
   const confirmIntake = (draftId?: string) => { const targetId = draftId || selectedIntakeRef.current; const target = targetId ? intakeDrafts.find(d => d.id === targetId) : intakeDraft; if (!target) return; const targetNo = intakeValue(target.values, "委託主約編號"); const existing = target.linkedRecordId ? records.find(record => record.id === target.linkedRecordId) : records.find(record => !!targetNo && record.propertyNo === targetNo); const record = intakeToRecord(target, existing); if (!record.propertyNo || !record.caseName) return flash("缺少物件編號或案名，請先確認表單內容"); if (existing) { const tracked = withTrackedUpdate(existing, record); setRecords(prev => prev.map(item => item.id === existing.id ? tracked : item)); setIntakeDrafts(prev => prev.map(draft => draft.id === target.id ? { ...draft, linkedRecordId: existing.id, enteredAt: draft.enteredAt || new Date().toISOString() } : draft)); flash("已連結並同步更新原總表資料"); return; } if (!confirm(`確定文件已收到，將「${record.caseName}」正式加入總表？`)) return; setRecords(prev => [record, ...prev]); setIntakeDrafts(prev => prev.map(draft => draft.id === target.id ? { ...draft, linkedRecordId: record.id, enteredAt: new Date().toISOString() } : draft)); flash("已正式進案；原貼串已保留並與總表連動"); };
@@ -1044,55 +1409,59 @@ export default function Home() {
 
   const showingPublic = internalView || tab === "public";
 
-  return <main className={internalView ? "internal-public-app" : ""}>
+  return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="brand"><h1>物件管理總表 <small className="app-version">V2026.08.04</small></h1></div>
-      <div className="header-actions"><button className="ppt-export-button" onClick={() => { setPptExtraIds([]); setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button onClick={exportExcel}>匯出 Excel</button><label className="file-button">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button onClick={exportJson}>匯出 JSON</button><button className="key-tag" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{active.filter(r => r.key).length}</b></button><div className="header-new-record"><button className="primary" onClick={() => setEditing(blankRecord())}>＋ 新增物件</button><small>最後修改時間：{latestModifiedAt ? displayModifiedAt(latestModifiedAt) : "尚無"}</small></div></div>
-    </header>}
-    {!internalView && <nav className="nav">
+      <div className="brand"><h1>總表　管理模式 <small className="app-version">V2026.08.04</small></h1></div>
+      <div className="header-actions"><button className="ppt-export-button" onClick={() => { setPptExtraIds([]); setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button onClick={exportExcel}>匯出 Excel</button><label className="file-button">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button onClick={exportJson}>匯出 JSON</button><button className="key-tag" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button><span className="home-last-modified">最後修改: {latestModifiedAt ? displayHomeModifiedAt(latestModifiedAt) : "尚無紀錄"}</span></div>
+      <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
       <button className={tab === "archive" ? "active" : ""} onClick={() => setTab("archive")}>封存{pendingArchiveCleanup.length > 0 && <small className="archive-pending-count">待下架 {pendingArchiveCleanup.length}</small>}</button>
       <button className={tab === "activity" ? "active" : ""} onClick={() => setTab("activity")}>每日物件動態</button>
-      <button className={tab === "inventory" ? "active" : ""} onClick={() => setTab("inventory")}>業務庫存</button>
+      <button className={tab === "inventory" ? "active" : ""} onClick={() => setTab("inventory")}>物件庫存</button>
       <button className={tab === "tour" ? "active" : ""} onClick={() => setTab("tour")}>團看安排</button>
       <button className={tab === "intake" ? "active" : ""} onClick={() => { setTab("intake"); selectIntakeDraft(""); }}>進案草稿</button>
       <button className={tab === "public" ? "active" : ""} onClick={openPublic}>前台總表</button>
       <button className={tab === "settings" ? "active" : ""} onClick={() => setTab("settings")}>設定</button>
-    </nav>}
+      </nav>
+    </header>}
 
     {!internalView && tab === "active" && systemExpiryReminders.length > 0 && <div className="system-expiry-reminder"><b>系統到期提醒</b>{systemExpiryReminders.map(item => <span key={item.label}>{item.label}：{displayRocDate(item.date)} 到期{item.date < today() ? "（已到期）" : item.leadDays === 30 ? "（30天內）" : "（明天到期）"}</span>)}</div>}
-    {!internalView && tab === "active" && <PropertyBookReview records={active} submit={submitBookReviews}/>}
+    {!internalView && tab === "active" && <PropertyBookReview records={active} settings={settings} submit={submitBookReviews}/>}
     {!internalView && tab === "active" && <BusinessReportInbox records={active} resolve={resolveMonthlyPropertyReport} archive={(record, status) => setArchiveChoice({ record, status, date: today() })}/>}
     {showingPublic && publicUnlocked && publicScope === "mine" && publicPerson && <MonthlyPropertyReport records={myProperties} person={publicPerson} submit={submitMonthlyPropertyReport}/>}
 
     {tab === "settings" ? <SettingsPanel settings={settings} setSettings={setSettings} supabasePush={supabasePush} supabasePull={supabasePull} cloudSession={cloudSession} supabaseSignIn={supabaseSignIn} supabaseSignOut={supabaseSignOut} /> :
-    tab === "intake" ? <IntakePanel raw={intakeRaw} setRaw={setIntakeRaw} drafts={intakeDrafts} draft={intakeDraft} selectDraft={selectIntakeDraft} deleteDraft={removeIntakeDraft} analyze={analyzeIntake} updateValue={updateIntakeValue} clear={() => setIntakeRaw("")} confirmIntake={confirmIntake} /> :
+    tab === "intake" ? <IntakePanel raw={intakeRaw} setRaw={setIntakeRaw} drafts={intakeDrafts} draft={intakeDraft} selectDraft={selectIntakeDraft} deleteDraft={removeIntakeDraft} analyze={analyzeIntake} addManualDraft={addManualIntakeDraft} updateValue={updateIntakeValue} clear={() => setIntakeRaw("")} confirmIntake={confirmIntake} /> :
     tab === "tour" ? <TourPlanner records={records} drafts={intakeDrafts} items={tourItems} setItems={setTourItems} editRecord={setEditing} updateDraftCaseName={updateIntakeDraftCaseName} tourDate={tourDate} setTourDate={setTourDate} tourTitle={tourTitle} setTourTitle={setTourTitle} notify={flash} complete={(date, recordIds, draftIds) => { setRecords(previous => previous.map(record => recordIds.includes(record.id) ? withTrackedUpdate(record, { ...record, groupViewDate: date, updateDate: today() }) : record)); setIntakeDrafts(previous => previous.map(draft => draftIds.includes(draft.id) ? { ...draft, groupViewDate: date } : draft)); setTourItems([]); flash("團看日期已同步到物件與草稿"); }} /> :
     tab === "activity" ? <DailyActivity records={records} /> :
     tab === "inventory" ? <BusinessInventory records={records} people={settings.personnel} /> :
     tab === "keys" ? <KeySummary records={records}/> :
-    showingPublic ? <section className="public-shell">{!publicUnlocked ? <div className="login-card"><h2>內部總表</h2><p>請輸入業務人員身分證字號進入</p><input type="password" value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === "Enter" && unlock()} placeholder="請輸入密碼"/><button className="primary wide" onClick={unlock}>進入內部總表</button><small>密碼可由管理端「設定」修改</small></div> : <><div className="public-head"><div><p className="logged-person">登錄人員：{publicPerson?.name || "業務人員"}</p><h2>{publicScope === "activity" ? "每日物件動態" : publicScope === "mine" ? "我的物件" : publicScope === "contacts" ? "通訊錄" : "物件總表"}</h2><div className="scope-tabs"><button className={publicScope === "activity" ? "selected" : ""} onClick={() => setPublicScope("activity")}>每日物件動態</button><button className={publicScope === "mine" ? "selected" : ""} onClick={() => setPublicScope("mine")}>我的物件 {myProperties.length}</button><button className={publicScope === "all" ? "selected" : ""} onClick={() => setPublicScope("all")}>物件總表 {active.length}</button><button className={publicScope === "contacts" ? "selected" : ""} onClick={() => setPublicScope("contacts")}>通訊錄</button></div></div><button onClick={() => { setPublicUnlocked(false); setPublicPersonId(""); }}>鎖定畫面</button></div>{publicScope === "activity" ? <DailyActivity records={records} compact/> : publicScope === "contacts" ? <ContactDirectory people={contactPeople}/> : <>{publicScope === "mine" && expiryAlerts.length > 0 && <div className="expiry-alert"><b>委託到期提醒</b>{expiryAlerts.map(r => <span key={r.id}>{r.caseName}：還有 {daysUntil(r.entrustEnd)} 天到期{daysUntil(r.entrustEnd) <= 15 ? "（15天內）" : "（30天內）"}</span>)}</div>}<PropertyTable records={publicScope === "mine" ? myProperties : active} columns={publicColumns} publicMode expiryAnnotation={publicScope === "mine"} onEdit={() => {}} onArchive={() => {}} onRestore={() => {}} onRemove={() => {}}/></>}</>}</section> :
+    showingPublic ? <section className="public-shell">{!publicUnlocked ? <div className="login-card"><h2>內部總表</h2><p>請輸入業務人員身分證字號進入</p><input type="password" value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === "Enter" && unlock()} placeholder="請輸入密碼"/><button className="primary wide" onClick={unlock}>進入內部總表</button><small>連城不動產開發有限公司物件資料屬公司重要資訊，僅限內部使用；未經授權，禁止外傳、外流、轉載或提供他人使用。</small></div> : <><div className="public-head"><div><p className="logged-person">登錄人員：{publicPerson?.name || "業務人員"}</p><h2>{publicScope === "activity" ? "每日物件動態" : publicScope === "mine" ? "我的物件" : publicScope === "contacts" ? "通訊錄" : "物件總表"}</h2><div className="scope-tabs"><button className={publicScope === "activity" ? "selected" : ""} onClick={() => setPublicScope("activity")}>每日物件動態</button><button className={publicScope === "mine" ? "selected" : ""} onClick={() => setPublicScope("mine")}>我的物件 {myProperties.length}</button><button className={publicScope === "all" ? "selected" : ""} onClick={() => setPublicScope("all")}>物件總表 {active.length}</button><button className={publicScope === "contacts" ? "selected" : ""} onClick={() => setPublicScope("contacts")}>通訊錄</button></div></div></div>{publicScope === "mine" && <div className="public-expiry-filters"><button className={publicExpiryFilter === "all" ? "selected" : ""} onClick={() => setPublicExpiryFilter("all")}>全部</button><button className={publicExpiryFilter === "15" ? "selected" : ""} onClick={() => setPublicExpiryFilter("15")}>15天內到期 {publicExpiry15Count}</button><button className={publicExpiryFilter === "30" ? "selected" : ""} onClick={() => setPublicExpiryFilter("30")}>30天內到期 {publicExpiry30Count}</button></div>}{(publicScope === "mine" || publicScope === "all") && <div className="public-search-tools"><label className="search">⌕<input value={publicQuery} onChange={event => setPublicQuery(event.target.value)} placeholder="搜尋編號、地區、案名、地址、開發…"/></label><button type="button" onClick={() => { setPublicQuery(""); setPublicExpiryFilter("all"); }}>清除篩選</button><div className="public-zoom-tools"><button type="button" onClick={() => setPublicZoom(value => Math.max(25, value - 10))}>－縮小</button><b>{publicZoom}%</b><button type="button" onClick={() => setPublicZoom(value => Math.min(140, value + 10))}>＋放大</button></div></div>}{publicScope === "activity" ? <DailyActivity records={records} compact/> : publicScope === "contacts" ? <ContactDirectory people={contactPeople}/> : <>{publicScope === "mine" && expiryAlerts.length > 0 && <div className="expiry-alert"><b>委託到期提醒</b>{expiryAlerts.map(r => <span key={r.id}>{r.caseName}：還有 {daysUntil(r.entrustEnd)} 天到期{daysUntil(r.entrustEnd) <= 15 ? "（15天內）" : "（30天內）"}</span>)}</div>}<PropertyTable records={publicTableRecords} columns={publicColumns} publicMode zoom={publicZoom} expiryAnnotation={publicScope === "mine"} onEdit={() => {}} onArchive={() => {}} onRestore={() => {}} onRemove={() => {}}/></>}</>}</section> :
     <section className={`content ${tab === "archive" ? "archive-list-page" : "active-list-page"}`}>
-      <div className="list-head"><div className="list-title-search"><SectionTitle title={tab === "archive" ? "封存物件" : "委託中物件"} subtitle={tab === "archive" ? "到期與已下架物件紀錄" : ""}/><label className="search">⌕<input value={query} onChange={e => setQuery(e.target.value)} placeholder="搜尋編號、地區、案名、地址…"/></label></div><div className="tools">{tab === "active" && <><button className={missingDataRecords.length ? "missing-data-button has-items" : "missing-data-button"} onClick={() => setMissingDataReminderOpen(true)}>待補資料 {missingDataRecords.length}</button><select className="website-filter" value={websiteFilter} onChange={event => setWebsiteFilter(event.target.value)}><option value="">全部物件</option><option value="all">全部尚未 PO</option>{Object.entries(websiteFieldMap).map(([key, name]) => <option key={key} value={key}>{name} 尚未 PO</option>)}</select><button className="advanced-filter-button" onClick={() => setAdvancedFilterOpen(true)}>進階篩選</button><button className="clear-filter-button" onClick={() => { setWebsiteFilter(""); setAdvancedFilter(blankAdvancedFilter()); setQuery(""); }}>清除篩選</button></>}</div></div>
+      <div className="list-head active-list-toolbar"><div className="list-title-search"><SectionTitle title={tab === "archive" ? "封存物件" : "委託中物件"} subtitle={tab === "archive" ? "到期與已下架物件紀錄" : ""}/><label className="search">⌕<input value={currentListQuery} onChange={e => tab === "archive" ? setArchiveQuery(e.target.value) : setQuery(e.target.value)} placeholder="搜尋編號、地區、案名、地址…"/></label>{tab === "archive" && <button className="clear-filter-button" onClick={() => setArchiveQuery("")}>清除篩選</button>}</div><div className="tools">{tab === "active" && <><button className="showing-follow-up-filter" onClick={() => setShowingFollowUpOpen(true)}>暫停帶看 {showingFollowUpRecords.length}</button><button className={missingDataRecords.length ? "missing-data-button has-items" : "missing-data-button"} onClick={() => setMissingDataReminderOpen(true)}>待補資料 {missingDataRecords.length}</button><select className="website-filter" value={websiteFilter} onChange={event => setWebsiteFilter(event.target.value)}><option value="">全部物件</option><option value="missing_sales_book_date">銷售本缺日期</option><option value="missing_book_location_date">物件本位置缺日期</option><option value="missing_photo_info">照片缺填寫</option><option value="all">全部尚未 PO</option>{Object.entries(websiteFieldMap).map(([key, name]) => <option key={key} value={key}>{name} 尚未 PO</option>)}</select><button className="advanced-filter-button" onClick={() => setAdvancedFilterOpen(true)}>進階篩選</button><button className="clear-filter-button" onClick={() => { setShowingFollowUpOnly(false); setWebsiteFilter(""); setAdvancedFilter(blankAdvancedFilter()); setQuery(""); }}>清除篩選</button></>}</div></div>
       {tab === "active" && websiteExpiryRecords.length > 0 && <div className="website-expiry-reminder"><b>網站廣告到期提醒</b>{websiteExpiryRecords.map(({ record, site, date }) => <button key={`${record.id}-${site}`} onClick={() => setEditing(record)}>{record.caseName || record.propertyNo}：{site} 已於 {displayRocDate(date)} 到期</button>)}</div>}
-      <PropertyTable records={shown} columns={tab === "archive" ? archiveColumns : activeColumns} archiveMode={tab === "archive"} activeLead={tab === "active"} showAreaGroups={tab === "active"} onEdit={setEditing} onArchive={archiveRecord} onRestore={setRestoreChoiceRecord} onRemove={removeRecord}/>
+      <PropertyTable records={tab === "archive" ? shown.map(archiveDisplayRecord) : shown.map(showingFollowUpDisplayRecord).map((record, index) => ({ ...record, displaySequence: String(index + 1) }))} columns={tab === "archive" ? archiveColumns : activeColumns} archiveMode={tab === "archive"} activeLead={tab === "active"} showAreaGroups={tab === "active"} onEdit={setEditing} onArchive={archiveRecord} onRestore={setRestoreChoiceRecord} onRemove={removeRecord}/>
       {advancedFilterOpen && <AdvancedFilterModal value={advancedFilter} setValue={setAdvancedFilter} onClose={() => setAdvancedFilterOpen(false)} onReset={() => setAdvancedFilter(blankAdvancedFilter())}/>}
       {!shown.length && <Empty text={query || tab === "active" && Object.values(advancedFilter).some(Boolean) ? "找不到符合的物件" : tab === "archive" ? "目前沒有封存物件" : "目前沒有委託中物件"}/>}
     </section>}
 
-    {missingDataReminderOpen && tab !== "public" && !expiryReminderOpen && <div className="modal-backdrop missing-data-reminder-backdrop"><div className="modal expiry-reminder-modal missing-data-reminder-modal"><div className="modal-head"><div><span>每日待補資料提醒</span><h2>{missingDataRecords.length ? `有 ${missingDataRecords.length} 筆物件尚待補資料` : "目前沒有待補資料"}</h2></div><button className="close" onClick={() => setMissingDataReminderOpen(false)}>×</button></div><div className="expiry-reminder-list">{missingDataRecords.map(record => <div className="expiry-reminder-row missing-data-reminder-row" key={record.id}><div><b>{record.caseName || record.propertyNo || "未命名案件"}</b><span>{record.propertyNo || "—"}　尚缺：{missingDataOf(record).join("、")}</span></div><button onClick={() => { setMissingDataReminderOpen(false); setEditing(record); }}>前往補資料</button></div>)}{!missingDataRecords.length && <div className="contact-empty">所有委託中物件資料均已補齊。</div>}</div><div className="modal-foot"><span>仍有待補資料時，每天第一次開啟會提醒一次</span><button onClick={() => setMissingDataReminderOpen(false)}>稍後處理</button></div></div></div>}
-    {expiryReminderOpen && tab !== "public" && expiredUnarchived.length > 0 && <div className="modal-backdrop expiry-reminder-backdrop"><div className="modal expiry-reminder-modal"><div className="modal-head"><div><span>委託期限提醒</span><h2>有 {expiredUnarchived.length} 筆到期物件尚未下架</h2></div></div><div className="expiry-reminder-list">{expiredUnarchived.map(record => <div className="expiry-reminder-row" key={record.id}><div><b>{record.caseName || "未命名案件"}</b><span>{record.propertyNo || "—"}　委託結束：{displayRocDate(record.entrustEnd) || "—"}</span></div><select defaultValue="" onChange={event => { if (event.target.value) requestArchive(record, event.target.value); }}><option value="">選擇封存原因…</option><option>售出下架</option><option>成交下架</option><option>下架洽開發</option><option>到期下架</option></select></div>)}</div>
+    {showingFollowUpOpen && tab === "active" && <div className="modal-backdrop"><div className="modal showing-follow-up-modal"><div className="modal-head"><div><span>委託中案件</span><h2>帶看追蹤 {showingFollowUpRecords.length}</h2></div><button className="close" onClick={() => setShowingFollowUpOpen(false)}>×</button></div><div className="showing-follow-up-table"><div className="showing-follow-up-heading"><b>案件</b><b>開發</b><b>追蹤日期</b><b>紀錄</b><b>操作</b></div>{sortActiveRecords(showingFollowUpRecords).map(record => <div className="showing-follow-up-row" key={record.id}><section><b>{record.caseName || record.propertyNo}</b><small>{record.propertyNo}　{record.address}</small></section><span className="showing-follow-up-developer">{developerFullNameText(record.developer) || "—"}</span><strong>{displayRocDate(record.showingFollowUpDueDate) || "—"}</strong><input className="showing-follow-up-note" type="text" value={record.showingFollowUpNote || ""} onChange={event => setRecords(previous => previous.map(item => item.id === record.id ? { ...item, showingFollowUpNote: event.target.value, lastModifiedAt: new Date().toISOString() } : item))} placeholder="輸入追蹤紀錄"/><div><button onClick={() => { setShowingFollowUpOpen(false); setEditing(record); }}>編輯</button><button onClick={() => clearShowingFollowUp(record)}>解除</button></div></div>)}{!showingFollowUpRecords.length && <p className="showing-follow-up-empty">目前沒有帶看追蹤案件</p>}</div><div className="modal-foot"><span>紀錄為帶看追蹤專用，不會帶入物件備註欄</span><button onClick={() => setShowingFollowUpOpen(false)}>完成</button></div></div></div>}
+
+    {dealCompletionReminderOpen && tab !== "public" && pendingDealCompletion.length > 0 && !expiryReminderOpen && !websitePoReminderOpen && !missingDataReminderOpen && !archiveCleanupReminderOpen && <div className="modal-backdrop archive-cleanup-backdrop"><div className="modal archive-cleanup-modal"><div className="modal-head"><div><span>成交後續提醒</span><h2>有 {pendingDealCompletion.length} 筆成交案件尚未完成後續作業</h2></div><button className="close" onClick={() => setDealCompletionReminderOpen(false)}>×</button></div><div className="archive-cleanup-table-wrap"><table className="archive-cleanup-table deal-completion-table"><thead><tr><th>案件</th>{dealCompletionTasks.map(([, label]) => <th key={label}>{label}</th>)}</tr></thead><tbody>{pendingDealCompletion.map(({ record, tasks }) => <tr key={record.id}><td className="archive-cleanup-case-cell"><b>{stripRestoredDisplay(record.caseName) || "未命名案件"}</b><small>{record.propertyNo || "—"}　{displayRocDate(record.archived || "")}成交下架</small></td>{dealCompletionTasks.map(([key]) => <td key={key}>{tasks.some(([pendingKey]) => pendingKey === key) ? <button onClick={() => completeDealTask(record, key)}>完成</button> : <span className="archive-cleanup-done">已完成</span>}</td>)}</tr>)}</tbody></table></div><div className="modal-foot"><span>五項全部完成前，下次開啟系統仍會提醒</span><button onClick={() => setDealCompletionReminderOpen(false)}>稍後處理</button></div></div></div>}
+
+    {missingDataReminderOpen && tab !== "public" && !expiryReminderOpen && <div className="modal-backdrop missing-data-reminder-backdrop"><div className="modal expiry-reminder-modal missing-data-reminder-modal"><div className="modal-head"><div><span>每日待補資料提醒</span><h2>{missingDataRecords.length ? `有 ${missingDataRecords.length} 筆物件尚待補資料` : "目前沒有待補資料"}</h2></div><button className="close" onClick={() => setMissingDataReminderOpen(false)}>×</button></div><div className="missing-data-table-wrap">{missingDataRecords.length ? <table className="missing-data-table"><thead><tr><th>物件編號</th><th>案名</th><th>缺</th></tr></thead><tbody>{missingDataRecords.map(record => <tr key={record.id}><td>{record.propertyNo || "—"}</td><td><button className="missing-data-case-link" onClick={() => { setMissingDataReminderOpen(false); setEditing(record); }}>{record.caseName || "未命名案件"}</button></td><td>{missingDataOf(record).join("　")}</td></tr>)}</tbody></table> : <div className="contact-empty">所有委託中物件資料均已補齊。</div>}</div><div className="modal-foot"><span>點選案名可直接前往補資料；仍有待補資料時，每天第一次開啟會提醒一次</span><button onClick={() => setMissingDataReminderOpen(false)}>稍後處理</button></div></div></div>}
+    {expiryReminderOpen && tab !== "public" && expiredUnarchived.length > 0 && <div className="modal-backdrop expiry-reminder-backdrop"><div className="modal expiry-reminder-modal"><div className="modal-head"><div><span>委託期限提醒</span><h2>有 {expiredUnarchived.length} 筆到期物件尚未下架</h2></div><button className="close" onClick={() => setExpiryReminderOpen(false)}>×</button></div><div className="expiry-reminder-list">{expiredUnarchived.map(record => <div className="expiry-reminder-row" key={record.id}><div><b><span className="expiry-property-no">{record.propertyNo || "—"}</span>　<span className="expiry-case-name">{record.caseName || "未命名案件"}</span></b><span className="expiry-reminder-detail"><span className="expiry-address">{record.address || "—"}</span><span>委託結束：<strong>{displayRocDate(record.entrustEnd) || "—"}</strong></span></span></div><select defaultValue="" onChange={event => { if (event.target.value) requestArchive(record, event.target.value); }}><option value="">選擇封存原因…</option><option>售出下架</option><option>成交下架</option><option>下架洽開發</option><option>到期下架</option></select></div>)}</div>
 <div className="modal-foot"><span>未封存前，下次開啟系統仍會提醒</span><button onClick={() => setExpiryReminderOpen(false)}>稍後處理</button></div></div></div>}
-    {websitePoReminderOpen && tab !== "public" && overduePoRecords.length > 0 && !expiryReminderOpen && !missingDataReminderOpen && <div className="modal-backdrop website-po-reminder-backdrop"><div className="modal expiry-reminder-modal website-po-reminder-modal"><div className="modal-head"><div><span>PO 網提醒</span><h2>進案超過 14 天，尚有 {overduePoRecords.length} 筆未完成</h2></div></div><div className="expiry-reminder-list">{overduePoRecords.map(({ record, missing }) => <div className="expiry-reminder-row website-po-reminder-row" key={record.id}><div><b>{record.caseName || "未命名案件"}</b><span>{record.propertyNo || "—"}　進案：{displayRocDate(record.reportDate) || "—"}</span><small>尚未 PO：{missing.map(key => websiteFieldMap[key]).join("、")}</small></div><button onClick={() => { setWebsitePoReminderOpen(false); setEditing(record); }}>前往填寫</button></div>)}</div>
+    {websitePoReminderOpen && tab !== "public" && overduePoRecords.length > 0 && !expiryReminderOpen && !missingDataReminderOpen && <div className="modal-backdrop website-po-reminder-backdrop"><div className="modal expiry-reminder-modal website-po-reminder-modal"><div className="modal-head"><div><span>PO 網提醒</span><h2>進案超過 14 天，尚有 {overduePoRecords.length} 筆未完成</h2></div><button className="close" onClick={() => setWebsitePoReminderOpen(false)}>×</button></div><div className="expiry-reminder-list">{overduePoRecords.map(({ record, missing }) => <div className="expiry-reminder-row website-po-reminder-row" key={record.id}><div><b>{record.caseName || "未命名案件"}</b><span>{record.propertyNo || "—"}　進案：{displayRocDate(record.reportDate) || "—"}</span><small>尚未 PO：{missing.map(key => websiteFieldMap[key]).join("、")}</small></div><button onClick={() => { setWebsitePoReminderOpen(false); setEditing(record); }}>前往填寫</button></div>)}</div>
 <div className="modal-foot"><span>填入網站編號、勾選「無」或設為旁5後，該項即停止提醒</span><button onClick={() => setWebsitePoReminderOpen(false)}>稍後處理</button></div></div></div>}
 
-    {archiveCleanupReminderOpen && tab !== "public" && pendingArchiveCleanup.length > 0 && !expiryReminderOpen && !websitePoReminderOpen && !missingDataReminderOpen && <div className="modal-backdrop archive-cleanup-backdrop"><div className="modal archive-cleanup-modal"><div className="modal-head"><div><span>封存下架提醒</span><h2>有 {pendingArchiveCleanup.length} 筆封存案件尚未完成下架</h2></div></div><div className="archive-cleanup-list">{pendingArchiveCleanup.map(({ record, tasks }) => <article className="archive-cleanup-case" key={record.id}><header><b>{record.caseName || "未命名案件"}</b><span>{record.propertyNo || "—"}　封存：{displayRocDate(record.archived || "")}</span></header><div>{tasks.map(task => <button key={task.key} onClick={() => completeArchiveCleanup(record, task.key)}><span>{task.label}</span><small className="archive-cleanup-meta">{displayRocDate(record.archived || "")}・{record.status || "下架"}</small><b>完成下架</b></button>)}</div></article>)}</div><div className="modal-foot"><span>未完成前，下次開啟系統仍會提醒</span><button onClick={() => setArchiveCleanupReminderOpen(false)}>稍後處理</button></div></div></div>}
+    {archiveCleanupReminderOpen && tab !== "public" && pendingArchiveCleanup.length > 0 && !expiryReminderOpen && !websitePoReminderOpen && !missingDataReminderOpen && <div className="modal-backdrop archive-cleanup-backdrop"><div className="modal archive-cleanup-modal"><div className="modal-head"><div><span>封存下架提醒</span><h2>有 {pendingArchiveCleanup.length} 筆封存案件尚未完成下架</h2></div><button className="close" onClick={() => setArchiveCleanupReminderOpen(false)}>×</button></div><div className="archive-cleanup-table-wrap"><table className="archive-cleanup-table"><thead><tr><th>案件</th><th>房管下架</th><th>物件本／旁5下架</th><th>銷售本下架</th>{archiveWebsiteTasks.map(([, label]) => <th key={label}>{label}</th>)}</tr></thead><tbody>{pendingArchiveCleanup.map(({ record, tasks }) => { const allTasks = archiveCleanupTasks(record); const buttonFor = (key: string) => { const applicable = allTasks.find(item => item.key === key); if (!applicable) return <span className="archive-cleanup-na">—</span>; const pending = tasks.find(item => item.key === key); return pending ? <button onClick={() => completeArchiveCleanup(record, pending.key)}>完成下架</button> : <span className="archive-cleanup-done">已完成</span>; }; return <tr key={record.id}><td className="archive-cleanup-case-cell"><b>{stripRestoredDisplay(record.caseName) || "未命名案件"}</b><small className="archive-cleanup-address">{record.address || "未填寫地址"}</small><small className="archive-cleanup-status">{record.propertyNo || "—"}　{displayRocDate(record.archived || "")}{record.status || "下架"}</small></td><td>{buttonFor("housingDownDate")}</td><td>{buttonFor("bookDownDate")}</td><td>{buttonFor("salesBookDownDate")}</td>{archiveWebsiteTasks.map(([field]) => <td key={field}>{buttonFor(`${field}DownDate`)}</td>)}</tr>; })}</tbody></table></div><div className="modal-foot"><span>未完成前，下次開啟系統仍會提醒</span><button onClick={() => setArchiveCleanupReminderOpen(false)}>稍後處理</button></div></div></div>}
     {archiveChoice && <div className="modal-backdrop"><div className="modal archive-choice-modal"><div className="modal-head"><div><span>確認封存資料</span><h2>{archiveChoice.record.caseName || "未命名案件"}</h2></div><button className="close" onClick={() => setArchiveChoice(null)}>×</button></div><div className="archive-choice-body"><label className="field"><span>封存原因</span><select value={archiveChoice.status} onChange={event => { const status = event.target.value; setArchiveChoice({ ...archiveChoice, status, date: status === "到期下架" ? nextDate(archiveChoice.record.entrustEnd) : today() }); }}><option>售出下架</option><option>成交下架</option><option>下架洽開發</option><option>到期下架</option></select></label><label className="field"><span>案名後方顯示日期</span><input type="text" value={displayRocDate(archiveChoice.date)} onChange={event => setArchiveChoice({ ...archiveChoice, date: event.target.value })} onBlur={event => setArchiveChoice({ ...archiveChoice, date: normalizeDateInput(event.target.value) || today() })}/><small>一般原因預設今天；到期下架預設委託結束隔天，可自行修改。每日物件動態仍依今天的實際操作日顯示。</small></label></div>
 <div className="modal-foot"><button onClick={() => setArchiveChoice(null)}>取消</button><button className="primary" onClick={() => archiveRecord(archiveChoice.record, archiveChoice.status, archiveChoice.date)}>確認封存</button></div></div></div>}
     {restoreChoiceRecord && <div className="modal-backdrop"><div className="modal restore-choice-modal"><div className="modal-head"><div><span>恢復封存物件</span><h2>{restoreChoiceRecord.caseName || "未命名案件"}</h2></div><button className="close" onClick={() => setRestoreChoiceRecord(null)}>×</button></div><div className="restore-choice-body"><p>請選擇這次恢復的原因：</p><button className="primary" onClick={() => restoreRecord(restoreChoiceRecord, true)}><b>重新上架</b><span>記錄今天日期，顯示重新上架紅字並列入每日動態</span></button><button onClick={() => restoreRecord(restoreChoiceRecord, false)}><b>恢復委託中物件</b><span>只恢復到委託中，不標示重新上架</span></button></div>
 <div className="modal-foot"><button onClick={() => setRestoreChoiceRecord(null)}>取消</button></div></div></div>}
-    {editing && <div className="modal-backdrop" onMouseDown={e => e.target === e.currentTarget && setEditing(null)}><div className="modal record-edit-modal"><div className="modal-head"><div className="record-modal-title"><span>{editing._intakeDraftId ? "編輯進案草稿" : records.some(r => r.id === editing.id) ? "編輯案件" : "建立新物件"}</span><h2><b>{editing.propertyNo || "尚無編號"}</b><em>{editing.caseName || "尚未命名"}</em></h2><small>{editing.address || "尚未填寫地址"}</small><p>開發業務：{editing.developer || "尚未填寫"}</p>{editing.archived && <i className="record-archive-title-note">{displayRocDate(editing.archived)} {editing.status || "下架"}</i>}</div>
-<div className="modal-head-actions">{records.some(record => record.id === editing.id) && !editing.archived && (editing.status || "委託中") === "委託中" && <><button className="record-print-button color" type="button" onClick={() => { const attention = colorSheetAttention(editing.attentionNotes || "", editing.additionNotes || ""); setPrintEditor({ kind: "color", data: { ...editing, notes: attention, attentionNotes: attention, photos: [...(editing.photos || [])] } }); }}>下載彩色表 Excel</button><button className="record-print-button cover" type="button" onClick={() => printRecordDocument(editing, "cover")}>列印新進封面</button></>}<button className="close" onClick={() => setEditing(null)}>×</button></div></div>
+    {editing && <div className="modal-backdrop" onMouseDown={e => e.target === e.currentTarget && requestCloseEditing()}><div className="modal record-edit-modal"><div className="modal-head"><div className="record-modal-title"><span>{editing._intakeDraftId ? "編輯進案草稿" : records.some(r => r.id === editing.id) ? "編輯案件" : "建立新物件"}</span><h2><b>{editing.propertyNo || "尚無編號"}</b><em>{editing.caseName || "尚未命名"}</em></h2><small>{editing.address || "尚未填寫地址"}</small><p>開發業務：{developerFullNameText(editing.developer) || "尚未填寫"}</p>{editing.archived && <i className="record-archive-title-note">{displayRocDate(editing.archived)} {editing.status || "下架"}</i>}</div>
+<div className="modal-head-actions">{records.some(record => record.id === editing.id) && !editing.archived && (editing.status || "委託中") === "委託中" && <><button className="record-print-button color" type="button" onClick={() => { const attention = colorSheetAttention(editing.attentionNotes || "", editing.additionNotes || ""); setPrintEditor({ kind: "color", data: { ...editing, notes: attention, attentionNotes: attention, photos: [...(editing.photos || [])] } }); }}>下載彩色表 Excel</button><button className="record-print-button cover" type="button" onClick={() => printRecordDocument(editing, "cover")}>列印新進封面</button></>}<button className="close" onClick={requestCloseEditing}>×</button></div></div>
 <div className="form-grid record-edit-grid">{recordEditOrder.filter(key => key !== "area").map(key => {
   if (["feature2", "feature3", "feature4"].includes(key)) return null;
   if (key === "feature1") return <div className="edit-cell edit-features" key="features">{["feature1", "feature2", "feature3", "feature4"].map(featureKey => <Field key={featureKey} fieldKey={featureKey} label={labels[featureKey]} record={editing} records={records} setRecord={updateEditingRecord}/>)}</div>;
@@ -1101,7 +1470,8 @@ export default function Home() {
 })}</div>
 <div className="modal-foot"><div className="archive-in-editor">{records.some(r => r.id === editing.id) && (editing.archived || isExpired(editing) || editing.status !== "委託中") ? <button type="button" className="restore-in-editor" onClick={() => { setRestoreChoiceRecord(editing); setEditing(null); }}>恢復</button> : records.some(r => r.id === editing.id) && <select defaultValue="" onChange={e => { if (e.target.value) { requestArchive(editing, e.target.value); setEditing(null); } }}><option value="">封存案件…</option><option>售出下架</option><option>成交下架</option><option>下架洽開發</option><option>到期下架</option></select>}</div><div className="record-bottom-actions">{records.some(r => r.id === editing.id) && !editing.archived && editing.status === "委託中" && <><button type="button" onClick={() => returnToIntake(editing)}>退回進案草稿</button><button type="button" className="danger" onClick={() => removeRecord(editing)}>刪除</button></>}</div><div className="record-save-actions">{editing._intakeDraftId && <span className="draft-save-note">尚未進案～進案草稿中</span>}<button className="primary" onClick={saveRecord}>{editing._intakeDraftId ? "同步更新草稿" : "儲存物件"}</button></div></div></div></div>}
     {printEditor && <div className="modal-backdrop print-editor-backdrop"><div className="modal print-editor-modal compact"><div className="modal-head print-editor-head"><div><span>彩色銷售資料表</span><h2>下載彩色表 Excel</h2></div><button className="close" onClick={() => setPrintEditor(null)}>×</button></div><div className="print-editor-body compact-body"><section className="print-editor-section basic"><div className="print-editor-compact-grid">{[["developer", "開發人員"], ["price", "總價（萬）"], ["key", "KEY編號"], ["currentState", "現況"], ["caseName", "案名"], ["address", "地址"]].map(([key, label]) => <label className={`field print-editor-${key}`} key={key}><span>{label}</span><input type="text" value={printEditor.data[key] || ""} onChange={event => setPrintEditor({ ...printEditor, data: { ...printEditor.data, [key]: event.target.value } })}/></label>)}<label className="field print-editor-notes"><span>重點說明與備註</span><textarea rows={5} value={printEditor.data.attentionNotes || ""} onChange={event => { const attention = colorSheetAttention(event.target.value, printEditor.data.additionNotes || ""); setPrintEditor({ ...printEditor, data: { ...printEditor.data, notes: attention, attentionNotes: attention } }); }}/></label></div></section></div><div className="modal-foot print-editor-foot"><span className="print-editor-warning">此處修改只套用本次下載，不會更動原案件。</span><button onClick={() => setPrintEditor(null)}>取消</button><button className="primary" onClick={async () => { try { await downloadColorWorkbook(printEditor.data, settings.personnel); setPrintEditor(null); flash("彩色表 Excel 已下載"); } catch (error) { console.error(error); flash("彩色表 Excel 下載失敗"); } }}>下載 Excel</button></div></div></div>}
-    {pptPickerOpen && <div className="modal-backdrop" onMouseDown={event => event.target === event.currentTarget && setPptPickerOpen(false)}><div className="modal ppt-picker-modal"><div className="modal-head"><div><span>產生 POWERPOINT</span><h2>選擇本次進案物件</h2></div><button className="close" onClick={() => setPptPickerOpen(false)}>×</button></div><div className="ppt-picker-body"><div className="ppt-week-range"><b>自動抓取本週進案</b><span>{displayRocDate(currentPptWeek().start)} ～ {displayRocDate(currentPptWeek().end)}</span></div><div className="ppt-meeting-note">以上為下周一 開會進案報告順序 請同仁準備</div><div className="ppt-case-list"><div className="ppt-case-heading"><span>序</span><span>案名</span><span>地址</span><span>開發</span><span>進案日期</span><span></span></div>{weeklyPptRecords.map((record, index) => <div className="ppt-case-row auto" key={record.id}><strong>{index + 1}</strong><b>{record.caseName || "未命名案件"}</b><span className="ppt-case-address">{chunkText(record.address || "—", 20).map((line, lineIndex) => <span key={`${line}-${lineIndex}`}>{line}</span>)}</span><span>{record.developer || "—"}</span><small>{displayRocDate(record.reportDate) || "—"}</small><span className="ppt-auto-mark">自動加入</span></div>)}{!weeklyPptRecords.length && <div className="ppt-empty">這個日期區間目前沒有進案物件</div>}</div><button type="button" className="ppt-extra-toggle" onClick={() => setPptShowExtras(value => !value)}>＋ 選擇臨時加入物件</button>{pptShowExtras && <div className="ppt-extra-list">{active.filter(record => !isCurrentPptWeek(record.reportDate)).map(record => <label className="ppt-case-row extra" key={record.id}><input type="checkbox" checked={pptExtraIds.includes(record.id)} onChange={event => setPptExtraIds(previous => event.target.checked ? [...previous, record.id] : previous.filter(id => id !== record.id))}/><b>{record.caseName || "未命名案件"}</b><span className="ppt-case-address">{chunkText(record.address || "—", 20).map((line, lineIndex) => <span key={`${line}-${lineIndex}`}>{line}</span>)}</span><span>{record.developer || "—"}</span><small>{displayRocDate(record.reportDate) || "無進案日期"}</small><span></span></label>)}{!active.some(record => !isCurrentPptWeek(record.reportDate)) && <div className="ppt-empty">沒有其他可臨時加入的委託中物件</div>}</div>}</div><div className="modal-foot ppt-picker-foot"><span>本週 {weeklyPptRecords.length} 筆＋臨時 {pptExtraIds.length} 筆</span><button onClick={() => setPptPickerOpen(false)}>取消</button><button className="ppt-image-button" onClick={exportPptOrderImage}>產生圖片</button><button className="primary" onClick={exportPpt}>下載 PPT</button></div></div></div>}
+    {pptPickerOpen && <div className="modal-backdrop" onMouseDown={event => event.target === event.currentTarget && setPptPickerOpen(false)}><div className="modal ppt-picker-modal"><div className="modal-head"><div><span>產生 POWERPOINT</span><h2>選擇週報期別與進案物件</h2></div><button className="close" onClick={() => setPptPickerOpen(false)}>×</button></div><div className="ppt-picker-body"><div className="ppt-week-selector"><b>報告週期</b><div className="ppt-week-dropdown"><button type="button" className="ppt-week-current" onClick={() => setPptWeekMenuOpen(value => !value)}><span>{displayPptWeekLabel(selectedPptWeek)}</span><i>{pptWeekMenuOpen ? "▲" : "▼"}</i></button>{pptWeekMenuOpen && <div className="ppt-week-menu">{pptWeekOptions.map(start => { const week = pptWeekOf(start); return <button type="button" className={selectedPptWeek.start === week.start ? "selected" : ""} key={week.start} onClick={() => { setPptWeekStart(week.start); setPptExtraIds([]); setPptWeekMenuOpen(false); }}>{displayPptWeekLabel(week)}</button>; })}</div>}</div></div><div className="ppt-week-range"><b>本週進案</b><span>{displayPptWeekLabel(selectedPptWeek)}</span></div><div className="ppt-meeting-note">進案週期固定為星期六至星期五，下一個星期一報告；歷史週期會持續保留。</div><div className="ppt-case-list"><div className="ppt-case-heading"><span>序</span><span>案名</span><span>地址</span><span>開發</span><span>進案日期</span><span></span></div>{weeklyPptRecords.map((record, index) => <div className="ppt-case-row auto" key={record.id}><strong>{index + 1}</strong><b>{record.caseName || "未命名案件"}</b><span className="ppt-case-address">{chunkText(record.address || "—", 20).map((line, lineIndex) => <span key={`${line}-${lineIndex}`}>{line}</span>)}</span><span>{developerFullNameText(record.developer) || "—"}</span><small>{displayRocDate(record.reportDate) || "—"}</small><button className="ppt-remove-pill" onClick={() => removeFromPptWeek(record)}>刪</button></div>)}{!weeklyPptRecords.length && <div className="ppt-empty">這個日期區間目前沒有進案物件</div>}</div>{deferredPptRecords.length > 0 && <div className="ppt-deferred-list"><h3>本週已移除／待決定</h3>{deferredPptRecords.map(record => { const choice = pptStoredChoices(record._pptWeekChoices)[selectedPptWeek.start] || ""; return <div className="ppt-deferred-row" key={record.id}><div><b>{record.caseName || "未命名案件"}</b><small>{record.propertyNo}　原週期保留</small></div><button className={choice === "next" ? "selected" : ""} onClick={() => decideRemovedPpt(record, "next")}>下次報告</button><button className={choice === "skip" ? "selected skip" : ""} onClick={() => decideRemovedPpt(record, "skip")}>確定不上PPT</button></div>; })}</div>}<button type="button" className="ppt-extra-toggle" onClick={() => setPptShowExtras(value => !value)}>＋ 選擇臨時加入物件</button>{pptShowExtras && <div className="ppt-extra-list">{active.filter(record => !belongsToPptWeek(record, selectedPptWeek)).map(record => <label className="ppt-case-row extra" key={record.id}><input type="checkbox" checked={pptExtraIds.includes(record.id)} onChange={event => setPptExtraIds(previous => event.target.checked ? [...previous, record.id] : previous.filter(id => id !== record.id))}/><b>{record.caseName || "未命名案件"}</b><span className="ppt-case-address">{chunkText(record.address || "—", 20).map((line, lineIndex) => <span key={`${line}-${lineIndex}`}>{line}</span>)}</span><span>{developerFullNameText(record.developer) || "—"}</span><small>{displayRocDate(record.reportDate) || "無進案日期"}</small><span></span></label>)}{!active.some(record => !belongsToPptWeek(record, selectedPptWeek)) && <div className="ppt-empty">沒有其他可臨時加入的委託中物件</div>}</div>}</div><div className="modal-foot ppt-picker-foot"><span>本期 {weeklyPptRecords.length} 筆＋臨時 {pptExtraIds.length} 筆</span><button onClick={() => setPptPickerOpen(false)}>取消</button><button className="ppt-image-button" onClick={exportPptOrderImage}>產生圖片</button><button className="primary" onClick={exportPpt}>下載 PPT</button></div></div></div>}
+    {pptPickerOpen && <div className="ppt-custom-period"><label><span>週期開始日期</span><input type="text" value={displayRocDate(pptCustomStart || defaultSelectedPptWeek.start)} onChange={event => setPptCustomStart(event.target.value)} onBlur={event => setPptCustomStart(normalizeDateInput(event.target.value) || defaultSelectedPptWeek.start)}/></label><label><span>週期結束日期</span><input type="text" value={displayRocDate(pptCustomEnd || defaultSelectedPptWeek.end)} onChange={event => setPptCustomEnd(event.target.value)} onBlur={event => setPptCustomEnd(normalizeDateInput(event.target.value) || defaultSelectedPptWeek.end)}/></label><label><span>報告日期</span><input type="text" value={displayRocDate(pptCustomMeeting || defaultSelectedPptWeek.meeting)} onChange={event => setPptCustomMeeting(event.target.value)} onBlur={event => setPptCustomMeeting(normalizeDateInput(event.target.value) || defaultSelectedPptWeek.meeting)}/></label><button type="button" onClick={resetPptCustomWeek}>恢復預設週期</button></div>}
     {notice && <div className="toast">{notice}</div>}
   </main>;
 }
@@ -1126,21 +1496,21 @@ function TourPlanner({ records, drafts, items, setItems, editRecord, updateDraft
   const unviewed = sortActiveRecords(records.filter(record => !record.archived && !isExpired(record) && (record.status || "委託中") === "委託中" && !record.groupViewDate && !items.some(item => item.recordId === record.id)));
   const draftCandidates = drafts.filter(draft => !draft.linkedRecordId && !draft.groupViewDate && !items.some(item => item.data._intakeDraftId === draft.id)).map(draft => ({ ...intakeToRecord(draft), id: `draft-${draft.id}`, reportDate: "", status: "尚未進案", _intakeDraftId: draft.id, _notEntered: "1" }));
   const candidates = [...draftCandidates, ...unviewed];
-  const developers = [...new Set(candidates.flatMap(record => String(record.developer || "").split(/[\/／,，、。]+/).map(name => name.trim()).filter(Boolean)))].sort((a, b) => a.localeCompare(b, "zh-TW"));
+  const developers = [...new Set(candidates.flatMap(record => developerNameLines(record.developer || "")))].sort((a, b) => a.localeCompare(b, "zh-TW"));
   const available = candidates.filter(record => {
     const reportDate = String(record.reportDate || "").slice(0, 10);
     const kind = typeShort(record.type) === "土地" ? "土地" : "房屋";
-    return (!developerFilter || String(record.developer || "").includes(developerFilter))
+    return (!developerFilter || developerNameLines(record.developer || "").includes(developerFilter))
       && (!reportDateFrom || (!!reportDate && reportDate >= reportDateFrom))
       && (!reportDateTo || (!!reportDate && reportDate <= reportDateTo))
       && (!propertyKindFilter || kind === propertyKindFilter)
-      && [record.propertyNo, record.caseName, record.address, record.developer].join(" ").includes(search);
+      && [record.propertyNo, record.caseName, record.address, developerFullNameText(record.developer)].join(" ").includes(search);
   });
   const ordered = items.slice().sort((a, b) => Number(a.sequence || 9999) - Number(b.sequence || 9999));
   const addRecord = (record: RecordItem) => setItems([...items, { id: newId(), recordId: record._intakeDraftId ? undefined : record.id, sequence: "", temporary: !!record._intakeDraftId, data: { ...record } }]);
   const openTemporary = () => { const data = blankRecord(); data.propertyNo = "臨時"; data.status = "臨時團看"; data.reportDate = ""; data._notEntered = "1"; setTemporaryEditId(""); setTemporaryDraft(data); setTemporaryOpen(true); };
   const editTemporary = (item: TourItem) => { setTemporaryEditId(item.id); setTemporaryDraft({ ...item.data }); setTemporaryOpen(true); };
-  const addTemporary = () => { if (temporaryEditId) setItems(items.map(item => item.id === temporaryEditId ? { ...item, data: { ...temporaryDraft } } : item)); else setItems([...items, { id: newId(), sequence: "", temporary: true, data: { ...temporaryDraft } }]); setTemporaryOpen(false); setTemporaryEditId(""); };
+  const addTemporary = () => { const normalizedDraft = normalizeRecordPings({ ...temporaryDraft, developer: developerFullNameText(temporaryDraft.developer || "") || temporaryDraft.developer }); if (temporaryEditId) setItems(items.map(item => item.id === temporaryEditId ? { ...item, data: { ...normalizedDraft } } : item)); else setItems([...items, { id: newId(), sequence: "", temporary: true, data: { ...normalizedDraft } }]); setTemporaryOpen(false); setTemporaryEditId(""); };
   const updateItem = (id: string, patch: Partial<TourItem>) => setItems(items.map(item => item.id === id ? { ...item, ...patch } : item));
   const updateTemp = (item: TourItem, key: string, value: string) => updateItem(item.id, { data: { ...item.data, [key]: value } });
   const sourceOf = (item: TourItem) => item.recordId ? (records.find(record => record.id === item.recordId) || item.data) : item.data;
@@ -1161,7 +1531,7 @@ function TourPlanner({ records, drafts, items, setItems, editRecord, updateDraft
     if (column === "coverageFar") return <span className="tour-pair inputs"><input value={record.coverage || ""} onChange={event => updateTemp(item, "coverage", event.target.value)} placeholder="建蔽"/><input value={record.far || ""} onChange={event => updateTemp(item, "far", event.target.value)} placeholder="容積"/></span>;
     return <input value={record[column] || ""} onChange={event => updateTemp(item, column, event.target.value)} />;
   };
-  const imageDeveloper = (value = "") => String(value).split(/[\/／,，、。]+/).map(name => name.trim()).filter(Boolean).join("\n");
+  const imageDeveloper = (value = "") => developerNameLines(value).join("\n");
   const supervisorRows = ordered.map(item => { const record = sourceOf(item); const price = String(record.price || "").replace(/\s*萬(?:元)?\s*/g, ""); return [item.sequence, areaCategory(record) || record.area || "", record.caseName || "", record.address || "", price ? `${price}萬` : "", imageDeveloper(record.developer || "")]; });
   const copyText = async (text: string, message: string) => {
     if (!text.trim()) return notify("目前沒有可複製的團看物件");
@@ -1169,8 +1539,8 @@ function TourPlanner({ records, drafts, items, setItems, editRecord, updateDraft
     catch { const box = document.createElement("textarea"); box.value = text; box.style.position = "fixed"; box.style.opacity = "0"; document.body.appendChild(box); box.select(); document.execCommand("copy"); box.remove(); notify(message); }
   };
   const copySupervisor = () => copyText([tourTitle, "序\t地區\t案名\t地址\t開價\t開發", ...supervisorRows.map(row => row.join("\t"))].join("\n"), "已複製主管用團看清單");
-  const copyAvailable = () => copyText(["目前尚未安排團看", "案名\t地址\t開發\t開價\t現況\t進案日期", ...available.map(record => [record.caseName, record.address, record.developer || "未填開發", record.price ? `${String(record.price).replace(/\s*萬(?:元)?\s*/g, "")}萬` : "", record.currentState || "", record._intakeDraftId ? "尚未進案" : displayRocDate(record.reportDate) || ""].join("\t"))].join("\n"), "已複製目前尚未安排團看列表");
-  const copyRoute = () => copyText([tourTitle, ["案名", "地址", "開發", "開價", "現況", "進案日期"].join("\t"), ...ordered.map(item => { const record = sourceOf(item); const price = String(record.price || "").replace(/\s*萬(?:元)?\s*/g, ""); return [record.caseName || "", record.address || "", record.developer || "", price ? `${price}萬` : "", record.currentState || "", isNotEnteredTourRecord(record) ? "尚未進案" : displayRocDate(record.reportDate) || ""].join("\t"); })].join("\n"), "已複製本次團看路線");
+  const copyAvailable = () => copyText(["目前尚未安排團看", "案名\t地址\t開發\t開價\t現況\t進案日期", ...available.map(record => [record.caseName, record.address, developerFullNameText(record.developer) || "未填開發", record.price ? `${String(record.price).replace(/\s*萬(?:元)?\s*/g, "")}萬` : "", record.currentState || "", record._intakeDraftId ? "尚未進案" : displayRocDate(record.reportDate) || ""].join("\t"))].join("\n"), "已複製目前尚未安排團看列表");
+  const copyRoute = () => copyText([tourTitle, ["案名", "地址", "開發", "開價", "現況", "進案日期"].join("\t"), ...ordered.map(item => { const record = sourceOf(item); const price = String(record.price || "").replace(/\s*萬(?:元)?\s*/g, ""); return [record.caseName || "", record.address || "", developerFullNameText(record.developer) || "", price ? `${price}萬` : "", record.currentState || "", isNotEnteredTourRecord(record) ? "尚未進案" : displayRocDate(record.reportDate) || ""].join("\t"); })].join("\n"), "已複製本次團看路線");
   const exportTourImage = () => {
     if (!ordered.length) return notify("請先加入團看物件");
     try {
@@ -1211,7 +1581,7 @@ function TourPlanner({ records, drafts, items, setItems, editRecord, updateDraft
       <div className="table-wrap tour-table"><table><thead><tr><th className="tour-remove"></th><th className="tour-sequence">序</th>{tourDisplayColumns.map(column => <th key={column} className={`tour-${column}`}>{tourColumnLabel[column].split("\n").map((line, index) => <Fragment key={line}>{index > 0 && <br/>}{line}</Fragment>)}</th>)}</tr></thead><tbody>{ordered.map(item => { const record = sourceOf(item); return <tr key={item.id}><td className="tour-remove"><button className="danger" title="移除" onClick={() => setItems(items.filter(current => current.id !== item.id))}>刪</button></td><td className="tour-sequence"><input type="number" min="1" value={item.sequence} onChange={event => updateItem(item.id, { sequence: event.target.value })}/></td>{tourDisplayColumns.map(column => <td key={column} className={`tour-${column}`}>{column === "caseName" ? <button className="case-link" onClick={() => record._intakeDraftId ? editRecord({ ...record, _editSource: "draft" }) : item.temporary ? editTemporary(item) : editRecord(record)}>{record.caseName || "未命名案件"}</button> : renderValue(record, column)}</td>)}</tr>;})}</tbody></table>{!items.length && <div className="contact-empty">目前尚未安排團看</div>}</div>
       <div className="tour-page-bottom"><div className="tour-complete-actions"><label>團看日期<input type="date" value={tourDate} onChange={event => setTourDate(event.target.value)}/></label><button className="primary" disabled={!items.length || !tourDate} onClick={() => { if (confirm(`確定完成 ${items.length} 筆團看，並將 ${displayRocDate(tourDate)} 寫入物件與草稿的團看日期？`)) complete(tourDate, items.map(item => item.recordId).filter(Boolean) as string[], items.map(item => item.data._intakeDraftId).filter(Boolean)); }}>完成團看</button></div></div>
     </section>
-    {pickerOpen && <div className="modal-backdrop" onMouseDown={event => event.target === event.currentTarget && setPickerOpen(false)}><div className="modal tour-picker-modal"><div className="modal-head"><div><span>目前尚未安排團看</span><h2>選擇本次團看物件</h2></div><button className="close" onClick={() => setPickerOpen(false)}>×</button></div><div className="tour-picker-filters"><input value={search} onChange={event => setSearch(event.target.value)} placeholder="搜尋案名、地址、開發"/><label><span>進案日期起</span><input type="date" value={reportDateFrom} onChange={event => setReportDateFrom(event.target.value)}/></label><label><span>進案日期迄</span><input type="date" value={reportDateTo} onChange={event => setReportDateTo(event.target.value)}/></label><select value={developerFilter} onChange={event => setDeveloperFilter(event.target.value)}><option value="">全部開發人員</option>{developers.map(name => <option key={name}>{name}</option>)}</select><select value={propertyKindFilter} onChange={event => setPropertyKindFilter(event.target.value)}><option value="">土地＋房屋</option><option value="土地">土地</option><option value="房屋">房屋</option></select><button type="button" onClick={() => { setSearch(""); setReportDateFrom(""); setReportDateTo(""); setDeveloperFilter(""); setPropertyKindFilter(""); }}>清除篩選</button></div><div className="tour-candidate-list"><div className="tour-candidate-head"><b>案名</b><b>地址</b><b>開發</b><b>開價</b><b>現況</b><b>進案日期</b><b></b></div>{available.map(record => <div className="tour-candidate-row" key={record.id}><button className="case-link candidate-case-link" onClick={() => editRecord(record._intakeDraftId ? { ...record, _editSource: "draft" } : record)}>{record.caseName || "未命名案件"}</button><span>{record.address}</span><em>{record.developer || "未填開發"}</em><span>{record.price ? `${String(record.price).replace(/\s*萬(?:元)?\s*/g, "")}萬` : "—"}</span><span>{record.currentState || "—"}</span><span className={record._intakeDraftId ? "not-entered" : ""}>{record._intakeDraftId ? "尚未進案" : displayRocDate(record.reportDate) || "—"}</span><button className="candidate-add" onClick={() => addRecord(record)}>＋ 加入</button></div>)}{!available.length && <div className="contact-empty">沒有符合篩選條件的尚未團看物件</div>}</div>
+    {pickerOpen && <div className="modal-backdrop" onMouseDown={event => event.target === event.currentTarget && setPickerOpen(false)}><div className="modal tour-picker-modal"><div className="modal-head"><div><span>目前尚未安排團看</span><h2>選擇本次團看物件</h2></div><button className="close" onClick={() => setPickerOpen(false)}>×</button></div><div className="tour-picker-filters"><input value={search} onChange={event => setSearch(event.target.value)} placeholder="搜尋案名、地址、開發"/><label><span>進案日期起</span><input type="date" value={reportDateFrom} onChange={event => setReportDateFrom(event.target.value)}/></label><label><span>進案日期迄</span><input type="date" value={reportDateTo} onChange={event => setReportDateTo(event.target.value)}/></label><select value={developerFilter} onChange={event => setDeveloperFilter(event.target.value)}><option value="">全部開發人員</option>{developers.map(name => <option key={name}>{name}</option>)}</select><select value={propertyKindFilter} onChange={event => setPropertyKindFilter(event.target.value)}><option value="">土地＋房屋</option><option value="土地">土地</option><option value="房屋">房屋</option></select><button type="button" onClick={() => { setSearch(""); setReportDateFrom(""); setReportDateTo(""); setDeveloperFilter(""); setPropertyKindFilter(""); }}>清除篩選</button></div><div className="tour-candidate-list"><div className="tour-candidate-head"><b>案名</b><b>地址</b><b>開發</b><b>開價</b><b>現況</b><b>進案日期</b><b></b></div>{available.map(record => <div className="tour-candidate-row" key={record.id}><button className="case-link candidate-case-link" onClick={() => editRecord(record._intakeDraftId ? { ...record, _editSource: "draft" } : record)}>{record.caseName || "未命名案件"}</button><span>{record.address}</span><em>{developerFullNameText(record.developer) || "未填開發"}</em><span>{record.price ? `${String(record.price).replace(/\s*萬(?:元)?\s*/g, "")}萬` : "—"}</span><span>{record.currentState || "—"}</span><span className={record._intakeDraftId ? "not-entered" : ""}>{record._intakeDraftId ? "尚未進案" : displayRocDate(record.reportDate) || "—"}</span><button className="candidate-add" onClick={() => addRecord(record)}>＋ 加入</button></div>)}{!available.length && <div className="contact-empty">沒有符合篩選條件的尚未團看物件</div>}</div>
 <div className="modal-foot"><span>共 {available.length} 筆</span><button onClick={copyAvailable}>複製目前列表</button><button className="primary" onClick={() => setPickerOpen(false)}>完成挑選</button></div></div></div>}
     {temporaryOpen && <div className="modal-backdrop" onMouseDown={event => event.target === event.currentTarget && setTemporaryOpen(false)}><div className="modal tour-temporary-modal"><div className="modal-head"><div><span>團看安排 · 所有欄位皆可留空</span><h2>{temporaryEditId ? "編輯團看案件" : "新增臨時案件"}</h2><p>先填目前知道的資料，之後可再次點案名修改。</p></div><button className="close" onClick={() => setTemporaryOpen(false)}>×</button></div><div className="temporary-form-grid">{temporaryTourFields.map(([key, label]) => <label className={`field temporary-field temporary-${key}${key === "address" || key === "notes" ? " temporary-wide" : ""}`} key={key}><span>{label}</span>{key === "notes" ? <textarea rows={4} value={temporaryDraft[key] || ""} onChange={event => setTemporaryDraft({ ...temporaryDraft, [key]: event.target.value })}/> : key === "type" ? <select value={temporaryDraft[key] || ""} onChange={event => setTemporaryDraft({ ...temporaryDraft, [key]: event.target.value })}><option value="">請選擇</option><option>土地</option><option>透天</option><option>公寓</option><option>華廈</option><option>大樓</option><option>其他</option></select> : <input type="text" value={temporaryDraft[key] || ""} onChange={event => setTemporaryDraft({ ...temporaryDraft, [key]: event.target.value })}/>}</label>)}</div><div className="modal-foot temporary-modal-foot"><span>所有欄位都不是必填</span><div className="temporary-save-actions">{temporaryEditId && !temporaryDraft._intakeDraftId && <span className="temporary-save-note">尚未進案～臨時加入團看</span>}<button onClick={() => setTemporaryOpen(false)}>取消</button><button className="primary" onClick={addTemporary}>{temporaryEditId ? "儲存修改" : "加入本次團看"}</button></div></div></div></div>}
   </>;
@@ -1219,12 +1589,12 @@ function TourPlanner({ records, drafts, items, setItems, editRecord, updateDraft
 
 function ContactDirectory({ people }: { people: Person[] }) {
   const bySequence = new Map<number, Person>();
-  people.forEach((person, index) => {
-    const sequence = Number(person.sequence || index + 1);
-    if (sequence >= 1 && sequence <= 30 && !bySequence.has(sequence)) bySequence.set(sequence, person);
+  contactDirectoryOrder.forEach((name, index) => {
+    const person = people.find(item => item.name.trim() === name);
+    if (person) bySequence.set(index + 1, { ...person, sequence: String(index + 1), phone: contactDirectoryPhoneOverrides[name] || person.phone });
   });
-  const groupStarts = [1, 11, 21];
-  return <section className="contact-directory"><h3>台慶文化崇明店～同仁通訊錄～</h3><div className="contact-table-scroll"><table><thead><tr>{groupStarts.map(start => <Fragment key={start}><th>序</th><th>姓名</th><th>手機</th></Fragment>)}</tr></thead><tbody>{Array.from({ length: 10 }, (_, row) => <tr key={row}>{groupStarts.map(start => { const sequence = start + row; const person = bySequence.get(sequence); return <Fragment key={sequence}><td>{sequence}</td><td>{person?.name || ""}</td><td>{person?.phone ? <a href={`tel:${String(person.phone).replace(/\D/g, "")}`}>{displayPhone(person.phone)}</a> : ""}</td></Fragment>; })}</tr>)}</tbody></table></div></section>;
+  const groupStarts = [1, 12, 23];
+  return <section className="contact-directory"><h3>台慶文化崇明店～同仁通訊錄～</h3><div className="contact-table-scroll"><table><thead><tr>{groupStarts.map(start => <Fragment key={start}><th>序</th><th>姓名</th><th>手機</th></Fragment>)}</tr></thead><tbody>{Array.from({ length: 11 }, (_, row) => <tr key={row}>{groupStarts.map(start => { const sequence = start + row; const person = bySequence.get(sequence); return <Fragment key={sequence}><td>{sequence}</td><td>{person?.name || ""}</td><td>{person?.phone ? <a href={`tel:${String(person.phone).replace(/\D/g, "")}`}>{displayPhone(person.phone)}</a> : ""}</td></Fragment>; })}</tr>)}</tbody></table></div></section>;
 }
 
 const keySummaryLeft = [1, 2, 3, 5, 6, 7, 8, 17, 18, 19, 20, 21, 22, 23, 24, 33, 34, 35, 36, 37, 38, 39];
@@ -1351,7 +1721,7 @@ async function downloadColorWorkbook(record: RecordItem, personnel: Person[] = [
   const price = String(record.price || "").replace(/\s*萬(?:元)?\s*/g, "");
   const aboutMeter = (value = "") => { const number = cleanNumber(value); return number ? `約${Number(number)}米` : "－米"; };
   const cells: Record<string, string> = {
-    A2: new Date().toLocaleString("zh-TW"), C2: record.developer || "", D2: record.propertyNo || "",
+    A2: new Date().toLocaleString("zh-TW"), C2: developerFullNameText(record.developer) || "", D2: record.propertyNo || "",
     E2: displayRocDate(record.entrustStart || ""), F2: displayRocDate(record.entrustEnd || ""),
     G2: record.caseName || "", H2: record.address || "", I2: record.currentState || "", J2: record.key || "",
     K2: record.type || "", L2: price, M2: cleanNumber(record.registryBuildingPing || record.buildingPing), N2: cleanNumber(record.registryIndoorPing || record.indoorPing),
@@ -1956,7 +2326,7 @@ async function downloadColorWorkbook(record: RecordItem, personnel: Person[] = [
   link.href = URL.createObjectURL(blob);
   const filenameArea = String(record.area || areaCategory(record) || "").trim();
   const filenameAddress = String(record.address || "").replace(/^(?:台|臺)?[^市縣]+[市縣]/, "").replace(/^[^市縣區鄉鎮]+(?:區|鄉|鎮|市)/, "").trim();
-  const filenameParts = [filenameArea, record.caseName, filenameAddress, record.developer].map(value => String(value || "").trim()).filter(Boolean);
+  const filenameParts = [filenameArea, record.caseName, filenameAddress, developerFullNameText(record.developer)].map(value => String(value || "").trim()).filter(Boolean);
   link.download = `${(filenameParts.join("-") || record.propertyNo || "物件").replace(/[\\/:*?"<>|]/g, "-")}.xlsx`;
   document.body.appendChild(link); link.click(); link.remove();
   // Keep the blob URL alive for this local session. Edge may hand the temporary
@@ -1966,7 +2336,7 @@ async function downloadColorWorkbook(record: RecordItem, personnel: Person[] = [
 
 function printRecordDocument(record: RecordItem, kind: "color" | "cover") {
   const escapeHtml = (value = "") => String(value || "").replace(/[&<>"']/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[character] || character));
-  const value = (key: string) => escapeHtml(record[key] || "—");
+  const value = (key: string) => escapeHtml(key === "developer" ? (developerFullNameText(record.developer) || "—") : (record[key] || "—"));
   const date = (key: string) => escapeHtml(displayRocDate(record[key] || "") || "—");
   const photo = record.photos?.[0] || "";
   const common = `<style>@page{size:A4 portrait;margin:0}*{box-sizing:border-box}html,body{margin:0;background:#fff;color:#111;font-family:"Microsoft JhengHei",sans-serif}.page{width:210mm;height:297mm;padding:10mm;overflow:hidden}table{width:100%;border-collapse:collapse}th,td{border:1.2px solid #222;padding:4mm;text-align:center;vertical-align:middle}h1{margin:0;text-align:center;font-family:DFKai-SB,"標楷體",serif;letter-spacing:.35em}.blue{background:#078bc8;color:#fff}.red{color:#e93035}.small{font-size:10pt}.left{text-align:left}</style>`;
@@ -2130,21 +2500,32 @@ const thirdIntakeFields = new Set(["鄰近國小", "鄰近國中", "鄰近高中
 const houseDetailFields = new Set(["建築完成日期", "格局 (房)", "格局 (廳)", "格局 (衛浴)", "格局 (陽台)", "有無電梯", "權狀層數", "透天請寫", "大樓名稱", "電梯數", "每層戶數", "警衛管理", "管理費", "車位", "車位編號"]);
 const intakeFieldClass = (key: string) => `field${fullIntakeFields.has(key) ? " full-field" : key === "案名" ? " case-field" : key === "物件(完整)地址" ? " address-field" : quarterIntakeFields.has(key) ? " quarter-field" : thirdIntakeFields.has(key) ? " third-field" : houseDetailFields.has(key) ? " house-detail-field" : ""}`;
 
+const intakeDraftEditorTitle = (draft: IntakeData) => {
+  const address = intakeValue(draft.values, "物件(完整)地址").trim();
+  const withoutCity = address.replace(/^(?:臺灣省|台灣省)?[^縣市]{1,8}[縣市]/, "");
+  const areaMatch = withoutCity.match(/^(.{1,8}區|.{1,8}[鄉鎮市])/);
+  const area = areaMatch?.[1] || "未填地區";
+  const shortAddress = (areaMatch ? withoutCity.slice(area.length) : withoutCity).trim() || "未填地址";
+  const caseName = intakeValue(draft.values, "案名").trim() || "未命名案件";
+  const developer = developerFullNameText(intakeValue(draft.values, "開發１/開發２").trim()) || "未填開發";
+  return `${area}－${caseName}－${shortAddress}－${developer}`;
+};
+
 function PreviousIntakePanel({ raw, setRaw, drafts, draft, selectDraft, deleteDraft, analyze, updateValue, clear, confirmIntake }: { raw: string; setRaw: (value: string) => void; drafts: IntakeData[]; draft: IntakeData | null; selectDraft: (id: string) => void; deleteDraft: (id: string) => void; analyze: () => void; updateValue: (key: string, value: string) => void; clear: () => void; confirmIntake: (id?: string) => void }) {
   return <section className="content intake-page"><div className="list-head"><SectionTitle title="進案草稿" subtitle="貼串列印後保留在列表；文件實際收到才按正式進案"/></div><article className="panel paste-panel"><label className="field"><span>貼上新的表單整串文字（可直接修改）</span><textarea className="intake-raw" value={raw} onChange={e => setRaw(e.target.value)} placeholder="請貼上標題列及一筆資料列…" rows={7}/></label><div className="paste-actions"><button onClick={clear}>清除貼串</button><button className="primary analyze-button" onClick={analyze}>加入草稿列表</button></div></article><div className="draft-list-head"><h3>已貼串進案列表</h3><span>{drafts.length} 筆待處理</span></div><div className="draft-list">{drafts.map(item => <article className={`draft-card ${draft?.id === item.id ? "selected" : ""}`} key={item.id}><div><span className={`kind-badge ${item.propertyKind === "純土地" ? "land" : ""}`}>{item.propertyKind}</span><h3>{intakeValue(item.values, "案名") || "未命名案件"}</h3><p>{intakeValue(item.values, "委託主約編號")}　{intakeValue(item.values, "物件(完整)地址")}</p><small>貼串時間：{new Date(item.createdAt).toLocaleString("zh-TW")}</small></div><div className="draft-actions"><button onClick={() => selectDraft(item.id)}>編輯</button><button onClick={() => { selectDraft(item.id); setTimeout(() => window.print(), 0); }}>列印</button><button className="primary" onClick={() => { selectDraft(item.id); setTimeout(confirmIntake, 0); }}>進案</button><button className="danger" onClick={() => deleteDraft(item.id)}>刪除</button></div></article>)}{!drafts.length && <div className="empty-drafts">尚無進案草稿，貼上表單後按「加入草稿列表」。</div>}</div>{draft && <><div className="draft-editor-head"><div><b>編輯：{intakeValue(draft.values, "案名")}</b><span>修改會自動保留</span></div><div><button className="pill-button" onClick={() => window.print()}>列印{draft.propertyKind}進案表</button><button className="pill-button primary" onClick={confirmIntake}>文件已收，正式進案</button></div></div><div className="intake-kind"><b>列印格式：</b><button className={draft.propertyKind === "房屋" ? "selected" : ""} onClick={() => updateValue("物件型態", intakeValue(draft.values, "物件型態").replace("土地", "房屋") || "房屋")}>房屋</button><button className={draft.propertyKind === "純土地" ? "selected" : ""} onClick={() => updateValue("物件型態", "土地")}>純土地</button><span>所有欄位都可修改後再列印</span></div><div className="intake-edit-grid">{intakeEditFields.filter(([key]) => draft.propertyKind === "房屋" || !["建築完成日期", "格局 (房)", "格局 (廳)", "格局 (衛浴)", "格局 (陽台)", "有無電梯", "權狀層數", "透天請寫", "大樓名稱", "管理費", "車位", "車位編號"].includes(key)).map(([key, label]) => <label className={`field ${["案名", "物件(完整)地址", "增建說明", "注意事項"].includes(key) ? "wide-field" : ""}`} key={key}><span>{label}</span><input value={intakeValue(draft.values, key)} onChange={e => updateValue(key, e.target.value)}/></label>)}</div><PrintableIntake draft={draft}/></>}</section>;
 }
 
-function IntakePanel({ raw, setRaw, drafts, draft, selectDraft, deleteDraft, analyze, updateValue, clear, confirmIntake }: { raw: string; setRaw: (value: string) => void; drafts: IntakeData[]; draft: IntakeData | null; selectDraft: (id: string) => void; deleteDraft: (id: string) => void; analyze: () => void; updateValue: (key: string, value: string) => void; clear: () => void; confirmIntake: (id?: string) => void }) {
+function IntakePanel({ raw, setRaw, drafts, draft, selectDraft, deleteDraft, analyze, addManualDraft, updateValue, clear, confirmIntake }: { raw: string; setRaw: (value: string) => void; drafts: IntakeData[]; draft: IntakeData | null; selectDraft: (id: string) => void; deleteDraft: (id: string) => void; analyze: () => void; addManualDraft: () => void; updateValue: (key: string, value: string) => void; clear: () => void; confirmIntake: (id?: string) => void }) {
   const [showEntered, setShowEntered] = useState(false);
   const printDraft = (id: string) => { selectDraft(id); setTimeout(() => { window.print(); selectDraft(""); }, 0); };
   const pendingDrafts = drafts.filter(item => !item.linkedRecordId);
   const enteredDrafts = drafts.filter(item => !!item.linkedRecordId);
   const draftCard = (item: IntakeData) => <article className={`draft-card ${draft?.id === item.id ? "selected" : ""}`} key={item.id}>
-    <div className="draft-summary"><span className={`kind-badge ${item.propertyKind === "純土地" ? "land" : ""}`}>{item.propertyKind === "純土地" ? "土地" : item.propertyKind}</span><button className="draft-case-link" onClick={() => selectDraft(item.id)}>{intakeValue(item.values, "案名") || "未命名案件"}</button><span>{intakeValue(item.values, "委託主約編號") || "—"}</span><span className="draft-address">{intakeValue(item.values, "物件(完整)地址") || "—"}</span><span>{intakeValue(item.values, "開發１/開發２") || "—"}</span><small>{intakeValue(item.values, "時間戳記") || "—"}</small></div>
+    <div className="draft-summary"><span className={`kind-badge ${item.propertyKind === "純土地" ? "land" : ""}`}>{item.propertyKind === "純土地" ? "土地" : item.propertyKind}</span><button className="draft-case-link" onClick={() => selectDraft(item.id)}>{intakeValue(item.values, "案名") || "未命名案件"}</button><span>{intakeValue(item.values, "委託主約編號") || "—"}</span><span className="draft-address">{intakeValue(item.values, "物件(完整)地址") || "—"}</span><span>{developerFullNameText(intakeValue(item.values, "開發１/開發２")) || "—"}</span><small>{intakeValue(item.values, "時間戳記") || "—"}</small></div>
     <div className="draft-actions"><button onClick={() => printDraft(item.id)}>列印</button><button className="primary" disabled={!!item.linkedRecordId} onClick={() => confirmIntake(item.id)}>{item.linkedRecordId ? "已進案" : "進案"}</button><button className="danger" onClick={() => deleteDraft(item.id)}>刪除</button></div>
   </article>;
   return <section className="content intake-page">
-    <div className="list-head"><SectionTitle title="進案草稿" subtitle=""/></div>
+    <div className="list-head"><SectionTitle title="進案草稿" subtitle=""/><button className="manual-intake-button" onClick={addManualDraft}>＋ 手動新增案件</button></div>
     <article className="panel paste-panel"><label className="field"><textarea className="intake-raw" value={raw} onChange={e => setRaw(e.target.value)} rows={7}/></label><div className="paste-actions"><button onClick={clear}>清除貼串</button><button className="primary analyze-button" onClick={analyze}>加入草稿列表</button></div></article>
     <div className="draft-list-head"><h3>已貼串進案列表</h3><span>{pendingDrafts.length} 筆待處理</span></div>
     <div className="draft-list compact-drafts"><div className="draft-card draft-columns"><div className="draft-summary"><b>種類</b><b>案名</b><b>契約編號</b><b>地址</b><b>開發業務</b><b>時間戳記</b></div><span className="draft-action-title">操作</span></div>{pendingDrafts.map(draftCard)}{!pendingDrafts.length && <div className="empty-drafts">目前沒有待進案草稿。</div>}</div>
@@ -2152,7 +2533,7 @@ function IntakePanel({ raw, setRaw, drafts, draft, selectDraft, deleteDraft, ana
     {showEntered && <div className="draft-list compact-drafts entered-drafts"><div className="draft-card draft-columns"><div className="draft-summary"><b>種類</b><b>案名</b><b>契約編號</b><b>地址</b><b>開發業務</b><b>時間戳記</b></div><span className="draft-action-title">操作</span></div>{enteredDrafts.map(draftCard)}{!enteredDrafts.length && <div className="empty-drafts">目前沒有已進案資料。</div>}</div>}
     {draft && <>
       <div className="modal-backdrop intake-modal-backdrop" onMouseDown={event => event.target === event.currentTarget && selectDraft("")}><div className="modal intake-draft-modal">
-        <div className="draft-editor-head"><div><b>編輯：{intakeValue(draft.values, "案名")}</b><span>{draft.linkedRecordId ? "已進案；修改會同步更新總表" : "修改會自動保留"}</span></div><div><button className="pill-button" onClick={() => window.print()}>列印{draft.propertyKind}進案表</button><button className="pill-button primary" disabled={!!draft.linkedRecordId} onClick={() => confirmIntake(draft.id)}>{draft.linkedRecordId ? "已進案" : "文件已收，正式進案"}</button><button className="pill-button" onClick={() => selectDraft("")}>存檔（關閉）</button></div></div>
+        <div className="draft-editor-head"><div><b>　檔名: {intakeDraftEditorTitle(draft)}</b><span>{draft.linkedRecordId ? "已進案；修改會同步更新總表" : "修改會自動保留"}</span></div><div><button className="pill-button" onClick={() => window.print()}>列印{draft.propertyKind}進案表</button><button className="pill-button primary" disabled={!!draft.linkedRecordId} onClick={() => confirmIntake(draft.id)}>{draft.linkedRecordId ? "已進案" : "文件已收，正式進案"}</button><button className="pill-button" onClick={() => selectDraft("")}>存檔（關閉）</button></div></div>
         <div className="intake-kind"><b>列印格式：</b><button className={draft.propertyKind === "房屋" ? "selected" : ""} onClick={() => updateValue("物件型態", intakeValue(draft.values, "物件型態").replace("土地", "房屋") || "房屋")}>房屋</button><button className={draft.propertyKind === "純土地" ? "selected" : ""} onClick={() => updateValue("物件型態", "土地")}>土地</button><span>所有欄位都可修改後再列印</span></div>
         <div className="intake-edit-grid">{intakeEditFields.filter(([key]) => draft.propertyKind === "房屋" || !["建築完成日期", "格局 (房)", "格局 (廳)", "格局 (衛浴)", "格局 (陽台)", "有無電梯", "權狀層數", "透天請寫", "大樓名稱", "管理費", "車位", "車位編號"].includes(key)).map(([key, label]) => <label className={intakeFieldClass(key)} key={key}><span>{label}</span><input value={intakeValue(draft.values, key)} onChange={e => updateValue(key, e.target.value)}/></label>)}</div>
         <div className="intake-modal-preview"><PrintableIntake draft={draft}/></div>
@@ -2180,7 +2561,7 @@ function measurementNumber(value: string) {
 
 function PrintableIntake({ draft }: { draft: IntakeData }) {
   const v = draft.values;
-  const val = (...keys: string[]) => intakeValue(v, ...keys) || "　";
+  const val = (...keys: string[]) => { const value = intakeValue(v, ...keys); return keys.includes("開發１/開發２") ? (developerFullNameText(value) || "　") : (value || "　"); };
   const features = [1, 2, 3, 4].map(n => val(`特色說明${n}`));
   const completion = val("建築完成日期");
   const age = buildingAgeText(completion);
@@ -2232,7 +2613,7 @@ function PrintableIntake({ draft }: { draft: IntakeData }) {
 function PrintRightRow({ label, value }: { label: string; value: string }) { return <p className="print-right-row"><b>{label}：</b><span>{value}</span></p>; }
 
 function PreviousPrintableIntake({ draft }: { draft: IntakeData }) {
-  const v = draft.values; const val = (...keys: string[]) => intakeValue(v, ...keys) || "　";
+  const v = draft.values; const val = (...keys: string[]) => { const value = intakeValue(v, ...keys); return keys.includes("開發１/開發２") ? (developerFullNameText(value) || "　") : (value || "　"); };
   const features = [1,2,3,4].map(n => val(`特色說明${n}`));
   const parking = [val("車位"), ...intakeAll(v, "車位型態"), val("車位編號")].filter(x => x.trim()).join("／");
   return <section className="print-document"><article className={`print-page data-page ${draft.propertyKind === "純土地" ? "land-print" : "house-print"}`}><div className="print-brand"><div className="print-logo"><b>台慶不動產</b><small>台南文化崇明加盟店</small></div><h1>物件資料表　送件審核</h1></div><p className="company-line">連城不動產開發有限公司　店址：台南市東區崇明路520號　電話：06-3356699　傳真：06-2681166</p><div className="case-band"><b>案名</b><strong>{val("案名")}</strong><b>屋址</b><span>{val("物件(完整)地址")}</span></div><div className="hero-price"><b>價格</b><span>總　價：</span><strong>{val("契約開價")} 萬</strong><em>□有符合契約簽訂開價</em></div><div className="print-main"><div className="print-left">{draft.propertyKind === "純土地" ? <><PrintSection title="面積"><p className="large-line">土地坪數：<strong>{val("地坪")}坪</strong></p></PrintSection><PrintSection title="土地資訊"><p className="large-line">使用分區：<strong>{val("使用分區")}</strong></p><p>建蔽率／容積率：{val("建蔽率/容積率")}</p><p>座　向：{val("朝向 [土地朝]")}</p><p>臨　路：約 {val("臨路")} 米</p><p>面　寬：約 {val("面寬")} 米</p><p>深　度：約 {val("深度")} 米</p></PrintSection></> : <><PrintSection title="面積"><p>總建物坪數：<strong>{val("總建坪")}坪</strong>　｜土地坪數：{val("地坪")}坪</p><p>室內坪數：{val("室內坪")}坪</p></PrintSection><PrintSection title="增建說明"><p>{val("增建說明")}</p></PrintSection><PrintSection title="車位"><p>車位產權／型態／編號：{parking}</p></PrintSection><PrintSection title="基本資料"><p>物件類型：{val("物件型態")}　｜大樓名稱：{val("大樓名稱")}</p><p>每層戶數：{val("每層戶數")}　｜電梯數：{val("電梯數")}</p><p>管理方式：{val("警衛管理")}　｜管理費：{val("管理費")}</p><p>格局：{val("格局 (房)")}{val("格局 (廳)")}{val("格局 (衛浴)")}{val("格局 (陽台)")}</p><p>現況樓層：{val("透天請寫")}　｜權狀樓別：{val("權狀層數")}</p><p>建築完成日：{val("建築完成日期")}　｜屋齡：　　　　　</p><p>座向：{val("朝向 [房屋朝]", "朝向 [大門朝]")}</p></PrintSection><PrintSection title="環境"><p>臨路：約 {val("臨路")}米　｜建蔽／容積：{val("建蔽率/容積率")}</p><p>面寬：約 {val("面寬")}米　｜深度：約 {val("深度")}米</p></PrintSection></>}<PrintSection title="重點說明" className="features-section">{features.map((feature, i) => <p key={i}>{i + 1}.　{feature}</p>)}</PrintSection></div><div className="print-right"><p>物件編號：{val("委託主約編號")}</p><p>鑰匙位置：{val("鑰匙位置")}</p><p>物件現況：{val("(物件)現況")}</p><p>國小：{val("鄰近國小")}</p><p>國中：{val("鄰近國中")}</p><p>高中：{val("鄰近高中")}</p><p>大專：{val("鄰近大專")}</p><p>市場：{val("市場/購物")}</p><p>公園：{val("公園綠地")}</p><hr/><p>物件相片：{val("當下進案文件 [物件相片]")}</p>{draft.propertyKind === "房屋" && <p>格局圖：{val("進案文件 [格局圖]")}</p>}<p>現詢調：{val("進案文件 [現詢調]")}</p><p>智能照片：{val("進案文件 [物件照片 上傳系統]")}</p>{draft.propertyKind === "房屋" && <><p>智能主約：{val("進案文件 [主約 契約拍照 上傳系統]")}</p><p>智能契變：{val("進案文件 [契變 照片上傳系統]")}</p></>}<div className="attention"><b>帶看注意事項：</b><span>中人：{val("中人(介紹費)")}</span><p>{val("注意事項")}</p></div></div></div><footer className="approval-footer"><span>店東審核</span><span>開發1／開發2<br/><b>{val("開發１/開發２")}</b></span><span>以上資料無誤簽名</span><span>業務交件日期：</span><span>助理收件日期：</span></footer><small className="legal-note">◎以上資訊如有記載錯誤，一律依地政機關謄本登記簿為準。</small></article><ChecklistPage val={val}/></section>;
@@ -2275,28 +2656,53 @@ function cellValue(r: RecordItem, key: string) { if (key === "age") return ageOf
 function AdvancedFilterModal({ value, setValue, onClose, onReset }: { value: AdvancedFilter; setValue: (next: AdvancedFilter) => void; onClose: () => void; onReset: () => void }) {
   const change = (key: string, next: string) => setValue({ ...value, [key]: next });
   const text = (key: string, label: string, placeholder = "") => <label className="filter-field"><span>{label}</span><input value={value[key] || ""} placeholder={placeholder} onChange={event => change(key, event.target.value)}/></label>;
-  const dateRange = (from: string, to: string, label: string) => <div className="filter-field range-field"><span>{label}</span><div><input value={value[from] || ""} placeholder="115/7/24" onChange={event => change(from, event.target.value)}/><i>至</i><input value={value[to] || ""} placeholder="115/7/24" onChange={event => change(to, event.target.value)}/></div></div>;
+  const dateRange = (from: string, to: string, label: string) => <div className="filter-field range-field"><span>{label}</span><div><input value={value[from] || ""} aria-label={`${label}開始`} onChange={event => change(from, event.target.value)}/><i>至</i><input value={value[to] || ""} aria-label={`${label}結束`} onChange={event => change(to, event.target.value)}/></div></div>;
   const numberRange = (from: string, to: string, label: string, unit = "") => <div className="filter-field range-field"><span>{label}</span><div><input inputMode="decimal" value={value[from] || ""} placeholder="最小" onChange={event => change(from, event.target.value)}/><i>至</i><input inputMode="decimal" value={value[to] || ""} placeholder="最大" onChange={event => change(to, event.target.value)}/>{unit && <em>{unit}</em>}</div></div>;
   const select = (key: string, label: string, options: string[]) => <label className="filter-field"><span>{label}</span><select value={value[key] || ""} onChange={event => change(key, event.target.value)}><option value="">不限</option>{options.map(option => <option key={option} value={option}>{option === "filled" ? "已填" : option === "empty" ? "未填" : option}</option>)}</select></label>;
+  const choices = (key: string, label: string, options: string[]) => <div className="filter-field choice-field"><span>{label}</span><div>{options.map(option => { const shown = option === "filled" ? "已填" : option === "empty" ? "未填" : option; return <label key={option}><input type="checkbox" checked={value[key] === option} onChange={() => change(key, value[key] === option ? "" : option)}/><b>{shown}</b></label>; })}</div></div>;
   const sites: [string, string][] = [["yes319", "YES319"], ["houseinfor", "HOUSE INFOR"], ["homeWeb", "我家網"], ["platform591", "591"], ["price5168", "5168"], ["windowAd", "櫥窗"], ["led", "LED"], ["goldExposure", "黃金曝光"]];
   return <div className="modal-backdrop"><div className="modal advanced-filter-modal"><div className="modal-head"><div><span>委託中物件</span><h2>進階篩選</h2></div><button className="close" onClick={onClose}>×</button></div><div className="advanced-filter-body">
-    <section><h3>基本條件</h3><div className="advanced-filter-grid">{text("propertyNo", "物件編號")}{text("caseName", "案名")}{text("address", "地址")}{select("type", "種類", ["透天", "華廈", "大樓", "公寓", "廠房", "土地"])}{text("direction", "朝向")}{text("developer", "開發業務")}{text("zoning", "使用分區")}{text("key", "鑰匙")}{text("currentState", "現況")}{select("parking", "車位", ["坡道", "平面", "機械", "昇降", "庭院", "平移"])}{select("salesBook", "銷售本", ["製作", "未製作", "完成"])}{select("photoInfo", "照片", ["filled", "empty"])}</div></section>
+    <section><h3>基本條件</h3><div className="advanced-filter-grid">{text("propertyNo", "物件編號")}{text("caseName", "案名")}{text("address", "地址")}{choices("type", "種類", ["透天", "華廈", "大樓", "公寓", "廠房", "土地"])}{text("direction", "朝向")}{text("developer", "開發業務")}{text("zoning", "使用分區")}{text("key", "鑰匙")}{text("currentState", "現況")}{choices("parking", "車位", ["坡道", "平面", "機械", "昇降", "庭院", "平移"])}{choices("salesBook", "銷售本", ["製作", "未製作", "完成"])}{choices("photoInfo", "照片", ["filled", "empty"])}</div></section>
     <section><h3>日期</h3><div className="advanced-filter-grid dates">{dateRange("entrustStartFrom", "entrustStartTo", "委託開始")}{dateRange("entrustEndFrom", "entrustEndTo", "委託結束")}{dateRange("reportFrom", "reportTo", "進案日期")}{dateRange("updateFrom", "updateTo", "更新日期")}{dateRange("groupFrom", "groupTo", "團看日期")}{dateRange("bookFrom", "bookTo", "物件本位置日期")}{dateRange("salesFrom", "salesTo", "銷售本日期")}</div></section>
     <section><h3>價格、坪數與樓層</h3><div className="advanced-filter-grid">{numberRange("priceFrom", "priceTo", "開價（萬）", "萬")}{numberRange("ageFrom", "ageTo", "屋齡", "年")}{text("floor", "所在樓層", "例：2")}{numberRange("indoorFrom", "indoorTo", "室內坪", "坪")}{numberRange("buildingFrom", "buildingTo", "建坪", "坪")}{numberRange("landFrom", "landTo", "土地坪", "坪")}{numberRange("roadFrom", "roadTo", "臨路", "米")}{numberRange("frontageFrom", "frontageTo", "面寬", "米")}{numberRange("depthFrom", "depthTo", "深度", "米")}{text("rooms", "格局－房", "例：3")}{text("halls", "格局－廳", "例：2")}{text("baths", "格局－衛", "例：2")}</div></section>
-    <section><h3>網站編號</h3><p className="filter-help">選擇「已填」或「未填」可同時篩選多個網站。</p><div className="advanced-filter-grid website-filter-grid">{sites.map(([key, label]) => select(key, label, ["filled", "empty"]))}</div></section>
+    <section><h3>網站編號</h3><p className="filter-help">勾選「已填」或「未填」，可和其他條件一起篩選。</p><div className="advanced-filter-grid website-filter-grid">{sites.map(([key, label]) => choices(key, label, ["filled", "empty"]))}</div></section>
   </div><div className="modal-foot"><button onClick={onReset}>清除全部條件</button><button className="primary" onClick={onClose}>套用篩選</button></div></div></div>;
 }
 
-function PropertyTable({ records, columns, publicMode = false, dailyMode = false, archiveMode = false, activeLead = false, expiryAnnotation = false, showAreaGroups = false, onEdit, onArchive, onRestore, onRemove, onPptChange }: { records: RecordItem[]; columns: string[]; publicMode?: boolean; dailyMode?: boolean; archiveMode?: boolean; activeLead?: boolean; expiryAnnotation?: boolean; showAreaGroups?: boolean; onEdit: (r: RecordItem) => void; onArchive: (r: RecordItem, status?: string) => void; onRestore: (r: RecordItem) => void; onRemove: (r: RecordItem) => void; onPptChange?: (r: RecordItem, patch: Partial<RecordItem>) => void }) {
+function PropertyTable({ records, columns, publicMode = false, dailyMode = false, archiveMode = false, activeLead = false, expiryAnnotation = false, showAreaGroups = false, zoom = 100, onEdit, onArchive, onRestore, onRemove, onPptChange }: { records: RecordItem[]; columns: string[]; publicMode?: boolean; dailyMode?: boolean; archiveMode?: boolean; activeLead?: boolean; expiryAnnotation?: boolean; showAreaGroups?: boolean; zoom?: number; onEdit: (r: RecordItem) => void; onArchive: (r: RecordItem, status?: string) => void; onRestore: (r: RecordItem) => void; onRemove: (r: RecordItem) => void; onPptChange?: (r: RecordItem, patch: Partial<RecordItem>) => void }) {
+  const [publicScrollLeft, setPublicScrollLeftState] = useState(0);
+  const setPublicScrollLeft = (value: number) => setPublicScrollLeftState(value > 0 ? value + 81 : 0);
+  const [hoveredPublicCase, setHoveredPublicCase] = useState("");
+  const [hoveredPublicCaseTop, setHoveredPublicCaseTopState] = useState(0);
+  const setHoveredPublicCaseTop = (value: number) => setHoveredPublicCaseTopState(Math.max(0, (value - 6) * zoom / 100 + 6));
+  useEffect(() => {
+    if (!publicMode) return;
+    const rows = Array.from(document.querySelectorAll<HTMLTableRowElement>(".public-table tbody tr:not(.area-group-row)"));
+    const cleanups = rows.map((row, index) => {
+      const activate = () => {
+        const record = records[index];
+        if (!record) return;
+        setHoveredPublicCase(record.caseName || record.propertyNo || "未命名案件");
+        setHoveredPublicCaseTop(row.offsetTop + 6);
+      };
+      row.addEventListener("touchstart", activate, { passive: true });
+      row.addEventListener("pointerdown", activate, { passive: true });
+      return () => { row.removeEventListener("touchstart", activate); row.removeEventListener("pointerdown", activate); };
+    });
+    return () => cleanups.forEach(cleanup => cleanup());
+  }, [publicMode, records, zoom]);
   const showPpt = !!onPptChange && !publicMode;
   const areaGroup = (record: RecordItem) => isRentalRecord(record) ? "租件" : areaCategory(record);
-  const stickyCount = activeLead ? 6 : 4;
-  return <div className={`table-wrap ${publicMode ? "public-table" : ""} ${dailyMode ? "daily-table" : ""} ${activeLead ? "active-lead-table" : ""}`}><table><thead><tr>{columns.map((k, i) => <th key={k} className={`${i < stickyCount ? `sticky sticky-${i}` : ""} col-${k}`}><ColumnLabel column={k}/></th>)}{showPpt && <><th className="ppt-col">加入PPT</th><th className="ppt-type-col">PPT分類</th></>}{!publicMode && records.some(r => r.archived || isExpired(r) || r.status !== "委託中") && <th className="actions-col">操作</th>}</tr></thead><tbody>{records.map((r, recordIndex) => { const highlighted: string[] = (() => { try { return JSON.parse(r._dailyHighlight || "[]"); } catch { return []; } })(); const isHighlighted = (key: string) => highlighted.includes(key) || (key === "caseName" && highlighted.includes("caseNameNote")) || (key === "coverageFar" && (highlighted.includes("coverage") || highlighted.includes("far"))); const archiveDate = r.archived || (isExpired(r) ? r.entrustEnd : ""); const archiveDateLabel = displayRocDate(archiveDate); const archiveLabel = `${archiveDateLabel}${r.archived ? (r.status || "下架") : "到期下架"}`; const restoredLabel = r._restoredAt ? `${displayRocDate(r._restoredAt)}重新上架` : ""; const expiryDays = daysUntil(r.entrustEnd); return <Fragment key={r.id}>{showAreaGroups && (recordIndex === 0 || areaGroup(records[recordIndex - 1]) !== areaGroup(r)) && <tr className="area-group-row"><td colSpan={columns.length + (showPpt ? 2 : 0)}><span>{areaGroup(r)}</span></td></tr>}<tr>{columns.map((k, i) => <td key={k} className={`${i < stickyCount ? `sticky sticky-${i}` : ""} col-${k} ${dateKeys.has(k) && k !== "groupViewDate" && !validDate(r[k]) ? "date-error" : ""} ${dailyMode && isHighlighted(k) ? "daily-updated-cell" : ""}`}>{k === "caseName" && publicMode ? <><span className="public-case-name">{chunkText(r.caseName || "—", 10).map((line, lineIndex) => <span key={`${line}-${lineIndex}`}>{line}</span>)}</span>{r.caseNameNote && <small className="case-name-note">{r.caseNameNote}</small>}{dailyMode && r._dailyAnnotation && <small className="daily-case-annotation">{r._dailyAnnotation}</small>}{expiryAnnotation && expiryDays >= 0 && expiryDays <= 30 && <small className="mine-expiry-annotation">提醒{displayRocDate(r.entrustEnd)}到期</small>}</> : k === "caseName" ? <><button className="case-link" onClick={() => onEdit(r)}>{chunkText(r.caseName || "—", activeLead ? 12 : 15).map((line, lineIndex) => <span className="case-name-line" key={`${line}-${lineIndex}`}>{line}</span>)}</button>{r.caseNameNote && <small className="case-name-note">{r.caseNameNote}</small>}{activeLead && restoredLabel && <small className="restore-case-annotation">{restoredLabel}</small>}{archiveMode && <small className="archive-case-annotation">{archiveLabel}</small>}</> : k === "status" ? <span className={`status ${displayStatus(r) === "委託中" ? "live" : "off"}`}>{displayStatus(r)}</span> : <CellContent record={r} column={k}/>}</td>)}{showPpt && <><td className="ppt-col"><input type="checkbox" checked={pptIncluded(r)} onChange={e => onPptChange(r, { pptSelected: e.target.checked ? "1" : "0", pptCategory: r.pptCategory || (isCurrentPptWeek(r.reportDate) ? "本週進案" : "臨時新增") })}/></td><td className="ppt-type-col"><select value={pptCategory(r)} onChange={e => onPptChange(r, { pptCategory: e.target.value, pptSelected: "1" })}><option>本週進案</option><option>臨時新增</option></select></td></>}{!publicMode && (r.archived || isExpired(r) || r.status !== "委託中") && <td className="actions-col"><div className="row-actions"><button onClick={() => onRestore(r)}>恢復</button><button className="danger" onClick={() => onRemove(r)}>刪除</button></div></td>}</tr></Fragment>;})}</tbody></table></div>;
+  const stickyCount = publicMode ? 0 : activeLead ? 7 : 4;
+  const displayedRecords = publicMode ? sortActiveRecords(records) : records;
+  if (publicMode) { records = displayedRecords; showAreaGroups = true; }
+  return <div className={`table-wrap ${publicMode ? "public-table" : ""} ${dailyMode ? "daily-table" : ""} ${activeLead ? "active-lead-table" : ""}`} onScroll={event => publicMode && setPublicScrollLeft(event.currentTarget.scrollLeft)}>{publicMode && publicScrollLeft > 80 && hoveredPublicCase && <div className="public-floating-case-name" style={{ left: publicScrollLeft + 8, top: hoveredPublicCaseTop }}>{hoveredPublicCase}</div>}<table style={publicMode ? { zoom: zoom / 100 } : undefined}><thead><tr>{columns.map((k, i) => <th key={k} className={`${i < stickyCount ? `sticky sticky-${i}` : ""} col-${k}`}><ColumnLabel column={k}/></th>)}{showPpt && <><th className="ppt-col">加入PPT</th><th className="ppt-type-col">PPT分類</th></>}{!publicMode && records.some(r => r.archived || isExpired(r) || r.status !== "委託中") && <th className="actions-col">操作</th>}</tr></thead><tbody>{records.map((r, recordIndex) => { const highlighted: string[] = (() => { try { return JSON.parse(r._dailyHighlight || "[]"); } catch { return []; } })(); const isHighlighted = (key: string) => highlighted.includes(key) || (key === "caseName" && highlighted.includes("caseNameNote")) || (key === "coverageFar" && (highlighted.includes("coverage") || highlighted.includes("far"))); const archiveDate = r.archived || (isExpired(r) ? r.entrustEnd : ""); const archiveDateLabel = displayRocDate(archiveDate); const archiveLabel = `${archiveDateLabel}${r.archived ? (r.status || "下架") : "到期下架"}`; const restoredLabel = r._restoredAt ? `${displayRocDate(r._restoredAt)}重新上架` : ""; const expiryDays = daysUntil(r.entrustEnd); return <Fragment key={r.id}>{showAreaGroups && (recordIndex === 0 || areaGroup(records[recordIndex - 1]) !== areaGroup(r)) && <tr className="area-group-row"><td colSpan={columns.length + (showPpt ? 2 : 0)}><span>{areaGroup(r)}</span></td></tr>}<tr onMouseEnter={event => { if (publicMode) { setHoveredPublicCase(r.caseName || r.propertyNo || "未命名案件"); setHoveredPublicCaseTop(event.currentTarget.offsetTop + 6); } }} onMouseLeave={() => publicMode && setHoveredPublicCase("")}>{columns.map((k, i) => <td key={k} className={`${i < stickyCount ? `sticky sticky-${i}` : ""} col-${k} ${dateKeys.has(k) && k !== "groupViewDate" && !validDate(r[k]) ? "date-error" : ""} ${dailyMode && isHighlighted(k) ? "daily-updated-cell" : ""}`}>{k === "caseName" && publicMode ? <><span className="public-case-name">{chunkText(r.caseName || "—", 10).map((line, lineIndex) => <span key={`${line}-${lineIndex}`}>{line}</span>)}</span>{r.caseNameNote && <small className="case-name-note">{r.caseNameNote}</small>}{dailyMode && r._dailyAnnotation && <small className="daily-case-annotation">{r._dailyAnnotation}</small>}{expiryAnnotation && expiryDays >= 0 && expiryDays <= 30 && <small className="mine-expiry-annotation">提醒{displayRocDate(r.entrustEnd)}到期</small>}</> : k === "caseName" ? <><button className="case-link" onClick={() => onEdit(r)}>{chunkText(r.caseName || "—", activeLead ? 12 : 15).map((line, lineIndex) => <span className="case-name-line" key={`${line}-${lineIndex}`}>{line}</span>)}</button>{r.caseNameNote && <small className="case-name-note">{r.caseNameNote}</small>}{activeLead && restoredLabel && <small className="restore-case-annotation">{restoredLabel}</small>}{archiveMode && <small className="archive-case-annotation">{archiveLabel}</small>}</> : k === "status" ? <span className={`status ${displayStatus(r) === "委託中" ? "live" : "off"}`}>{displayStatus(r)}</span> : <CellContent record={r} column={k}/>}</td>)}{showPpt && <><td className="ppt-col"><input type="checkbox" checked={pptIncluded(r)} onChange={e => onPptChange(r, { pptSelected: e.target.checked ? "1" : "0", pptCategory: r.pptCategory || (isCurrentPptWeek(r.reportDate) ? "本週進案" : "臨時新增") })}/></td><td className="ppt-type-col"><select value={pptCategory(r)} onChange={e => onPptChange(r, { pptCategory: e.target.value, pptSelected: "1" })}><option>本週進案</option><option>臨時新增</option></select></td></>}{!publicMode && (r.archived || isExpired(r) || r.status !== "委託中") && <td className="actions-col"><div className="row-actions"><button onClick={() => onRestore(r)}>恢復</button><button className="danger" onClick={() => onRemove(r)}>刪除</button></div></td>}</tr></Fragment>;})}</tbody></table></div>;
 }
 
 function ColumnLabel({ column }: { column: string }) {
   if (column === "dailyHide") return null;
-  if (column === "price") return <>開價<small>（萬）</small></>;
+  if (column === "price") return <>總價<small>（萬）</small></>;
+  if (column === "coverageFar") return <>建蔽率<br/>容積率</>;
   if (column === "reportDate") return <>進案報件<br/>日期</>;
   if (column === "entrustPeriod") return <>委託開始<br/>委託結束</>;
   if (column === "bookLocation") return <>物件本<br/>位置</>;
@@ -2316,51 +2722,65 @@ function ColumnLabel({ column }: { column: string }) {
 }
 
 function CellContent({ record: r, column: k }: { record: RecordItem; column: string }) {
+  if (k === "type") return <>{typeShort(r.type) || "—"}</>;
   if (k === "direction") return <>{directionShort(r.direction) || "—"}</>;
   if (k === "dailyHide") return r._dailyHideKey ? <button className="daily-hide-button" type="button" title="不顯示於前台每日物件動態" onClick={() => window.dispatchEvent(new CustomEvent("hide-daily-item", { detail: r._dailyHideKey }))}>刪</button> : null;
   if (k === "propertyNo" && r._dailyHideKey) return <span className="daily-property-number"><button type="button" title="不顯示於前台每日物件動態" onClick={() => window.dispatchEvent(new CustomEvent("hide-daily-item", { detail: r._dailyHideKey }))}>刪</button><span>{r.propertyNo || "—"}</span></span>;
-  if (k === "area") { const address = String(r.address || "").trim(); const match = address.match(/^(.{2,3}?)(?:市|縣)([^市縣區]{1,4})區/); const district = match ? (match[1] === "台南" ? `${match[2]}區` : `${match[1]}${match[2]}`) : address.match(/^([^市縣區]{1,4}區)/)?.[1] || ""; const lineSize = Array.from(district).length === 4 ? 2 : 4; return <span className="area-lines">{chunkText(district, lineSize).map((line, index) => <span key={`${line}-${index}`}>{line}</span>)}</span>; }
+  if (k === "area") { const district = districtFromAddress(r.address) || String(r.area || "").trim(); const lineSize = Array.from(district).length === 4 ? 2 : 4; return <span className="area-lines">{chunkText(district, lineSize).map((line, index) => <span key={`${line}-${index}`}>{line}</span>)}</span>; }
   if (k === "housingRemoval") return r.housingDownDate ? <small className="archive-down-note">{displayRocDate(r.housingDownDate)}下架</small> : <span className="archive-down-pending">待下架</span>;
   if (k === "entrustPeriod") return <span className="two-line-value entrust-period-value"><span>{displayRocDate(r.entrustStart) || "—"}</span><span>{displayRocDate(r.entrustEnd) || "—"}</span></span>;
   if (["platform591", "price5168", "goldExposure", "yes319", "houseinfor", "homeWeb", "windowAd", "led"].includes(k)) {
     if (r[`${k}None`] === "1") return <>無</>;
     const website = websiteCellDisplay(r, k);
-    return <span className="two-line-value website-list-value"><span>{website.value}</span>{website.notes.map((note, index) => <small className="website-inline-note" key={`${note}-${index}`}>{note}</small>)}</span>;
+    return <span className="two-line-value website-list-value"><span>{website.value}</span>{website.notes.map((note, index) => <small className={note.includes("下架") ? "website-inline-note archive-down-note" : "website-inline-note"} key={`${note}-${index}`}>{note}</small>)}</span>;
   }
   if (k === "salesBook") return <span className="two-line-value archive-field-value"><span>{displayRocDate(r.salesBookDate || "") || "—"}</span>{(r.salesBookDate || r.salesBook) && <small>{String(r.salesBook || "").includes("更新") ? "更新" : "製作"}</small>}{r.salesBookDownDate && <small className="archive-down-note">{displayRocDate(r.salesBookDownDate)}下架</small>}</span>;
   if (k === "updateDate") return <>{displayRocDate(r.updateDate) || "—"}</>;
-  if (k === "key") { const value = String(r.key || "").trim(); const landNoKey = value.match(/^土地\s*[（(]\s*無鑰匙\s*[）)]$/); if (landNoKey) return <span className="two-line-value land-no-key"><span>土地</span><small>（無鑰匙）</small></span>; const lines = chunkText(value, 5); return lines.length ? <span className="floor-lines">{lines.map((line, index) => <span key={`${line}-${index}`}>{line}</span>)}</span> : <>—</>; }
+  if (k === "key") { const value = String(r.key || "").trim(); const landNoKey = value.match(/^土地\s*[（(]\s*無鑰匙\s*[）)]$/); if (landNoKey) return <span className="two-line-value land-no-key"><span>土地</span><small>（無鑰匙）</small></span>; const lines = chunkText(value, 5); const keyLength = Array.from(value).length; const sizeClass = keyLength > 10 ? " key-text-long" : keyLength > 5 ? " key-text-medium" : ""; return lines.length ? <span className={`floor-lines key-cell-value${sizeClass}`}>{lines.map((line, index) => <span key={`${line}-${index}`}>{line}</span>)}</span> : <>—</>; }
   if (k === "entrustEnd") { const remaining = daysUntil(r.entrustEnd); return <span className="two-line-value"><span className={remaining >= 0 && remaining <= 30 ? "expiry-date-text" : ""}>{displayRocDate(r.entrustEnd) || "—"}</span>{r.contractChangeNo && <small className="contract-change-number">{r.contractChangeNo}</small>}</span>; }
-  if (k === "developer") { const names = String(r.developer || "").split(/[\/／,，、。]+/).map(value => value.trim()).filter(Boolean); return names.length ? <span className="floor-lines">{names.map((name, index) => <span key={`${name}-${index}`}>{name}</span>)}</span> : <>—</>; }
+  if (k === "developer") { const names = developerNameLines(r.developer, developerPersonnelForDisplay); return names.length ? <span className="floor-lines">{names.map((name, index) => <span key={`${name}-${index}`}>{name}</span>)}</span> : <>—</>; }
   if (k === "price") { const price = String(r.price || "").replace(/\s*萬(?:元)?\s*/g, "").trim(); const adjusted = String(r.reducedPrice || "").replace(/\s*萬(?:元)?\s*/g, "").trim(); const label = adjustedPriceLabel(price, adjusted); return <span className="two-line-value"><b>{price || "—"}</b>{label && <span className="price-reduction">{label}{adjusted}</span>}</span>; }
-  if (k === "floor") { const rawFloor = String(r.floor || "").replace(/[\s／/]/g, ""); if (/^(?:土地|建地)+$/.test(rawFloor)) return <></>; const floor = floorShortFixed(r.floor); const parts = floor.match(/^(\d+T)(\/.*增建)$/); return parts ? <span className="two-line-value"><b>{parts[1]}</b><small>{parts[2]}</small></span> : <>{floor || "—"}</>; }
+  if (k === "floor") { const titleFloor = String(r.titleFloor || "").trim(); const currentFloor = String(r.currentFloor || "").trim(); if (!titleFloor && !currentFloor) return <></>; const invalidFloorParts = String(r.floor || "").split(/[／/]/).map(value => value.replace(/\s/g, "").toUpperCase()).filter(Boolean); if (invalidFloorParts.length && invalidFloorParts.every(value => ["土地", "建地", "無", "0T", "農地", "遊樂區"].includes(value))) return <></>; const floor = floorShortFixed(r.floor); const parts = floor.match(/^(\d+T)(\/.*增建)$/); return parts ? <span className="two-line-value"><span>{parts[1]}</span><small>{parts[2]}</small></span> : <>{floor || "—"}</>; }
   if (k === "layout") return <>{layoutShort(r.layout, r.type) || "—"}</>;
-  if (k === "parking") { const parking = parkingShort(r.parking); const parts = parking.match(/^(坡平|昇平)(.+)$/); return parts ? <span className="two-line-value"><b>{parts[1]}</b><small>{parts[2]}</small></span> : <>{parking || "—"}</>; }
-  if (["indoorPing", "buildingPing", "landPing"].includes(k)) return <>{String(r[k] || "").replace(/\s*坪\s*$/, "").trim() || "—"}</>;
+  if (k === "parking") {
+    if (typeShort(r.type) === "土地" || /^(?:LG|LA)/i.test(String(r.propertyNo || ""))) return <></>;
+    const ownership = String(r.parkingOwnership || "").trim();
+    if (ownership === "無車位" || /無車位/.test(String(r.parking || ""))) return <>無車位</>;
+    const combined = String(r.parking || "");
+    const method = String(r.parkingMethod || r.parkingType || "").trim() || ["坡道/平面", "坡道/機械", "昇降/平面", "昇降/機械", "獨立車庫", "庭院", "車庫", "平移/機械"].find(value => combined.includes(value)) || "";
+    const methodShort: Record<string, string> = { "坡道/平面": "坡平", "坡道/機械": "坡機", "昇降/平面": "昇平", "昇降/機械": "昇機", "獨立車庫": "車庫", "庭院": "庭院", "車庫": "車位", "平移/機械": "平機" };
+    const shortType = methodShort[method] || method;
+    const parkingNo = String(r.parkingNo || "").trim().replace(/號$/g, "");
+    if (!shortType && !parkingNo) return <>{parkingShort(combined) || "—"}</>;
+    return <span className="two-line-value parking-list-value"><span>{shortType || "—"}</span>{parkingNo && <small>{parkingNo}</small>}</span>;
+  }
+  if (k === "indoorPing") return <>{String(r.registryIndoorPing || r.indoorPing || "").replace(/\s*坪\s*$/, "").trim() || "—"}</>;
+  if (["buildingPing", "landPing"].includes(k)) return <>{String(r[k] || "").replace(/\s*坪\s*$/, "").trim() || "—"}</>;
   if (k === "zoning") { const chars = Array.from(r.zoning || ""); const lines = Array.from({ length: Math.ceil(chars.length / 5) }, (_, index) => chars.slice(index * 5, index * 5 + 5).join("")); return lines.length ? <span className="floor-lines">{lines.map((line, index) => <span key={`${line}-${index}`}>{line}</span>)}</span> : <>—</>; }
-  if (k === "coverageFar") return <span className="coverage-far-value"><span>{r.coverage ? `${r.coverage.replace(/\s*%\s*$/, "")}%` : "—"}</span><span>{r.far ? `${r.far.replace(/\s*%\s*$/, "")}%` : "—"}</span></span>;
+  if (k === "coverageFar") { const pairs = String(r.coverageCombined || "").split(/[、,，\n]+/).map(value => value.trim()).filter(value => /^\d+(?:\.\d+)?[\/／]\d+(?:\.\d+)?$/.test(value)); return pairs.length > 1 ? <span className="coverage-far-value coverage-pair-value">{pairs.map((pair, index) => <span key={`${pair}-${index}`}>{pair.replace("／", "/")}</span>)}</span> : <span className="coverage-far-value"><span>{r.coverage ? `${r.coverage.replace(/\s*%\s*$/, "")}%` : "—"}</span><span>{r.far ? `${r.far.replace(/\s*%\s*$/, "")}%` : "—"}</span></span>; }
   if (k === "age") { const text = ageOf(r); const parts = text.match(/^(.*?建)（(.*)）$/); return parts ? <span className="two-line-value"><b>{parts[1]}</b><small>（{parts[2]}）</small></span> : <>{text || "—"}</>; }
   if (k === "bookLocation") return <span className="two-line-value"><b>{r.bookLocationDate ? r.bookLocationDate.slice(5).replace("-", "/") : "—"}</b><small>{r.bookLocationType || "架上"}</small>{r.bookDownDate && <small className="archive-down-note">{displayRocDate(r.bookDownDate)}下架</small>}</span>;
-  if (["road", "frontage", "depth"].includes(k)) return r[k] ? <span className="two-line-value"><b>{r[k].replace(/\s*米\s*$/, "")}</b><small>米</small></span> : <>—</>;
+  if (k === "road") { const values = String(r.road || "").match(/\d+(?:\.\d+)?/g) || []; return values.length ? <span className="floor-lines road-lines">{values.map((value, index) => <span className="measure-number" key={`${value}-${index}`}>{value}</span>)}<small>米</small></span> : <>—</>; }
+  if (["frontage", "depth"].includes(k)) { const measure = String(r[k] || "").replace(/\s*米\s*$/, "").trim(); const isHouseZero = typeShort(r.type) !== "土地" && /^(?:0|0\.0+)$/.test(measure); const values = measure.match(/\d+(?:\.\d+)?/g) || []; return isHouseZero ? <>-</> : values.length ? <span className="two-line-value measure-value">{values.map((value, index) => <span className="measure-number" key={`${value}-${index}`}>{value}</span>)}<small>米</small></span> : measure ? <>{measure}</> : <>—</>; }
   if (["coverage", "far"].includes(k)) return r[k] ? <span className="two-line-value"><b>{r[k].replace(/\s*%\s*$/, "")}</b><small>%</small></span> : <>—</>;
   if (k === "managementFee") {
     const rawFee = String(r.managementFee || "").trim();
-    const fee = rawFee.replace(/\s*[\/／]\s*月\s*$/, "").trim();
+    const fee = rawFee.replace(/元/g, "").replace(/\s*[\/／]\s*月\s*$/, "").trim();
     return <>{rawFee && !fee ? "無" : !fee ? "—" : /^(?:無|\$?0(?:\.0+)?(?:元)?)$/.test(fee) ? "無" : `${fee}/月`}</>;
   }
   if (k === "notes") {
-    const naturalNoteText = displayNoteSegments(r.notes).join("； ");
-    return naturalNoteText ? <span className="notes-display natural-notes-display">{naturalNoteText}</span> : <></>;
-    const meaningful = String(r.notes || "").split(/[；;]/).map(value => value.trim()).filter(value => value && !/^(?:0|無)$/.test(value));
-    const lines = meaningful.flatMap((value, segmentIndex) => { const chars = Array.from(value); const chunks = Array.from({ length: Math.ceil(chars.length / 20) }, (_, index) => chars.slice(index * 20, index * 20 + 20).join("")); if (segmentIndex < meaningful.length - 1 && chunks.length) chunks[chunks.length - 1] += "；"; return chunks; });
-    return lines.length ? <span className="floor-lines notes-display">{lines.map((line, index) => <span key={`${line}-${index}`}>{line}</span>)}</span> : <></>;
+    const internalNoteText = String(r.notes || "").trim();
+    return <>{internalNoteText || "—"}</>;
   }
   return <>{cellValue(r, k) || "—"}</>;
 }
 
-function PropertyBookReview({ records, submit }: { records: RecordItem[]; submit: (reviews: Array<{ record: RecordItem; status: string }>) => void }) {
-  const reviewCycle = bookReviewCycleKey(), cycleStart = bookReviewCycleStart(), nextCheckDate = addDaysIso(cycleStart, 60); const dueRecords = reviewCycle ? records.filter(record => normalizeDateInput(record.bookLocationDate || "") !== today()) : [];
-  const [values, setValues] = useState<Record<string, string>>({}); const [scannerOpen, setScannerOpen] = useState(false); const [scannedId, setScannedId] = useState(""); const [scannedIds, setScannedIds] = useState<string[]>([]); const [scanMessage, setScanMessage] = useState(""); const videoRef = useRef<HTMLVideoElement | null>(null); const streamRef = useRef<MediaStream | null>(null); const scannedSetRef = useRef<Set<string>>(new Set());
+function PropertyBookReview({ records, settings, submit }: { records: RecordItem[]; settings: Settings; submit: (reviews: Array<{ record: RecordItem; status: string }>) => void }) {
+  const cycleStart = normalizeDateInput(settings.bookReviewCurrentDate || "") || "2026-07-30";
+  const nextCheckDate = normalizeDateInput(settings.bookReviewNextDate || "") || "2026-09-30";
+  const reviewCycle = today() >= cycleStart ? `book-${cycleStart}` : "";
+  const dueRecords = reviewCycle ? records.filter(record => normalizeDateInput(record.bookLocationDate || "") !== today()) : [];
+  const [reviewOpen, setReviewOpen] = useState(false); const [reviewVisible, setReviewVisible] = useState(true); const [values, setValues] = useState<Record<string, string>>({}); const [scannerOpen, setScannerOpen] = useState(false); const [scannedId, setScannedId] = useState(""); const [scannedIds, setScannedIds] = useState<string[]>([]); const [scanMessage, setScanMessage] = useState(""); const videoRef = useRef<HTMLVideoElement | null>(null); const streamRef = useRef<MediaStream | null>(null); const scannedSetRef = useRef<Set<string>>(new Set());
   const locateCode = (raw: string) => { const clean = String(raw || "").trim(); const record = records.find(item => clean.includes(item.propertyNo) || (item.address && clean.includes(item.address)) || (item.caseName && clean.includes(item.caseName))); if (!record) { setScanMessage(`找不到對應物件：${clean}`); return; } if (scannedSetRef.current.has(record.id)) { setScanMessage(`${record.propertyNo} 已掃描，請刷下一件`); return; } if (!dueRecords.some(item => item.id === record.id)) { setScanMessage(`${record.caseName || record.propertyNo} 尚未到確認日期`); return; } scannedSetRef.current.add(record.id); setScannedId(record.id); setScannedIds(previous => [...previous, record.id]); setScanMessage(`已更新今天日期：${record.propertyNo} ${record.caseName || ""}`); submit([{ record, status: record.bookLocationType || "架上" }]); };
   const decodeWithJsQR = (source: CanvasImageSource, width: number, height: number) => { const canvas = document.createElement("canvas"); canvas.width = width; canvas.height = height; const context = canvas.getContext("2d", { willReadFrequently: true }); if (!context) return ""; context.drawImage(source, 0, 0, width, height); const image = context.getImageData(0, 0, width, height); return jsQR(image.data, width, height, { inversionAttempts: "attemptBoth" })?.data || ""; };
   const decodeImage = async (file?: File) => { if (!file) return; try { const bitmap = await createImageBitmap(file); const Detector = (window as any).BarcodeDetector; let raw = ""; if (Detector) { const codes = await new Detector({ formats: ["qr_code"] }).detect(bitmap); raw = codes[0]?.rawValue || ""; } if (!raw) raw = decodeWithJsQR(bitmap, bitmap.width, bitmap.height); bitmap.close(); if (!raw) return alert("圖片中沒有辨識到QR Code，請換一張較清楚的照片"); locateCode(raw); } catch { alert("QR Code圖片讀取失敗，請換一張較清楚的照片"); } };
@@ -2368,11 +2788,12 @@ function PropertyBookReview({ records, submit }: { records: RecordItem[]; submit
   // 因此桌面總表固定向本機掃描服務讀取，掃描後才能即時寫回目前的總表資料。
   useEffect(() => { let stopped = false; const endpoint = "http://localhost:8765/api/mobile-qr"; const poll = async () => { try { const response = await fetch(endpoint, { cache: "no-store" }); if (!response.ok) return; const data = await response.json(); if (!stopped) (data.events || []).forEach((event: { code?: string }) => event.code && locateCode(event.code)); } catch {} }; poll(); const timer = window.setInterval(poll, 900); return () => { stopped = true; clearInterval(timer); }; }, [records.map(record => `${record.id}:${record._bookReviewAt || ""}`).join("|")]);
   useEffect(() => { if (!scannerOpen) { streamRef.current?.getTracks().forEach(track => track.stop()); streamRef.current = null; return; } let stopped = false, timer = 0; const start = async () => { const Detector = (window as any).BarcodeDetector; try { const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } }); streamRef.current = stream; if (!videoRef.current) return; videoRef.current.srcObject = stream; await videoRef.current.play(); const detector = Detector ? new Detector({ formats: ["qr_code"] }) : null; timer = window.setInterval(async () => { if (stopped || !videoRef.current || videoRef.current.readyState < 2) return; let raw = ""; if (detector) { const codes = await detector.detect(videoRef.current); raw = codes[0]?.rawValue || ""; } if (!raw) raw = decodeWithJsQR(videoRef.current, videoRef.current.videoWidth, videoRef.current.videoHeight); if (raw) locateCode(raw); }, 500); } catch { alert("無法開啟相機，請允許相機權限或改用上傳QR圖片"); setScannerOpen(false); } }; start(); return () => { stopped = true; if (timer) clearInterval(timer); streamRef.current?.getTracks().forEach(track => track.stop()); streamRef.current = null; }; }, [scannerOpen]);
-  if (!dueRecords.length) return null;
+  useEffect(() => { const close = (event: KeyboardEvent) => { if (event.key !== "Escape" || !reviewVisible) return; event.stopImmediatePropagation(); if (scannerOpen) setScannerOpen(false); else setReviewVisible(false); }; window.addEventListener("keydown", close, true); return () => window.removeEventListener("keydown", close, true); }, [reviewVisible, scannerOpen]);
+  if (!dueRecords.length || !reviewVisible) return null;
   const statusOf = (record: RecordItem) => record.bookLocationType || "架上";
   const bookAreaOrder = ["北區", "東區", "中西區", "南區", "永康區", "安平區", "仁德區", "安南區", "其他區", "外縣市"];
   const groupedDueRecords = bookAreaOrder.map(area => ({ area, items: dueRecords.filter(record => areaCategory(record) === area) })).filter(group => group.items.length);
-  return <section className="book-review-panel"><div className="book-review-head"><div className="book-review-title"><b>物件本確認</b><span>本次確認：{displayRocDate(cycleStart)}　下次確認：{displayRocDate(nextCheckDate)}</span></div><div className="book-review-actions"><strong>{dueRecords.length} 筆待確認</strong><button onClick={() => { setScanMessage(""); setScannerOpen(true); }}>掃描QR Code</button><label className="file-button">上傳QR圖片<input type="file" accept="image/*" capture="environment" onChange={event => { decodeImage(event.target.files?.[0]); event.target.value = ""; }}/></label></div></div><div className="book-review-list">{groupedDueRecords.map(group => <Fragment key={group.area}><div className="book-review-area"><span>{group.area}</span><small>{group.items.length}筆</small></div>{group.items.map(record => <div id={`book-review-${record.id}`} className="book-review-row" key={record.id}><div><b>{record.caseName || record.propertyNo}</b><small className="book-record-line"><span>{record.propertyNo}</span><span>{record.address || "未填地址"}</span></small></div><div className="book-review-side"><small className="book-current-note">{displayRocDate(record.bookLocationDate || "") || "未填日期"}　{record.bookLocationType || "未填位置"}</small><strong className="book-scan-status">待確認</strong></div></div>)}</Fragment>)}</div><div className="book-review-foot"><span>本次已掃描 {scannedIds.length} 筆</span></div>{scannerOpen && <div className="qr-scanner-backdrop"><div className="qr-scanner-modal"><div><b>連續掃描物件QR Code</b><button onClick={() => setScannerOpen(false)}>×</button></div><video ref={videoRef} playsInline muted/><strong className="qr-scan-count">已掃描 {scannedIds.length} 筆</strong><p>{scanMessage || "將QR Code放在畫面中央，掃完一件可直接刷下一件。"}</p><button className="primary qr-scan-done" onClick={() => setScannerOpen(false)}>掃描完成</button></div></div>}</section>;
+  return <div className="modal-backdrop book-review-reminder-backdrop"><section className={`book-review-panel ${reviewOpen ? "book-review-open" : "book-review-collapsed"}`}><div className="book-review-head" role="button" tabIndex={0} onClick={() => setReviewOpen(open => !open)} onKeyDown={event => (event.key === "Enter" || event.key === " ") && setReviewOpen(open => !open)}><div className="book-review-title"><b>物件本確認</b><span>本次確認：{displayRocDate(cycleStart)}　下次確認：{displayRocDate(nextCheckDate)}</span></div><div className="book-review-actions" onClick={event => event.stopPropagation()} onKeyDown={event => event.stopPropagation()}><strong>{dueRecords.length} 筆待確認</strong>{reviewOpen && <><button onClick={() => { setScanMessage(""); setScannerOpen(true); }}>掃描QR Code</button><label className="file-button">上傳QR圖片<input type="file" accept="image/*" capture="environment" onChange={event => { decodeImage(event.target.files?.[0]); event.target.value = ""; }}/></label></>}<button className="close book-review-close" title="關閉" onClick={() => setReviewVisible(false)}>×</button></div></div>{reviewOpen && <><div className="book-review-list">{groupedDueRecords.map(group => <Fragment key={group.area}><div className="book-review-area"><span>{group.area}</span><small>{group.items.length}筆</small></div>{group.items.map(record => <div id={`book-review-${record.id}`} className="book-review-row" key={record.id}><div><b>{record.caseName || record.propertyNo}</b><small className="book-record-line"><span>{record.propertyNo}</span><span>{record.address || "未填地址"}</span></small></div><div className="book-review-side"><small className="book-current-note">{displayRocDate(record.bookLocationDate || "") || "未填日期"}　{record.bookLocationType || "未填位置"}</small><strong className="book-scan-status">待確認</strong></div></div>)}</Fragment>)}</div><div className="book-review-foot"><span>本次已掃描 {scannedIds.length} 筆</span></div></>}{scannerOpen && <div className="qr-scanner-backdrop"><div className="qr-scanner-modal"><div><b>連續掃描物件QR Code</b><button className="close" onClick={() => setScannerOpen(false)}>×</button></div><video ref={videoRef} playsInline muted/><strong className="qr-scan-count">已掃描 {scannedIds.length} 筆</strong><p>{scanMessage || "將QR Code放在畫面中央，掃完一件可直接刷下一件。"}</p><button className="primary qr-scan-done" onClick={() => setScannerOpen(false)}>掃描完成</button></div></div>}</section></div>;
 }
 
 function BusinessReportInbox({ records, resolve, archive }: { records: RecordItem[]; resolve: (record: RecordItem, reportKey: string, keepActive?: boolean) => void; archive: (record: RecordItem, status: string) => void }) {
@@ -2390,7 +2811,7 @@ function BusinessReportInbox({ records, resolve, archive }: { records: RecordIte
     if (item.report.status === "請跟開發業務2確認") return <small className="business-report-wait">等待另一位開發確認委託中</small>;
     return <button onClick={() => resolve(item.record, item.key)}>已查看，等待再次確認</button>;
   };
-  return <section className="business-report-inbox"><header><div><div className="business-report-title-row"><b>業務回報待處理</b><div className="business-report-developer-filter">{developers.map(name => <button key={name} className={developerFilter === name ? "selected" : ""} onClick={() => setDeveloperFilter(current => current === name ? "" : name)}>#{name}</button>)}</div></div><span>業務回傳後，請在此完成下架或確認作業</span></div><strong>{shownItems.length}{developerFilter ? `／${items.length}` : ""} 筆</strong></header><div className="business-report-list">{shownItems.map(item => <article key={`${item.record.id}-${item.key}`}><div className="business-report-case"><b>{item.record.caseName || item.record.propertyNo}</b><small>{item.record.propertyNo}　開發：{item.record.developer || "未填"}</small><span>回報：<em>{item.report.status}</em>{item.report.reason ? `　原因：${item.report.reason}` : ""}</span>{item.report.status === "待確認" && item.report.dueDate && <i>下次確認：{displayRocDate(item.report.dueDate)}</i>}</div><div className="business-report-meta"><small>{item.report.personName || "業務人員"}　{new Date(item.report.reportedAt || Date.now()).toLocaleString("zh-TW")}</small>{action(item)}</div></article>)}</div></section>;
+  return <section className="business-report-inbox"><header><div><div className="business-report-title-row"><b>業務回報待處理</b><div className="business-report-developer-filter">{developers.map(name => <button key={name} className={developerFilter === name ? "selected" : ""} onClick={() => setDeveloperFilter(current => current === name ? "" : name)}>#{name}</button>)}</div></div><span>業務回傳後，請在此完成下架或確認作業</span></div><strong>{shownItems.length}{developerFilter ? `／${items.length}` : ""} 筆</strong></header><div className="business-report-list">{shownItems.map(item => <article key={`${item.record.id}-${item.key}`}><div className="business-report-case"><b>{item.record.caseName || item.record.propertyNo}</b><small>{item.record.propertyNo}　開發：{developerFullNameText(item.record.developer) || "未填"}</small><span>回報：<em>{item.report.status}</em>{item.report.reason ? `　原因：${item.report.reason}` : ""}</span>{item.report.status === "待確認" && item.report.dueDate && <i>下次確認：{displayRocDate(item.report.dueDate)}</i>}</div><div className="business-report-meta"><small>{item.report.personName || "業務人員"}　{new Date(item.report.reportedAt || Date.now()).toLocaleString("zh-TW")}</small>{action(item)}</div></article>)}</div></section>;
 }
 
 function MonthlyPropertyReport({ records, person, submit }: { records: RecordItem[]; person: Person; submit: (record: RecordItem, status: string, reason: string) => void }) {
@@ -2409,18 +2830,21 @@ function MonthlyPropertyReport({ records, person, submit }: { records: RecordIte
 
 function BusinessInventory({ records, people }: { records: RecordItem[]; people: Person[] }) {
   const [month, setMonth] = useState(today().slice(0, 7));
+  const [monthlyDetailName, setMonthlyDetailName] = useState("");
+  const [monthlyExpanded, setMonthlyExpanded] = useState(false);
+  const [stockDetailName, setStockDetailName] = useState("");
+  const monthAt = (offset: number) => { const [year, value] = today().slice(0, 7).split("-").map(Number); const date = new Date(year, value - 1 + offset, 1); return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`; };
+  const previousMonth = monthAt(-1), currentMonth = monthAt(0);
+  const shortMonth = (value: string) => `${Number(value.split("-")[1])}月`;
   const activeRecords = records.filter(record => !record.archived && !isExpired(record) && (record.status || "委託中") === "委託中");
   const knownNames = people.filter(person => person.role !== "秘書").map(person => String(person.name || "").trim()).filter(Boolean);
+  const secretaryNames = people.filter(person => person.role === "秘書").map(person => String(person.name || "").trim()).filter(Boolean);
   const namesFor = (record: RecordItem) => {
     const raw = String(record.developer || "").replace(/[\s、，,／/+&和與]/g, "");
-    const matched = knownNames.filter(name => {
-      const fullName = name.replace(/\s/g, "");
-      const shortName = Array.from(fullName).slice(-2).join("");
-      return raw.includes(fullName) || (shortName.length === 2 && raw.includes(shortName));
-    });
-    return matched.length ? matched : developerNameLines(raw);
+    const parsed = [...new Set(developerNameLines(raw, people).filter(name => !secretaryNames.includes(name)))];
+    return parsed.length ? parsed : ["未歸屬業務"];
   };
-  const allNames = Array.from(new Set((knownNames.length ? knownNames : records.flatMap(record => namesFor(record))).filter(Boolean)));
+  const allNames = Array.from(new Set([...knownNames, ...records.flatMap(record => namesFor(record))].filter(Boolean)));
   const monthMatches = (value = "") => normalizeDateInput(value).slice(0, 7) === month;
   const weightFor = (record: RecordItem, name: string) => {
     const names = namesFor(record);
@@ -2430,7 +2854,7 @@ function BusinessInventory({ records, people }: { records: RecordItem[]; people:
   const isLand = (record: RecordItem) => /^L/i.test(String(record.propertyNo || "")) || String(record.type || "").includes("土地");
   const isExclusive = (record: RecordItem) => /^(EA|LA|EC)/i.test(String(record.propertyNo || "")) || String(contractFromNo(record.propertyNo) || record.contractType || "").includes("專約");
   const monthlyEntry = records.filter(record => monthMatches(record.reportDate));
-  const monthlyArchive = records.filter(record => Boolean(record.archived) && monthMatches(record._archiveActionDate || record.archived));
+  const monthlyArchive = records.filter(record => Boolean(record.archived) && ((record.status || "委託中") !== "委託中" || Boolean(record._restoredAt)) && monthMatches(record._archiveActionDate || record.archived));
   const monthlyRestore = records.filter(record => monthMatches(record._restoredAt));
   const numberText = (value: number) => Number.isInteger(value) ? String(value) : value.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
   const categoryTotals = (items: RecordItem[], name: string) => {
@@ -2459,6 +2883,15 @@ function BusinessInventory({ records, people }: { records: RecordItem[]; people:
   const stockGrandTotal = stockRows.reduce((total, row) => total + row.total, 0);
   const categoryText = (values: { exclusiveHouse: number; exclusiveLand: number; generalHouse: number; generalLand: number; rental: number; total: number }, totalOnly = false) => { const parts = ([['房專', values.exclusiveHouse], ['土專', values.exclusiveLand], ['房一', values.generalHouse], ['土一', values.generalLand], ['租', values.rental]] as const).filter(([, count]) => count > 0).map(([label, count]) => `${label}${numberText(count)}`); return totalOnly ? `共${numberText(values.total)}件` : parts.length ? `${parts.join(" +")}=${numberText(values.total)}` : "-"; };
   const categorySummary = (values: { exclusiveHouse: number; exclusiveLand: number; generalHouse: number; generalLand: number; rental: number; total: number }, totalOnly = false) => <div className="inventory-category-summary">{totalOnly ? <b>{categoryText(values, true)}</b> : <span>{categoryText(values)}</span>}</div>;
+  const shortPropertyNo = (record: RecordItem) => String(record.propertyNo || "").match(/^[A-Za-z]{2}/)?.[0]?.toUpperCase() || String(record.propertyNo || "").slice(0, 2);
+  const inventoryCaseLine = (record: RecordItem) => <><b>{shortPropertyNo(record)}　{record.caseName || "未命名案件"}</b><span>{record.address || "未填地址"}</span></>;
+  const monthlyItemsFor = (name: string) => [
+    ...monthlyEntry.filter(record => weightFor(record, name) > 0).map(record => ({ record, action: "本月進案" })),
+    ...monthlyArchive.filter(record => weightFor(record, name) > 0).map(record => ({ record, action: "本月下架" })),
+    ...monthlyRestore.filter(record => weightFor(record, name) > 0).map(record => ({ record, action: "本月重新上架" })),
+  ];
+  const monthlyDetailItems = monthlyDetailName ? monthlyItemsFor(monthlyDetailName) : [];
+  const stockDetailRecords = stockDetailName ? activeRecords.filter(record => weightFor(record, stockDetailName) > 0).sort((a, b) => { const rank = (record: RecordItem) => /^[A-Z]A/i.test(String(record.propertyNo || "")) ? 0 : /^[A-Z]G/i.test(String(record.propertyNo || "")) ? 1 : 2; return rank(a) - rank(b) || String(a.propertyNo || "").localeCompare(String(b.propertyNo || ""), "zh-TW"); }) : [];
   const exportInventoryCanvas = (kind: "monthly" | "stock") => {
     const monthly = kind === "monthly"; const title = monthly ? `${rocMonth}進案統計　總件數 :${numberText(monthlyGrandTotal)}件` : `目前人員總件數表　總件數 :${numberText(stockGrandTotal)}件`;
     const headers = monthly ? ["人員", "本月進案", "本月下架", "本月重新上架", "本月件數"] : ["人員", "房專", "土專", "房一", "土一", "租件", "總件數"];
@@ -2480,18 +2913,20 @@ function BusinessInventory({ records, people }: { records: RecordItem[]; people:
     const url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml;charset=utf-8" })); const image = new Image(); image.onload = () => { const canvas = document.createElement("canvas"); canvas.width = width * 2; canvas.height = height * 2; const context = canvas.getContext("2d"); if (!context) return alert("圖片產生失敗"); context.scale(2, 2); context.drawImage(image, 0, 0); URL.revokeObjectURL(url); canvas.toBlob(blob => { if (blob) saveImage(blob); else alert("圖片產生失敗"); }, "image/png"); }; image.onerror = () => { URL.revokeObjectURL(url); alert("圖片產生失敗，請再試一次"); }; image.src = url;
   };
   return <section className="content business-inventory-page">
-    <div className="list-head"><SectionTitle title="業務庫存件數表" subtitle="共同開發案件依人數平均計算"/><label className="inventory-month">統計月份<input type="month" value={month} onChange={event => setMonth(event.target.value)}/></label></div>
+    <div className="list-head"><SectionTitle title="物件庫存件數表" subtitle="共同開發案件依人數平均計算；未對應人員的案件列入未歸屬業務"/><div className="inventory-month-controls"><b>統計月份</b><button className={month === previousMonth ? "selected" : ""} onClick={() => setMonth(previousMonth)}>上月 {shortMonth(previousMonth)}</button><button className={month === currentMonth ? "selected" : ""} onClick={() => setMonth(currentMonth)}>本月 {shortMonth(currentMonth)}</button><label className="inventory-month"><span>選月份</span><input type="month" value={month} onChange={event => setMonth(event.target.value)}/></label></div></div>
     <div className="inventory-columns"><div className="inventory-panel monthly-inventory-panel" id="monthly-inventory-image">
-      <div className="inventory-panel-title"><h3>{rocMonth}進案統計　總件數 :{numberText(monthlyGrandTotal)}件</h3><button onClick={() => exportInventoryCanvas("monthly")}>產圖</button></div>
+      <div className="inventory-panel-title"><h3>{rocMonth}進案統計　總件數 :{numberText(monthlyGrandTotal)}件</h3><div className="inventory-title-actions"><button onClick={() => exportInventoryCanvas("monthly")}>產圖</button><button onClick={() => setMonthlyExpanded(value => !value)}>{monthlyExpanded ? "收合" : "展開"}</button></div></div>
       <table><colgroup><col style={{width:"14%"}}/><col style={{width:"36%"}}/><col style={{width:"18%"}}/><col style={{width:"18%"}}/><col style={{width:"14%"}}/></colgroup><thead><tr><th>人員</th><th>本月進案</th><th>本月下架</th><th>本月重新上架</th><th>本月件數</th></tr></thead>
-      <tbody>{monthlyRows.map(row => <tr key={row.name}><td>{row.name}</td><td>{categorySummary(row.entered)}</td><td>{categorySummary(row.archived)}</td><td>{categorySummary(row.restored)}</td><td className="inventory-total">{categorySummary(row.total, true)}</td></tr>)}{!monthlyRows.length && <tr><td colSpan={5} className="inventory-empty">本月目前沒有進案、下架或重新上架紀錄</td></tr>}</tbody></table>
+      <tbody>{monthlyRows.map(row => <Fragment key={row.name}><tr><td>{row.name}</td><td>{categorySummary(row.entered)}</td><td>{categorySummary(row.archived)}</td><td>{categorySummary(row.restored)}</td><td className="inventory-total"><button className="inventory-count-button" onClick={() => setMonthlyDetailName(row.name)}>{categorySummary(row.total, true)}</button></td></tr>{monthlyExpanded && <tr className="inventory-month-detail-row"><td colSpan={5}><div className="inventory-case-list inventory-inline-detail">{monthlyItemsFor(row.name).map(({ record, action }, index) => <div key={`${record.id}-${action}-${index}`}><em>{action}</em>{inventoryCaseLine(record)}</div>)}</div></td></tr>}</Fragment>)}{!monthlyRows.length && <tr><td colSpan={5} className="inventory-empty">本月目前沒有進案、下架或重新上架紀錄</td></tr>}</tbody></table>
       <small>本月件數＝本月進案＋本月重新上架＋本月下架</small>
     </div>
     <div className="inventory-panel stock-inventory-panel" id="stock-inventory-image">
       <div className="inventory-panel-title"><h3>目前人員總件數表　總件數 :{numberText(stockGrandTotal)}件</h3><button onClick={() => exportInventoryCanvas("stock")}>產圖</button></div>
       <table><thead><tr><th rowSpan={2}>人員</th><th colSpan={2}>專約</th><th colSpan={2}>一般約</th><th rowSpan={2}>租件</th><th rowSpan={2}>總件數</th></tr><tr><th>房屋</th><th>土地</th><th>房屋</th><th>土地</th></tr></thead>
-      <tbody>{stockRows.map(row => <tr key={row.name}><td>{row.name}</td><td>{numberText(row.exclusiveHouse)}</td><td>{numberText(row.exclusiveLand)}</td><td>{numberText(row.generalHouse)}</td><td>{numberText(row.generalLand)}</td><td>{numberText(row.rental)}</td><td className="inventory-total">{numberText(row.total)}</td></tr>)}</tbody></table>
+      <tbody>{stockRows.map(row => <tr key={row.name}><td>{row.name}</td><td>{numberText(row.exclusiveHouse)}</td><td>{numberText(row.exclusiveLand)}</td><td>{numberText(row.generalHouse)}</td><td>{numberText(row.generalLand)}</td><td>{numberText(row.rental)}</td><td className="inventory-total"><button className="inventory-count-button" onClick={() => setStockDetailName(row.name)}>{numberText(row.total)}</button></td></tr>)}</tbody></table>
     </div></div>
+    {monthlyDetailName && <div className="modal-backdrop"><div className="modal inventory-detail-modal"><div className="modal-head"><div><span>本月件數明細</span><h2>{monthlyDetailName}　{numberText(monthlyRows.find(row => row.name === monthlyDetailName)?.total.total || 0)}件</h2></div><button className="close" onClick={() => setMonthlyDetailName("")}>×</button></div><div className="inventory-case-list monthly-detail-list">{monthlyDetailItems.map(({ record, action }, index) => <div key={`${record.id}-${action}-${index}`}><em>{action}</em>{inventoryCaseLine(record)}</div>)}</div><div className="modal-foot"><button onClick={() => setMonthlyDetailName("")}>完成</button></div></div></div>}
+    {stockDetailName && <div className="modal-backdrop"><div className="modal inventory-detail-modal"><div className="modal-head"><div><span>目前總件數明細</span><h2>{stockDetailName}　{numberText(stockRows.find(row => row.name === stockDetailName)?.total || 0)}件</h2></div><button className="close" onClick={() => setStockDetailName("")}>×</button></div><div className="inventory-case-list monthly-detail-list stock-detail-list">{stockDetailRecords.map(record => <div key={record.id}>{inventoryCaseLine(record)}</div>)}</div><div className="modal-foot"><button onClick={() => setStockDetailName("")}>完成</button></div></div></div>}
   </section>;
 }
 
@@ -2503,17 +2938,18 @@ function Field({ fieldKey, label, record, records, setRecord }: { fieldKey: stri
   const pillChoices: Record<string, string[]> = {
     coverBottomSource: ["主約", "契變", "口頭"], coverPercentSource: ["主約", "契變", "口頭"], coverNoChange: ["無契變"], coverOriginalType: ["原稿", "草稿"], titleUndertaking: ["有切結", "無切結"],
     zoningDocumentStatus: ["房屋不需要", "土地已附正式分區", "謄本已標示不用附"], authorizationStatus: ["無需要", "已附上歸檔"], authorizationCopyType: ["影本", "正本"],
-    parkingOwnership: ["無車位", "停自有地", "固定車位", "車位另租", "抽籤決定"], parkingType: ["固定車位", "車位另租", "抽籤決定", "先到先停", "排隊等候", "停自有地"], parkingMethod: ["坡道/平面", "坡道/機械", "昇降/平面", "昇降/機械", "庭院", "平移/機械"]
+    parkingOwnership: ["無車位", "停自有地", "固定車位", "車位另租", "抽籤決定", "先到先停"], parkingMethod: ["坡道/平面", "坡道/機械", "昇降/平面", "昇降/機械", "庭院", "車庫", "平移/機械"]
   };
-  if (pillChoices[fieldKey]) return <label className={`field cover-pill-field cover-pill-${fieldKey}`}><span>{label}</span><span className="pill-options">{pillChoices[fieldKey].map(option => <button type="button" className={value === option ? "active" : ""} onClick={() => set(value === option ? "" : option)} key={option}>{option}</button>)}</span></label>;
+  if (pillChoices[fieldKey]) { const displayedValue = fieldKey === "parkingMethod" && !value && pillChoices.parkingMethod.includes(record.parkingType || "") ? record.parkingType : value; const selectPill = (option: string) => fieldKey === "parkingMethod" ? setRecord({ ...record, parkingMethod: displayedValue === option ? "" : option, parkingType: "" }) : set(displayedValue === option ? "" : option); return <label className={`field cover-pill-field cover-pill-${fieldKey}`}><span>{label}</span><span className="pill-options">{pillChoices[fieldKey].map(option => <button type="button" className={displayedValue === option ? "active" : ""} onClick={() => selectPill(option)} key={option}>{option}</button>)}</span></label>; }
   if (fieldKey === "reducedPrice") return null;
   if (fieldKey === "caseNameNote") return <label className="field case-name-note-field"><span>{label}{record.caseNameNoteModifiedAt && <small>修改:{displayModifiedAt(record.caseNameNoteModifiedAt)}</small>}</span><input type="text" value={value} onChange={event => setRecord({ ...record, caseNameNote: event.target.value, caseNameNoteModifiedAt: new Date().toISOString() })}/></label>;
+  if (fieldKey === "showingFollowUpDueDate") return <label className="field showing-follow-up-date-field"><span>{label}</span><input type="text" inputMode="numeric" value={displayRocDate(value)} onChange={event => setRecord({ ...record, showingFollowUpDueDate: event.target.value, showingFollowUp: event.target.value ? "暫停帶看／等待業務回覆" : "", showingFollowUpDate: event.target.value ? record.showingFollowUpDate || today() : "" })} onBlur={event => { const date = normalizeDateInput(event.target.value); setRecord({ ...record, showingFollowUpDueDate: date, showingFollowUp: date ? "暫停帶看／等待業務回覆" : "", showingFollowUpDate: date ? record.showingFollowUpDate || today() : "" }); }} placeholder="例如 115/8/15"/><small>清空日期即解除追蹤</small></label>;
   if (fieldKey === "completionDate") { const parsed = record.areaPaste ? parseAreaPaste(record.areaPaste, record) : record; const shownDate = value || parsed.completionDate || ""; const yearText = String(shownDate || record.builtYear || "").match(/\d{2,4}/)?.[0] || ""; const yearNumber = Number(yearText); const westernYear = yearNumber ? (yearNumber > 1911 ? yearNumber : yearNumber + 1911) : 0; const age = westernYear ? new Date().getFullYear() - westernYear : NaN; return <label className="field completion-age-field"><span>{label}{Number.isFinite(age) && age >= 0 && <small>約 {age} 年屋</small>}</span><input type="text" inputMode="numeric" value={displayRocDate(shownDate)} onChange={event => set(event.target.value)} onBlur={event => set(normalizeDateInput(event.target.value))} placeholder="例如 074.04.16"/></label>; }
   if (["buildingPing", "indoorPing", "landPing", "registryBuildingPing", "registryIndoorPing", "landSharePing"].includes(fieldKey)) { const parsed = record.areaPaste ? parseAreaPaste(record.areaPaste, record) : record; const compared = fieldKey === "buildingPing" ? parsed.registryBuildingPing : fieldKey === "indoorPing" ? parsed.registryIndoorPing : fieldKey === "landPing" ? parsed.landSharePing : fieldKey === "registryBuildingPing" ? record.buildingPing : fieldKey === "registryIndoorPing" ? record.indoorPing : record.landPing; const prefix = ["registryBuildingPing", "registryIndoorPing", "landSharePing"].includes(fieldKey) ? "進案" : "房管"; return <label className="field compared-ping-field"><span><b>{label}</b>{compared && <small>{prefix} {compared} 坪</small>}</span><input inputMode="decimal" value={value} onChange={event => set(event.target.value)}/></label>; }
   if (fieldKey === "price") return <div className="price-pair"><label className="field"><span>開價（萬）</span><input inputMode="decimal" value={record.price || ""} onChange={e => setRecord({ ...record, price: e.target.value })}/></label><label className="field reduced-price-field"><span>降價/調價(萬){record.reducedPrice && <small>修改：{displayModifiedAt(record.reducedPriceModifiedAt || record.lastModifiedAt)}</small>}</span><input inputMode="decimal" value={record.reducedPrice || ""} onChange={e => setRecord({ ...record, reducedPrice: e.target.value, reducedPriceModifiedAt: e.target.value ? new Date().toISOString() : "" })}/></label></div>;
   if (fieldKey === "bookLocationNo") return null;
   if (fieldKey === "contractType") return <label className="field contract-field"><span>{label}<small>EG 房一、EA 房專、LG 土一、LA 土專、EB 租一、EC 租專、RG 預一、RA 預專</small></span><input value={contractFromNo(record.propertyNo) || value} readOnly placeholder="依物件編號自動判斷"/></label>;
-  if (fieldKey === "coverage") { const storedParts = String(record.coverageCombined || "").split(/[／/]/); const combinedValue = record.coverageCombined && storedParts[0] === String(record.coverage || "") && (storedParts[1] || "") === String(record.far || "") ? record.coverageCombined : [record.coverage, record.far].filter(Boolean).join("/"); return <label className="field coverage-combined-field"><span>建蔽率%/容積率%</span><input type="text" inputMode="decimal" value={combinedValue} onChange={event => { const raw = event.target.value.replace(/／/g, "/"); const [coverage = "", far = ""] = raw.split("/"); setRecord({ ...record, coverageCombined: raw, coverage: coverage.trim(), far: far.trim() }); }} placeholder="例如 60/240"/></label>; }
+  if (fieldKey === "coverage") { const combinedValue = record.coverageCombined || [record.coverage, record.far].filter(Boolean).join("/"); return <label className="field coverage-combined-field"><span>建蔽率%/容積率%</span><input type="text" inputMode="decimal" value={combinedValue} onChange={event => { const raw = event.target.value.replace(/／/g, "/"); const pairs = raw.split(/[、,，\n]+/).map(value => value.trim()).filter(Boolean).map(value => value.split("/")); const coverage = pairs.map(pair => pair[0] || "").filter(Boolean).join("/"); const far = pairs.map(pair => pair[1] || "").filter(Boolean).join("/"); setRecord({ ...record, coverageCombined: raw, coverage, far }); }} placeholder="例如 60/240；兩組可輸入 60/360、80/320"/></label>; }
   if (["platform591", "price5168", "goldExposure"].includes(fieldKey)) { const expiryKey = `${fieldKey}Expiry`; const siteLabel = fieldKey === "platform591" ? "591" : fieldKey === "price5168" ? "5168" : "黃金曝光"; return websiteInput(fieldKey, siteLabel, expiryKey); }
   if (fieldKey === "yes319") return <div className="website-stack">{websiteInput("yes319", "YES319")}{websiteInput("houseinfor", "HOUSE INFOR")}</div>;
   if (fieldKey === "windowAd") return <div className="website-stack">{websiteInput("windowAd", "櫥窗（專）")}{websiteInput("led", "LED（專）")}</div>;
@@ -2525,8 +2961,8 @@ function Field({ fieldKey, label, record, records, setRecord }: { fieldKey: stri
   if (fieldKey === "type") { const selectedType = selectOptions.type.find(option => typeShort(option) === typeShort(value)) || value; return <label className="field"><span>{label}</span><select value={selectedType} onChange={e => set(e.target.value)}><option value="">請選擇</option>{selectOptions.type.map(o => <option key={o} value={o}>{o}</option>)}</select></label>; }
   if (selectOptions[fieldKey]) return <label className="field"><span>{label}</span><select value={value} onChange={e => set(e.target.value)}><option value="">請選擇</option>{selectOptions[fieldKey].map(o => <option key={o}>{o}</option>)}</select></label>;
   if (fieldKey === "groupViewDate") return <label className="field"><span>{label}</span><input type="text" placeholder="例如：115年7月28日、已團看" value={value} onChange={e => set(e.target.value)}/><small>可輸入日期或中文註記</small></label>;
-  if (fieldKey === "updateDate") return <label className="field update-date-field"><span>{label}</span><input type="text" inputMode="numeric" value={displayRocDate(value)} onChange={e => set(e.target.value)} onBlur={e => set(normalizeDateInput(e.target.value))} placeholder="例如 115/7/29"/><small>{record.lastModifiedAt ? `最後修改:${displayModifiedAt(record.lastModifiedAt)}` : "尚無修改時間"}</small></label>;
-  if (dateKeys.has(fieldKey)) return <label className={`field ${value && !validDate(value) ? "invalid" : ""}`}><span>{label}</span><input type="text" inputMode="numeric" placeholder="例如 7/24" value={displayRocDate(value)} onChange={e => set(e.target.value)} onBlur={e => set(normalizeDateInput(e.target.value))}/><small>可輸入 7/24，自動轉為民國日期</small></label>;
+  if (fieldKey === "updateDate") return <label className="field update-date-field"><span>{label}</span><input type="text" inputMode="numeric" value={displayRocDate(value)} onChange={e => set(normalizeCompleteDateInput(e.target.value))} onBlur={e => set(normalizeDateInput(e.target.value))} placeholder="例如 115/7/29"/><small>{record.lastModifiedAt ? `最後修改:${displayModifiedAt(record.lastModifiedAt)}` : "尚無修改時間"}</small></label>;
+  if (dateKeys.has(fieldKey)) return <label className={`field ${value && !validDate(normalizeDateInput(value)) ? "invalid" : ""}`}><span>{label}</span><input type="text" inputMode="numeric" placeholder="例如 7/24" value={displayRocDate(normalizeDateInput(value))} onChange={e => set(normalizeCompleteDateInput(e.target.value))} onBlur={e => set(normalizeDateInput(e.target.value))}/><small>可輸入 7/24，自動轉為民國日期</small></label>;
   return <label className="field"><span>{label}{fieldKey === "propertyNo" || fieldKey === "caseName" ? " *" : ""}</span><input type="text" inputMode={["price", "reducedPrice", "builtYear", "indoorPing", "buildingPing", "landPing", "coverage", "far"].includes(fieldKey) ? "decimal" : undefined} value={inputValue} onChange={e => set(e.target.value)}/>{fieldKey === "builtYear" && value && <small>目前換算：{ageOf(record)}</small>}</label>;
 }
 
@@ -2565,15 +3001,17 @@ function SettingsPanel({ settings, setSettings, supabasePush, supabasePull, clou
   const updatePerson = (id: string, patch: Partial<Person>) => setSettings({ ...settings, personnel: settings.personnel.map(p => p.id === id ? { ...p, ...patch } : p) });
   const removePerson = (id: string) => {
     if (!confirm("確定刪除這位人員？刪除後序號會自動重新編排。")) return;
+    const currentScrollTop = window.scrollY;
     const personnel = sortPeopleBySequence(settings.personnel.filter(person => person.id !== id)).map((person, index) => ({ ...person, sequence: String(index + 1) }));
     setSettings({ ...settings, personnel });
+    requestAnimationFrame(() => requestAnimationFrame(() => window.scrollTo({ top: Math.min(currentScrollTop, Math.max(0, document.documentElement.scrollHeight - window.innerHeight)), behavior: "auto" })));
   };
   const addPerson = () => setSettings({ ...settings, personnel: [...settings.personnel, { id: newId(), sequence: String(settings.personnel.length + 1), name: "", nationalId: "", phone: "", role: "業務", status: "在職" }] });
   const activePeople = sortPeopleBySequence(settings.personnel.filter(p => p.status === "在職"));
   const formerPeople = sortPeopleBySequence(settings.personnel.filter(p => p.status === "離職"));
   const personRow = (p: Person) => <div className="person-row" key={p.id}><input className="person-sequence" type="number" min="1" value={p.sequence || ""} onChange={e => updatePerson(p.id, { sequence: e.target.value })} placeholder="序"/><input value={p.name} onChange={e => updatePerson(p.id, { name: e.target.value })} placeholder="姓名"/><input type="text" value={p.nationalId} onChange={e => updatePerson(p.id, { nationalId: e.target.value.toUpperCase() })} placeholder="身分證字號"/><input type="tel" value={p.phone || ""} onChange={e => updatePerson(p.id, { phone: e.target.value })} placeholder="手機號碼"/><select value={p.role || "業務"} onChange={e => updatePerson(p.id, { role: e.target.value as Person["role"] })}><option>業務</option><option>秘書</option></select><select value={p.status} onChange={e => updatePerson(p.id, { status: e.target.value as Person["status"] })}><option>在職</option><option>離職</option></select><button className="danger" onClick={() => removePerson(p.id)}>刪除</button></div>;
-  return <section className="settings content"><SectionTitle title="系統設定" subtitle=""/><details className="supabase"><summary><span>進階：Supabase 雲端同步</span><small>{cloudSession ? `已登入：${cloudSession.email || "雲端帳號"}` : "預設隱藏"}</small></summary><div className="supabase-body"><div className="warning">資料只會在你修改後等待 6 秒同步一次；不會每幾秒讀取或上傳。照片檔案不會上傳到雲端。</div><div className="form-grid"><label className="field"><span>Project URL</span><input value={settings.supabaseUrl} onChange={e => set("supabaseUrl", e.target.value)}/></label><label className="field"><span>Supabase Publishable key</span><input type="password" value={settings.supabaseKey} onChange={e => set("supabaseKey", e.target.value)} placeholder="貼上 anon / publishable key"/></label></div>{cloudSession ? <div className="backup-actions"><button onClick={supabasePull}>從雲端合併</button><button className="primary" onClick={() => void supabasePush()}>立即同步</button><button onClick={supabaseSignOut}>登出雲端帳號</button></div> : <><div className="form-grid"><label className="field"><span>雲端登入 Email</span><input type="email" value={cloudEmail} onChange={e => setCloudEmail(e.target.value)}/></label><label className="field"><span>雲端登入密碼</span><input type="password" value={cloudPassword} onChange={e => setCloudPassword(e.target.value)}/></label></div><div className="backup-actions"><button onClick={() => void supabaseSignIn(cloudEmail, cloudPassword, false)}>登入</button><button className="primary" onClick={() => void supabaseSignIn(cloudEmail, cloudPassword, true)}>第一次使用：註冊雲端帳號</button></div></>}</div></details><article className="panel personnel-panel"><div className="personnel-head"><h3>人員設定</h3><button className="primary" onClick={addPerson}>＋ 新增人員</button></div><div className="personnel-table"><div className="person-row person-labels"><span>序</span><span>人員</span><span>身分證字號（前台密碼）</span><span>手機號碼</span><span>職務</span><span>狀態</span><span>操作</span></div>{activePeople.map(personRow)}{!activePeople.length && <div className="no-person">尚未新增在職人員</div>}</div>{formerPeople.length > 0 && <details className="former-people"><summary>離職人員（{formerPeople.length}）</summary><div className="personnel-table">{formerPeople.map(personRow)}</div></details>}</article></section>;
+  return <section className="settings content"><SectionTitle title="系統設定" subtitle=""/><details className="supabase"><summary><span>進階：Supabase 雲端同步</span><small>{cloudSession ? `已登入：${cloudSession.email || "雲端帳號"}（自動同步）` : "預設隱藏"}</small></summary><div className="supabase-body"><div className="warning">登入後，開啟系統會自動取得最新雲端資料；修改後等待 6 秒自動上傳。照片檔案不會上傳到雲端。</div><div className="form-grid"><label className="field"><span>Project URL</span><input value={settings.supabaseUrl} onChange={e => set("supabaseUrl", e.target.value)}/></label><label className="field"><span>Supabase Publishable key</span><input type="password" value={settings.supabaseKey} onChange={e => set("supabaseKey", e.target.value)} placeholder="貼上 anon / publishable key"/></label></div>{cloudSession ? <div className="backup-actions"><span className="cloud-auto-sync-status">已啟用自動下載與自動上傳</span><button onClick={supabaseSignOut}>登出雲端帳號</button></div> : <><div className="form-grid"><label className="field"><span>雲端登入 Email</span><input type="email" value={cloudEmail} onChange={e => setCloudEmail(e.target.value)}/></label><label className="field"><span>雲端登入密碼</span><input type="password" value={cloudPassword} onChange={e => setCloudPassword(e.target.value)}/></label></div><div className="backup-actions"><button onClick={() => void supabaseSignIn(cloudEmail, cloudPassword, false)}>登入</button><button className="primary" onClick={() => void supabaseSignIn(cloudEmail, cloudPassword, true)}>第一次使用：註冊雲端帳號</button></div></>}</div></details><details className="panel book-review-settings-panel"><summary>物件本確認日期</summary><div className="form-grid"><label className="field"><span>本次確認日期</span><input type="text" inputMode="numeric" value={displayRocDate(settings.bookReviewCurrentDate || "2026-07-30")} onChange={e => set("bookReviewCurrentDate", e.target.value)} onBlur={e => set("bookReviewCurrentDate", normalizeDateInput(e.target.value) || "2026-07-30")} placeholder="115/7/30"/></label><label className="field"><span>下次確認日期</span><input type="text" inputMode="numeric" value={displayRocDate(settings.bookReviewNextDate || "2026-09-30")} onChange={e => set("bookReviewNextDate", e.target.value)} onBlur={e => set("bookReviewNextDate", normalizeDateInput(e.target.value) || "2026-09-30")} placeholder="115/9/30"/></label></div></details><article className="panel personnel-panel personnel-open"><div className="personnel-head"><h3>人員設定</h3><button className="primary" onClick={addPerson}>＋ 新增人員</button></div><div className="personnel-table"><div className="person-row person-labels"><span>序</span><span>人員</span><span>身分證字號（前台密碼）</span><span>手機號碼</span><span>職務</span><span>狀態</span><span>操作</span></div>{activePeople.map(personRow)}{!activePeople.length && <div className="no-person">尚未新增在職人員</div>}</div>{formerPeople.length > 0 && <details className="former-people"><summary>離職人員（{formerPeople.length}）</summary><div className="personnel-table">{formerPeople.map(personRow)}</div></details>}</article></section>;
 }
 
 function SectionTitle({ title, subtitle }: { title: string; subtitle: string }) { return <div className="section-title"><h2>{title}</h2>{subtitle && <p>{subtitle}</p>}</div>; }
-function Empty({ text }: { text: string }) { return <div className="empty"><span>⌂</span><h3>{text}</h3><p>可使用右上角「新增物件」建立第一筆資料。</p></div>; }
+function Empty({ text }: { text: string }) { return <div className="empty"><span>⌂</span><h3>{text}</h3><p>新案件請先由進案草稿確認後正式進案。</p></div>; }
