@@ -1046,7 +1046,7 @@ export default function Home() {
 
   return <main className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="brand"><h1>物件管理總表</h1></div>
+      <div className="brand"><h1>物件管理總表 <small className="app-version">V2026.08.04</small></h1></div>
       <div className="header-actions"><button className="ppt-export-button" onClick={() => { setPptExtraIds([]); setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button onClick={exportExcel}>匯出 Excel</button><label className="file-button">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button onClick={exportJson}>匯出 JSON</button><button className="key-tag" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{active.filter(r => r.key).length}</b></button><div className="header-new-record"><button className="primary" onClick={() => setEditing(blankRecord())}>＋ 新增物件</button><small>最後修改時間：{latestModifiedAt ? displayModifiedAt(latestModifiedAt) : "尚無"}</small></div></div>
     </header>}
     {!internalView && <nav className="nav">
