@@ -1976,6 +1976,10 @@ function printRecordDocument(record: RecordItem, kind: "color" | "cover") {
   const bottomSource = record.coverBottomSource || "主約";
   const bottomText = record.coverBottomPrice ? `${escapeHtml(bottomSource)}${escapeHtml(record.coverBottomPrice)}萬` : "";
   const percentText = record.coverBottomPercent ? `${escapeHtml(record.coverPercentSource || "主約")}${escapeHtml(record.coverBottomPercent)}%` : "";
+  const coverChangeNo = String(record.coverChangeNo || "").trim();
+  const hasCoverChange = record.coverNoChange !== "無契變" && !!coverChangeNo && !isImportedDashPlaceholder(coverChangeNo);
+  const changeBottomPrice = String(record.coverBottomPrice || "").replace(/\s*萬(?:元)?\s*/g, "").trim();
+  const coverChangePurpose = hasCoverChange && changeBottomPrice ? `底價${escapeHtml(changeBottomPrice)}萬` : value("coverChangePurpose");
   const coverIsLand = typeShort(record.type) === "土地" || /^(?:LG|LA)/i.test(record.propertyNo || "");
   const coverZoningStatus = record.zoningDocumentStatus || (coverIsLand ? "" : "房屋不需要");
   const coverContractRows = false ? `<table class="contract-grid-v3"><colgroup><col style="width:25mm"><col style="width:11mm"><col style="width:11mm"><col style="width:11mm"><col style="width:58mm"><col></colgroup><tbody>
@@ -1988,7 +1992,7 @@ function printRecordDocument(record: RecordItem, kind: "color" | "cover") {
       <tr style="height:9mm"><th rowspan="2">契約編號</th><th rowspan="2">日期／委託起訖日</th><td class="report">進案日期：　${date("reportDate")}</td></tr>
       <tr style="height:9mm"><th>用途</th></tr>
       <tr style="height:12mm"><td>${value("propertyNo")}</td><td>${date("entrustStart")}～${date("entrustEnd")}</td><td>開價${value("price")}萬</td></tr>
-      <tr style="height:12mm"><td>${record.coverNoChange === "無契變" ? "無契變" : (isImportedDashPlaceholder(record.coverChangeNo) ? "－" : value("coverChangeNo"))}</td><td>${record.coverNoChange === "無契變" || isImportedDashPlaceholder(record.coverChangeDate) ? "－" : date("coverChangeDate")}</td><td>${record.coverNoChange === "無契變" || isImportedDashPlaceholder(record.coverChangePurpose) ? "－" : value("coverChangePurpose")}</td></tr>
+      <tr style="height:12mm"><td>${record.coverNoChange === "無契變" ? "無契變" : (isImportedDashPlaceholder(record.coverChangeNo) ? "－" : value("coverChangeNo"))}</td><td>${record.coverNoChange === "無契變" || isImportedDashPlaceholder(record.coverChangeDate) ? "－" : date("coverChangeDate")}</td><td>${record.coverNoChange === "無契變" || isImportedDashPlaceholder(record.coverChangePurpose) && !hasCoverChange ? "－" : coverChangePurpose}</td></tr>
       <tr style="height:10.8mm"><td></td><td></td><td></td></tr><tr style="height:10.8mm"><td></td><td></td><td></td></tr><tr style="height:10.8mm"><td></td><td></td><td></td></tr><tr style="height:10.8mm"><td></td><td></td><td></td></tr><tr style="height:10mm"><td></td><td></td><td></td></tr>
     </tbody></table>`;
   const coverV2 = `<div class="page intake-cover"><style>

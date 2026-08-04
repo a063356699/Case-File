@@ -45395,6 +45395,10 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     const bottomSource = record.coverBottomSource || "\u4E3B\u7D04";
     const bottomText = record.coverBottomPrice ? `${escapeHtml(bottomSource)}${escapeHtml(record.coverBottomPrice)}\u842C` : "";
     const percentText = record.coverBottomPercent ? `${escapeHtml(record.coverPercentSource || "\u4E3B\u7D04")}${escapeHtml(record.coverBottomPercent)}%` : "";
+    const coverChangeNo = String(record.coverChangeNo || "").trim();
+    const hasCoverChange = record.coverNoChange !== "\u7121\u5951\u8B8A" && !!coverChangeNo && !isImportedDashPlaceholder(coverChangeNo);
+    const changeBottomPrice = String(record.coverBottomPrice || "").replace(/\s*萬(?:元)?\s*/g, "").trim();
+    const coverChangePurpose = hasCoverChange && changeBottomPrice ? `\u5E95\u50F9${escapeHtml(changeBottomPrice)}\u842C` : value("coverChangePurpose");
     const coverIsLand = typeShort(record.type) === "\u571F\u5730" || /^(?:LG|LA)/i.test(record.propertyNo || "");
     const coverZoningStatus = record.zoningDocumentStatus || (coverIsLand ? "" : "\u623F\u5C4B\u4E0D\u9700\u8981");
     const coverContractRows = false ? `<table class="contract-grid-v3"><colgroup><col style="width:25mm"><col style="width:11mm"><col style="width:11mm"><col style="width:11mm"><col style="width:58mm"><col></colgroup><tbody>
@@ -45407,7 +45411,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       <tr style="height:9mm"><th rowspan="2">\u5951\u7D04\u7DE8\u865F</th><th rowspan="2">\u65E5\u671F\uFF0F\u59D4\u8A17\u8D77\u8A16\u65E5</th><td class="report">\u9032\u6848\u65E5\u671F\uFF1A\u3000${date("reportDate")}</td></tr>
       <tr style="height:9mm"><th>\u7528\u9014</th></tr>
       <tr style="height:12mm"><td>${value("propertyNo")}</td><td>${date("entrustStart")}\uFF5E${date("entrustEnd")}</td><td>\u958B\u50F9${value("price")}\u842C</td></tr>
-      <tr style="height:12mm"><td>${record.coverNoChange === "\u7121\u5951\u8B8A" ? "\u7121\u5951\u8B8A" : isImportedDashPlaceholder(record.coverChangeNo) ? "\uFF0D" : value("coverChangeNo")}</td><td>${record.coverNoChange === "\u7121\u5951\u8B8A" || isImportedDashPlaceholder(record.coverChangeDate) ? "\uFF0D" : date("coverChangeDate")}</td><td>${record.coverNoChange === "\u7121\u5951\u8B8A" || isImportedDashPlaceholder(record.coverChangePurpose) ? "\uFF0D" : value("coverChangePurpose")}</td></tr>
+      <tr style="height:12mm"><td>${record.coverNoChange === "\u7121\u5951\u8B8A" ? "\u7121\u5951\u8B8A" : isImportedDashPlaceholder(record.coverChangeNo) ? "\uFF0D" : value("coverChangeNo")}</td><td>${record.coverNoChange === "\u7121\u5951\u8B8A" || isImportedDashPlaceholder(record.coverChangeDate) ? "\uFF0D" : date("coverChangeDate")}</td><td>${record.coverNoChange === "\u7121\u5951\u8B8A" || isImportedDashPlaceholder(record.coverChangePurpose) && !hasCoverChange ? "\uFF0D" : coverChangePurpose}</td></tr>
       <tr style="height:10.8mm"><td></td><td></td><td></td></tr><tr style="height:10.8mm"><td></td><td></td><td></td></tr><tr style="height:10.8mm"><td></td><td></td><td></td></tr><tr style="height:10.8mm"><td></td><td></td><td></td></tr><tr style="height:10mm"><td></td><td></td><td></td></tr>
     </tbody></table>`;
     const coverV2 = `<div class="page intake-cover"><style>
