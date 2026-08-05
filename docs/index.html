@@ -1277,6 +1277,7 @@ body{background:#f8fbfe!important;color:#405064!important}
 }
 /* Visible release marker beside the home title. */
 .app-version{font-family:"Noto Sans TC","Microsoft JhengHei",sans-serif;font-size:11px;letter-spacing:0;color:var(--muted);font-weight:700;margin-left:7px;vertical-align:middle}
+.book-location-value b,.book-location-value small{font-weight:800!important}
 </style>
 </head>
 <body>
@@ -43215,7 +43216,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       !internalView && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { className: "topbar", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
           "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V2" })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V3" })
         ] }) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "ppt-export-button", onClick: () => {
@@ -46742,8 +46743,9 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       const rocDate = displayRocDate(r.bookLocationDate || "");
       const shortDate = rocDate ? rocDate.split("/").slice(-2).join("/") : "";
       const location2 = r.bookLocationType || "";
-      return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "book-location-inline", children: [
-        shortDate || location2 ? `${shortDate}${location2}` : "\u2014",
+      return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "two-line-value book-location-value", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: shortDate || "\u2014" }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: location2 || "\u2014" }),
         r.bookDownDate && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { className: "archive-down-note", children: [
           displayRocDate(r.bookDownDate),
           "\u4E0B\u67B6"
