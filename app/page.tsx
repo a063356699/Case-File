@@ -1427,7 +1427,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="brand"><h1>總表　管理模式 <small className="app-version">V8</small></h1></div>
+      <div className="brand"><h1>總表　管理模式 <small className="app-version">V9</small></h1></div>
       <div className="header-actions"><button className="ppt-export-button" onClick={() => { setPptExtraIds([]); setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button onClick={exportExcel}>匯出 Excel</button><label className="file-button">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button onClick={exportJson}>匯出 JSON</button><button className="key-tag" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button><span className="home-last-modified">最後修改: {latestModifiedAt ? displayHomeModifiedAt(latestModifiedAt) : "尚無紀錄"}</span></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -2538,7 +2538,7 @@ function IntakePanel({ raw, setRaw, drafts, draft, selectDraft, deleteDraft, ana
   const enteredDrafts = drafts.filter(item => !!item.linkedRecordId);
   const draftCard = (item: IntakeData) => <article className={`draft-card ${draft?.id === item.id ? "selected" : ""}`} key={item.id}>
     <div className="draft-summary"><span className={`kind-badge ${item.propertyKind === "純土地" ? "land" : ""}`}>{item.propertyKind === "純土地" ? "土地" : item.propertyKind}</span><button className="draft-case-link" onClick={() => selectDraft(item.id)}>{intakeValue(item.values, "案名") || "未命名案件"}</button><span>{intakeValue(item.values, "委託主約編號") || "—"}</span><span className="draft-address">{intakeValue(item.values, "物件(完整)地址") || "—"}</span><span>{developerFullNameText(intakeValue(item.values, "開發１/開發２")) || "—"}</span><small>{intakeValue(item.values, "時間戳記") || "—"}</small></div>
-    <div className="draft-actions"><button onClick={() => printDraft(item.id)}>列印</button><button className={item.printedForSalesAt ? "draft-printed-recorded" : ""} title={item.printedForSalesAt ? "再點一次可取消列印紀錄" : "記錄已列印草稿"} onClick={() => markPrintedForSales(item.id)}>{item.printedForSalesAt ? `已列印草稿${displayRocDate(item.printedForSalesAt)}` : "已列印草稿"}</button><button className="primary" disabled={!!item.linkedRecordId} onClick={() => confirmIntake(item.id)}>{item.linkedRecordId ? "已進案" : "進案"}</button><button className="danger" onClick={() => deleteDraft(item.id)}>刪除</button></div>
+    <div className="draft-actions"><button onClick={() => printDraft(item.id)}>列印</button><button className={item.printedForSalesAt ? "draft-printed-recorded" : ""} title={item.printedForSalesAt ? "再點一次可取消列印紀錄" : "記錄已列印草稿"} onClick={() => markPrintedForSales(item.id)}>{item.printedForSalesAt ? `已列印草稿${displayRocDate(String(item.printedForSalesAt).slice(0, 10))}` : "已列印草稿"}</button><button className="primary" disabled={!!item.linkedRecordId} onClick={() => confirmIntake(item.id)}>{item.linkedRecordId ? "已進案" : "進案"}</button><button className="danger" onClick={() => deleteDraft(item.id)}>刪除</button></div>
   </article>;
   return <section className="content intake-page">
     <div className="list-head"><SectionTitle title="進案草稿" subtitle=""/><button className="manual-intake-button" onClick={addManualDraft}>＋ 手動新增案件</button></div>
