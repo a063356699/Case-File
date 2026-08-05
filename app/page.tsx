@@ -1427,7 +1427,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="brand"><h1>總表　管理模式 <small className="app-version">V9</small></h1></div>
+      <div className="brand"><h1>總表　管理模式 <small className="app-version">V10</small></h1></div>
       <div className="header-actions"><button className="ppt-export-button" onClick={() => { setPptExtraIds([]); setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button onClick={exportExcel}>匯出 Excel</button><label className="file-button">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button onClick={exportJson}>匯出 JSON</button><button className="key-tag" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button><span className="home-last-modified">最後修改: {latestModifiedAt ? displayHomeModifiedAt(latestModifiedAt) : "尚無紀錄"}</span></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -1802,6 +1802,7 @@ async function downloadColorWorkbook(record: RecordItem, personnel: Person[] = [
     const commonValues: Record<string, string> = isLand
       ? { G1: " 銷 售 資 料 表", B6: record.caseName || "", O6: record.address || "", D7: record.propertyNo || "", G7: "KEY編號:", K7: record.key || "", B9: "總價:", G9: `${price}${price ? "萬" : ""}` }
       : { G1: " 銷 售 資 料 表", B6: record.caseName || "", O6: record.address || "", D7: record.propertyNo || "", G7: "KEY編號:", K7: record.key || "", N7: `現況:${record.currentState || ""}`, A9: "價格", B9: "總價:", G9: `${price}${price ? "萬" : ""}` };
+    const noParking = [record.parkingOwnership, record.parkingType, record.parkingMethod, record.parking].some(value => String(value || "").includes("無車位"));
     const directValues: Record<string, string> = isLand ? {
       ...commonValues,
       B13: "土地坪數:", F13: pingValue(record.landSharePing || record.landPing), H13: "", I13: "每坪單價:", M13: record.landPing && price ? `$${Math.round(Number(cleanNumber(price)) * 10000 / Number(cleanNumber(record.landSharePing || record.landPing) || 1)).toLocaleString("en-US")}` : "",
@@ -1813,7 +1814,7 @@ async function downloadColorWorkbook(record: RecordItem, personnel: Person[] = [
       C26: noteParts[0], C27: noteParts[1], C28: noteParts[2], C29: noteParts[3], B30: cleanNotes, P33: developerContact,
     } : {
       ...commonValues, F13: pingValue(record.registryBuildingPing || record.buildingPing), M13: pingValue(record.landSharePing || record.landPing), F14: pingValue(record.registryIndoorPing || record.indoorPing), M14: pingValue(record.buildingOtherPing || record.basementPing),
-      F15: pingValue(record.mainBuildingPing), M15: record.parkingType || record.parking || "", F16: pingValue(record.auxiliaryBuildingPing), M16: record.parkingMethod || "", F17: pingValue(record.commonAreaPing), M17: record.parkingNo || "",
+      F15: pingValue(record.mainBuildingPing), M15: noParking ? "無車位" : record.parkingType || record.parking || "", F16: pingValue(record.auxiliaryBuildingPing), M16: noParking ? "" : record.parkingMethod || "", F17: pingValue(record.commonAreaPing), M17: noParking ? "" : record.parkingNo || "",
       F19: typeShort(record.type), M19: record.buildingName || "", F20: `${record.unitsPerFloor || ""}戶`, M20: `${record.elevatorCount || ""}部`, F21: record.managementMethod || "", M21: !cleanNumber(record.managementFee) || Number(cleanNumber(record.managementFee)) === 0 ? "-/月" : `${cleanNumber(record.managementFee)}/月`, F22: layoutForHouseWorkbook(record.layout || "", record.type),
       F23: record.titleFloor || floorParts[0] || "", M23: currentFloorValue(record.currentFloor || floorParts[1] || ""), F24: record.completionDate || record.builtYear || "", M24: `約${String(ageOf(record)).match(/(\d+(?:\.\d+)?)\s*年屋/)?.[1] || String(ageOf(record)).match(/(\d+(?:\.\d+)?)/)?.[1] || ""}年屋`, F25: record.direction || "", M25: record.currentState || "",
       F27: aboutMeter(record.road), M27: [record.coverage, record.far].filter(Boolean).join("/"), F28: aboutMeter(record.frontage), M28: aboutMeter(record.depth), F29: record.market || "", F30: record.park || "", F31: record.school || "",

@@ -43225,7 +43225,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       !internalView && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { className: "topbar", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
           "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V9" })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V10" })
         ] }) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "ppt-export-button", onClick: () => {
@@ -44663,6 +44663,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       });
       rightRows.forEach((rowNumber) => replaceMergedField(visibleDocument, `I${rowNumber}:L${rowNumber}`, `I${rowNumber}:J${rowNumber}`, `K${rowNumber}:M${rowNumber}`, `J${rowNumber}`, `K${rowNumber}`));
       const commonValues = isLand ? { G1: " \u92B7 \u552E \u8CC7 \u6599 \u8868", B6: record.caseName || "", O6: record.address || "", D7: record.propertyNo || "", G7: "KEY\u7DE8\u865F:", K7: record.key || "", B9: "\u7E3D\u50F9:", G9: `${price}${price ? "\u842C" : ""}` } : { G1: " \u92B7 \u552E \u8CC7 \u6599 \u8868", B6: record.caseName || "", O6: record.address || "", D7: record.propertyNo || "", G7: "KEY\u7DE8\u865F:", K7: record.key || "", N7: `\u73FE\u6CC1:${record.currentState || ""}`, A9: "\u50F9\u683C", B9: "\u7E3D\u50F9:", G9: `${price}${price ? "\u842C" : ""}` };
+      const noParking = [record.parkingOwnership, record.parkingType, record.parkingMethod, record.parking].some((value) => String(value || "").includes("\u7121\u8ECA\u4F4D"));
       const directValues = isLand ? {
         ...commonValues,
         B13: "\u571F\u5730\u576A\u6578:",
@@ -44705,11 +44706,11 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
         F14: pingValue(record.registryIndoorPing || record.indoorPing),
         M14: pingValue(record.buildingOtherPing || record.basementPing),
         F15: pingValue(record.mainBuildingPing),
-        M15: record.parkingType || record.parking || "",
+        M15: noParking ? "\u7121\u8ECA\u4F4D" : record.parkingType || record.parking || "",
         F16: pingValue(record.auxiliaryBuildingPing),
-        M16: record.parkingMethod || "",
+        M16: noParking ? "" : record.parkingMethod || "",
         F17: pingValue(record.commonAreaPing),
-        M17: record.parkingNo || "",
+        M17: noParking ? "" : record.parkingNo || "",
         F19: typeShort(record.type),
         M19: record.buildingName || "",
         F20: `${record.unitsPerFloor || ""}\u6236`,
