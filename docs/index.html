@@ -361,7 +361,7 @@ button:hover,.file-button:hover{border-color:#9fbad0;box-shadow:0 2px 8px #7895a
 .draft-summary>.draft-case-link{max-width:15em;white-space:normal!important;overflow-wrap:anywhere;line-height:1.35;text-align:left}
 .draft-columns{min-height:38px!important;padding-top:7px!important;padding-bottom:7px!important;background:#e8efeb!important;color:#43554e;font-size:12px;font-weight:800}
 .draft-columns .draft-summary>b{text-align:center;white-space:nowrap}
-.draft-action-title{width:238px;text-align:center}
+.draft-action-title{width:318px;text-align:center}
 .ppt-export-button{background:#6b4ca5!important;border-color:#6b4ca5!important;color:#fff!important}
 .table-wrap th.ppt-col,.table-wrap td.ppt-col{min-width:76px;text-align:center!important;background:#f5f0fb}
 .table-wrap th.ppt-type-col,.table-wrap td.ppt-type-col{min-width:112px;text-align:center!important;background:#f5f0fb}
@@ -1279,7 +1279,7 @@ body{background:#f8fbfe!important;color:#405064!important}
 .app-version{font-family:"Noto Sans TC","Microsoft JhengHei",sans-serif;font-size:11px;letter-spacing:0;color:var(--muted);font-weight:700;margin-left:7px;vertical-align:middle}
 .book-location-value b,.book-location-value small{font-weight:800!important}
 .developer-cell-value{min-width:3em}.developer-cell-value>span{white-space:nowrap}
-.draft-actions .draft-printed-recorded{background:#e5edf6!important;border-color:#a8bfd2!important;color:#345d7d!important;font-size:11px!important}
+.compact-drafts .draft-card:not(.draft-columns){display:grid;grid-template-columns:minmax(0,1fr) 318px;gap:12px}.compact-drafts .draft-actions{width:318px;justify-content:flex-end}.compact-drafts .draft-actions button{white-space:nowrap}.draft-actions .draft-printed-recorded{background:#e5edf6!important;border-color:#a8bfd2!important;color:#345d7d!important;font-size:11px!important}
 </style>
 </head>
 <body>
@@ -43225,7 +43225,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       !internalView && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { className: "topbar", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
           "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V6" })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V7" })
         ] }) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "ppt-export-button", onClick: () => {
@@ -45751,7 +45751,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       ] }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "draft-actions", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => printDraft(item.id), children: "\u5217\u5370" }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: item.printedForSalesAt ? "draft-printed-recorded" : "", onClick: () => !item.printedForSalesAt && markPrintedForSales(item.id), disabled: !!item.printedForSalesAt, children: item.printedForSalesAt ? `\u5DF2\u5217\u5370\u7D66\u696D\u52D9 ${displayRocDate(item.printedForSalesAt)}` : "\u5DF2\u5217\u5370\u7D66\u696D\u52D9" }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: item.printedForSalesAt ? "draft-printed-recorded" : "", onClick: () => !item.printedForSalesAt && markPrintedForSales(item.id), disabled: !!item.printedForSalesAt, children: item.printedForSalesAt ? `\u5DF2\u5217\u5370\u8349\u7A3F${displayRocDate(item.printedForSalesAt)}` : "\u5DF2\u5217\u5370\u8349\u7A3F" }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "primary", disabled: !!item.linkedRecordId, onClick: () => confirmIntake(item.id), children: item.linkedRecordId ? "\u5DF2\u9032\u6848" : "\u9032\u6848" }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "danger", onClick: () => deleteDraft(item.id), children: "\u522A\u9664" })
       ] })
