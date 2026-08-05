@@ -43142,9 +43142,9 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
     const markIntakeDraftPrintedForSales = (id) => {
       const target = intakeDrafts.find((draft) => draft.id === id);
       if (!target) return;
-      const printedForSalesAt = (/* @__PURE__ */ new Date()).toISOString();
+      const printedForSalesAt = target.printedForSalesAt ? void 0 : (/* @__PURE__ */ new Date()).toISOString();
       setIntakeDrafts((previous) => previous.map((draft) => draft.id === id ? { ...draft, printedForSalesAt } : draft));
-      flash(`\u5DF2\u8A18\u9304\u300C${intakeValue(target.values, "\u6848\u540D") || "\u672A\u547D\u540D\u6848\u4EF6"}\u300D\u5217\u5370\u7D66\u696D\u52D9`);
+      flash(printedForSalesAt ? `\u5DF2\u8A18\u9304\u300C${intakeValue(target.values, "\u6848\u540D") || "\u672A\u547D\u540D\u6848\u4EF6"}\u300D\u5217\u5370\u8349\u7A3F` : "\u5DF2\u53D6\u6D88\u5217\u5370\u8349\u7A3F\u7D00\u9304");
     };
     const confirmIntake = (draftId) => {
       const targetId = draftId || selectedIntakeRef.current;
@@ -43225,7 +43225,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       !internalView && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { className: "topbar", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
           "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V7" })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V8" })
         ] }) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "ppt-export-button", onClick: () => {
@@ -45751,7 +45751,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       ] }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "draft-actions", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => printDraft(item.id), children: "\u5217\u5370" }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: item.printedForSalesAt ? "draft-printed-recorded" : "", onClick: () => !item.printedForSalesAt && markPrintedForSales(item.id), disabled: !!item.printedForSalesAt, children: item.printedForSalesAt ? `\u5DF2\u5217\u5370\u8349\u7A3F${displayRocDate(item.printedForSalesAt)}` : "\u5DF2\u5217\u5370\u8349\u7A3F" }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: item.printedForSalesAt ? "draft-printed-recorded" : "", title: item.printedForSalesAt ? "\u518D\u9EDE\u4E00\u6B21\u53EF\u53D6\u6D88\u5217\u5370\u7D00\u9304" : "\u8A18\u9304\u5DF2\u5217\u5370\u8349\u7A3F", onClick: () => markPrintedForSales(item.id), children: item.printedForSalesAt ? `\u5DF2\u5217\u5370\u8349\u7A3F${displayRocDate(item.printedForSalesAt)}` : "\u5DF2\u5217\u5370\u8349\u7A3F" }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "primary", disabled: !!item.linkedRecordId, onClick: () => confirmIntake(item.id), children: item.linkedRecordId ? "\u5DF2\u9032\u6848" : "\u9032\u6848" }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "danger", onClick: () => deleteDraft(item.id), children: "\u522A\u9664" })
       ] })
