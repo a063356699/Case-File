@@ -1278,6 +1278,7 @@ body{background:#f8fbfe!important;color:#405064!important}
 /* Visible release marker beside the home title. */
 .app-version{font-family:"Noto Sans TC","Microsoft JhengHei",sans-serif;font-size:11px;letter-spacing:0;color:var(--muted);font-weight:700;margin-left:7px;vertical-align:middle}
 .book-location-value b,.book-location-value small{font-weight:800!important}
+.developer-cell-value{min-width:3em}.developer-cell-value>span{white-space:nowrap}
 </style>
 </head>
 <body>
@@ -43216,7 +43217,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       !internalView && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { className: "topbar", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
           "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V4" })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V5" })
         ] }) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "ppt-export-button", onClick: () => {
@@ -46670,7 +46671,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     }
     if (k === "developer") {
       const names = developerNameLines(r.developer, developerPersonnelForDisplay);
-      return names.length ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "floor-lines", children: names.map((name, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: name }, `${name}-${index}`)) }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: "\u2014" });
+      return names.length ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "floor-lines developer-cell-value", children: names.map((name, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: name }, `${name}-${index}`)) }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: "\u2014" });
     }
     if (k === "price") {
       const price = String(r.price || "").replace(/\s*萬(?:元)?\s*/g, "").trim();
