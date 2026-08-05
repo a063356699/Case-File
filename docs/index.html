@@ -1279,6 +1279,7 @@ body{background:#f8fbfe!important;color:#405064!important}
 .app-version{font-family:"Noto Sans TC","Microsoft JhengHei",sans-serif;font-size:11px;letter-spacing:0;color:var(--muted);font-weight:700;margin-left:7px;vertical-align:middle}
 .book-location-value b,.book-location-value small{font-weight:800!important}
 .developer-cell-value{min-width:3em}.developer-cell-value>span{white-space:nowrap}
+.draft-actions .draft-printed-recorded{background:#e5edf6!important;border-color:#a8bfd2!important;color:#345d7d!important;font-size:11px!important}
 </style>
 </head>
 <body>
@@ -43138,6 +43139,13 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       selectedIntakeRef.current = id;
       setSelectedIntakeId(id);
     };
+    const markIntakeDraftPrintedForSales = (id) => {
+      const target = intakeDrafts.find((draft) => draft.id === id);
+      if (!target) return;
+      const printedForSalesAt = (/* @__PURE__ */ new Date()).toISOString();
+      setIntakeDrafts((previous) => previous.map((draft) => draft.id === id ? { ...draft, printedForSalesAt } : draft));
+      flash(`\u5DF2\u8A18\u9304\u300C${intakeValue(target.values, "\u6848\u540D") || "\u672A\u547D\u540D\u6848\u4EF6"}\u300D\u5217\u5370\u7D66\u696D\u52D9`);
+    };
     const confirmIntake = (draftId) => {
       const targetId = draftId || selectedIntakeRef.current;
       const target = targetId ? intakeDrafts.find((d) => d.id === targetId) : intakeDraft;
@@ -43217,7 +43225,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       !internalView && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { className: "topbar", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
           "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V5" })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V6" })
         ] }) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "ppt-export-button", onClick: () => {
@@ -43276,7 +43284,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       !internalView && tab === "active" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PropertyBookReview, { records, settings, submit: submitBookReviews, openRecord: setEditing }),
       !internalView && tab === "active" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(BusinessReportInbox, { records: active, resolve: resolveMonthlyPropertyReport, archive: (record, status) => setArchiveChoice({ record, status, date: today() }) }),
       showingPublic && publicUnlocked && publicScope === "mine" && publicPerson && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(MonthlyPropertyReport, { records: myProperties, person: publicPerson, submit: submitMonthlyPropertyReport }),
-      tab === "settings" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SettingsPanel, { settings, setSettings, supabasePush, supabasePull, cloudSession, supabaseSignIn, supabaseSignOut }) : tab === "intake" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(IntakePanel, { raw: intakeRaw, setRaw: setIntakeRaw, drafts: intakeDrafts, draft: intakeDraft, selectDraft: selectIntakeDraft, deleteDraft: removeIntakeDraft, analyze: analyzeIntake, addManualDraft: addManualIntakeDraft, updateValue: updateIntakeValue, clear: () => setIntakeRaw(""), confirmIntake }) : tab === "tour" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TourPlanner, { records, drafts: intakeDrafts, items: tourItems, setItems: setTourItems, editRecord: setEditing, updateDraftCaseName: updateIntakeDraftCaseName, tourDate, setTourDate, tourTitle, setTourTitle, notify: flash, complete: (date, recordIds, draftIds) => {
+      tab === "settings" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SettingsPanel, { settings, setSettings, supabasePush, supabasePull, cloudSession, supabaseSignIn, supabaseSignOut }) : tab === "intake" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(IntakePanel, { raw: intakeRaw, setRaw: setIntakeRaw, drafts: intakeDrafts, draft: intakeDraft, selectDraft: selectIntakeDraft, deleteDraft: removeIntakeDraft, analyze: analyzeIntake, addManualDraft: addManualIntakeDraft, updateValue: updateIntakeValue, clear: () => setIntakeRaw(""), confirmIntake, markPrintedForSales: markIntakeDraftPrintedForSales }) : tab === "tour" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TourPlanner, { records, drafts: intakeDrafts, items: tourItems, setItems: setTourItems, editRecord: setEditing, updateDraftCaseName: updateIntakeDraftCaseName, tourDate, setTourDate, tourTitle, setTourTitle, notify: flash, complete: (date, recordIds, draftIds) => {
         setRecords((previous) => previous.map((record) => recordIds.includes(record.id) ? withTrackedUpdate(record, { ...record, groupViewDate: date, updateDate: today() }) : record));
         setIntakeDrafts((previous) => previous.map((draft) => draftIds.includes(draft.id) ? { ...draft, groupViewDate: date } : draft));
         setTourItems([]);
@@ -45721,7 +45729,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     const developer = developerFullNameText(intakeValue(draft.values, "\u958B\u767C\uFF11/\u958B\u767C\uFF12").trim()) || "\u672A\u586B\u958B\u767C";
     return `${area}\uFF0D${caseName}\uFF0D${shortAddress}\uFF0D${developer}`;
   };
-  function IntakePanel({ raw, setRaw, drafts, draft, selectDraft, deleteDraft, analyze, addManualDraft, updateValue, clear, confirmIntake }) {
+  function IntakePanel({ raw, setRaw, drafts, draft, selectDraft, deleteDraft, analyze, addManualDraft, updateValue, clear, confirmIntake, markPrintedForSales }) {
     const [showEntered, setShowEntered] = (0, import_react.useState)(false);
     const printDraft = (id) => {
       selectDraft(id);
@@ -45743,6 +45751,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       ] }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "draft-actions", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => printDraft(item.id), children: "\u5217\u5370" }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: item.printedForSalesAt ? "draft-printed-recorded" : "", onClick: () => !item.printedForSalesAt && markPrintedForSales(item.id), disabled: !!item.printedForSalesAt, children: item.printedForSalesAt ? `\u5DF2\u5217\u5370\u7D66\u696D\u52D9 ${displayRocDate(item.printedForSalesAt)}` : "\u5DF2\u5217\u5370\u7D66\u696D\u52D9" }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "primary", disabled: !!item.linkedRecordId, onClick: () => confirmIntake(item.id), children: item.linkedRecordId ? "\u5DF2\u9032\u6848" : "\u9032\u6848" }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "danger", onClick: () => deleteDraft(item.id), children: "\u522A\u9664" })
       ] })
