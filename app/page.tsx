@@ -1427,7 +1427,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="brand"><h1>總表　管理模式 <small className="app-version">V10</small></h1></div>
+      <div className="brand"><h1>總表　管理模式 <small className="app-version">V11</small></h1></div>
       <div className="header-actions"><button className="ppt-export-button" onClick={() => { setPptExtraIds([]); setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button onClick={exportExcel}>匯出 Excel</button><label className="file-button">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button onClick={exportJson}>匯出 JSON</button><button className="key-tag" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button><span className="home-last-modified">最後修改: {latestModifiedAt ? displayHomeModifiedAt(latestModifiedAt) : "尚無紀錄"}</span></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -1721,8 +1721,12 @@ async function downloadColorWorkbook(record: RecordItem, personnel: Person[] = [
   const cleanNumber = (value = "") => String(value || "").replace(/,/g, "").match(/-?\d+(?:\.\d+)?/)?.[0] || "";
   const truncated2 = (value = "") => { const number = Number(cleanNumber(value)); return Number.isFinite(number) && number !== 0 ? (Math.trunc(number * 100) / 100).toFixed(2) : ""; };
   const pingValue = (value = "") => `${truncated2(value)}坪`;
-  const halfWidth = (value = "") => String(value || "").replace(/[０-９]/g, character => String(character.charCodeAt(0) - 0xFEE0)).replace(/[～〜﹣－–—-]/g, "~");
-  const currentFloorValue = (value = "") => halfWidth(value).replace(/^現況\s*/g, "").trim();
+  const halfWidth = (value = "") => String(value || "").replace(/[０-９]/g, character => String.fromCharCode(character.charCodeAt(0) - 0xFEE0)).replace(/[～〜﹣－–—-]/g, "~");
+  const currentFloorValue = (value = "") => {
+    const normalized = halfWidth(value).replace(/\s+/g, "").replace(/^\u73fe\u6cc1/, "").trim();
+    if (!normalized) return "";
+    return normalized.startsWith("\u5728") ? normalized : `\u5728${normalized}`;
+  };
   const taxValue = (value = "") => {
     const raw = String(value || "").trim();
     const number = cleanNumber(raw);

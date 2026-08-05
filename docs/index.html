@@ -43225,7 +43225,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       !internalView && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { className: "topbar", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
           "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V10" })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V11" })
         ] }) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "ppt-export-button", onClick: () => {
@@ -44543,8 +44543,12 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       return Number.isFinite(number) && number !== 0 ? (Math.trunc(number * 100) / 100).toFixed(2) : "";
     };
     const pingValue = (value = "") => `${truncated2(value)}\u576A`;
-    const halfWidth = (value = "") => String(value || "").replace(/[０-９]/g, (character) => String(character.charCodeAt(0) - 65248)).replace(/[～〜﹣－–—-]/g, "~");
-    const currentFloorValue = (value = "") => halfWidth(value).replace(/^現況\s*/g, "").trim();
+    const halfWidth = (value = "") => String(value || "").replace(/[０-９]/g, (character) => String.fromCharCode(character.charCodeAt(0) - 65248)).replace(/[～〜﹣－–—-]/g, "~");
+    const currentFloorValue = (value = "") => {
+      const normalized = halfWidth(value).replace(/\s+/g, "").replace(/^\u73fe\u6cc1/, "").trim();
+      if (!normalized) return "";
+      return normalized.startsWith("\u5728") ? normalized : `\u5728${normalized}`;
+    };
     const taxValue = (value = "") => {
       const raw = String(value || "").trim();
       const number = cleanNumber(raw);
