@@ -43229,7 +43229,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       !internalView && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { className: "topbar", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
           "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V12" })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V13" })
         ] }) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "ppt-export-button", onClick: () => {
@@ -43730,14 +43730,10 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
           ] }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal-head-actions", children: [
             records.some((record) => record.id === editing.id) && !editing.archived && (editing.status || "\u59D4\u8A17\u4E2D") === "\u59D4\u8A17\u4E2D" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "record-print-button color", type: "button", onClick: () => {
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: `record-print-button color${editing.colorSheetIssue ? " has-issue" : ""}`, type: "button", onClick: () => {
                 const attention = colorSheetAttention(editing.attentionNotes || "", editing.additionNotes || "");
                 setPrintEditor({ kind: "color", data: { ...editing, notes: attention, attentionNotes: attention, photos: [...editing.photos || []] } });
-              }, children: "\u4E0B\u8F09\u5F69\u8272\u8868 Excel" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: `record-print-button issue${editing.colorSheetIssue ? " has-issue" : ""}`, type: "button", onClick: () => {
-                const attention = colorSheetAttention(editing.attentionNotes || "", editing.additionNotes || "");
-                setPrintEditor({ kind: "color", data: { ...editing, notes: attention, attentionNotes: attention, photos: [...editing.photos || []] } });
-              }, children: editing.colorSheetIssue ? "\u5F69\u8272\u8868\u7F3A\u4EF6\u7D00\u9304 \u25CF" : "\u5F69\u8272\u8868\u7F3A\u4EF6\u7D00\u9304" }),
+              }, children: editing.colorSheetIssue ? "\u5F69\u8272\u8868 Excel \u25CF" : "\u5F69\u8272\u8868 Excel" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "record-print-button cover", type: "button", onClick: () => printRecordDocument(editing, "cover"), children: "\u5217\u5370\u65B0\u9032\u5C01\u9762" })
             ] }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "close", onClick: requestCloseEditing, children: "\xD7" })
