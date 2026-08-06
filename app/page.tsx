@@ -1439,8 +1439,8 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="brand"><h1>總表　管理模式 <small className="app-version">V18</small></h1></div>
-      <small className="release-flag">V26</small><div className="header-actions"><button className="ppt-export-button" onClick={() => { setPptExtraIds([]); setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button onClick={exportExcel}>匯出 Excel</button><label className="file-button">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button onClick={exportJson}>匯出 JSON</button><button className="key-tag" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button><span className="home-last-modified">最後修改: {latestModifiedAt ? displayHomeModifiedAt(latestModifiedAt) : "尚無紀錄"}</span></div>
+      <div className="brand"><h1>總表　管理模式 <small className="app-version">V27</small></h1></div>
+      <div className="header-actions"><button className="ppt-export-button" onClick={() => { setPptExtraIds([]); setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button onClick={exportExcel}>匯出 Excel</button><label className="file-button">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button onClick={exportJson}>匯出 JSON</button><button className="key-tag" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button><span className="home-last-modified">最後修改: {latestModifiedAt ? displayHomeModifiedAt(latestModifiedAt) : "尚無紀錄"}</span></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
       <button className={tab === "archive" ? "active" : ""} onClick={() => setTab("archive")}>封存{pendingArchiveCleanup.length > 0 && <small className="archive-pending-count">待下架 {pendingArchiveCleanup.length}</small>}</button>
@@ -2447,7 +2447,7 @@ function printRecordDocument(record: RecordItem, kind: "color" | "cover") {
       <div class="sub">●此物件為銷售土地需要且已附(<span class="form-box">${coverZoningStatus === "土地已附正式分區" ? "✓" : ""}</span>正式分區)</div>
       <div class="sub">●此物件為銷售土地，謄本<span class="form-box">${coverZoningStatus === "謄本已標示不用附" ? "✓" : ""}</span>已標示--不用附上使用分區</div>
       <div>◎ ★授權書:眼看「謄本」、「權狀」、「主約」是否一樣</div>
-      <div class="sub">● <span class="form-box">${record.authorizationStatus === "無需要" ? "✓" : ""}</span>無需要/已附上歸檔(<span class="form-box">${record.authorizationCopyType === "影本" ? "✓" : ""}</span>影 本/<span class="form-box">${record.authorizationCopyType === "正本" ? "✓" : ""}</span>正本 )</div>
+      <div class="sub">● <span class="form-box">${record.authorizationStatus === "缺授" ? "✓" : ""}</span>缺授/<span class="form-box">${record.authorizationStatus === "無需要" ? "✓" : ""}</span>無需要/已附上歸檔(<span class="form-box">${record.authorizationCopyType === "影本" ? "✓" : ""}</span>影 本/<span class="form-box">${record.authorizationCopyType === "正本" ? "✓" : ""}</span>正本 )</div>
     </div></div>
   </div></div>`;
   const frame = document.createElement("iframe"); frame.style.position = "fixed"; frame.style.width = "0"; frame.style.height = "0"; frame.style.border = "0"; document.body.appendChild(frame); const printDocument = frame.contentDocument; if (!printDocument) { frame.remove(); return; } printDocument.open(); printDocument.write(`<!doctype html><html lang="zh-Hant"><head><meta charset="UTF-8"><title>${kind === "color" ? "彩色表" : "新進封面"}</title>${common}</head><body>${kind === "color" ? colorSheet : coverV3}</body></html>`); printDocument.close(); setTimeout(() => { frame.contentWindow?.focus(); frame.contentWindow?.print(); setTimeout(() => frame.remove(), 1000); }, 300);
