@@ -43258,7 +43258,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       !internalView && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { className: "topbar", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
           "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V27" })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V28" })
         ] }) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "ppt-export-button", onClick: () => {
@@ -44573,6 +44573,12 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       return Number.isFinite(number) && number !== 0 ? (Math.trunc(number * 100) / 100).toFixed(2) : "";
     };
     const pingValue = (value = "") => `${truncated2(value)}\u576A`;
+    const houseManagementFee = (value = "") => {
+      const raw = String(value || "").trim();
+      const amount = raw.replace(/元/g, "").replace(/[／/]\s*[年月]\s*/g, "").trim();
+      const period = raw.match(/[／/]\s*([年月])/)?.[1] || "\u6708";
+      return !amount || /^(?:無|\$?0(?:\.0+)?)$/.test(amount) ? "-/\u6708" : `${amount}\u5143/${period}`;
+    };
     const halfWidth = (value = "") => String(value || "").replace(/[０-９]/g, (character) => String.fromCharCode(character.charCodeAt(0) - 65248)).replace(/[～〜﹣－–—-]/g, "~");
     const currentFloorValue = (value = "") => {
       const normalized = halfWidth(value).replace(/\s+/g, "").replace(/^\u73fe\u6cc1/, "").trim();
@@ -44754,7 +44760,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
         F20: `${record.unitsPerFloor || ""}\u6236`,
         M20: `${record.elevatorCount || ""}\u90E8`,
         F21: record.managementMethod || "",
-        M21: !cleanNumber(record.managementFee) || Number(cleanNumber(record.managementFee)) === 0 ? "-/\u6708" : `${cleanNumber(record.managementFee)}/\u6708`,
+        M21: houseManagementFee(record.managementFee),
         F22: layoutForHouseWorkbook(record.layout || "", record.type),
         F23: record.titleFloor || floorParts[0] || "",
         M23: currentFloorValue(record.currentFloor || floorParts[1] || ""),
