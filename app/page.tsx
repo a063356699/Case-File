@@ -1133,6 +1133,28 @@ export default function Home() {
     const font = "標楷體";
     const clean = (value = "") => /^(?:0|無|0；無|0;無)$/.test(String(value).trim()) ? "" : String(value || "").trim();
     const num = (value = "") => String(value || "").replace(/,/g, "").match(/-?\d+(?:\.\d+)?/)?.[0] || "";
+    const pptCompletionDate = (value = "") => {
+      const text = String(value || "").trim();
+      const iso = text.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+      if (iso) return `${String(Number(iso[1]) - 1911).padStart(3, "0")}.${String(Number(iso[2])).padStart(2, "0")}.${String(Number(iso[3])).padStart(2, "0")}`;
+      const roc = text.match(/^(\d{2,3})[.\/-](\d{1,2})[.\/-](\d{1,2})$/);
+      return roc ? `${roc[1].padStart(3, "0")}.${roc[2].padStart(2, "0")}.${roc[3].padStart(2, "0")}` : text;
+    };
+    const pptBuildingAge = (value = "") => {
+      const text = String(value || "").trim();
+      const iso = text.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+      const roc = text.match(/^(\d{2,3})[.\/-](\d{1,2})[.\/-](\d{1,2})$/);
+      const year = iso ? Number(iso[1]) : roc ? Number(roc[1]) + 1911 : 0;
+      const age = year ? new Date().getFullYear() - year : NaN;
+      return Number.isFinite(age) && age >= 0 ? `約${age}` : "";
+    };
+    const pptManagementFeeRuns = (value = "") => {
+      const raw = String(value || "").trim();
+      const noMonthlySuffix = raw.replace(/\s*[\/／]\s*月\s*$/, "").trim();
+      if (!noMonthlySuffix || /^\$?0(?:\.0+)?(?:\s*[\/／]\s*月)?$/.test(raw) || /^無(?:\s*[\/／]\s*月)?$/.test(raw)) return [{ text: "無$0", options: { fontFace: font, fontSize: 21 } }];
+      if (/[\/／]\s*年\s*$/.test(raw)) return [{ text: raw, options: { fontFace: font, fontSize: 21 } }];
+      return [{ text: noMonthlySuffix, options: { fontFace: font, fontSize: 21 } }, { text: "/月", options: { fontFace: font, fontSize: 12 } }];
+    };
     const addAlignedLabel = (slide: any, label: string, x: number, y: number, labelSize = 17) => {
       const chars = Array.from(label);
       if (chars.length >= 2 && chars.length <= 4) chars.forEach((char, index) => slide.addText(char, { x: x + index * (.68 / (chars.length - 1)), y, w: .22, h: .4, fontFace: font, fontSize: labelSize, color: "000000", align: "center", margin: 0, breakLine: false }));
@@ -1191,8 +1213,9 @@ export default function Home() {
         addLabel(slide, "面寬", num(record.frontage) ? `${num(record.frontage)}米` : clean(record.frontage), .08, 2.92, 2.85); addLabel(slide, "深度", num(record.depth) ? `${num(record.depth)}米` : clean(record.depth), 3.02, 2.92, 2.82);
         addLabel(slide, "臨路", num(record.road) ? `${num(record.road)}米` : clean(record.road), .08, 3.48, 2.85); addRichLabel(slide, "樓層", Array.from(floorPptDisplay(record.floor)).map(char => ({ text: char, options: { fontFace: font, fontSize: /[\u4e00-\u9fff]/.test(char) ? 12 : 21 } })), 3.02, 3.48, 2.82);
         addLabel(slide, "朝向", record.direction, .08, 4.04, 2.85); addLabel(slide, "車位", parkingShort(record.parking), 3.02, 4.04, 2.82, "000000", 17.5);
-        addRichLabel(slide, "管理費", !String(record.managementFee || "").replace(/\s*[\/／]\s*月\s*$/, "").trim() || /^\$?0(?:\.0+)?(?:\s*[\/／]\s*月)?$/.test(String(record.managementFee || "").trim()) || /^無(?:\s*[\/／]\s*月)?$/.test(String(record.managementFee || "").trim()) ? [{ text: "無$0", options: { fontFace: font, fontSize: 21 } }] : [{ text: clean(record.managementFee).replace(/\s*[\/／]\s*月\s*$/, ""), options: { fontFace: font, fontSize: 21 } }, { text: "/月", options: { fontFace: font, fontSize: 12 } }], .08, 4.6, 2.85); addLabel(slide, "社區名稱", draftValue("大樓名稱") || record.communityName, 3.02, 4.6, 2.82, "000000", 18);
-        addLabel(slide, "完工日期", draftValue("建築完成日期") || record.builtYear, .08, 5.16, 2.85, "000000", 18); addRichLabel(slide, "屋齡", [{ text: pptAge ? `約${pptAge.replace(/年屋$/, "")}` : "", options: { fontFace: font, fontSize: 21 } }, { text: pptAge.endsWith("年屋") ? "年建" : "", options: { fontFace: font, fontSize: 12 } }], 3.02, 5.16, 2.82);
+        addRichLabel(slide, "管理費", pptManagementFeeRuns(record.managementFee), .08, 4.6, 2.85); addLabel(slide, "社區名稱", draftValue("大樓名稱") || record.communityName, 3.02, 4.6, 2.82, "000000", 18);
+        const completionForPpt = draftValue("建築完成日期") || record.completionDate || record.builtYear;
+        addLabel(slide, "完工日期", pptCompletionDate(completionForPpt), .08, 5.16, 2.85, "000000", 18); addRichLabel(slide, "屋齡", [{ text: pptBuildingAge(completionForPpt), options: { fontFace: font, fontSize: 21 } }, { text: pptBuildingAge(completionForPpt) ? "年屋" : "", options: { fontFace: font, fontSize: 12 } }], 3.02, 5.16, 2.82);
         addLabel(slide, "現況", record.currentState, .08, 5.72, 2.85); addLabel(slide, "鑰匙", record.key, 3.02, 5.72, 2.82);
       }
       const notesY = land ? 6.40 : 6.28;
@@ -1439,7 +1462,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="brand"><h1>總表　管理模式 <small className="app-version">V30</small></h1></div>
+      <div className="brand"><h1>總表　管理模式 <small className="app-version">V31</small></h1></div>
       <div className="header-actions"><button className="ppt-export-button" onClick={() => { setPptExtraIds([]); setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button onClick={exportExcel}>匯出 Excel</button><label className="file-button">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button onClick={exportJson}>匯出 JSON</button><button className="key-tag" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button><span className="home-last-modified">最後修改: {latestModifiedAt ? displayHomeModifiedAt(latestModifiedAt) : "尚無紀錄"}</span></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>

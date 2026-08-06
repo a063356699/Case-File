@@ -42817,6 +42817,28 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       const font = "\u6A19\u6977\u9AD4";
       const clean = (value = "") => /^(?:0|無|0；無|0;無)$/.test(String(value).trim()) ? "" : String(value || "").trim();
       const num = (value = "") => String(value || "").replace(/,/g, "").match(/-?\d+(?:\.\d+)?/)?.[0] || "";
+      const pptCompletionDate = (value = "") => {
+        const text = String(value || "").trim();
+        const iso = text.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+        if (iso) return `${String(Number(iso[1]) - 1911).padStart(3, "0")}.${String(Number(iso[2])).padStart(2, "0")}.${String(Number(iso[3])).padStart(2, "0")}`;
+        const roc = text.match(/^(\d{2,3})[.\/-](\d{1,2})[.\/-](\d{1,2})$/);
+        return roc ? `${roc[1].padStart(3, "0")}.${roc[2].padStart(2, "0")}.${roc[3].padStart(2, "0")}` : text;
+      };
+      const pptBuildingAge = (value = "") => {
+        const text = String(value || "").trim();
+        const iso = text.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+        const roc = text.match(/^(\d{2,3})[.\/-](\d{1,2})[.\/-](\d{1,2})$/);
+        const year = iso ? Number(iso[1]) : roc ? Number(roc[1]) + 1911 : 0;
+        const age = year ? (/* @__PURE__ */ new Date()).getFullYear() - year : NaN;
+        return Number.isFinite(age) && age >= 0 ? `\u7D04${age}` : "";
+      };
+      const pptManagementFeeRuns = (value = "") => {
+        const raw = String(value || "").trim();
+        const noMonthlySuffix = raw.replace(/\s*[\/／]\s*月\s*$/, "").trim();
+        if (!noMonthlySuffix || /^\$?0(?:\.0+)?(?:\s*[\/／]\s*月)?$/.test(raw) || /^無(?:\s*[\/／]\s*月)?$/.test(raw)) return [{ text: "\u7121$0", options: { fontFace: font, fontSize: 21 } }];
+        if (/[\/／]\s*年\s*$/.test(raw)) return [{ text: raw, options: { fontFace: font, fontSize: 21 } }];
+        return [{ text: noMonthlySuffix, options: { fontFace: font, fontSize: 21 } }, { text: "/\u6708", options: { fontFace: font, fontSize: 12 } }];
+      };
       const addAlignedLabel = (slide, label, x, y, labelSize = 17) => {
         const chars = Array.from(label);
         if (chars.length >= 2 && chars.length <= 4) chars.forEach((char, index) => slide.addText(char, { x: x + index * (0.68 / (chars.length - 1)), y, w: 0.22, h: 0.4, fontFace: font, fontSize: labelSize, color: "000000", align: "center", margin: 0, breakLine: false }));
@@ -42884,10 +42906,11 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
           addRichLabel(slide, "\u6A13\u5C64", Array.from(floorPptDisplay(record.floor)).map((char) => ({ text: char, options: { fontFace: font, fontSize: /[\u4e00-\u9fff]/.test(char) ? 12 : 21 } })), 3.02, 3.48, 2.82);
           addLabel(slide, "\u671D\u5411", record.direction, 0.08, 4.04, 2.85);
           addLabel(slide, "\u8ECA\u4F4D", parkingShort(record.parking), 3.02, 4.04, 2.82, "000000", 17.5);
-          addRichLabel(slide, "\u7BA1\u7406\u8CBB", !String(record.managementFee || "").replace(/\s*[\/／]\s*月\s*$/, "").trim() || /^\$?0(?:\.0+)?(?:\s*[\/／]\s*月)?$/.test(String(record.managementFee || "").trim()) || /^無(?:\s*[\/／]\s*月)?$/.test(String(record.managementFee || "").trim()) ? [{ text: "\u7121$0", options: { fontFace: font, fontSize: 21 } }] : [{ text: clean(record.managementFee).replace(/\s*[\/／]\s*月\s*$/, ""), options: { fontFace: font, fontSize: 21 } }, { text: "/\u6708", options: { fontFace: font, fontSize: 12 } }], 0.08, 4.6, 2.85);
+          addRichLabel(slide, "\u7BA1\u7406\u8CBB", pptManagementFeeRuns(record.managementFee), 0.08, 4.6, 2.85);
           addLabel(slide, "\u793E\u5340\u540D\u7A31", draftValue("\u5927\u6A13\u540D\u7A31") || record.communityName, 3.02, 4.6, 2.82, "000000", 18);
-          addLabel(slide, "\u5B8C\u5DE5\u65E5\u671F", draftValue("\u5EFA\u7BC9\u5B8C\u6210\u65E5\u671F") || record.builtYear, 0.08, 5.16, 2.85, "000000", 18);
-          addRichLabel(slide, "\u5C4B\u9F61", [{ text: pptAge ? `\u7D04${pptAge.replace(/年屋$/, "")}` : "", options: { fontFace: font, fontSize: 21 } }, { text: pptAge.endsWith("\u5E74\u5C4B") ? "\u5E74\u5EFA" : "", options: { fontFace: font, fontSize: 12 } }], 3.02, 5.16, 2.82);
+          const completionForPpt = draftValue("\u5EFA\u7BC9\u5B8C\u6210\u65E5\u671F") || record.completionDate || record.builtYear;
+          addLabel(slide, "\u5B8C\u5DE5\u65E5\u671F", pptCompletionDate(completionForPpt), 0.08, 5.16, 2.85, "000000", 18);
+          addRichLabel(slide, "\u5C4B\u9F61", [{ text: pptBuildingAge(completionForPpt), options: { fontFace: font, fontSize: 21 } }, { text: pptBuildingAge(completionForPpt) ? "\u5E74\u5C4B" : "", options: { fontFace: font, fontSize: 12 } }], 3.02, 5.16, 2.82);
           addLabel(slide, "\u73FE\u6CC1", record.currentState, 0.08, 5.72, 2.85);
           addLabel(slide, "\u9470\u5319", record.key, 3.02, 5.72, 2.82);
         }
@@ -43258,7 +43281,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       !internalView && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { className: "topbar", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
           "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V30" })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V31" })
         ] }) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "ppt-export-button", onClick: () => {
