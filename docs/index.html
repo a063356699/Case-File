@@ -93,6 +93,7 @@
   --gold:#d29a3a;
   --red:#c43d46;
 }
+
 body{background:var(--paper);color:var(--ink)}
 .topbar,.nav,.modal-head,.modal-foot,.public-head,.active-list-toolbar{background:#ffffff}
 .modal-backdrop{background:#4a303999}
@@ -866,6 +867,7 @@ button:hover,.file-button:hover{border-color:#9fbad0;box-shadow:0 2px 8px #7895a
 .public-table td.col-area,.public-table th.col-area{vertical-align:middle!important;text-align:center!important}.public-table td.col-area .area-lines{height:100%;min-height:0!important;justify-content:center!important;align-items:center!important;text-align:center!important}
 .public-table td.col-road,.public-table td.col-frontage,.public-table td.col-depth,.public-table td.col-road *,.public-table td.col-frontage *,.public-table td.col-depth *{color:#111!important;font-weight:400!important}
 .daily-card .daily-table th.col-price,.daily-card .daily-table td.col-price{width:82px!important;min-width:82px!important;max-width:82px!important;vertical-align:middle!important;text-align:center!important}.daily-card .daily-table td.col-price .two-line-value{align-items:center!important;text-align:center!important}.daily-card .daily-table td.col-price .two-line-value b{color:#17242a!important;font-weight:800!important}.daily-card .daily-table td.col-price .price-reduction{display:block!important;color:#ff0000!important;font-weight:900!important}
+.daily-date{flex-wrap:wrap;justify-content:flex-end}.daily-date button{min-width:58px;padding:8px 12px;border-color:#b9cfc4;background:#fff;color:#31584d}.daily-date button.selected{border-color:#397b67;background:#397b67;color:#fff}.daily-date>b{min-width:82px;color:#173f35;text-align:center}.daily-activity{padding-left:12px!important;padding-right:12px!important}.daily-card .table-wrap{overflow:visible!important}.daily-table table{width:100%!important;min-width:0!important;table-layout:fixed!important}.daily-table th,.daily-table td{position:static!important;left:auto!important;width:auto!important;min-width:0!important;max-width:none!important;padding:6px 3px!important;font-size:10px!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;overflow-wrap:anywhere!important;word-break:break-word!important}.daily-table th.col-dailyHide,.daily-table td.col-dailyHide{width:30px!important}.daily-table th.col-area,.daily-table td.col-area{width:4.5%!important}.daily-table th.col-caseName,.daily-table td.col-caseName{width:9.5%!important}.daily-table th.col-address,.daily-table td.col-address{width:12%!important}.daily-table th.col-notes,.daily-table td.col-notes{width:9%!important;white-space:pre-wrap!important;line-height:1.4!important}.daily-table td.col-parking,.daily-table td.col-parking *,.daily-table td.col-managementFee,.daily-table td.col-managementFee *{color:#111!important}.daily-activity:not(.compact) .daily-table td.col-caseName{cursor:pointer}.daily-activity:not(.compact) .daily-table td.col-caseName:hover{background:#edf7f2!important}.daily-activity:not(.compact) .daily-table td.col-caseName .public-case-name{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px}
 .expiry-settings-panel h3,.personnel-head h3{cursor:pointer}.expiry-settings-panel h3:hover,.personnel-head h3:hover{color:var(--green)}
 .expiry-settings-panel:not(.expiry-open)>p,.expiry-settings-panel:not(.expiry-open)>.form-grid{display:none}.expiry-settings-panel h3{display:flex;align-items:center;justify-content:space-between;margin:0}.expiry-toggle{padding:7px 14px;color:var(--green);border-color:#b9cfc4;background:#f3f8f4}
 .advanced-filter-button{background:#eef6f1;border-color:#b9d3c5;color:#176044}.advanced-filter-modal{width:min(1540px,98vw)}.advanced-filter-body{padding:18px 20px 26px;display:grid;grid-template-columns:1.25fr 1fr 1.25fr 1fr;gap:0;align-items:start}.advanced-filter-body section{min-width:0;min-height:100%;border:0;border-right:1px solid #d8dedb;background:#fff;border-radius:0;padding:6px 22px 18px}.advanced-filter-body section:last-child{border-right:0}.advanced-filter-body h3{margin:0 0 14px;font-size:17px;color:#243b33}.advanced-filter-grid,.website-filter-grid{display:grid;grid-template-columns:1fr;gap:13px}.filter-field{display:flex;flex-direction:column;gap:6px;min-width:0}.filter-field>span{font-size:14px;font-weight:800;color:#354a42}.filter-field input,.filter-field select{min-width:0;width:100%;height:40px;border:1px solid #c7cfcb;border-radius:6px;padding:8px 9px;background:#fff;font-size:14px}.range-field>div{display:flex;align-items:center;gap:6px}.range-field input{min-width:0}.range-field i{font-style:normal;color:#606e67;font-size:13px}.range-field em{font-style:normal;color:#606e67;font-size:13px;white-space:nowrap}.choice-field>div{display:flex;flex-wrap:wrap;gap:8px 13px}.choice-field label{display:inline-flex;align-items:center;gap:5px;cursor:pointer;white-space:nowrap}.choice-field label input{width:19px;height:19px;margin:0;padding:0;accent-color:#f06b21}.choice-field label b{font-size:14px;font-weight:500;color:#27342f}.filter-help{margin:-5px 0 12px!important;color:#738078!important;font-size:12px!important}@media(max-width:1100px){.advanced-filter-body{grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.advanced-filter-body section:nth-child(2){border-right:0}}@media(max-width:800px){.advanced-filter-body{grid-template-columns:1fr;padding:14px}.advanced-filter-body section{border-right:0;border-bottom:1px solid #d8dedb;padding:8px 5px 18px}.advanced-filter-modal{width:100vw;height:100vh;max-height:100vh;border-radius:0}}
@@ -1288,6 +1290,17 @@ body{background:#f8fbfe!important;color:#405064!important}
 
 /* 委託中編輯：學校依國小、國中、高中、大專各自輸入。 */
 .record-edit-grid>.edit-market,.record-edit-grid>.edit-park,.record-edit-grid>.edit-elementarySchool,.record-edit-grid>.edit-juniorHighSchool,.record-edit-grid>.edit-seniorHighSchool,.record-edit-grid>.edit-collegeSchool{grid-column:span 20!important;background:#f1f7ec!important;border-color:#d5e4cb!important}
+
+/* 每日物件動態：桌面整頁顯示，不需水平拖曳。 */
+.daily-activity .daily-card .table-wrap{overflow:visible!important}
+.daily-activity .daily-table table{width:100%!important;min-width:0!important;table-layout:fixed!important}
+.daily-activity .daily-table th,.daily-activity .daily-table td{position:static!important;left:auto!important;width:auto!important;min-width:0!important;max-width:none!important;padding:6px 3px!important;font-size:10px!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;overflow-wrap:anywhere!important;word-break:break-word!important}
+.daily-activity .daily-table th.col-dailyHide,.daily-activity .daily-table td.col-dailyHide{width:30px!important}
+.daily-activity .daily-table th.col-area,.daily-activity .daily-table td.col-area{width:4.5%!important}
+.daily-activity .daily-table th.col-caseName,.daily-activity .daily-table td.col-caseName{width:9.5%!important}
+.daily-activity .daily-table th.col-address,.daily-activity .daily-table td.col-address{width:12%!important}
+.daily-activity .daily-table th.col-notes,.daily-activity .daily-table td.col-notes{width:9%!important;white-space:pre-wrap!important;line-height:1.4!important}
+.daily-activity .daily-table td.col-parking,.daily-activity .daily-table td.col-parking *,.daily-activity .daily-table td.col-managementFee,.daily-activity .daily-table td.col-managementFee *{color:#111!important}
 </style>
 </head>
 <body>
@@ -1307,11 +1320,7 @@ body{background:#f8fbfe!important;color:#405064!important}
     throw Error('Dynamic require of "' + x + '" is not supported');
   });
   var __commonJS = (cb, mod) => function __require2() {
-    try {
-      return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
-    } catch (e) {
-      throw mod = 0, e;
-    }
+    return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
   };
   var __copyProps = (to, from, except, desc) => {
     if (from && typeof from === "object" || typeof from === "function") {
@@ -1330,9 +1339,9 @@ body{background:#f8fbfe!important;color:#405064!important}
     mod
   ));
 
-  // node_modules/.pnpm/scheduler@0.27.0/node_modules/scheduler/cjs/scheduler.development.js
+  // node_modules/scheduler/cjs/scheduler.development.js
   var require_scheduler_development = __commonJS({
-    "node_modules/.pnpm/scheduler@0.27.0/node_modules/scheduler/cjs/scheduler.development.js"(exports) {
+    "node_modules/scheduler/cjs/scheduler.development.js"(exports) {
       "use strict";
       (function() {
         function performWorkUntilDeadline() {
@@ -1589,9 +1598,9 @@ body{background:#f8fbfe!important;color:#405064!important}
     }
   });
 
-  // node_modules/.pnpm/scheduler@0.27.0/node_modules/scheduler/index.js
+  // node_modules/scheduler/index.js
   var require_scheduler = __commonJS({
-    "node_modules/.pnpm/scheduler@0.27.0/node_modules/scheduler/index.js"(exports, module) {
+    "node_modules/scheduler/index.js"(exports, module) {
       "use strict";
       if (false) {
         module.exports = null;
@@ -1601,9 +1610,9 @@ body{background:#f8fbfe!important;color:#405064!important}
     }
   });
 
-  // node_modules/.pnpm/react@19.2.6/node_modules/react/cjs/react.development.js
+  // node_modules/react/cjs/react.development.js
   var require_react_development = __commonJS({
-    "node_modules/.pnpm/react@19.2.6/node_modules/react/cjs/react.development.js"(exports, module) {
+    "node_modules/react/cjs/react.development.js"(exports, module) {
       "use strict";
       (function() {
         function defineDeprecationWarning(methodName, info) {
@@ -2573,9 +2582,9 @@ body{background:#f8fbfe!important;color:#405064!important}
     }
   });
 
-  // node_modules/.pnpm/react@19.2.6/node_modules/react/index.js
+  // node_modules/react/index.js
   var require_react = __commonJS({
-    "node_modules/.pnpm/react@19.2.6/node_modules/react/index.js"(exports, module) {
+    "node_modules/react/index.js"(exports, module) {
       "use strict";
       if (false) {
         module.exports = null;
@@ -2585,9 +2594,9 @@ body{background:#f8fbfe!important;color:#405064!important}
     }
   });
 
-  // node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/cjs/react-dom.development.js
+  // node_modules/react-dom/cjs/react-dom.development.js
   var require_react_dom_development = __commonJS({
-    "node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/cjs/react-dom.development.js"(exports) {
+    "node_modules/react-dom/cjs/react-dom.development.js"(exports) {
       "use strict";
       (function() {
         function noop() {
@@ -2829,9 +2838,9 @@ body{background:#f8fbfe!important;color:#405064!important}
     }
   });
 
-  // node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/index.js
+  // node_modules/react-dom/index.js
   var require_react_dom = __commonJS({
-    "node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/index.js"(exports, module) {
+    "node_modules/react-dom/index.js"(exports, module) {
       "use strict";
       if (false) {
         checkDCE();
@@ -2842,9 +2851,9 @@ body{background:#f8fbfe!important;color:#405064!important}
     }
   });
 
-  // node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/cjs/react-dom-client.development.js
+  // node_modules/react-dom/cjs/react-dom-client.development.js
   var require_react_dom_client_development = __commonJS({
-    "node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/cjs/react-dom-client.development.js"(exports) {
+    "node_modules/react-dom/cjs/react-dom-client.development.js"(exports) {
       "use strict";
       (function() {
         function findHook(fiber, id) {
@@ -22741,9 +22750,9 @@ body{background:#f8fbfe!important;color:#405064!important}
     }
   });
 
-  // node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/client.js
+  // node_modules/react-dom/client.js
   var require_client = __commonJS({
-    "node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/client.js"(exports, module) {
+    "node_modules/react-dom/client.js"(exports, module) {
       "use strict";
       if (false) {
         checkDCE();
@@ -22754,9 +22763,9 @@ body{background:#f8fbfe!important;color:#405064!important}
     }
   });
 
-  // node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/dist/jszip.min.js
+  // node_modules/jszip/dist/jszip.min.js
   var require_jszip_min = __commonJS({
-    "node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/dist/jszip.min.js"(exports, module) {
+    "node_modules/jszip/dist/jszip.min.js"(exports, module) {
       !(function(e) {
         if ("object" == typeof exports && "undefined" != typeof module) module.exports = e();
         else if ("function" == typeof define && define.amd) define([], e);
@@ -35152,9 +35161,9 @@ body{background:#f8fbfe!important;color:#405064!important}
     }
   });
 
-  // node_modules/.pnpm/react@19.2.6/node_modules/react/cjs/react-jsx-runtime.development.js
+  // node_modules/react/cjs/react-jsx-runtime.development.js
   var require_react_jsx_runtime_development = __commonJS({
-    "node_modules/.pnpm/react@19.2.6/node_modules/react/cjs/react-jsx-runtime.development.js"(exports) {
+    "node_modules/react/cjs/react-jsx-runtime.development.js"(exports) {
       "use strict";
       (function() {
         function getComponentNameFromType(type) {
@@ -35409,9 +35418,9 @@ body{background:#f8fbfe!important;color:#405064!important}
     }
   });
 
-  // node_modules/.pnpm/react@19.2.6/node_modules/react/jsx-runtime.js
+  // node_modules/react/jsx-runtime.js
   var require_jsx_runtime = __commonJS({
-    "node_modules/.pnpm/react@19.2.6/node_modules/react/jsx-runtime.js"(exports, module) {
+    "node_modules/react/jsx-runtime.js"(exports, module) {
       "use strict";
       if (false) {
         module.exports = null;
@@ -35427,7 +35436,7 @@ body{background:#f8fbfe!important;color:#405064!important}
   // app/page.tsx
   var import_react = __toESM(require_react(), 1);
 
-  // node_modules/.pnpm/pptxgenjs@4.0.1/node_modules/pptxgenjs/dist/pptxgen.es.js
+  // node_modules/pptxgenjs/dist/pptxgen.es.js
   var import_jszip = __toESM(require_jszip_min());
   function __awaiter(thisArg, _arguments, P, generator) {
     function adopt(value) {
@@ -42384,7 +42393,9 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
     const pptWeekOptions = [.../* @__PURE__ */ new Set([...standardPptWeeks, ...records.flatMap((record) => [normalizeDateInput(record.reportDate || ""), ...pptStoredList(record._pptExtraWeeks)]).filter((date) => /^\d{4}-\d{2}-\d{2}$/.test(date)).map((date) => pptWeekOf(date).start).filter((start) => start <= pptCurrentStart)])].sort((a, b) => b.localeCompare(a));
     const weeklyPptRecords = sortPptRecords(records.filter((record) => belongsToPptWeek(record, selectedPptWeek) && !excludedFromPptWeek(record, selectedPptWeek.start)));
     const deferredPptRecords = sortPptRecords(records.filter((record) => belongsToPptWeek(record, selectedPptWeek) && excludedFromPptWeek(record, selectedPptWeek.start)));
-    const selectedPptRecords = sortPptRecords(records.filter((record) => weeklyPptRecords.some((item) => item.id === record.id) || pptExtraIds.includes(record.id)));
+    const pptDraftRecords = intakeDrafts.filter((draft) => !draft.linkedRecordId).map((draft) => ({ ...intakeToRecord(draft), id: `ppt-draft-${draft.id}`, reportDate: "", status: "\u5C1A\u672A\u9032\u6848", _intakeDraftId: draft.id, _notEntered: "1" }));
+    const pptExtraCandidates = [...active.filter((record) => !belongsToPptWeek(record, selectedPptWeek)), ...pptDraftRecords];
+    const selectedPptRecords = sortPptRecords([...records.filter((record) => weeklyPptRecords.some((item) => item.id === record.id) || pptExtraIds.includes(record.id)), ...pptDraftRecords.filter((record) => pptExtraIds.includes(record.id))]);
     const flash = (text) => {
       setNotice(text);
       setTimeout(() => setNotice(""), 2600);
@@ -42738,7 +42749,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
         slide.background = { color: "FFFFFF" };
         const noteText = displayNoteSegments(record.notes).join("\uFF1B");
         const land = typeShort(record.type) === "\u571F\u5730" || /^(LG|LA)/i.test(record.propertyNo || "");
-        const linkedDraft = intakeDrafts.find((draft) => draft.linkedRecordId === record.id);
+        const linkedDraft = intakeDrafts.find((draft) => draft.id === record._intakeDraftId || draft.linkedRecordId === record.id);
         const draftValue = (...keys) => linkedDraft ? intakeValue(linkedDraft.values, ...keys) : "";
         const numberOf = (value = "") => Number(String(value).replace(/,/g, "").match(/-?\d+(?:\.\d+)?/)?.[0] || 0);
         const unitPrice = numberOf(record.price) && numberOf(record.landPing) ? `$${Math.round(numberOf(record.price) * 1e4 / numberOf(record.landPing)).toLocaleString("en-US")}` : "\u2014";
@@ -42862,7 +42873,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
         slide.background = { color: "FFFFFF" };
         const land = typeShort(record.type) === "\u571F\u5730" || /^(LG|LA)/i.test(record.propertyNo || "");
         const frameColor = "222222";
-        const linkedDraft = intakeDrafts.find((draft) => draft.linkedRecordId === record.id);
+        const linkedDraft = intakeDrafts.find((draft) => draft.id === record._intakeDraftId || draft.linkedRecordId === record.id);
         const draftValue = (...keys) => linkedDraft ? intakeValue(linkedDraft.values, ...keys) : "";
         const noteText = displayNoteSegments(record.notes).join("\uFF1B");
         const price = num(record.reducedPrice || record.price);
@@ -43281,7 +43292,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       !internalView && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { className: "topbar", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
           "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V31" })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V33" })
         ] }) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "ppt-export-button", onClick: () => {
@@ -43345,7 +43356,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
         setIntakeDrafts((previous) => previous.map((draft) => draftIds.includes(draft.id) ? { ...draft, groupViewDate: date } : draft));
         setTourItems([]);
         flash("\u5718\u770B\u65E5\u671F\u5DF2\u540C\u6B65\u5230\u7269\u4EF6\u8207\u8349\u7A3F");
-      } }) : tab === "activity" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(DailyActivity, { records }) : tab === "inventory" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(BusinessInventory, { records, people: settings.personnel }) : tab === "keys" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(KeySummary, { records }) : showingPublic ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("section", { className: "public-shell", children: !publicUnlocked ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "login-card", children: [
+      } }) : tab === "activity" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(DailyActivity, { records, onEdit: setEditing }) : tab === "inventory" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(BusinessInventory, { records, people: settings.personnel }) : tab === "keys" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(KeySummary, { records }) : showingPublic ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("section", { className: "public-shell", children: !publicUnlocked ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "login-card", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", { children: "\u5167\u90E8\u7E3D\u8868" }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "\u8ACB\u8F38\u5165\u696D\u52D9\u4EBA\u54E1\u8EAB\u5206\u8B49\u5B57\u865F\u9032\u5165" }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "password", value: password, onChange: (e) => setPassword(e.target.value), onKeyDown: (e) => e.key === "Enter" && unlock(), placeholder: "\u8ACB\u8F38\u5165\u5BC6\u78BC" }),
@@ -43934,15 +43945,15 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
           ] }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: "ppt-extra-toggle", onClick: () => setPptShowExtras((value) => !value), children: "\uFF0B \u9078\u64C7\u81E8\u6642\u52A0\u5165\u7269\u4EF6" }),
           pptShowExtras && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "ppt-extra-list", children: [
-            active.filter((record) => !belongsToPptWeek(record, selectedPptWeek)).map((record) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "ppt-case-row extra", children: [
+            pptExtraCandidates.map((record) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "ppt-case-row extra", children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: pptExtraIds.includes(record.id), onChange: (event) => setPptExtraIds((previous) => event.target.checked ? [...previous, record.id] : previous.filter((id) => id !== record.id)) }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: record.caseName || "\u672A\u547D\u540D\u6848\u4EF6" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "ppt-case-address", children: chunkText(record.address || "\u2014", 20).map((line, lineIndex) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: line }, `${line}-${lineIndex}`)) }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: developerFullNameText(record.developer) || "\u2014" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: displayRocDate(record.reportDate) || "\u7121\u9032\u6848\u65E5\u671F" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: record._intakeDraftId ? "not-entered" : "", children: record._intakeDraftId ? "\u5C1A\u672A\u9032\u6848" : displayRocDate(record.reportDate) || "\u7121\u9032\u6848\u65E5\u671F" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {})
             ] }, record.id)),
-            !active.some((record) => !belongsToPptWeek(record, selectedPptWeek)) && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "ppt-empty", children: "\u6C92\u6709\u5176\u4ED6\u53EF\u81E8\u6642\u52A0\u5165\u7684\u59D4\u8A17\u4E2D\u7269\u4EF6" })
+            !pptExtraCandidates.length && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "ppt-empty", children: "\u6C92\u6709\u5176\u4ED6\u53EF\u81E8\u6642\u52A0\u5165\u7684\u59D4\u8A17\u4E2D\u7269\u4EF6\u6216\u9032\u6848\u8349\u7A3F" })
           ] })
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal-foot ppt-picker-foot", children: [
@@ -45697,7 +45708,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       ] }) })
     ] });
   }
-  function DailyActivity({ records, compact = false }) {
+  function DailyActivity({ records, compact = false, onEdit }) {
     const [selectedDate, setSelectedDate] = (0, import_react.useState)(today());
     const [hiddenItems, setHiddenItems] = (0, import_react.useState)(() => {
       try {
@@ -45718,6 +45729,11 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       return () => window.removeEventListener("hide-daily-item", hide);
     }, []);
     const dateOnly = (value = "") => value.slice(0, 10);
+    const yesterday = (() => {
+      const date = /* @__PURE__ */ new Date(`${today()}T12:00:00`);
+      date.setDate(date.getDate() - 1);
+      return date.toISOString().slice(0, 10);
+    })();
     const rocDay = displayRocDate(selectedDate);
     const updateRecords = records.filter((record) => !record.archived && !isExpired(record) && record.status === "\u59D4\u8A17\u4E2D" && (dailyUpdateFields(record, selectedDate).length > 0 || dateOnly(record._restoredAt) === selectedDate)).map((record) => ({ ...record, _dailyHighlight: JSON.stringify(dailyUpdateFields(record, selectedDate)), ...dateOnly(record._restoredAt) === selectedDate ? { _dailyAnnotation: `${rocDay}\u91CD\u65B0\u4E0A\u67B6`, _dailyAnnotationType: "restored" } : {} }));
     const removedRecords = records.filter((record) => !!record.archived && dateOnly(record._archiveActionDate || record.archived) === selectedDate).map((record) => ({ ...record, _dailyAnnotation: `${displayRocDate(record.archived)}${record.status || "\u4E0B\u67B6"}` }));
@@ -45726,15 +45742,29 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       { key: "updated", title: "\u66F4\u65B0\u7269\u4EF6", records: updateRecords },
       { key: "removed", title: "\u4E0B\u67B6\u7269\u4EF6", records: removedRecords }
     ].map((group) => ({ ...group, records: group.records.filter((record) => !hiddenItems.includes(`${selectedDate}|${group.key}|${record.id}`)).map((record) => compact ? record : { ...record, _dailyHideKey: `${selectedDate}|${group.key}|${record.id}` }) }));
-    return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", { className: `daily-activity${compact ? " compact" : ""}`, children: [
+    return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", { className: `daily-activity${compact ? " compact" : ""}`, onClick: (event) => {
+      if (!onEdit) return;
+      const cell = event.target.closest("td.col-caseName");
+      if (!cell) return;
+      const article = cell.closest("article.daily-card");
+      const row = cell.closest("tbody tr:not(.area-group-row)");
+      if (!article || !row) return;
+      const groupIndex = Array.from(event.currentTarget.querySelectorAll("article.daily-card")).indexOf(article);
+      const rowIndex = Array.from(article.querySelectorAll("tbody tr:not(.area-group-row)")).indexOf(row);
+      const record = sortActiveRecords(groups[groupIndex]?.records || [])[rowIndex];
+      if (record) onEdit(record);
+    }, children: [
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "daily-activity-head", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", { children: compact ? "\u6BCF\u65E5\u7269\u4EF6\u52D5\u614B" : "\u6BCF\u65E5\u7269\u4EF6\u52D5\u614B" }),
           !compact && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "\u67E5\u770B\u6BCF\u65E5\u65B0\u589E\u3001\u4E0B\u67B6\u8207\u5230\u671F\u7269\u4EF6" })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "daily-date", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u65E5\u671F" }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "date", value: selectedDate, onChange: (event) => setSelectedDate(event.target.value) })
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "daily-date", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u986F\u793A" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: selectedDate === yesterday ? "selected" : "", onClick: () => setSelectedDate(yesterday), children: "\u6628\u5929" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: selectedDate === today() ? "selected" : "", onClick: () => setSelectedDate(today()), children: "\u4ECA\u5929" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { "aria-label": "\u9078\u64C7\u6BCF\u65E5\u7269\u4EF6\u52D5\u614B\u65E5\u671F", type: "date", value: selectedDate, onChange: (event) => setSelectedDate(event.target.value) }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: displayRocDate(selectedDate) })
         ] })
       ] }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "daily-cards", children: groups.map((group) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("article", { className: `daily-card ${group.key}`, children: [
@@ -45742,8 +45772,8 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { children: group.title }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: group.records.length })
         ] }),
-        group.records.length ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PropertyTable, { records: group.records, columns: compact ? dailyColumns : ["dailyHide", ...dailyColumns], publicMode: true, dailyMode: true, onEdit: () => {
-        }, onArchive: () => {
+        group.records.length ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PropertyTable, { records: group.records, columns: compact ? dailyColumns : ["dailyHide", ...dailyColumns], publicMode: true, dailyMode: true, onEdit: onEdit || (() => {
+        }), onArchive: () => {
         }, onRestore: () => {
         }, onRemove: () => {
         } }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "daily-empty", children: [
@@ -46895,8 +46925,11 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     ] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: "\u2014" });
     if (k === "managementFee") {
       const rawFee = String(r.managementFee || "").trim();
-      const fee = rawFee.replace(/元/g, "").replace(/\s*[\/／]\s*月\s*$/, "").trim();
-      return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: rawFee && !fee ? "\u7121" : !fee ? "\u2014" : /^(?:無|\$?0(?:\.0+)?(?:元)?)$/.test(fee) ? "\u7121" : `${fee}/\u6708` });
+      const fee = rawFee.replace(/元/g, "").trim();
+      if (!fee) return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: "\u2014" });
+      if (/^無(?:\$?0(?:\.0+)?)?(?:\s*[\/／]\s*月)?$/.test(fee) || /^\$?0(?:\.0+)?(?:\s*[\/／]\s*月)?$/.test(fee)) return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: "\u7121$0" });
+      if (/[\/／]\s*(?:年|月)$/.test(fee)) return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: fee.replace(/／/g, "/") });
+      return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: `${fee}/\u6708` });
     }
     if (k === "notes") {
       const internalNoteText = String(r.notes || "").trim();
@@ -47382,7 +47415,11 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     const isLand = (record) => /^L/i.test(String(record.propertyNo || "")) || String(record.type || "").includes("\u571F\u5730");
     const isExclusive = (record) => /^(EA|LA|EC)/i.test(String(record.propertyNo || "")) || String(contractFromNo(record.propertyNo) || record.contractType || "").includes("\u5C08\u7D04");
     const monthlyEntry = records.filter((record) => monthMatches(record.reportDate));
-    const monthlyArchive = records.filter((record) => Boolean(record.archived) && ((record.status || "\u59D4\u8A17\u4E2D") !== "\u59D4\u8A17\u4E2D" || Boolean(record._restoredAt)) && monthMatches(record._archiveActionDate || record.archived));
+    const monthlyArchive = records.filter((record) => {
+      const archiveDate = normalizeDateInput(record._archiveActionDate || record.archived);
+      const reportDate = normalizeDateInput(record.reportDate);
+      return Boolean(record.archived) && ((record.status || "\u59D4\u8A17\u4E2D") !== "\u59D4\u8A17\u4E2D" || Boolean(record._restoredAt)) && monthMatches(reportDate) && monthMatches(archiveDate) && reportDate <= archiveDate;
+    });
     const monthlyRestore = records.filter((record) => monthMatches(record._restoredAt));
     const numberText = (value) => Number.isInteger(value) ? String(value) : value.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
     const categoryTotals = (items, name) => {
@@ -47620,7 +47657,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
               !monthlyRows.length && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("tr", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { colSpan: 5, className: "inventory-empty", children: "\u672C\u6708\u76EE\u524D\u6C92\u6709\u9032\u6848\u3001\u4E0B\u67B6\u6216\u91CD\u65B0\u4E0A\u67B6\u7D00\u9304" }) })
             ] })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "\u672C\u6708\u4EF6\u6578\uFF1D\u672C\u6708\u9032\u6848\uFF0B\u672C\u6708\u91CD\u65B0\u4E0A\u67B6\uFF0B\u672C\u6708\u4E0B\u67B6" })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "\u672C\u6708\u4EF6\u6578\uFF1D\u672C\u6708\u9032\u6848\uFF0B\u672C\u6708\u91CD\u65B0\u4E0A\u67B6\uFF0B\u672C\u6708\u4E0B\u67B6\uFF1B\u672C\u6708\u4E0B\u67B6\u53EA\u8A08\u7B97\u672C\u6708\u9032\u6848\u5F8C\u53C8\u5728\u540C\u6708\u4E0B\u67B6\u7684\u6848\u4EF6" })
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "inventory-panel stock-inventory-panel", id: "stock-inventory-image", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "inventory-panel-title", children: [
