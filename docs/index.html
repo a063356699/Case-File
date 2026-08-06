@@ -1281,7 +1281,7 @@ body{background:#f8fbfe!important;color:#405064!important}
 }
 /* Visible release marker beside the home title. */
 .app-version{font-family:"Noto Sans TC","Microsoft JhengHei",sans-serif;font-size:11px;letter-spacing:0;color:var(--muted);font-weight:700;margin-left:7px;vertical-align:middle}
-.app-version{font-size:0!important}.app-version::after{content:"V23";font-size:11px;letter-spacing:0}
+.app-version{font-size:0!important}.app-version::after{content:"V24";font-size:11px;letter-spacing:0}
 .intake-feature-title{display:flex!important;align-items:center;justify-content:space-between;gap:8px}.copy-features-button{margin-left:auto;border:1px solid #7aa89a!important;background:#edf7f2!important;color:#17654e!important;border-radius:999px!important;padding:3px 9px!important;font-size:11px!important;line-height:1.2!important;white-space:nowrap}
 .book-location-value b,.book-location-value small{font-weight:800!important}
 .developer-cell-value{min-width:3em}.developer-cell-value>span{white-space:nowrap}
@@ -45773,7 +45773,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     const shortAddress = (areaMatch ? withoutCity.slice(area.length) : withoutCity).trim() || "\u672A\u586B\u5730\u5740";
     const caseName = intakeValue(draft.values, "\u6848\u540D").trim() || "\u672A\u547D\u540D\u6848\u4EF6";
     const developer = developerFullNameText(intakeValue(draft.values, "\u958B\u767C\uFF11/\u958B\u767C\uFF12").trim()) || "\u672A\u586B\u958B\u767C";
-    const fileNamePart = (text) => String(text).replace(/[\uFF01-\uFF5E]/g, (char) => String.fromCharCode(char.charCodeAt(0) - 65248)).replace(/\u3000/g, " ").replace(/[－–—]/g, "-");
+    const fileNamePart = (text) => String(text).replace(/[－–—]/g, "-").replace(/[\\/:*?"<>|／：＊？＂＜＞｜＼]/g, "-").replace(/\u3000/g, " ");
     return [area, caseName, shortAddress, developer].map(fileNamePart).join("-");
   };
   function IntakePanel({ raw, setRaw, drafts, draft, selectDraft, deleteDraft, analyze, addManualDraft, updateValue, clear, confirmIntake, markPrintedForSales }) {

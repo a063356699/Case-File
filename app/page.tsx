@@ -2553,8 +2553,11 @@ const intakeDraftEditorTitle = (draft: IntakeData) => {
   const shortAddress = (areaMatch ? withoutCity.slice(area.length) : withoutCity).trim() || "未填地址";
   const caseName = intakeValue(draft.values, "案名").trim() || "未命名案件";
   const developer = developerFullNameText(intakeValue(draft.values, "開發１/開發２").trim()) || "未填開發";
-  // 草稿檔名的英數與符號一律半形，中文內容維持原樣。
-  const fileNamePart = (text: string) => String(text).replace(/[\uFF01-\uFF5E]/g, char => String.fromCharCode(char.charCodeAt(0) - 0xFEE0)).replace(/\u3000/g, " ").replace(/[－–—]/g, "-");
+  // 檔名的分隔符號使用半形 -；Windows 禁用符號（例如 |）也改為 -。
+  const fileNamePart = (text: string) => String(text)
+    .replace(/[－–—]/g, "-")
+    .replace(/[\\/:*?"<>|／：＊？＂＜＞｜＼]/g, "-")
+    .replace(/\u3000/g, " ");
   return [area, caseName, shortAddress, developer].map(fileNamePart).join("-");
 };
 
