@@ -2998,7 +2998,7 @@ function Field({ fieldKey, label, record, records, setRecord }: { fieldKey: stri
   if (fieldKey === "areaPaste") return <label className="field area-paste-field"><span>{label}</span><textarea rows={8} value={value} onChange={event => setRecord(parseAreaPaste(event.target.value, record))} placeholder="貼上建物面積、土地面積、建築完成日與主要建材整串文字，系統會自動抓取下方數字。"/><small>已抓取的內容仍可在下方個別修改。</small></label>;
   const pillChoices: Record<string, string[]> = {
     coverBottomSource: ["主約", "契變", "口頭"], coverPercentSource: ["主約", "契變", "口頭"], coverNoChange: ["無契變"], coverOriginalType: ["原稿", "草稿"], titleUndertaking: ["有切結", "無切結"],
-    zoningDocumentStatus: ["房屋不需要", "土地已附正式分區", "謄本已標示不用附"], authorizationStatus: ["無需要", "已附上歸檔"], authorizationCopyType: ["影本", "正本"],
+    zoningDocumentStatus: ["房屋不需要", "土地已附正式分區", "謄本已標示不用附"], authorizationStatus: ["缺授", "無需要", "已附上歸檔"], authorizationCopyType: ["影本", "正本"],
     parkingOwnership: ["無車位", "停自有地", "固定車位", "車位另租", "抽籤決定", "先到先停"], parkingMethod: ["坡道/平面", "坡道/機械", "昇降/平面", "昇降/機械", "庭院", "車庫", "平移/機械"]
   };
   if (pillChoices[fieldKey]) { const displayedValue = fieldKey === "parkingMethod" && !value && pillChoices.parkingMethod.includes(record.parkingType || "") ? record.parkingType : value; const selectPill = (option: string) => fieldKey === "parkingMethod" ? setRecord({ ...record, parkingMethod: displayedValue === option ? "" : option, parkingType: "" }) : set(displayedValue === option ? "" : option); return <label className={`field cover-pill-field cover-pill-${fieldKey}`}><span>{label}</span><span className="pill-options">{pillChoices[fieldKey].map(option => <button type="button" className={displayedValue === option ? "active" : ""} onClick={() => selectPill(option)} key={option}>{option}</button>)}</span></label>; }
