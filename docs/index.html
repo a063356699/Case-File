@@ -279,6 +279,10 @@ button:hover,.file-button:hover{border-color:#9fbad0;box-shadow:0 2px 8px #7895a
 .excel-print .print-right>hr{flex:0 0 auto!important;width:100%!important;margin:1mm 0!important}
 .excel-print .print-right>.attention{flex:0 0 28mm!important;height:28mm!important;min-height:28mm!important;max-height:28mm!important;margin:1mm 0 0!important;box-sizing:border-box!important;overflow:hidden!important}
 
+/* 國小至公園：資料較長時保留完整文字並在欄位內換行，不使用省略號。 */
+.excel-print .print-right>.print-right-row.print-right-row-wrap{flex:0 0 auto!important;min-height:7.5mm!important;align-items:start!important;padding:1mm 0!important}
+.excel-print .print-right-row.print-right-row-wrap>span{white-space:normal!important;overflow:visible!important;text-overflow:clip!important;overflow-wrap:anywhere!important;line-height:1.28!important}
+
 /* P2 依房屋／土地 PDF 的八個區塊高度鋪滿整張 A4 */
 .print-document .checklist-page{display:grid!important;grid-template-rows:7mm 12mm 27mm 97mm 56mm 57mm 18mm 7mm!important;height:297mm!important;min-height:297mm!important;max-height:297mm!important;padding:8mm 9mm!important;box-sizing:border-box!important;overflow:hidden!important}
 .print-document .checklist-page>.check-strip,.print-document .checklist-page>h1,.print-document .checklist-page>.check-price,.print-document .checklist-page>.check-list,.print-document .checklist-page>.check-columns,.print-document .checklist-page>.check-tail,.print-document .checklist-page>.signature-box{min-height:0!important;max-height:none!important;height:auto!important;box-sizing:border-box!important;margin:0!important;overflow:hidden!important}
@@ -43225,7 +43229,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       !internalView && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { className: "topbar", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
           "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V11" })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V12" })
         ] }) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "ppt-export-button", onClick: () => {
@@ -46175,7 +46179,8 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     ] });
   }
   function PrintRightRow({ label, value }) {
-    return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { className: "print-right-row", children: [
+    const canWrap = ["\u570B\u5C0F", "\u570B\u4E2D", "\u9AD8\u4E2D", "\u5927\u5C08", "\u5E02\u5834", "\u516C\u5712"].includes(label);
+    return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { className: `print-right-row${canWrap ? " print-right-row-wrap" : ""}`, children: [
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("b", { children: [
         label,
         "\uFF1A"
