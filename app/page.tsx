@@ -1745,6 +1745,10 @@ async function downloadColorWorkbook(record: RecordItem, personnel: Person[] = [
     if (!raw || (!number && !/[\d]/.test(raw))) return raw || "$0 依稅單為準";
     return !number || Number(number) === 0 ? "$0 依稅單為準" : `約$${Number(number).toLocaleString("en-US")}`;
   };
+  const optionalPingValue = (value = "") => {
+    const numeric = cleanNumber(value);
+    return numeric && Number(numeric) === 0 ? "-" : pingValue(value);
+  };
   const layoutNumber = (pattern: RegExp) => String(record.layout || "").match(pattern)?.[1] || "";
   const floorParts = String(record.floor || "").split(/[／/]/).map(value => value.trim()).filter(Boolean);
   const cleanNotes = colorSheetAttention(record.attentionNotes || "", "");
@@ -1838,6 +1842,12 @@ async function downloadColorWorkbook(record: RecordItem, personnel: Person[] = [
     };
     // 注意事項內容格是 C30（土地）與 C41（房屋）；B 欄只是左側標題。
     directValues[isLand ? "C30" : "C41"] = cleanNotes;
+    if (!isLand) {
+      // 房屋 Excel：附屬、公設與建物其他坪數為 0 時直接顯示「-」。
+      directValues.F16 = optionalPingValue(record.auxiliaryBuildingPing);
+      directValues.F17 = optionalPingValue(record.commonAreaPing);
+      directValues.M14 = optionalPingValue(record.buildingOtherPing || record.basementPing);
+    }
     const featureAddresses = isLand ? ["C26", "C27", "C28", "C29"] : ["C37", "C38", "C39", "C40"];
     const longFeatureAddresses = new Set<string>();
     featureAddresses.forEach(address => { if (directValues[address]) { const normalized = String(directValues[address]).replace(/[\r\n]+/g, ""); if (Array.from(normalized).length > 27) longFeatureAddresses.add(address); directValues[address] = normalized; } });
