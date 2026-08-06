@@ -1836,6 +1836,8 @@ async function downloadColorWorkbook(record: RecordItem, personnel: Person[] = [
       F27: aboutMeter(record.road), M27: [record.coverage, record.far].filter(Boolean).join("/"), F28: aboutMeter(record.frontage), M28: aboutMeter(record.depth), F29: record.market || "", F30: record.park || "", F31: schoolSummary(record),
       F33: taxValue(record.generalLandValueTax || ""), F34: taxValue(record.selfUseLandValueTax || ""), F35: "$- 依稅單為準", C37: noteParts[0], C38: noteParts[1], C39: noteParts[2], C40: noteParts[3], B41: cleanNotes, P44: developerContact,
     };
+    // 注意事項內容格是 C30（土地）與 C41（房屋）；B 欄只是左側標題。
+    directValues[isLand ? "C30" : "C41"] = cleanNotes;
     const featureAddresses = isLand ? ["C26", "C27", "C28", "C29"] : ["C37", "C38", "C39", "C40"];
     const longFeatureAddresses = new Set<string>();
     featureAddresses.forEach(address => { if (directValues[address]) { const normalized = String(directValues[address]).replace(/[\r\n]+/g, ""); if (Array.from(normalized).length > 27) longFeatureAddresses.add(address); directValues[address] = normalized; } });
