@@ -1284,6 +1284,9 @@ body{background:#f8fbfe!important;color:#405064!important}
 .book-location-value b,.book-location-value small{font-weight:800!important}
 .developer-cell-value{min-width:3em}.developer-cell-value>span{white-space:nowrap}
 .compact-drafts .draft-card:not(.draft-columns){display:grid;grid-template-columns:minmax(0,1fr) 318px;gap:12px}.compact-drafts .draft-actions{width:318px;justify-content:flex-end}.compact-drafts .draft-actions button{white-space:nowrap}.draft-actions .draft-printed-recorded{background:#e5edf6!important;border-color:#a8bfd2!important;color:#345d7d!important;font-size:11px!important}
+
+/* 委託中編輯：學校依國小、國中、高中、大專各自輸入。 */
+.record-edit-grid>.edit-elementarySchool,.record-edit-grid>.edit-juniorHighSchool,.record-edit-grid>.edit-seniorHighSchool,.record-edit-grid>.edit-collegeSchool{grid-column:span 20!important;background:#f1f7ec!important;border-color:#d5e4cb!important}
 </style>
 </head>
 <body>
@@ -40986,7 +40989,11 @@ ${String(ex)}`);
     ["parkingNo", "\u8ECA\u4F4D\u7DE8\u865F"],
     ["market", "\u5E02\u5834"],
     ["park", "\u516C\u5712"],
-    ["school", "\u5B78\u6821"],
+    ["elementarySchool", "\u570B\u5C0F"],
+    ["juniorHighSchool", "\u570B\u4E2D"],
+    ["seniorHighSchool", "\u9AD8\u4E2D"],
+    ["collegeSchool", "\u5927\u5C08"],
+    ["school", "\u5B78\u6821\u5F59\u6574"],
     ["generalLandValueTax", "\u4E00\u822C\u589E\u503C\u7A05"],
     ["selfUseLandValueTax", "\u81EA\u7528\u589E\u503C\u7A05"],
     ["deedTax", "\u5951\u7A05"],
@@ -41084,7 +41091,10 @@ ${String(ex)}`);
     "parkingNo",
     "market",
     "park",
-    "school",
+    "elementarySchool",
+    "juniorHighSchool",
+    "seniorHighSchool",
+    "collegeSchool",
     "feature1",
     "feature2",
     "feature3",
@@ -41791,6 +41801,7 @@ ${String(ex)}`);
     const notes = displayNoteSegments(value).filter((part) => !/(?:中人|介紹費|開發\s*%)/.test(part)).filter((part) => !/^增建[:：]/.test(part));
     return [addition ? `\u589E\u5EFA:${addition}` : "", ...notes].filter(Boolean).join("\uFF1B");
   };
+  var schoolSummary = (record) => [record.elementarySchool, record.juniorHighSchool, record.seniorHighSchool, record.collegeSchool].map((value) => String(value || "").trim()).filter(Boolean).join("\uFF0F") || String(record.school || "").trim();
   function intakeToRecord(intake, existing) {
     const v = intake.values;
     const no = intakeValue(v, "\u59D4\u8A17\u4E3B\u7D04\u7DE8\u865F");
@@ -41803,7 +41814,11 @@ ${String(ex)}`);
     const parkingOwnership = /無車位/.test(parking) ? "\u7121\u8ECA\u4F4D" : /停自有地|自有地/.test(parking) ? "\u505C\u81EA\u6709\u5730" : /車位另租/.test(parking) ? "\u8ECA\u4F4D\u53E6\u79DF" : /抽籤/.test(parking) ? "\u62BD\u7C64\u6C7A\u5B9A" : /固定/.test(parking) ? "\u56FA\u5B9A\u8ECA\u4F4D" : "";
     const parkingType = /先到先停/.test(parking) ? "\u5148\u5230\u5148\u505C" : /排隊/.test(parking) ? "\u6392\u968A\u7B49\u5019" : /停自有地|自有地/.test(parking) ? "\u505C\u81EA\u6709\u5730" : /車位另租/.test(parking) ? "\u8ECA\u4F4D\u53E6\u79DF" : /抽籤/.test(parking) ? "\u62BD\u7C64\u6C7A\u5B9A" : /固定/.test(parking) ? "\u56FA\u5B9A\u8ECA\u4F4D" : "";
     const parkingMethod = parking.match(/坡道[／/]平面|坡道[／/]機械|昇降[／/]平面|昇降[／/]機械|庭院|平移[／/]機械/)?.[0] || "";
-    return { ...blankRecord(), ...existing || {}, propertyNo: no, contractType: contractFromNo(no), type: intakeValue(v, "\u7269\u4EF6\u578B\u614B"), status: existing?.status || "\u59D4\u8A17\u4E2D", area: intakeValue(v, "\u7269\u4EF6(\u5B8C\u6574)\u5730\u5740").replace(/^.*?[市縣]/, "").slice(0, 3), caseName: intakeValue(v, "\u6848\u540D"), address: intakeValue(v, "\u7269\u4EF6(\u5B8C\u6574)\u5730\u5740"), price: intakeValue(v, "\u5951\u7D04\u958B\u50F9"), direction: intakeValue(v, "\u671D\u5411 [\u623F\u5C4B\u671D]", "\u671D\u5411 [\u5927\u9580\u671D]", "\u671D\u5411 [\u571F\u5730\u671D]"), completionDate: completion, builtYear: completion ? String(Number(completion.split(/[./]/)[0])) : "", titleFloor: intakeValue(v, "\u6B0A\u72C0\u5C64\u6578"), currentFloor: intakeValue(v, "\u900F\u5929\u8ACB\u5BEB"), floor: [intakeValue(v, "\u6B0A\u72C0\u5C64\u6578"), intakeValue(v, "\u900F\u5929\u8ACB\u5BEB")].filter(Boolean).join("\uFF0F"), layout, indoorPing: intakeValue(v, "\u5BA4\u5167\u576A"), buildingPing: intakeValue(v, "\u7E3D\u5EFA\u576A"), landPing: intakeValue(v, "\u5730\u576A"), parking, parkingOwnership, parkingType, parkingMethod, parkingNo: intakeValue(v, "\u8ECA\u4F4D\u7DE8\u865F"), buildingName: intakeValue(v, "\u5927\u6A13\u540D\u7A31"), elevatorCount: intakeValue(v, "\u96FB\u68AF\u6578"), unitsPerFloor: intakeValue(v, "\u6BCF\u5C64\u6236\u6578"), managementMethod: intakeValue(v, "\u8B66\u885B\u7BA1\u7406"), market: intakeValue(v, "\u5E02\u5834/\u8CFC\u7269"), park: intakeValue(v, "\u516C\u5712\u7DA0\u5730"), school: [intakeValue(v, "\u9130\u8FD1\u570B\u5C0F"), intakeValue(v, "\u9130\u8FD1\u570B\u4E2D")].filter(Boolean).join("\uFF0F"), feature1: intakeValue(v, "\u7279\u8272\u8AAA\u660E1"), feature2: intakeValue(v, "\u7279\u8272\u8AAA\u660E2"), feature3: intakeValue(v, "\u7279\u8272\u8AAA\u660E3"), feature4: intakeValue(v, "\u7279\u8272\u8AAA\u660E4"), attentionNotes: [intakeValue(v, "\u589E\u5EFA\u8AAA\u660E"), intakeValue(v, "\u6CE8\u610F\u4E8B\u9805")].filter(Boolean).join("\uFF1B"), managementFee: intakeValue(v, "\u7BA1\u7406\u8CBB"), key: intakeValue(v, "\u9470\u5319\u4F4D\u7F6E"), currentState: intakeValue(v, "(\u7269\u4EF6)\u73FE\u6CC1"), road: intakeValue(v, "\u81E8\u8DEF"), frontage: intakeValue(v, "\u9762\u5BEC"), depth: intakeValue(v, "\u6DF1\u5EA6"), zoning: intakeValue(v, "\u4F7F\u7528\u5206\u5340"), coverage: coverageFar[0] || "", far: coverageFar[1] || "", developer: intakeValue(v, "\u958B\u767C\uFF11/\u958B\u767C\uFF12"), entrustStart: normalizeDateInput(intakeValue(v, "\u59D4\u8A17\u958B\u59CB")), entrustEnd: normalizeDateInput(intakeValue(v, "\u59D4\u8A17\u7D50\u675F")), reportDate: existing?.reportDate || today(), updateDate: today(), groupViewDate: existing?.groupViewDate || intake.groupViewDate || "", notes, photoInfo: existing?.photoInfo || "" };
+    const elementarySchool = intakeValue(v, "\u9130\u8FD1\u570B\u5C0F");
+    const juniorHighSchool = intakeValue(v, "\u9130\u8FD1\u570B\u4E2D");
+    const seniorHighSchool = intakeValue(v, "\u9130\u8FD1\u9AD8\u4E2D");
+    const collegeSchool = intakeValue(v, "\u9130\u8FD1\u5927\u5C08");
+    return { ...blankRecord(), ...existing || {}, propertyNo: no, contractType: contractFromNo(no), type: intakeValue(v, "\u7269\u4EF6\u578B\u614B"), status: existing?.status || "\u59D4\u8A17\u4E2D", area: intakeValue(v, "\u7269\u4EF6(\u5B8C\u6574)\u5730\u5740").replace(/^.*?[市縣]/, "").slice(0, 3), caseName: intakeValue(v, "\u6848\u540D"), address: intakeValue(v, "\u7269\u4EF6(\u5B8C\u6574)\u5730\u5740"), price: intakeValue(v, "\u5951\u7D04\u958B\u50F9"), direction: intakeValue(v, "\u671D\u5411 [\u623F\u5C4B\u671D]", "\u671D\u5411 [\u5927\u9580\u671D]", "\u671D\u5411 [\u571F\u5730\u671D]"), completionDate: completion, builtYear: completion ? String(Number(completion.split(/[./]/)[0])) : "", titleFloor: intakeValue(v, "\u6B0A\u72C0\u5C64\u6578"), currentFloor: intakeValue(v, "\u900F\u5929\u8ACB\u5BEB"), floor: [intakeValue(v, "\u6B0A\u72C0\u5C64\u6578"), intakeValue(v, "\u900F\u5929\u8ACB\u5BEB")].filter(Boolean).join("\uFF0F"), layout, indoorPing: intakeValue(v, "\u5BA4\u5167\u576A"), buildingPing: intakeValue(v, "\u7E3D\u5EFA\u576A"), landPing: intakeValue(v, "\u5730\u576A"), parking, parkingOwnership, parkingType, parkingMethod, parkingNo: intakeValue(v, "\u8ECA\u4F4D\u7DE8\u865F"), buildingName: intakeValue(v, "\u5927\u6A13\u540D\u7A31"), elevatorCount: intakeValue(v, "\u96FB\u68AF\u6578"), unitsPerFloor: intakeValue(v, "\u6BCF\u5C64\u6236\u6578"), managementMethod: intakeValue(v, "\u8B66\u885B\u7BA1\u7406"), market: intakeValue(v, "\u5E02\u5834/\u8CFC\u7269"), park: intakeValue(v, "\u516C\u5712\u7DA0\u5730"), elementarySchool, juniorHighSchool, seniorHighSchool, collegeSchool, school: [elementarySchool, juniorHighSchool, seniorHighSchool, collegeSchool].filter(Boolean).join("\uFF0F") || existing?.school || "", feature1: intakeValue(v, "\u7279\u8272\u8AAA\u660E1"), feature2: intakeValue(v, "\u7279\u8272\u8AAA\u660E2"), feature3: intakeValue(v, "\u7279\u8272\u8AAA\u660E3"), feature4: intakeValue(v, "\u7279\u8272\u8AAA\u660E4"), attentionNotes: [intakeValue(v, "\u589E\u5EFA\u8AAA\u660E"), intakeValue(v, "\u6CE8\u610F\u4E8B\u9805")].filter(Boolean).join("\uFF1B"), managementFee: intakeValue(v, "\u7BA1\u7406\u8CBB"), key: intakeValue(v, "\u9470\u5319\u4F4D\u7F6E"), currentState: intakeValue(v, "(\u7269\u4EF6)\u73FE\u6CC1"), road: intakeValue(v, "\u81E8\u8DEF"), frontage: intakeValue(v, "\u9762\u5BEC"), depth: intakeValue(v, "\u6DF1\u5EA6"), zoning: intakeValue(v, "\u4F7F\u7528\u5206\u5340"), coverage: coverageFar[0] || "", far: coverageFar[1] || "", developer: intakeValue(v, "\u958B\u767C\uFF11/\u958B\u767C\uFF12"), entrustStart: normalizeDateInput(intakeValue(v, "\u59D4\u8A17\u958B\u59CB")), entrustEnd: normalizeDateInput(intakeValue(v, "\u59D4\u8A17\u7D50\u675F")), reportDate: existing?.reportDate || today(), updateDate: today(), groupViewDate: existing?.groupViewDate || intake.groupViewDate || "", notes, photoInfo: existing?.photoInfo || "" };
   }
   function recordToIntake(record) {
     const values = {
@@ -41891,6 +41906,10 @@ ${String(ex)}`);
     setValue("\u8ECA\u4F4D\u7DE8\u865F", record.parkingNo);
     setValue("\u5E02\u5834/\u8CFC\u7269", record.market);
     setValue("\u516C\u5712\u7DA0\u5730", record.park);
+    setValue("\u9130\u8FD1\u570B\u5C0F", record.elementarySchool);
+    setValue("\u9130\u8FD1\u570B\u4E2D", record.juniorHighSchool);
+    setValue("\u9130\u8FD1\u9AD8\u4E2D", record.seniorHighSchool);
+    setValue("\u9130\u8FD1\u5927\u5C08", record.collegeSchool);
     setValue("\u6CE8\u610F\u4E8B\u9805", record.attentionNotes || record.notes);
     return values;
   }
@@ -42438,7 +42457,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       const existing = records.find((record) => record.id === normalizedEditing.id);
       const combinedFloor = [normalizedEditing.titleFloor, normalizedEditing.currentFloor].filter(Boolean).join("\uFF0F");
       const combinedParking = [normalizedEditing.parkingOwnership, normalizedEditing.parkingType, normalizedEditing.parkingMethod, normalizedEditing.parkingNo].filter(Boolean).join("\uFF0F");
-      const prepared = { ...normalizedEditing, builtYear: normalizedEditing.completionDate ? String(Number(normalizedEditing.completionDate.split(/[./]/)[0])) : normalizedEditing.builtYear, floor: combinedFloor || normalizedEditing.floor, parking: combinedParking || normalizedEditing.parking, contractType: contractFromNo(normalizedEditing.propertyNo) || normalizedEditing.contractType, status: normalizedEditing.status || "\u59D4\u8A17\u4E2D", updateDate: normalizedEditing.updateDate || existing?.updateDate || today(), lastModifiedAt: normalizedEditing.lastModifiedAt || existing?.lastModifiedAt || "" };
+      const prepared = { ...normalizedEditing, school: schoolSummary(normalizedEditing), builtYear: normalizedEditing.completionDate ? String(Number(normalizedEditing.completionDate.split(/[./]/)[0])) : normalizedEditing.builtYear, floor: combinedFloor || normalizedEditing.floor, parking: combinedParking || normalizedEditing.parking, contractType: contractFromNo(normalizedEditing.propertyNo) || normalizedEditing.contractType, status: normalizedEditing.status || "\u59D4\u8A17\u4E2D", updateDate: normalizedEditing.updateDate || existing?.updateDate || today(), lastModifiedAt: normalizedEditing.lastModifiedAt || existing?.lastModifiedAt || "" };
       const next = existing ? withTrackedUpdate(existing, prepared) : prepared;
       setRecords((prev) => prev.some((r) => r.id === next.id) ? prev.map((r) => r.id === next.id ? next : r) : [next, ...prev]);
       setIntakeDrafts((previous) => previous.map((draft) => draft.linkedRecordId === next.id ? { ...draft, values: syncRecordToDraftValues(draft, next) } : draft));
@@ -43143,6 +43162,16 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       selectedIntakeRef.current = id;
       setSelectedIntakeId(id);
     };
+    const openRecordIntakeDraft = (record) => {
+      const linked = intakeDrafts.find((draft2) => draft2.linkedRecordId === record.id);
+      const baseDraft = recordToIntake(record);
+      const draft = linked || { ...baseDraft, values: syncRecordToDraftValues(baseDraft, record), linkedRecordId: record.id, enteredAt: (/* @__PURE__ */ new Date()).toISOString() };
+      if (!linked) setIntakeDrafts((previous) => [draft, ...previous]);
+      setEditing(null);
+      setTab("intake");
+      selectIntakeDraft(draft.id);
+      flash(linked ? "\u5DF2\u958B\u555F\u539F\u672C\u7684\u9032\u6848\u8349\u7A3F\uFF1B\u4FEE\u6539\u6703\u540C\u6B65\u7E3D\u8868" : "\u5DF2\u5EFA\u7ACB\u9023\u7D50\u9032\u6848\u8349\u7A3F\uFF1B\u4FEE\u6539\u6703\u540C\u6B65\u7E3D\u8868");
+    };
     const markIntakeDraftPrintedForSales = (id) => {
       const target = intakeDrafts.find((draft) => draft.id === id);
       if (!target) return;
@@ -43229,7 +43258,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       !internalView && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { className: "topbar", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
           "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V13" })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V14" })
         ] }) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "ppt-export-button", onClick: () => {
@@ -43730,6 +43759,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
           ] }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal-head-actions", children: [
             records.some((record) => record.id === editing.id) && !editing.archived && (editing.status || "\u59D4\u8A17\u4E2D") === "\u59D4\u8A17\u4E2D" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "record-print-button", type: "button", onClick: () => openRecordIntakeDraft(editing), children: "\u9032\u6848\u8349\u7A3F" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: `record-print-button color${editing.colorSheetIssue ? " has-issue" : ""}`, type: "button", onClick: () => {
                 const attention = colorSheetAttention(editing.attentionNotes || "", editing.additionNotes || "");
                 setPrintEditor({ kind: "color", data: { ...editing, notes: attention, attentionNotes: attention, photos: [...editing.photos || []] } });

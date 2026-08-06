@@ -44,7 +44,7 @@ const fields = [
   ["mainBuildingPing", "主建物坪數"], ["auxiliaryBuildingPing", "附屬建物坪數"], ["commonAreaPing", "共同使用坪數"], ["buildingOtherPing", "建物其他坪數"], ["basementPing", "地下室坪數"], ["landSharePing", "土地坪數"],
   ["buildingName", "大樓名稱"], ["unitsPerFloor", "每層戶數"], ["elevatorCount", "電梯數"], ["managementMethod", "管理方式"], ["titleFloor", "權狀樓層"], ["currentFloor", "現況樓別"],
   ["parkingOwnership", "車位產權"], ["parkingType", "車位型態"], ["parkingMethod", "停車方式"], ["parkingNo", "車位編號"],
-  ["market", "市場"], ["park", "公園"], ["school", "學校"], ["generalLandValueTax", "一般增值稅"], ["selfUseLandValueTax", "自用增值稅"], ["deedTax", "契稅"],
+  ["market", "市場"], ["park", "公園"], ["elementarySchool", "國小"], ["juniorHighSchool", "國中"], ["seniorHighSchool", "高中"], ["collegeSchool", "大專"], ["school", "學校彙整"], ["generalLandValueTax", "一般增值稅"], ["selfUseLandValueTax", "自用增值稅"], ["deedTax", "契稅"],
   ["feature1", "特色說明1"], ["feature2", "特色說明2"], ["feature3", "特色說明3"], ["feature4", "特色說明4"],
   ["additionNotes", "增建說明"], ["attentionNotes", "注意事項"], ["middleman", "中人"],
   ["coverBottomPrice", "底價（萬）"], ["coverBottomSource", "底價依據"], ["coverBottomPercent", "底價％數"], ["coverPercentSource", "％數依據"],
@@ -69,7 +69,7 @@ const recordEditOrder = [
   "auxiliaryBuildingPing", "commonAreaPing", "basementPing",
   "buildingName", "unitsPerFloor", "elevatorCount", "generalLandValueTax", "selfUseLandValueTax",
   "parkingOwnership", "parkingMethod", "parkingNo",
-  "market", "park", "school", "feature1", "feature2", "feature3", "feature4", "attentionNotes",
+  "market", "park", "elementarySchool", "juniorHighSchool", "seniorHighSchool", "collegeSchool", "feature1", "feature2", "feature3", "feature4", "attentionNotes",
   "coverHeader", "coverBottomPrice", "coverBottomSource", "coverBottomPercent", "coverPercentSource", "coverChangeNo", "coverChangeDate", "coverNoChange", "coverChangePurpose",
   "landTitleCount", "buildingTitleCount", "titleUndertaking", "zoningDocumentStatus", "authorizationStatus", "authorizationCopyType",
   "websiteHeader",
@@ -548,6 +548,7 @@ const colorSheetAttention = (value = "", additionNotes = "") => {
   const notes = displayNoteSegments(value).filter(part => !/(?:中人|介紹費|開發\s*%)/.test(part)).filter(part => !/^增建[:：]/.test(part));
   return [addition ? `增建:${addition}` : "", ...notes].filter(Boolean).join("；");
 };
+const schoolSummary = (record: RecordItem) => [record.elementarySchool, record.juniorHighSchool, record.seniorHighSchool, record.collegeSchool].map(value => String(value || "").trim()).filter(Boolean).join("／") || String(record.school || "").trim();
 
 function intakeToRecord(intake: IntakeData, existing?: RecordItem): RecordItem {
   const v = intake.values; const no = intakeValue(v, "委託主約編號");
@@ -560,7 +561,8 @@ function intakeToRecord(intake: IntakeData, existing?: RecordItem): RecordItem {
   const parkingOwnership = /無車位/.test(parking) ? "無車位" : /停自有地|自有地/.test(parking) ? "停自有地" : /車位另租/.test(parking) ? "車位另租" : /抽籤/.test(parking) ? "抽籤決定" : /固定/.test(parking) ? "固定車位" : "";
   const parkingType = /先到先停/.test(parking) ? "先到先停" : /排隊/.test(parking) ? "排隊等候" : /停自有地|自有地/.test(parking) ? "停自有地" : /車位另租/.test(parking) ? "車位另租" : /抽籤/.test(parking) ? "抽籤決定" : /固定/.test(parking) ? "固定車位" : "";
   const parkingMethod = parking.match(/坡道[／/]平面|坡道[／/]機械|昇降[／/]平面|昇降[／/]機械|庭院|平移[／/]機械/)?.[0] || "";
-  return { ...blankRecord(), ...(existing || {}), propertyNo: no, contractType: contractFromNo(no), type: intakeValue(v, "物件型態"), status: existing?.status || "委託中", area: intakeValue(v, "物件(完整)地址").replace(/^.*?[市縣]/, "").slice(0, 3), caseName: intakeValue(v, "案名"), address: intakeValue(v, "物件(完整)地址"), price: intakeValue(v, "契約開價"), direction: intakeValue(v, "朝向 [房屋朝]", "朝向 [大門朝]", "朝向 [土地朝]"), completionDate: completion, builtYear: completion ? String(Number(completion.split(/[./]/)[0])) : "", titleFloor: intakeValue(v, "權狀層數"), currentFloor: intakeValue(v, "透天請寫"), floor: [intakeValue(v, "權狀層數"), intakeValue(v, "透天請寫")].filter(Boolean).join("／"), layout, indoorPing: intakeValue(v, "室內坪"), buildingPing: intakeValue(v, "總建坪"), landPing: intakeValue(v, "地坪"), parking, parkingOwnership, parkingType, parkingMethod, parkingNo: intakeValue(v, "車位編號"), buildingName: intakeValue(v, "大樓名稱"), elevatorCount: intakeValue(v, "電梯數"), unitsPerFloor: intakeValue(v, "每層戶數"), managementMethod: intakeValue(v, "警衛管理"), market: intakeValue(v, "市場/購物"), park: intakeValue(v, "公園綠地"), school: [intakeValue(v, "鄰近國小"), intakeValue(v, "鄰近國中")].filter(Boolean).join("／"), feature1: intakeValue(v, "特色說明1"), feature2: intakeValue(v, "特色說明2"), feature3: intakeValue(v, "特色說明3"), feature4: intakeValue(v, "特色說明4"), attentionNotes: [intakeValue(v, "增建說明"), intakeValue(v, "注意事項")].filter(Boolean).join("；"), managementFee: intakeValue(v, "管理費"), key: intakeValue(v, "鑰匙位置"), currentState: intakeValue(v, "(物件)現況"), road: intakeValue(v, "臨路"), frontage: intakeValue(v, "面寬"), depth: intakeValue(v, "深度"), zoning: intakeValue(v, "使用分區"), coverage: coverageFar[0] || "", far: coverageFar[1] || "", developer: intakeValue(v, "開發１/開發２"), entrustStart: normalizeDateInput(intakeValue(v, "委託開始")), entrustEnd: normalizeDateInput(intakeValue(v, "委託結束")), reportDate: existing?.reportDate || today(), updateDate: today(), groupViewDate: existing?.groupViewDate || intake.groupViewDate || "", notes, photoInfo: existing?.photoInfo || "" };
+  const elementarySchool = intakeValue(v, "鄰近國小"); const juniorHighSchool = intakeValue(v, "鄰近國中"); const seniorHighSchool = intakeValue(v, "鄰近高中"); const collegeSchool = intakeValue(v, "鄰近大專");
+  return { ...blankRecord(), ...(existing || {}), propertyNo: no, contractType: contractFromNo(no), type: intakeValue(v, "物件型態"), status: existing?.status || "委託中", area: intakeValue(v, "物件(完整)地址").replace(/^.*?[市縣]/, "").slice(0, 3), caseName: intakeValue(v, "案名"), address: intakeValue(v, "物件(完整)地址"), price: intakeValue(v, "契約開價"), direction: intakeValue(v, "朝向 [房屋朝]", "朝向 [大門朝]", "朝向 [土地朝]"), completionDate: completion, builtYear: completion ? String(Number(completion.split(/[./]/)[0])) : "", titleFloor: intakeValue(v, "權狀層數"), currentFloor: intakeValue(v, "透天請寫"), floor: [intakeValue(v, "權狀層數"), intakeValue(v, "透天請寫")].filter(Boolean).join("／"), layout, indoorPing: intakeValue(v, "室內坪"), buildingPing: intakeValue(v, "總建坪"), landPing: intakeValue(v, "地坪"), parking, parkingOwnership, parkingType, parkingMethod, parkingNo: intakeValue(v, "車位編號"), buildingName: intakeValue(v, "大樓名稱"), elevatorCount: intakeValue(v, "電梯數"), unitsPerFloor: intakeValue(v, "每層戶數"), managementMethod: intakeValue(v, "警衛管理"), market: intakeValue(v, "市場/購物"), park: intakeValue(v, "公園綠地"), elementarySchool, juniorHighSchool, seniorHighSchool, collegeSchool, school: [elementarySchool, juniorHighSchool, seniorHighSchool, collegeSchool].filter(Boolean).join("／") || existing?.school || "", feature1: intakeValue(v, "特色說明1"), feature2: intakeValue(v, "特色說明2"), feature3: intakeValue(v, "特色說明3"), feature4: intakeValue(v, "特色說明4"), attentionNotes: [intakeValue(v, "增建說明"), intakeValue(v, "注意事項")].filter(Boolean).join("；"), managementFee: intakeValue(v, "管理費"), key: intakeValue(v, "鑰匙位置"), currentState: intakeValue(v, "(物件)現況"), road: intakeValue(v, "臨路"), frontage: intakeValue(v, "面寬"), depth: intakeValue(v, "深度"), zoning: intakeValue(v, "使用分區"), coverage: coverageFar[0] || "", far: coverageFar[1] || "", developer: intakeValue(v, "開發１/開發２"), entrustStart: normalizeDateInput(intakeValue(v, "委託開始")), entrustEnd: normalizeDateInput(intakeValue(v, "委託結束")), reportDate: existing?.reportDate || today(), updateDate: today(), groupViewDate: existing?.groupViewDate || intake.groupViewDate || "", notes, photoInfo: existing?.photoInfo || "" };
 }
 
 function recordToIntake(record: RecordItem): IntakeData {
@@ -591,7 +593,7 @@ function syncRecordToDraftValues(draft: IntakeData, record: RecordItem): Record<
   setValue("格局 (房)", record.layout.match(/(\d+)\s*房/)?.[0] || ""); setValue("格局 (廳)", record.layout.match(/(\d+)\s*廳/)?.[0] || ""); setValue("格局 (衛浴)", record.layout.match(/(\d+)\s*衛(?:浴)?/)?.[0] || ""); setValue("格局 (陽台)", record.layout.match(/(\d+)\s*陽台/)?.[0] || "");
   setValue("大樓名稱", record.buildingName); setValue("電梯數", record.elevatorCount); setValue("每層戶數", record.unitsPerFloor); setValue("警衛管理", record.managementMethod);
   setValue("特色說明1", record.feature1); setValue("特色說明2", record.feature2); setValue("特色說明3", record.feature3); setValue("特色說明4", record.feature4);
-  setValue("管理費", record.managementFee); setValue("車位", [record.parkingOwnership, record.parkingType, record.parkingMethod].filter(Boolean).join("／") || record.parking); setValue("車位編號", record.parkingNo); setValue("市場/購物", record.market); setValue("公園綠地", record.park); setValue("注意事項", record.attentionNotes || record.notes);
+  setValue("管理費", record.managementFee); setValue("車位", [record.parkingOwnership, record.parkingType, record.parkingMethod].filter(Boolean).join("／") || record.parking); setValue("車位編號", record.parkingNo); setValue("市場/購物", record.market); setValue("公園綠地", record.park); setValue("鄰近國小", record.elementarySchool); setValue("鄰近國中", record.juniorHighSchool); setValue("鄰近高中", record.seniorHighSchool); setValue("鄰近大專", record.collegeSchool); setValue("注意事項", record.attentionNotes || record.notes);
   return values;
 }
 
@@ -967,7 +969,7 @@ export default function Home() {
     const existing = records.find(record => record.id === normalizedEditing.id);
     const combinedFloor = [normalizedEditing.titleFloor, normalizedEditing.currentFloor].filter(Boolean).join("／");
     const combinedParking = [normalizedEditing.parkingOwnership, normalizedEditing.parkingType, normalizedEditing.parkingMethod, normalizedEditing.parkingNo].filter(Boolean).join("／");
-    const prepared = { ...normalizedEditing, builtYear: normalizedEditing.completionDate ? String(Number(normalizedEditing.completionDate.split(/[./]/)[0])) : normalizedEditing.builtYear, floor: combinedFloor || normalizedEditing.floor, parking: combinedParking || normalizedEditing.parking, contractType: contractFromNo(normalizedEditing.propertyNo) || normalizedEditing.contractType, status: normalizedEditing.status || "委託中", updateDate: normalizedEditing.updateDate || existing?.updateDate || today(), lastModifiedAt: normalizedEditing.lastModifiedAt || existing?.lastModifiedAt || "" };
+    const prepared = { ...normalizedEditing, school: schoolSummary(normalizedEditing), builtYear: normalizedEditing.completionDate ? String(Number(normalizedEditing.completionDate.split(/[./]/)[0])) : normalizedEditing.builtYear, floor: combinedFloor || normalizedEditing.floor, parking: combinedParking || normalizedEditing.parking, contractType: contractFromNo(normalizedEditing.propertyNo) || normalizedEditing.contractType, status: normalizedEditing.status || "委託中", updateDate: normalizedEditing.updateDate || existing?.updateDate || today(), lastModifiedAt: normalizedEditing.lastModifiedAt || existing?.lastModifiedAt || "" };
     const next = existing ? withTrackedUpdate(existing, prepared) : prepared;
     setRecords(prev => prev.some(r => r.id === next.id) ? prev.map(r => r.id === next.id ? next : r) : [next, ...prev]);
     setIntakeDrafts(previous => previous.map(draft => draft.linkedRecordId === next.id ? { ...draft, values: syncRecordToDraftValues(draft, next) } : draft));
@@ -1382,6 +1384,16 @@ export default function Home() {
     if (updated.linkedRecordId) setRecords(prev => prev.map(record => record.id === updated.linkedRecordId ? normalizeRecordPings(intakeToRecord(updated, record)) : record));
   };
   const selectIntakeDraft = (id: string) => { selectedIntakeRef.current = id; setSelectedIntakeId(id); };
+  const openRecordIntakeDraft = (record: RecordItem) => {
+    const linked = intakeDrafts.find(draft => draft.linkedRecordId === record.id);
+    const baseDraft = recordToIntake(record);
+    const draft = linked || { ...baseDraft, values: syncRecordToDraftValues(baseDraft, record), linkedRecordId: record.id, enteredAt: new Date().toISOString() };
+    if (!linked) setIntakeDrafts(previous => [draft, ...previous]);
+    setEditing(null);
+    setTab("intake");
+    selectIntakeDraft(draft.id);
+    flash(linked ? "已開啟原本的進案草稿；修改會同步總表" : "已建立連結進案草稿；修改會同步總表");
+  };
   const markIntakeDraftPrintedForSales = (id: string) => {
     const target = intakeDrafts.find(draft => draft.id === id);
     if (!target) return;
@@ -1427,7 +1439,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="brand"><h1>總表　管理模式 <small className="app-version">V13</small></h1></div>
+      <div className="brand"><h1>總表　管理模式 <small className="app-version">V14</small></h1></div>
       <div className="header-actions"><button className="ppt-export-button" onClick={() => { setPptExtraIds([]); setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button onClick={exportExcel}>匯出 Excel</button><label className="file-button">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button onClick={exportJson}>匯出 JSON</button><button className="key-tag" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button><span className="home-last-modified">最後修改: {latestModifiedAt ? displayHomeModifiedAt(latestModifiedAt) : "尚無紀錄"}</span></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -1477,7 +1489,7 @@ export default function Home() {
     {restoreChoiceRecord && <div className="modal-backdrop"><div className="modal restore-choice-modal"><div className="modal-head"><div><span>恢復封存物件</span><h2>{restoreChoiceRecord.caseName || "未命名案件"}</h2></div><button className="close" onClick={() => setRestoreChoiceRecord(null)}>×</button></div><div className="restore-choice-body"><p>請選擇這次恢復的原因：</p><button className="primary" onClick={() => restoreRecord(restoreChoiceRecord, true)}><b>重新上架</b><span>記錄今天日期，顯示重新上架紅字並列入每日動態</span></button><button onClick={() => restoreRecord(restoreChoiceRecord, false)}><b>恢復委託中物件</b><span>只恢復到委託中，不標示重新上架</span></button></div>
 <div className="modal-foot"><button onClick={() => setRestoreChoiceRecord(null)}>取消</button></div></div></div>}
     {editing && <div className="modal-backdrop" onMouseDown={e => e.target === e.currentTarget && requestCloseEditing()}><div className="modal record-edit-modal"><div className="modal-head"><div className="record-modal-title"><span>{editing._intakeDraftId ? "編輯進案草稿" : records.some(r => r.id === editing.id) ? "編輯案件" : "建立新物件"}</span><h2><b>{editing.propertyNo || "尚無編號"}</b><em>{editing.caseName || "尚未命名"}</em></h2><small>{editing.address || "尚未填寫地址"}</small><p>開發業務：{developerFullNameText(editing.developer) || "尚未填寫"}</p>{editing.archived && <i className="record-archive-title-note">{displayRocDate(editing.archived)} {editing.status || "下架"}</i>}</div>
-<div className="modal-head-actions">{records.some(record => record.id === editing.id) && !editing.archived && (editing.status || "委託中") === "委託中" && <><button className={`record-print-button color${editing.colorSheetIssue ? " has-issue" : ""}`} type="button" onClick={() => { const attention = colorSheetAttention(editing.attentionNotes || "", editing.additionNotes || ""); setPrintEditor({ kind: "color", data: { ...editing, notes: attention, attentionNotes: attention, photos: [...(editing.photos || [])] } }); }}>{editing.colorSheetIssue ? "彩色表 Excel ●" : "彩色表 Excel"}</button><button className="record-print-button cover" type="button" onClick={() => printRecordDocument(editing, "cover")}>列印新進封面</button></>}<button className="close" onClick={requestCloseEditing}>×</button></div></div>
+<div className="modal-head-actions">{records.some(record => record.id === editing.id) && !editing.archived && (editing.status || "委託中") === "委託中" && <><button className="record-print-button" type="button" onClick={() => openRecordIntakeDraft(editing)}>進案草稿</button><button className={`record-print-button color${editing.colorSheetIssue ? " has-issue" : ""}`} type="button" onClick={() => { const attention = colorSheetAttention(editing.attentionNotes || "", editing.additionNotes || ""); setPrintEditor({ kind: "color", data: { ...editing, notes: attention, attentionNotes: attention, photos: [...(editing.photos || [])] } }); }}>{editing.colorSheetIssue ? "彩色表 Excel ●" : "彩色表 Excel"}</button><button className="record-print-button cover" type="button" onClick={() => printRecordDocument(editing, "cover")}>列印新進封面</button></>}<button className="close" onClick={requestCloseEditing}>×</button></div></div>
 <div className="form-grid record-edit-grid">{recordEditOrder.filter(key => key !== "area").map(key => {
   if (["feature2", "feature3", "feature4"].includes(key)) return null;
   if (key === "feature1") return <div className="edit-cell edit-features" key="features">{["feature1", "feature2", "feature3", "feature4"].map(featureKey => <Field key={featureKey} fieldKey={featureKey} label={labels[featureKey]} record={editing} records={records} setRecord={updateEditingRecord}/>)}</div>;

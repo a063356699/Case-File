@@ -1277,3 +1277,6 @@ body{background:#f8fbfe!important;color:#405064!important}
 .book-location-value b,.book-location-value small{font-weight:800!important}
 .developer-cell-value{min-width:3em}.developer-cell-value>span{white-space:nowrap}
 .compact-drafts .draft-card:not(.draft-columns){display:grid;grid-template-columns:minmax(0,1fr) 318px;gap:12px}.compact-drafts .draft-actions{width:318px;justify-content:flex-end}.compact-drafts .draft-actions button{white-space:nowrap}.draft-actions .draft-printed-recorded{background:#e5edf6!important;border-color:#a8bfd2!important;color:#345d7d!important;font-size:11px!important}
+
+/* 委託中編輯：學校依國小、國中、高中、大專各自輸入。 */
+.record-edit-grid>.edit-elementarySchool,.record-edit-grid>.edit-juniorHighSchool,.record-edit-grid>.edit-seniorHighSchool,.record-edit-grid>.edit-collegeSchool{grid-column:span 20!important;background:#f1f7ec!important;border-color:#d5e4cb!important}
