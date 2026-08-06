@@ -1281,7 +1281,8 @@ body{background:#f8fbfe!important;color:#405064!important}
 }
 /* Visible release marker beside the home title. */
 .app-version{font-family:"Noto Sans TC","Microsoft JhengHei",sans-serif;font-size:11px;letter-spacing:0;color:var(--muted);font-weight:700;margin-left:7px;vertical-align:middle}
-.app-version{font-size:0!important}.app-version::after{content:"V22";font-size:11px;letter-spacing:0}
+.app-version{font-size:0!important}.app-version::after{content:"V23";font-size:11px;letter-spacing:0}
+.intake-feature-title{display:flex!important;align-items:center;justify-content:space-between;gap:8px}.copy-features-button{margin-left:auto;border:1px solid #7aa89a!important;background:#edf7f2!important;color:#17654e!important;border-radius:999px!important;padding:3px 9px!important;font-size:11px!important;line-height:1.2!important;white-space:nowrap}
 .book-location-value b,.book-location-value small{font-weight:800!important}
 .developer-cell-value{min-width:3em}.developer-cell-value>span{white-space:nowrap}
 .compact-drafts .draft-card:not(.draft-columns){display:grid;grid-template-columns:minmax(0,1fr) 318px;gap:12px}.compact-drafts .draft-actions{width:318px;justify-content:flex-end}.compact-drafts .draft-actions button{white-space:nowrap}.draft-actions .draft-printed-recorded{background:#e5edf6!important;border-color:#a8bfd2!important;color:#345d7d!important;font-size:11px!important}
@@ -45777,6 +45778,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
   };
   function IntakePanel({ raw, setRaw, drafts, draft, selectDraft, deleteDraft, analyze, addManualDraft, updateValue, clear, confirmIntake, markPrintedForSales }) {
     const [showEntered, setShowEntered] = (0, import_react.useState)(false);
+    const [featuresCopied, setFeaturesCopied] = (0, import_react.useState)(false);
     const printDraft = (id) => {
       selectDraft(id);
       setTimeout(() => {
@@ -45786,6 +45788,22 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     };
     const pendingDrafts = drafts.filter((item) => !item.linkedRecordId);
     const enteredDrafts = drafts.filter((item) => !!item.linkedRecordId);
+    const copyFeatures = async () => {
+      if (!draft) return;
+      const text = [1, 2, 3, 4].map((number) => `${number}.${intakeValue(draft.values, `\u7279\u8272\u8AAA\u660E${number}`).trim()}`).join("\n");
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch {
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        textarea.remove();
+      }
+      setFeaturesCopied(true);
+      window.setTimeout(() => setFeaturesCopied(false), 1800);
+    };
     const draftCard = (item) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("article", { className: `draft-card ${draft?.id === item.id ? "selected" : ""}`, children: [
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "draft-summary", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: `kind-badge ${item.propertyKind === "\u7D14\u571F\u5730" ? "land" : ""}`, children: item.propertyKind === "\u7D14\u571F\u5730" ? "\u571F\u5730" : item.propertyKind }),
@@ -45888,7 +45906,10 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u6240\u6709\u6B04\u4F4D\u90FD\u53EF\u4FEE\u6539\u5F8C\u518D\u5217\u5370" })
           ] }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "intake-edit-grid", children: intakeEditFields.filter(([key]) => draft.propertyKind === "\u623F\u5C4B" || !["\u5EFA\u7BC9\u5B8C\u6210\u65E5\u671F", "\u683C\u5C40 (\u623F)", "\u683C\u5C40 (\u5EF3)", "\u683C\u5C40 (\u885B\u6D74)", "\u683C\u5C40 (\u967D\u53F0)", "\u6709\u7121\u96FB\u68AF", "\u6B0A\u72C0\u5C64\u6578", "\u900F\u5929\u8ACB\u5BEB", "\u5927\u6A13\u540D\u7A31", "\u7BA1\u7406\u8CBB", "\u8ECA\u4F4D", "\u8ECA\u4F4D\u7DE8\u865F"].includes(key)).map(([key, label]) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: intakeFieldClass(key), children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: label }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: key === "\u7279\u8272\u8AAA\u660E1" ? "intake-feature-title" : "", children: [
+              label,
+              key === "\u7279\u8272\u8AAA\u660E1" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: "copy-features-button", onClick: copyFeatures, children: featuresCopied ? "\u5DF2\u8907\u88FD" : "\u8907\u88FD\u7279\u82721\uFF5E4" })
+            ] }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { value: intakeValue(draft.values, key), onChange: (e) => updateValue(key, e.target.value) })
           ] }, key)) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "intake-modal-preview", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PrintableIntake, { draft }) })
