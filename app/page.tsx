@@ -544,9 +544,9 @@ const websiteCellDisplay = (record: RecordItem, key: string) => {
   return { value: parts.shift() || "—", notes: [...parts, expiry, down].filter(Boolean) };
 };
 const colorSheetAttention = (value = "", additionNotes = "") => {
-  const addition = String(additionNotes || "").trim().replace(/^增建[:：]\s*/, "");
-  const notes = displayNoteSegments(value).filter(part => !/(?:中人|介紹費|開發\s*%)/.test(part)).filter(part => !/^增建[:：]/.test(part));
-  return [addition ? `增建說明:${addition}` : "", ...notes].filter(Boolean).join("；");
+  // Excel 注意事項只使用委託中編輯的「彩色表注意事項」。
+  const notes = displayNoteSegments(value).filter(part => !/(?:中人|介紹費|開發\s*%)/.test(part));
+  return notes.join("；");
 };
 const schoolSummary = (record: RecordItem) => [record.elementarySchool, record.juniorHighSchool, record.seniorHighSchool, record.collegeSchool].map(value => String(value || "").trim()).filter(Boolean).join("／") || String(record.school || "").trim();
 
@@ -1747,7 +1747,7 @@ async function downloadColorWorkbook(record: RecordItem, personnel: Person[] = [
   };
   const layoutNumber = (pattern: RegExp) => String(record.layout || "").match(pattern)?.[1] || "";
   const floorParts = String(record.floor || "").split(/[／/]/).map(value => value.trim()).filter(Boolean);
-  const cleanNotes = colorSheetAttention(record.attentionNotes || record.notes || "", record.additionNotes || "");
+  const cleanNotes = colorSheetAttention(record.attentionNotes || "", "");
   const noteParts = [record.feature1, record.feature2, record.feature3, record.feature4].map(value => String(value || "").trim());
   const isLand = typeShort(record.type) === "土地" || /^(?:LG|LA)/i.test(record.propertyNo || "");
   const price = String(record.price || "").replace(/\s*萬(?:元)?\s*/g, "");

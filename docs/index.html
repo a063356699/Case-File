@@ -41797,9 +41797,8 @@ ${String(ex)}`);
     return { value: parts.shift() || "\u2014", notes: [...parts, expiry, down].filter(Boolean) };
   };
   var colorSheetAttention = (value = "", additionNotes = "") => {
-    const addition = String(additionNotes || "").trim().replace(/^增建[:：]\s*/, "");
-    const notes = displayNoteSegments(value).filter((part) => !/(?:中人|介紹費|開發\s*%)/.test(part)).filter((part) => !/^增建[:：]/.test(part));
-    return [addition ? `\u589E\u5EFA\u8AAA\u660E:${addition}` : "", ...notes].filter(Boolean).join("\uFF1B");
+    const notes = displayNoteSegments(value).filter((part) => !/(?:中人|介紹費|開發\s*%)/.test(part));
+    return notes.join("\uFF1B");
   };
   var schoolSummary = (record) => [record.elementarySchool, record.juniorHighSchool, record.seniorHighSchool, record.collegeSchool].map((value) => String(value || "").trim()).filter(Boolean).join("\uFF0F") || String(record.school || "").trim();
   function intakeToRecord(intake, existing) {
@@ -44587,7 +44586,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     };
     const layoutNumber = (pattern) => String(record.layout || "").match(pattern)?.[1] || "";
     const floorParts = String(record.floor || "").split(/[／/]/).map((value) => value.trim()).filter(Boolean);
-    const cleanNotes = colorSheetAttention(record.attentionNotes || record.notes || "", record.additionNotes || "");
+    const cleanNotes = colorSheetAttention(record.attentionNotes || "", "");
     const noteParts = [record.feature1, record.feature2, record.feature3, record.feature4].map((value) => String(value || "").trim());
     const isLand = typeShort(record.type) === "\u571F\u5730" || /^(?:LG|LA)/i.test(record.propertyNo || "");
     const price = String(record.price || "").replace(/\s*萬(?:元)?\s*/g, "");
