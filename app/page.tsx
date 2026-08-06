@@ -1439,7 +1439,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="brand"><h1>總表　管理模式 <small className="app-version">V28</small></h1></div>
+      <div className="brand"><h1>總表　管理模式 <small className="app-version">V30</small></h1></div>
       <div className="header-actions"><button className="ppt-export-button" onClick={() => { setPptExtraIds([]); setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button onClick={exportExcel}>匯出 Excel</button><label className="file-button">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button onClick={exportJson}>匯出 JSON</button><button className="key-tag" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button><span className="home-last-modified">最後修改: {latestModifiedAt ? displayHomeModifiedAt(latestModifiedAt) : "尚無紀錄"}</span></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -1739,6 +1739,21 @@ async function downloadColorWorkbook(record: RecordItem, personnel: Person[] = [
     const period = raw.match(/[／/]\s*([年月])/ )?.[1] || "月";
     return !amount || /^(?:無|\$?0(?:\.0+)?)$/.test(amount) ? "-/月" : `${amount}元/${period}`;
   };
+  const houseCompletionDate = (value = "") => {
+    const text = String(value || "").trim();
+    const iso = text.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+    if (iso) return `${String(Number(iso[1]) - 1911).padStart(3, "0")}.${String(Number(iso[2])).padStart(2, "0")}.${String(Number(iso[3])).padStart(2, "0")}`;
+    const roc = text.match(/^(\d{2,3})[.\/-](\d{1,2})[.\/-](\d{1,2})$/);
+    return roc ? `${roc[1].padStart(3, "0")}.${roc[2].padStart(2, "0")}.${roc[3].padStart(2, "0")}` : text;
+  };
+  const houseBuildingAge = (value = "") => {
+    const text = String(value || "").trim();
+    const iso = text.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+    const roc = text.match(/^(\d{2,3})[.\/-](\d{1,2})[.\/-](\d{1,2})$/);
+    const westernYear = iso ? Number(iso[1]) : roc ? Number(roc[1]) + 1911 : 0;
+    const age = westernYear ? new Date().getFullYear() - westernYear : NaN;
+    return Number.isFinite(age) && age >= 0 ? `約${age}年屋` : "";
+  };
   const halfWidth = (value = "") => String(value || "").replace(/[０-９]/g, character => String.fromCharCode(character.charCodeAt(0) - 0xFEE0)).replace(/[～〜﹣－–—-]/g, "~");
   const currentFloorValue = (value = "") => {
     const normalized = halfWidth(value).replace(/\s+/g, "").replace(/^\u73fe\u6cc1/, "").trim();
@@ -1842,7 +1857,7 @@ async function downloadColorWorkbook(record: RecordItem, personnel: Person[] = [
       ...commonValues, F13: pingValue(record.registryBuildingPing || record.buildingPing), M13: pingValue(record.landSharePing || record.landPing), F14: pingValue(record.registryIndoorPing || record.indoorPing), M14: pingValue(record.buildingOtherPing || record.basementPing),
       F15: pingValue(record.mainBuildingPing), M15: noParking ? "無車位" : record.parkingType || record.parking || "", F16: pingValue(record.auxiliaryBuildingPing), M16: noParking ? "" : record.parkingMethod || "", F17: pingValue(record.commonAreaPing), M17: noParking ? "" : record.parkingNo || "",
       F19: typeShort(record.type), M19: record.buildingName || "", F20: `${record.unitsPerFloor || ""}戶`, M20: `${record.elevatorCount || ""}部`, F21: record.managementMethod || "", M21: houseManagementFee(record.managementFee), F22: layoutForHouseWorkbook(record.layout || "", record.type),
-      F23: record.titleFloor || floorParts[0] || "", M23: currentFloorValue(record.currentFloor || floorParts[1] || ""), F24: record.completionDate || record.builtYear || "", M24: `約${String(ageOf(record)).match(/(\d+(?:\.\d+)?)\s*年屋/)?.[1] || String(ageOf(record)).match(/(\d+(?:\.\d+)?)/)?.[1] || ""}年屋`, F25: record.direction || "", M25: record.currentState || "",
+      F23: record.titleFloor || floorParts[0] || "", M23: currentFloorValue(record.currentFloor || floorParts[1] || ""), F24: houseCompletionDate(record.completionDate || record.builtYear), M24: houseBuildingAge(record.completionDate || record.builtYear), F25: record.direction || "", M25: record.currentState || "",
       F27: aboutMeter(record.road), M27: [record.coverage, record.far].filter(Boolean).join("/"), F28: aboutMeter(record.frontage), M28: aboutMeter(record.depth), F29: record.market || "", F30: record.park || "", F31: schoolSummary(record),
       F33: taxValue(record.generalLandValueTax || ""), F34: taxValue(record.selfUseLandValueTax || ""), F35: "$- 依稅單為準", C37: noteParts[0], C38: noteParts[1], C39: noteParts[2], C40: noteParts[3], B41: cleanNotes, P44: developerContact,
     };

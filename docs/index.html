@@ -43258,7 +43258,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       !internalView && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { className: "topbar", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
           "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V28" })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V30" })
         ] }) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "ppt-export-button", onClick: () => {
@@ -44579,6 +44579,21 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       const period = raw.match(/[／/]\s*([年月])/)?.[1] || "\u6708";
       return !amount || /^(?:無|\$?0(?:\.0+)?)$/.test(amount) ? "-/\u6708" : `${amount}\u5143/${period}`;
     };
+    const houseCompletionDate = (value = "") => {
+      const text = String(value || "").trim();
+      const iso = text.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+      if (iso) return `${String(Number(iso[1]) - 1911).padStart(3, "0")}.${String(Number(iso[2])).padStart(2, "0")}.${String(Number(iso[3])).padStart(2, "0")}`;
+      const roc = text.match(/^(\d{2,3})[.\/-](\d{1,2})[.\/-](\d{1,2})$/);
+      return roc ? `${roc[1].padStart(3, "0")}.${roc[2].padStart(2, "0")}.${roc[3].padStart(2, "0")}` : text;
+    };
+    const houseBuildingAge = (value = "") => {
+      const text = String(value || "").trim();
+      const iso = text.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+      const roc = text.match(/^(\d{2,3})[.\/-](\d{1,2})[.\/-](\d{1,2})$/);
+      const westernYear = iso ? Number(iso[1]) : roc ? Number(roc[1]) + 1911 : 0;
+      const age = westernYear ? (/* @__PURE__ */ new Date()).getFullYear() - westernYear : NaN;
+      return Number.isFinite(age) && age >= 0 ? `\u7D04${age}\u5E74\u5C4B` : "";
+    };
     const halfWidth = (value = "") => String(value || "").replace(/[０-９]/g, (character) => String.fromCharCode(character.charCodeAt(0) - 65248)).replace(/[～〜﹣－–—-]/g, "~");
     const currentFloorValue = (value = "") => {
       const normalized = halfWidth(value).replace(/\s+/g, "").replace(/^\u73fe\u6cc1/, "").trim();
@@ -44764,8 +44779,8 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
         F22: layoutForHouseWorkbook(record.layout || "", record.type),
         F23: record.titleFloor || floorParts[0] || "",
         M23: currentFloorValue(record.currentFloor || floorParts[1] || ""),
-        F24: record.completionDate || record.builtYear || "",
-        M24: `\u7D04${String(ageOf(record)).match(/(\d+(?:\.\d+)?)\s*年屋/)?.[1] || String(ageOf(record)).match(/(\d+(?:\.\d+)?)/)?.[1] || ""}\u5E74\u5C4B`,
+        F24: houseCompletionDate(record.completionDate || record.builtYear),
+        M24: houseBuildingAge(record.completionDate || record.builtYear),
         F25: record.direction || "",
         M25: record.currentState || "",
         F27: aboutMeter(record.road),
