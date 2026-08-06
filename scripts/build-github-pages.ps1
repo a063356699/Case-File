@@ -23,6 +23,7 @@ $css = $css.Replace("/taiching-logo.png", $logoData)
 $bundle = Get-Content -Raw -Encoding UTF8 -LiteralPath "$projectRoot\work\standalone-bundle.js"
 $outputDir = Join-Path $projectRoot "docs"
 New-Item -ItemType Directory -Force -Path $outputDir | Out-Null
+[System.IO.File]::WriteAllText((Join-Path $outputDir ".nojekyll"), "")
 
 $html = @"
 <!doctype html>
