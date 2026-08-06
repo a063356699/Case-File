@@ -546,7 +546,7 @@ const websiteCellDisplay = (record: RecordItem, key: string) => {
 const colorSheetAttention = (value = "", additionNotes = "") => {
   const addition = String(additionNotes || "").trim().replace(/^增建[:：]\s*/, "");
   const notes = displayNoteSegments(value).filter(part => !/(?:中人|介紹費|開發\s*%)/.test(part)).filter(part => !/^增建[:：]/.test(part));
-  return [addition ? `增建:${addition}` : "", ...notes].filter(Boolean).join("；");
+  return [addition ? `增建說明:${addition}` : "", ...notes].filter(Boolean).join("；");
 };
 const schoolSummary = (record: RecordItem) => [record.elementarySchool, record.juniorHighSchool, record.seniorHighSchool, record.collegeSchool].map(value => String(value || "").trim()).filter(Boolean).join("／") || String(record.school || "").trim();
 
@@ -1439,7 +1439,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="brand"><h1>總表　管理模式 <small className="app-version">V17</small></h1></div>
+      <div className="brand"><h1>總表　管理模式 <small className="app-version">V18</small></h1></div>
       <div className="header-actions"><button className="ppt-export-button" onClick={() => { setPptExtraIds([]); setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button onClick={exportExcel}>匯出 Excel</button><label className="file-button">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button onClick={exportJson}>匯出 JSON</button><button className="key-tag" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button><span className="home-last-modified">最後修改: {latestModifiedAt ? displayHomeModifiedAt(latestModifiedAt) : "尚無紀錄"}</span></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
