@@ -1439,7 +1439,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="brand"><h1>總表　管理模式 <small className="app-version">V15</small></h1></div>
+      <div className="brand"><h1>總表　管理模式 <small className="app-version">V16</small></h1></div>
       <div className="header-actions"><button className="ppt-export-button" onClick={() => { setPptExtraIds([]); setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button onClick={exportExcel}>匯出 Excel</button><label className="file-button">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button onClick={exportJson}>匯出 JSON</button><button className="key-tag" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button><span className="home-last-modified">最後修改: {latestModifiedAt ? displayHomeModifiedAt(latestModifiedAt) : "尚無紀錄"}</span></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -1825,7 +1825,7 @@ async function downloadColorWorkbook(record: RecordItem, personnel: Person[] = [
       B14: "臨路約:", F14: aboutMeter(record.road).replace(/^約/, "").replace(/^－/, "-"), I14: "座向:", M14: record.direction || "",
       B15: "面寬約:", F15: aboutMeter(record.frontage).replace(/^約/, "").replace(/^－/, "-"), I15: "使用分區:", M15: record.zoning || "",
       B16: "深度約:", F16: aboutMeter(record.depth).replace(/^約/, "").replace(/^－/, "-"), I16: "建蔽/容積:", M16: [record.coverage, record.far].filter(Boolean).join("/"),
-      B19: "市場:", F19: record.market || "", B20: "公園:", F20: record.park || "", B21: "學校:", F21: record.school || "",
+      B19: "市場:", F19: record.market || "", B20: "公園:", F20: record.park || "", B21: "學校:", F21: schoolSummary(record),
       B23: "一般增值稅:", F23: taxValue(record.generalLandValueTax || ""), B24: "自用增值稅:", F24: taxValue(record.selfUseLandValueTax || ""),
       C26: noteParts[0], C27: noteParts[1], C28: noteParts[2], C29: noteParts[3], B30: cleanNotes, P33: developerContact,
     } : {
@@ -1833,7 +1833,7 @@ async function downloadColorWorkbook(record: RecordItem, personnel: Person[] = [
       F15: pingValue(record.mainBuildingPing), M15: noParking ? "無車位" : record.parkingType || record.parking || "", F16: pingValue(record.auxiliaryBuildingPing), M16: noParking ? "" : record.parkingMethod || "", F17: pingValue(record.commonAreaPing), M17: noParking ? "" : record.parkingNo || "",
       F19: typeShort(record.type), M19: record.buildingName || "", F20: `${record.unitsPerFloor || ""}戶`, M20: `${record.elevatorCount || ""}部`, F21: record.managementMethod || "", M21: !cleanNumber(record.managementFee) || Number(cleanNumber(record.managementFee)) === 0 ? "-/月" : `${cleanNumber(record.managementFee)}/月`, F22: layoutForHouseWorkbook(record.layout || "", record.type),
       F23: record.titleFloor || floorParts[0] || "", M23: currentFloorValue(record.currentFloor || floorParts[1] || ""), F24: record.completionDate || record.builtYear || "", M24: `約${String(ageOf(record)).match(/(\d+(?:\.\d+)?)\s*年屋/)?.[1] || String(ageOf(record)).match(/(\d+(?:\.\d+)?)/)?.[1] || ""}年屋`, F25: record.direction || "", M25: record.currentState || "",
-      F27: aboutMeter(record.road), M27: [record.coverage, record.far].filter(Boolean).join("/"), F28: aboutMeter(record.frontage), M28: aboutMeter(record.depth), F29: record.market || "", F30: record.park || "", F31: record.school || "",
+      F27: aboutMeter(record.road), M27: [record.coverage, record.far].filter(Boolean).join("/"), F28: aboutMeter(record.frontage), M28: aboutMeter(record.depth), F29: record.market || "", F30: record.park || "", F31: schoolSummary(record),
       F33: taxValue(record.generalLandValueTax || ""), F34: taxValue(record.selfUseLandValueTax || ""), F35: "$- 依稅單為準", C37: noteParts[0], C38: noteParts[1], C39: noteParts[2], C40: noteParts[3], B41: cleanNotes, P44: developerContact,
     };
     const featureAddresses = isLand ? ["C26", "C27", "C28", "C29"] : ["C37", "C38", "C39", "C40"];

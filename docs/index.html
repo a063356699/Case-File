@@ -43258,7 +43258,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       !internalView && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { className: "topbar", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
           "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V15" })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V16" })
         ] }) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "ppt-export-button", onClick: () => {
@@ -44722,7 +44722,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
         B20: "\u516C\u5712:",
         F20: record.park || "",
         B21: "\u5B78\u6821:",
-        F21: record.school || "",
+        F21: schoolSummary(record),
         B23: "\u4E00\u822C\u589E\u503C\u7A05:",
         F23: taxValue(record.generalLandValueTax || ""),
         B24: "\u81EA\u7528\u589E\u503C\u7A05:",
@@ -44764,7 +44764,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
         M28: aboutMeter(record.depth),
         F29: record.market || "",
         F30: record.park || "",
-        F31: record.school || "",
+        F31: schoolSummary(record),
         F33: taxValue(record.generalLandValueTax || ""),
         F34: taxValue(record.selfUseLandValueTax || ""),
         F35: "$- \u4F9D\u7A05\u55AE\u70BA\u6E96",
