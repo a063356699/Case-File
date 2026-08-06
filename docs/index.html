@@ -1281,7 +1281,7 @@ body{background:#f8fbfe!important;color:#405064!important}
 }
 /* Visible release marker beside the home title. */
 .app-version{font-family:"Noto Sans TC","Microsoft JhengHei",sans-serif;font-size:11px;letter-spacing:0;color:var(--muted);font-weight:700;margin-left:7px;vertical-align:middle}
-.app-version{font-size:0!important}.app-version::after{content:"V21";font-size:11px;letter-spacing:0}
+.app-version{font-size:0!important}.app-version::after{content:"V22";font-size:11px;letter-spacing:0}
 .book-location-value b,.book-location-value small{font-weight:800!important}
 .developer-cell-value{min-width:3em}.developer-cell-value>span{white-space:nowrap}
 .compact-drafts .draft-card:not(.draft-columns){display:grid;grid-template-columns:minmax(0,1fr) 318px;gap:12px}.compact-drafts .draft-actions{width:318px;justify-content:flex-end}.compact-drafts .draft-actions button{white-space:nowrap}.draft-actions .draft-printed-recorded{background:#e5edf6!important;border-color:#a8bfd2!important;color:#345d7d!important;font-size:11px!important}
@@ -45772,7 +45772,8 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     const shortAddress = (areaMatch ? withoutCity.slice(area.length) : withoutCity).trim() || "\u672A\u586B\u5730\u5740";
     const caseName = intakeValue(draft.values, "\u6848\u540D").trim() || "\u672A\u547D\u540D\u6848\u4EF6";
     const developer = developerFullNameText(intakeValue(draft.values, "\u958B\u767C\uFF11/\u958B\u767C\uFF12").trim()) || "\u672A\u586B\u958B\u767C";
-    return `${area}\uFF0D${caseName}\uFF0D${shortAddress}\uFF0D${developer}`;
+    const fileNamePart = (text) => String(text).replace(/[\uFF01-\uFF5E]/g, (char) => String.fromCharCode(char.charCodeAt(0) - 65248)).replace(/\u3000/g, " ").replace(/[－–—]/g, "-");
+    return [area, caseName, shortAddress, developer].map(fileNamePart).join("-");
   };
   function IntakePanel({ raw, setRaw, drafts, draft, selectDraft, deleteDraft, analyze, addManualDraft, updateValue, clear, confirmIntake, markPrintedForSales }) {
     const [showEntered, setShowEntered] = (0, import_react.useState)(false);

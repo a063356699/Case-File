@@ -2553,7 +2553,9 @@ const intakeDraftEditorTitle = (draft: IntakeData) => {
   const shortAddress = (areaMatch ? withoutCity.slice(area.length) : withoutCity).trim() || "未填地址";
   const caseName = intakeValue(draft.values, "案名").trim() || "未命名案件";
   const developer = developerFullNameText(intakeValue(draft.values, "開發１/開發２").trim()) || "未填開發";
-  return `${area}－${caseName}－${shortAddress}－${developer}`;
+  // 草稿檔名的英數與符號一律半形，中文內容維持原樣。
+  const fileNamePart = (text: string) => String(text).replace(/[\uFF01-\uFF5E]/g, char => String.fromCharCode(char.charCodeAt(0) - 0xFEE0)).replace(/\u3000/g, " ").replace(/[－–—]/g, "-");
+  return [area, caseName, shortAddress, developer].map(fileNamePart).join("-");
 };
 
 function PreviousIntakePanel({ raw, setRaw, drafts, draft, selectDraft, deleteDraft, analyze, updateValue, clear, confirmIntake }: { raw: string; setRaw: (value: string) => void; drafts: IntakeData[]; draft: IntakeData | null; selectDraft: (id: string) => void; deleteDraft: (id: string) => void; analyze: () => void; updateValue: (key: string, value: string) => void; clear: () => void; confirmIntake: (id?: string) => void }) {
