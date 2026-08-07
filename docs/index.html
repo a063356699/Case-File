@@ -42224,6 +42224,7 @@ ${String(ex)}`);
     const [archiveCleanupReminderOpen, setArchiveCleanupReminderOpen] = (0, import_react.useState)(false);
     const [dealCompletionReminderOpen, setDealCompletionReminderOpen] = (0, import_react.useState)(false);
     const [printEditor, setPrintEditor] = (0, import_react.useState)(null);
+    const [colorWorkbookDownloading, setColorWorkbookDownloading] = (0, import_react.useState)(false);
     const [restoreChoiceRecord, setRestoreChoiceRecord] = (0, import_react.useState)(null);
     const [archiveChoice, setArchiveChoice] = (0, import_react.useState)(null);
     const [publicUnlocked, setPublicUnlocked] = (0, import_react.useState)(false);
@@ -43601,7 +43602,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       !internalView && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { className: "topbar", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
           "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V82" })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V83" })
         ] }) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "ppt-export-button", onClick: () => {
@@ -44135,7 +44136,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
               }, children: editing.colorSheetIssue ? "\u5F69\u8272\u8868 Excel \u25CF" : "\u5F69\u8272\u8868 Excel" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "record-print-button cover", type: "button", onClick: () => printRecordDocument(editing, "cover"), children: "\u5217\u5370\u65B0\u9032\u5C01\u9762" })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "close", onClick: requestCloseEditing, children: "\xD7" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "close", type: "button", onClick: requestCloseEditing, children: "\xD7" })
           ] })
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "form-grid record-edit-grid", children: recordEditOrder.filter((key) => key !== "area").map((key) => {
@@ -44176,7 +44177,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u5F69\u8272\u92B7\u552E\u8CC7\u6599\u8868" }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", { children: "\u4E0B\u8F09\u5F69\u8272\u8868 Excel" })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "close", onClick: () => setPrintEditor(null), children: "\xD7" })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "close", type: "button", onClick: () => setPrintEditor(null), children: "\xD7" })
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "print-editor-body compact-body", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("section", { className: "print-editor-section basic", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "print-editor-compact-grid", children: [
           [["developer", "\u958B\u767C\u4EBA\u54E1"], ["price", "\u7E3D\u50F9\uFF08\u842C\uFF09"], ["key", "KEY\u7DE8\u865F"], ["currentState", "\u73FE\u6CC1"], ["caseName", "\u6848\u540D"], ["address", "\u5730\u5740"]].map(([key, label]) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: `field print-editor-${key}`, children: [
@@ -44197,18 +44198,24 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
         ] }) }) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal-foot print-editor-foot", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "print-editor-warning", children: "\u91CD\u9EDE\u8AAA\u660E\u8207\u5099\u8A3B\u53EA\u5957\u7528\u672C\u6B21\u4E0B\u8F09\uFF1B\u7F3A\u4EF6\u7D00\u9304\u53EF\u53E6\u5916\u5132\u5B58\u5230\u6848\u4EF6\u3002" }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => setPrintEditor(null), children: "\u53D6\u6D88" }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => saveColorSheetIssue(printEditor.data), children: "\u5132\u5B58\u7F3A\u4EF6\u7D00\u9304" }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "primary", onClick: async () => {
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", onClick: () => setPrintEditor(null), children: "\u53D6\u6D88" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", onClick: () => saveColorSheetIssue(printEditor.data), children: "\u5132\u5B58\u7F3A\u4EF6\u7D00\u9304" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "primary", type: "button", disabled: colorWorkbookDownloading, onClick: async () => {
+            setColorWorkbookDownloading(true);
+            flash("\u6B63\u5728\u5EFA\u7ACB\u5F69\u8272\u8868 Excel\u2026");
             try {
               await downloadColorWorkbook(printEditor.data, settings.personnel);
               setPrintEditor(null);
               flash("\u5F69\u8272\u8868 Excel \u5DF2\u4E0B\u8F09");
             } catch (error) {
               console.error(error);
-              flash("\u5F69\u8272\u8868 Excel \u4E0B\u8F09\u5931\u6557\uFF0C\u8ACB\u586B\u5BEB\u7F3A\u4EF6\uFF0F\u539F\u56E0\u7D00\u9304");
+              const reason = error instanceof Error ? error.message : String(error || "\u672A\u77E5\u932F\u8AA4");
+              alert(`\u5F69\u8272\u8868 Excel \u4E0B\u8F09\u5931\u6557\uFF1A${reason}`);
+              flash("\u5F69\u8272\u8868 Excel \u4E0B\u8F09\u5931\u6557");
+            } finally {
+              setColorWorkbookDownloading(false);
             }
-          }, children: "\u4E0B\u8F09 Excel" })
+          }, children: colorWorkbookDownloading ? "\u5EFA\u7ACB\u4E2D\u2026" : "\u4E0B\u8F09 Excel" })
         ] })
       ] }) }),
       pptPickerOpen && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "modal-backdrop", onMouseDown: (event) => event.target === event.currentTarget && setPptPickerOpen(false), children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal ppt-picker-modal", children: [
