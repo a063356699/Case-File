@@ -906,6 +906,7 @@ button:hover,.file-button:hover{border-color:#9fbad0;box-shadow:0 2px 8px #7895a
 .active-lead-table{max-height:calc(100vh - 155px)!important}.active-lead-table th{height:38px!important;padding:5px 6px!important}.active-lead-table td,.active-lead-table td.col-caseName{height:26px!important;max-height:26px!important;padding:3px 6px!important;line-height:1.1!important;vertical-align:middle!important}.active-lead-table td.col-caseName{overflow:hidden!important}.active-lead-table td.col-caseName .case-link,.active-lead-table td.col-caseName .case-link span,.active-lead-table .case-name-line{display:block!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;line-height:1.1!important}.active-lead-table td.col-caseName .restore-case-annotation{display:none!important}.active-lead-table .two-line-value{display:block!important;line-height:1.1!important}.active-lead-table .two-line-value>*:not(:first-child){display:none!important}.active-lead-table .area-group-row td{height:22px!important;max-height:22px!important;padding:3px 7px!important;line-height:1!important}
 .active-lead-table td.col-price .two-line-value{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important}.active-lead-table td.col-price .two-line-value>.price-reduction{display:block!important;color:#ff0000!important;font-size:12px!important;font-weight:900!important;margin-top:1px!important}.active-lead-table tr:has(td.col-price .price-reduction) td{height:38px!important;max-height:38px!important}
 .list-title-search{display:flex;align-items:center;gap:16px;min-width:0}.list-title-search .section-title{flex:0 0 auto}.list-title-search .search{margin-top:0}@media(max-width:800px){.list-title-search{width:100%;flex-wrap:wrap;gap:9px}.list-title-search .search{width:100%}}
+.ppt-order-float{position:fixed;z-index:1200;right:24px;bottom:24px;width:min(340px,calc(100vw - 36px));max-height:55vh;overflow:auto;padding:12px;border:1px solid #a8c7b9;border-radius:12px;background:#fff;box-shadow:0 12px 32px #0003}.ppt-order-float>b,.ppt-order-float>small{display:block}.ppt-order-float>b{color:#176044;font-size:16px}.ppt-order-float>small{margin-top:2px;color:#697972;font-size:11px}.ppt-order-float ol{margin:8px 0 0;padding:0;list-style:none}.ppt-order-float li{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0;border-top:1px solid #e2ebe6;font-size:12px}.ppt-order-float li span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ppt-order-float li div{display:flex;gap:4px}.ppt-order-float button{min-width:28px;padding:3px 7px;font-weight:800}.ppt-order-float button:disabled{opacity:.35}
 .active-lead-table th.col-caseName,.active-lead-table td.col-caseName{text-align:center!important}.active-lead-table td.col-caseName .case-link{display:block!important;width:100%!important;max-width:100%!important;margin:0 auto!important;text-align:center!important}.active-lead-table td.col-caseName .case-link span,.active-lead-table td.col-caseName .case-name-line{display:block!important;width:100%!important;text-align:center!important}
 .active-lead-table th.col-reportDate,.active-lead-table td.col-reportDate,.active-lead-table th.col-updateDate,.active-lead-table td.col-updateDate{width:92px!important;min-width:92px!important;max-width:92px!important}
 .active-lead-table td.col-road,.active-lead-table td.col-frontage,.active-lead-table td.col-depth{height:40px!important;max-height:none!important}.active-lead-table td.col-road .road-lines,.active-lead-table td.col-frontage .measure-value,.active-lead-table td.col-depth .measure-value{display:flex!important;flex-direction:column!important;align-items:center!important;line-height:1.05!important}.active-lead-table td.col-road small,.active-lead-table td.col-frontage .measure-value small,.active-lead-table td.col-depth .measure-value small{display:block!important;font-size:10px!important;font-weight:400!important;color:#66736d!important;margin-top:2px!important}.active-lead-table .measure-number{display:block!important;color:#111!important;font-weight:400!important;margin:0!important}
@@ -42244,6 +42245,7 @@ ${String(ex)}`);
     const [pptConfirmedSnapshots, setPptConfirmedSnapshots] = (0, import_react.useState)({});
     const [pptShowExtras, setPptShowExtras] = (0, import_react.useState)(false);
     const [pptExtraIds, setPptExtraIds] = (0, import_react.useState)([]);
+    const [pptOrderIds, setPptOrderIds] = (0, import_react.useState)([]);
     const [pptWeekStart, setPptWeekStart] = (0, import_react.useState)(currentPptWeek().start);
     const [pptWeekMenuOpen, setPptWeekMenuOpen] = (0, import_react.useState)(false);
     const [pptCustomStart, setPptCustomStart] = (0, import_react.useState)("");
@@ -42269,11 +42271,13 @@ ${String(ex)}`);
         const saved = JSON.parse(localStorage.getItem(PPT_WEEK_SELECTIONS_KEY) || "{}")[pptWeekStart] || {};
         pptWeekLoadedRef.current = pptWeekStart;
         setPptExtraIds(Array.isArray(saved.extraIds) ? saved.extraIds : []);
+        setPptOrderIds(Array.isArray(saved.orderIds) ? saved.orderIds : []);
         setPptAdHocRecords(Array.isArray(saved.adHocRecords) ? saved.adHocRecords : []);
         setPptConfirmedSnapshots(saved.confirmedSnapshots && typeof saved.confirmedSnapshots === "object" ? saved.confirmedSnapshots : {});
       } catch {
         pptWeekLoadedRef.current = pptWeekStart;
         setPptExtraIds([]);
+        setPptOrderIds([]);
         setPptAdHocRecords([]);
         setPptConfirmedSnapshots({});
       }
@@ -42282,11 +42286,11 @@ ${String(ex)}`);
       if (!storageReady || pptWeekLoadedRef.current !== pptWeekStart) return;
       try {
         const all = JSON.parse(localStorage.getItem(PPT_WEEK_SELECTIONS_KEY) || "{}");
-        all[pptWeekStart] = { extraIds: pptExtraIds, adHocRecords: pptAdHocRecords, confirmedSnapshots: pptConfirmedSnapshots };
+        all[pptWeekStart] = { extraIds: pptExtraIds, orderIds: pptOrderIds, adHocRecords: pptAdHocRecords, confirmedSnapshots: pptConfirmedSnapshots };
         localStorage.setItem(PPT_WEEK_SELECTIONS_KEY, JSON.stringify(all));
       } catch {
       }
-    }, [storageReady, pptWeekStart, pptExtraIds, pptAdHocRecords, pptConfirmedSnapshots]);
+    }, [storageReady, pptWeekStart, pptExtraIds, pptOrderIds, pptAdHocRecords, pptConfirmedSnapshots]);
     const [tourItems, setTourItems] = (0, import_react.useState)([]);
     const [tourDate, setTourDate] = (0, import_react.useState)(today());
     const [tourTitle, setTourTitle] = (0, import_react.useState)(`${displayRocDate(today()).replace(/\//g, ".")}\u5718\u770B`);
@@ -42671,12 +42675,23 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
     const deferredPptRecords = sortPptRecords(records.filter((record) => belongsToPptWeek(record, selectedPptWeek) && excludedFromPptWeek(record, selectedPptWeek.start)));
     const pptDraftRecords = intakeDrafts.filter((draft) => !draft.linkedRecordId).map((draft) => ({ ...intakeToRecord(draft), id: `ppt-draft-${draft.id}`, reportDate: "", status: "\u5C1A\u672A\u9032\u6848", _intakeDraftId: draft.id, _notEntered: "1" }));
     const pptExtraCandidates = [...records.filter((record) => !belongsToPptWeek(record, selectedPptWeek)), ...pptDraftRecords].filter((record) => [record.caseName, record.address].join(" ").toLowerCase().includes(pptExtraSearch.trim().toLowerCase()));
-    const selectedPptBaseRecords = sortPptRecords([...records.filter((record) => weeklyPptRecords.some((item) => item.id === record.id) || pptExtraIds.includes(record.id)), ...pptDraftRecords.filter((record) => pptExtraIds.includes(record.id)), ...pptAdHocRecords]);
+    const selectedPptBaseRecords = (() => {
+      const standard = sortPptRecords([...records.filter((record) => weeklyPptRecords.some((item) => item.id === record.id) || pptExtraIds.includes(record.id)), ...pptDraftRecords.filter((record) => pptExtraIds.includes(record.id)), ...pptAdHocRecords]);
+      const position = new Map(pptOrderIds.map((id, index) => [id, index]));
+      return standard.slice().sort((a, b) => (position.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (position.get(b.id) ?? Number.MAX_SAFE_INTEGER));
+    })();
     const selectedPptRecords = selectedPptBaseRecords.map((record) => pptConfirmedSnapshots[record.id] || record);
     const pendingPptConfirmCount = selectedPptBaseRecords.filter((record) => !pptConfirmedSnapshots[record.id]).length;
     const flash = (text) => {
       setNotice(text);
       setTimeout(() => setNotice(""), 2600);
+    };
+    const movePptOrder = (id, direction) => {
+      const ids = selectedPptBaseRecords.map((record) => record.id);
+      const index = ids.indexOf(id), target = index + direction;
+      if (index < 0 || target < 0 || target >= ids.length) return;
+      [ids[index], ids[target]] = [ids[target], ids[index]];
+      setPptOrderIds(ids);
     };
     const removeFromPptWeek = (record) => setRecords((previous) => previous.map((item) => {
       if (item.id !== record.id) return item;
@@ -43586,7 +43601,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       !internalView && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { className: "topbar", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
           "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V81" })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V82" })
         ] }) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "ppt-export-button", onClick: () => {
@@ -43644,6 +43659,21 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       !internalView && tab === "active" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PropertyBookReview, { records, settings, submit: submitBookReviews, openRecord: setEditing }),
       !internalView && tab === "active" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(BusinessReportInbox, { records: active, resolve: resolveMonthlyPropertyReport, archive: (record, status) => setArchiveChoice({ record, status, date: today() }) }),
       showingPublic && publicUnlocked && publicScope === "mine" && publicPerson && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(MonthlyPropertyReport, { records: myProperties, person: publicPerson, submit: submitMonthlyPropertyReport }),
+      pptPickerOpen && selectedPptBaseRecords.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("aside", { className: "ppt-order-float", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u8ABF\u6574\u672C\u6B21\u6392\u5E8F" }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "\u6B64\u9806\u5E8F\u6703\u4FDD\u7559\u5728\u672C\u9031" }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("ol", { children: selectedPptBaseRecords.map((record, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("li", { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+            index + 1,
+            ". ",
+            record.caseName || "\u672A\u547D\u540D\u6848\u4EF6"
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", disabled: index === 0, onClick: () => movePptOrder(record.id, -1), children: "\u2191" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", disabled: index === selectedPptBaseRecords.length - 1, onClick: () => movePptOrder(record.id, 1), children: "\u2193" })
+          ] })
+        ] }, record.id)) })
+      ] }),
       tab === "settings" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SettingsPanel, { settings, setSettings, supabasePush, supabasePull, cloudSession, supabaseSignIn, supabaseSignOut }) : tab === "intake" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(IntakePanel, { raw: intakeRaw, setRaw: setIntakeRaw, drafts: intakeDrafts, draft: intakeDraft, selectDraft: selectIntakeDraft, deleteDraft: removeIntakeDraft, analyze: analyzeIntake, addManualDraft: addManualIntakeDraft, updateValue: updateIntakeValue, clear: () => setIntakeRaw(""), confirmIntake, markPrintedForSales: markIntakeDraftPrintedForSales }) : tab === "tour" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TourPlanner, { records, drafts: intakeDrafts, items: tourItems, setItems: setTourItems, editRecord: setEditing, updateDraftCaseName: updateIntakeDraftCaseName, tourDate, setTourDate, tourTitle, setTourTitle, notify: flash, complete: (date, recordIds, draftIds) => {
         setRecords((previous) => previous.map((record) => recordIds.includes(record.id) ? withTrackedUpdate(record, { ...record, groupViewDate: date, updateDate: today() }) : record));
         setIntakeDrafts((previous) => previous.map((draft) => draftIds.includes(draft.id) ? { ...draft, groupViewDate: date } : draft));

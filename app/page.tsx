@@ -709,6 +709,7 @@ export default function Home() {
   const [pptConfirmedSnapshots, setPptConfirmedSnapshots] = useState<Record<string, RecordItem>>({});
   const [pptShowExtras, setPptShowExtras] = useState(false);
   const [pptExtraIds, setPptExtraIds] = useState<string[]>([]);
+  const [pptOrderIds, setPptOrderIds] = useState<string[]>([]);
   const [pptWeekStart, setPptWeekStart] = useState(currentPptWeek().start);
   const [pptWeekMenuOpen, setPptWeekMenuOpen] = useState(false);
   const [pptCustomStart, setPptCustomStart] = useState("");
@@ -722,21 +723,22 @@ export default function Home() {
       const saved = JSON.parse(localStorage.getItem(PPT_WEEK_SELECTIONS_KEY) || "{}")[pptWeekStart] || {};
       pptWeekLoadedRef.current = pptWeekStart;
       setPptExtraIds(Array.isArray(saved.extraIds) ? saved.extraIds : []);
+      setPptOrderIds(Array.isArray(saved.orderIds) ? saved.orderIds : []);
       setPptAdHocRecords(Array.isArray(saved.adHocRecords) ? saved.adHocRecords : []);
       setPptConfirmedSnapshots(saved.confirmedSnapshots && typeof saved.confirmedSnapshots === "object" ? saved.confirmedSnapshots : {});
     } catch {
       pptWeekLoadedRef.current = pptWeekStart;
-      setPptExtraIds([]); setPptAdHocRecords([]); setPptConfirmedSnapshots({});
+      setPptExtraIds([]); setPptOrderIds([]); setPptAdHocRecords([]); setPptConfirmedSnapshots({});
     }
   }, [pptWeekStart]);
   useEffect(() => {
     if (!storageReady || pptWeekLoadedRef.current !== pptWeekStart) return;
     try {
       const all = JSON.parse(localStorage.getItem(PPT_WEEK_SELECTIONS_KEY) || "{}");
-      all[pptWeekStart] = { extraIds: pptExtraIds, adHocRecords: pptAdHocRecords, confirmedSnapshots: pptConfirmedSnapshots };
+      all[pptWeekStart] = { extraIds: pptExtraIds, orderIds: pptOrderIds, adHocRecords: pptAdHocRecords, confirmedSnapshots: pptConfirmedSnapshots };
       localStorage.setItem(PPT_WEEK_SELECTIONS_KEY, JSON.stringify(all));
     } catch {}
-  }, [storageReady, pptWeekStart, pptExtraIds, pptAdHocRecords, pptConfirmedSnapshots]);
+  }, [storageReady, pptWeekStart, pptExtraIds, pptOrderIds, pptAdHocRecords, pptConfirmedSnapshots]);
   const [tourItems, setTourItems] = useState<TourItem[]>([]);
   const [tourDate, setTourDate] = useState(today());
   const [tourTitle, setTourTitle] = useState(`${displayRocDate(today()).replace(/\//g, ".")}團看`);
@@ -1014,11 +1016,22 @@ export default function Home() {
   const deferredPptRecords = sortPptRecords(records.filter(record => belongsToPptWeek(record, selectedPptWeek) && excludedFromPptWeek(record, selectedPptWeek.start)));
   const pptDraftRecords = intakeDrafts.filter(draft => !draft.linkedRecordId).map(draft => ({ ...intakeToRecord(draft), id: `ppt-draft-${draft.id}`, reportDate: "", status: "尚未進案", _intakeDraftId: draft.id, _notEntered: "1" }));
   const pptExtraCandidates = [...records.filter(record => !belongsToPptWeek(record, selectedPptWeek)), ...pptDraftRecords].filter(record => [record.caseName, record.address].join(" ").toLowerCase().includes(pptExtraSearch.trim().toLowerCase()));
-  const selectedPptBaseRecords = sortPptRecords([...records.filter(record => weeklyPptRecords.some(item => item.id === record.id) || pptExtraIds.includes(record.id)), ...pptDraftRecords.filter(record => pptExtraIds.includes(record.id)), ...pptAdHocRecords]);
+  const selectedPptBaseRecords = (() => {
+    const standard = sortPptRecords([...records.filter(record => weeklyPptRecords.some(item => item.id === record.id) || pptExtraIds.includes(record.id)), ...pptDraftRecords.filter(record => pptExtraIds.includes(record.id)), ...pptAdHocRecords]);
+    const position = new Map(pptOrderIds.map((id, index) => [id, index]));
+    return standard.slice().sort((a, b) => (position.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (position.get(b.id) ?? Number.MAX_SAFE_INTEGER));
+  })();
   const selectedPptRecords = selectedPptBaseRecords.map(record => pptConfirmedSnapshots[record.id] || record);
   const pendingPptConfirmCount = selectedPptBaseRecords.filter(record => !pptConfirmedSnapshots[record.id]).length;
 
   const flash = (text: string) => { setNotice(text); setTimeout(() => setNotice(""), 2600); };
+  const movePptOrder = (id: string, direction: -1 | 1) => {
+    const ids = selectedPptBaseRecords.map(record => record.id);
+    const index = ids.indexOf(id), target = index + direction;
+    if (index < 0 || target < 0 || target >= ids.length) return;
+    [ids[index], ids[target]] = [ids[target], ids[index]];
+    setPptOrderIds(ids);
+  };
   const removeFromPptWeek = (record: RecordItem) => setRecords(previous => previous.map(item => {
     if (item.id !== record.id) return item;
     const excluded = [...new Set([...pptStoredList(item._pptExcludedWeeks), selectedPptWeek.start])];
@@ -1585,7 +1598,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="brand"><h1>總表　管理模式 <small className="app-version">V81</small></h1></div>
+      <div className="brand"><h1>總表　管理模式 <small className="app-version">V82</small></h1></div>
       <div className="header-actions"><button className="ppt-export-button" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button onClick={exportExcel}>匯出 Excel</button><label className="file-button">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button onClick={exportJson}>匯出 JSON</button><button className="key-tag" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button><span className="home-last-modified">最後修改: {latestModifiedAt ? displayHomeModifiedAt(latestModifiedAt) : "尚無紀錄"}</span></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -1603,6 +1616,7 @@ export default function Home() {
     {!internalView && tab === "active" && <PropertyBookReview records={records} settings={settings} submit={submitBookReviews} openRecord={setEditing}/>}
     {!internalView && tab === "active" && <BusinessReportInbox records={active} resolve={resolveMonthlyPropertyReport} archive={(record, status) => setArchiveChoice({ record, status, date: today() })}/>}
     {showingPublic && publicUnlocked && publicScope === "mine" && publicPerson && <MonthlyPropertyReport records={myProperties} person={publicPerson} submit={submitMonthlyPropertyReport}/>}
+    {pptPickerOpen && selectedPptBaseRecords.length > 0 && <aside className="ppt-order-float"><b>調整本次排序</b><small>此順序會保留在本週</small><ol>{selectedPptBaseRecords.map((record, index) => <li key={record.id}><span>{index + 1}. {record.caseName || "未命名案件"}</span><div><button type="button" disabled={index === 0} onClick={() => movePptOrder(record.id, -1)}>↑</button><button type="button" disabled={index === selectedPptBaseRecords.length - 1} onClick={() => movePptOrder(record.id, 1)}>↓</button></div></li>)}</ol></aside>}
 
     {tab === "settings" ? <SettingsPanel settings={settings} setSettings={setSettings} supabasePush={supabasePush} supabasePull={supabasePull} cloudSession={cloudSession} supabaseSignIn={supabaseSignIn} supabaseSignOut={supabaseSignOut} /> :
     tab === "intake" ? <IntakePanel raw={intakeRaw} setRaw={setIntakeRaw} drafts={intakeDrafts} draft={intakeDraft} selectDraft={selectIntakeDraft} deleteDraft={removeIntakeDraft} analyze={analyzeIntake} addManualDraft={addManualIntakeDraft} updateValue={updateIntakeValue} clear={() => setIntakeRaw("")} confirmIntake={confirmIntake} markPrintedForSales={markIntakeDraftPrintedForSales} /> :
