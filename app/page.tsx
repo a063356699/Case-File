@@ -867,6 +867,25 @@ export default function Home() {
     }));
     localStorage.setItem(cleanupKey, "1");
   }, [records.length]);
+  useEffect(() => {
+    // V74 上線前已存在的當日紀錄曾把多次更新合併；依已確認內容修正一次。
+    const cleanupKey = "property-desk-daily-single-update-v74";
+    if (localStorage.getItem(cleanupKey) === "1") return;
+    const date = today();
+    setRecords(previous => previous.map(record => {
+      const history = recordUpdateHistory(record);
+      if (!history[date]) return record;
+      if (String(record.caseName || "").includes("新市真祥家3輕齡四套房車墅")) {
+        return { ...record, _updateHistory: JSON.stringify({ ...history, [date]: ["price"] }) };
+      }
+      if (String(record._restoredAt || "").slice(0, 10) === date) {
+        const { [date]: _removed, ...rest } = history;
+        return { ...record, _updateHistory: JSON.stringify(rest) };
+      }
+      return record;
+    }));
+    localStorage.setItem(cleanupKey, "1");
+  }, [records.length]);
   useEffect(() => { if (records.length) localStorage.setItem(STORAGE_KEY, JSON.stringify(records)); }, [records]);
   useEffect(() => {
     const syncAcrossTabs = (event: StorageEvent) => {
@@ -1030,7 +1049,13 @@ export default function Home() {
       caseNameNote: String(prepared.caseNameNote || "").includes(reopenNote) ? prepared.caseNameNote : [prepared.caseNameNote, reopenNote].filter(Boolean).join("　"),
       caseNameNoteModifiedAt: new Date().toISOString(),
     } : prepared;
-    const next = existing ? (_materialEditAt || autoReopen ? withTrackedUpdate(existing, preparedForSave) : { ...preparedForSave, updateDate: existing.updateDate, lastModifiedAt: existing.lastModifiedAt, _updateHistory: existing._updateHistory }) : preparedForSave;
+    let next = existing ? (_materialEditAt || autoReopen ? withTrackedUpdate(existing, preparedForSave) : { ...preparedForSave, updateDate: existing.updateDate, lastModifiedAt: existing.lastModifiedAt, _updateHistory: existing._updateHistory }) : preparedForSave;
+    // 重新上架本身在每日動態只顯示「月/日重新上架」，不另列為「更新：案名」。
+    if (autoReopen) {
+      const history = recordUpdateHistory(next);
+      if (history[today()]) history[today()] = history[today()].filter(key => key !== "caseNameNote" && key !== "caseNameNoteModifiedAt");
+      next = { ...next, _updateHistory: JSON.stringify(history) };
+    }
     setRecords(prev => prev.some(r => r.id === next.id) ? prev.map(r => r.id === next.id ? next : r) : [next, ...prev]);
     setIntakeDrafts(previous => previous.map(draft => draft.linkedRecordId === next.id ? { ...draft, values: syncRecordToDraftValues(draft, next) } : draft));
     setEditing(null); flash(autoReopen ? "已重新上架，並記錄在案名後方備註" : "物件已儲存");
@@ -1522,7 +1547,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="brand"><h1>總表　管理模式 <small className="app-version">V73</small></h1></div>
+      <div className="brand"><h1>總表　管理模式 <small className="app-version">V74</small></h1></div>
       <div className="header-actions"><button className="ppt-export-button" onClick={() => { setPptExtraIds([]); setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button onClick={exportExcel}>匯出 Excel</button><label className="file-button">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button onClick={exportJson}>匯出 JSON</button><button className="key-tag" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button><span className="home-last-modified">最後修改: {latestModifiedAt ? displayHomeModifiedAt(latestModifiedAt) : "尚無紀錄"}</span></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -2605,7 +2630,7 @@ function DailyActivity({ records, compact = false, onEdit }: { records: RecordIt
   const dateOnly = (value = "") => value.slice(0, 10);
   const yesterday = (() => { const date = new Date(`${today()}T12:00:00`); date.setDate(date.getDate() - 1); return date.toISOString().slice(0, 10); })();
   const rocDay = displayRocDate(selectedDate);
-  const updateRecords = records.filter(record => !record.archived && !isExpired(record) && record.status === "委託中" && (dailyUpdateFields(record, selectedDate).length > 0 || dateOnly(record._restoredAt) === selectedDate)).map(record => { const changed = dailyUpdateFields(record, selectedDate); return { ...record, caseNameNote: changed.length ? `更新：${dailyChangedLabels(changed).join("、")}` : "", _dailyHighlight: JSON.stringify(changed), ...(dateOnly(record._restoredAt) === selectedDate ? { _dailyAnnotation: `${rocDay}重新上架`, _dailyAnnotationType: "restored" } : {}) }; });
+  const updateRecords = records.filter(record => !record.archived && !isExpired(record) && record.status === "委託中" && (dailyUpdateFields(record, selectedDate).length > 0 || dateOnly(record._restoredAt) === selectedDate)).map(record => { const changed = dailyUpdateFields(record, selectedDate); return { ...record, caseNameNote: changed.length ? `更新：${dailyChangedLabels(changed).join("、")}` : "", _dailyHighlight: JSON.stringify(changed), ...(dateOnly(record._restoredAt) === selectedDate ? { _dailyAnnotation: `${shortRocMonthDay(selectedDate)}重新上架`, _dailyAnnotationType: "restored" } : {}) }; });
   const removedRecords = records.filter(record => !!record.archived && dateOnly(record._archiveActionDate || record.archived) === selectedDate).map(record => ({ ...record, _dailyAnnotation: `${displayRocDate(record.archived)}${record.status || "下架"}` }));
   const groups = [
     { key: "added", title: "新增物件", records: records.filter(record => dateOnly(record.reportDate) === selectedDate) },

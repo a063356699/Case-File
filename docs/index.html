@@ -42485,6 +42485,24 @@ ${String(ex)}`);
       localStorage.setItem(cleanupKey, "1");
     }, [records.length]);
     (0, import_react.useEffect)(() => {
+      const cleanupKey = "property-desk-daily-single-update-v74";
+      if (localStorage.getItem(cleanupKey) === "1") return;
+      const date = today();
+      setRecords((previous) => previous.map((record) => {
+        const history = recordUpdateHistory(record);
+        if (!history[date]) return record;
+        if (String(record.caseName || "").includes("\u65B0\u5E02\u771F\u7965\u5BB63\u8F15\u9F61\u56DB\u5957\u623F\u8ECA\u5885")) {
+          return { ...record, _updateHistory: JSON.stringify({ ...history, [date]: ["price"] }) };
+        }
+        if (String(record._restoredAt || "").slice(0, 10) === date) {
+          const { [date]: _removed, ...rest } = history;
+          return { ...record, _updateHistory: JSON.stringify(rest) };
+        }
+        return record;
+      }));
+      localStorage.setItem(cleanupKey, "1");
+    }, [records.length]);
+    (0, import_react.useEffect)(() => {
       if (records.length) localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
     }, [records]);
     (0, import_react.useEffect)(() => {
@@ -42703,7 +42721,12 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
         caseNameNote: String(prepared.caseNameNote || "").includes(reopenNote) ? prepared.caseNameNote : [prepared.caseNameNote, reopenNote].filter(Boolean).join("\u3000"),
         caseNameNoteModifiedAt: (/* @__PURE__ */ new Date()).toISOString()
       } : prepared;
-      const next = existing ? _materialEditAt || autoReopen ? withTrackedUpdate(existing, preparedForSave) : { ...preparedForSave, updateDate: existing.updateDate, lastModifiedAt: existing.lastModifiedAt, _updateHistory: existing._updateHistory } : preparedForSave;
+      let next = existing ? _materialEditAt || autoReopen ? withTrackedUpdate(existing, preparedForSave) : { ...preparedForSave, updateDate: existing.updateDate, lastModifiedAt: existing.lastModifiedAt, _updateHistory: existing._updateHistory } : preparedForSave;
+      if (autoReopen) {
+        const history = recordUpdateHistory(next);
+        if (history[today()]) history[today()] = history[today()].filter((key) => key !== "caseNameNote" && key !== "caseNameNoteModifiedAt");
+        next = { ...next, _updateHistory: JSON.stringify(history) };
+      }
       setRecords((prev) => prev.some((r) => r.id === next.id) ? prev.map((r) => r.id === next.id ? next : r) : [next, ...prev]);
       setIntakeDrafts((previous) => previous.map((draft) => draft.linkedRecordId === next.id ? { ...draft, values: syncRecordToDraftValues(draft, next) } : draft));
       setEditing(null);
@@ -43526,7 +43549,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       !internalView && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { className: "topbar", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
           "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V73" })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V74" })
         ] }) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "ppt-export-button", onClick: () => {
@@ -46099,7 +46122,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     const rocDay = displayRocDate(selectedDate);
     const updateRecords = records.filter((record) => !record.archived && !isExpired(record) && record.status === "\u59D4\u8A17\u4E2D" && (dailyUpdateFields(record, selectedDate).length > 0 || dateOnly(record._restoredAt) === selectedDate)).map((record) => {
       const changed = dailyUpdateFields(record, selectedDate);
-      return { ...record, caseNameNote: changed.length ? `\u66F4\u65B0\uFF1A${dailyChangedLabels(changed).join("\u3001")}` : "", _dailyHighlight: JSON.stringify(changed), ...dateOnly(record._restoredAt) === selectedDate ? { _dailyAnnotation: `${rocDay}\u91CD\u65B0\u4E0A\u67B6`, _dailyAnnotationType: "restored" } : {} };
+      return { ...record, caseNameNote: changed.length ? `\u66F4\u65B0\uFF1A${dailyChangedLabels(changed).join("\u3001")}` : "", _dailyHighlight: JSON.stringify(changed), ...dateOnly(record._restoredAt) === selectedDate ? { _dailyAnnotation: `${shortRocMonthDay(selectedDate)}\u91CD\u65B0\u4E0A\u67B6`, _dailyAnnotationType: "restored" } : {} };
     });
     const removedRecords = records.filter((record) => !!record.archived && dateOnly(record._archiveActionDate || record.archived) === selectedDate).map((record) => ({ ...record, _dailyAnnotation: `${displayRocDate(record.archived)}${record.status || "\u4E0B\u67B6"}` }));
     const groups = [
