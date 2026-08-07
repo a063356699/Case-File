@@ -42804,6 +42804,27 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       setEditing(null);
       flash(autoReopen ? "\u5DF2\u91CD\u65B0\u4E0A\u67B6\uFF0C\u4E26\u8A18\u9304\u5728\u6848\u540D\u5F8C\u65B9\u5099\u8A3B" : "\u7269\u4EF6\u5DF2\u5132\u5B58");
     };
+    const temporarilySaveRecord = () => {
+      if (!editing) return;
+      const savedAt = (/* @__PURE__ */ new Date()).toISOString();
+      const next = normalizeRecordPings(clearImportedLandLabels({
+        ...editing,
+        developer: developerFullNameText(editing.developer || "", settings.personnel) || editing.developer,
+        ...Object.fromEntries([...dateKeys].map((key) => [key, normalizeDateInput(editing[key] || "")])),
+        completionDate: normalizeDateInput(editing.completionDate || ""),
+        lastModifiedAt: savedAt
+      }));
+      if (next._intakeDraftId) {
+        setIntakeDrafts((previous) => previous.map((draft) => draft.id === next._intakeDraftId ? { ...draft, values: syncRecordToDraftValues(draft, next), propertyKind: next.type.includes("\u571F\u5730") ? "\u571F\u5730" : "\u623F\u5C4B" } : draft));
+        setTourItems((previous) => previous.map((item) => item.data._intakeDraftId === next._intakeDraftId ? { ...item, data: { ...item.data, ...next } } : item));
+      } else {
+        setRecords((previous) => previous.some((record) => record.id === next.id) ? previous.map((record) => record.id === next.id ? { ...record, ...next } : record) : [next, ...previous]);
+        setIntakeDrafts((previous) => previous.map((draft) => draft.linkedRecordId === next.id ? { ...draft, values: syncRecordToDraftValues(draft, next) } : draft));
+      }
+      editingInitialRef.current = JSON.stringify(next);
+      setEditing(next);
+      flash("\u5DF2\u66AB\u5B58\uFF0C\u53EF\u7E7C\u7E8C\u586B\u5BEB");
+    };
     const saveColorSheetIssue = (data) => {
       const existing = records.find((record) => record.id === data.id);
       if (!existing) return flash("\u6B64\u6848\u4EF6\u5C1A\u672A\u6B63\u5F0F\u9032\u6848\uFF0C\u7121\u6CD5\u5132\u5B58\u7F3A\u4EF6\u7D00\u9304");
@@ -43621,7 +43642,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       !internalView && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { className: "topbar", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
           "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V86" })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V87" })
         ] }) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "ppt-export-button", onClick: () => {
@@ -44189,6 +44210,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "record-save-actions", children: [
             editing._intakeDraftId && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "draft-save-note", children: "\u5C1A\u672A\u9032\u6848\uFF5E\u9032\u6848\u8349\u7A3F\u4E2D" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", onClick: temporarilySaveRecord, children: "\u66AB\u5B58" }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "primary", onClick: saveRecord, children: editing._intakeDraftId ? "\u540C\u6B65\u66F4\u65B0\u8349\u7A3F" : "\u5132\u5B58\u7269\u4EF6" })
           ] })
         ] })
