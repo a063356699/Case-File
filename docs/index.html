@@ -1420,7 +1420,11 @@ body{background:#f8fbfe!important;color:#405064!important}
     throw Error('Dynamic require of "' + x + '" is not supported');
   });
   var __commonJS = (cb, mod) => function __require2() {
-    return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
+    try {
+      return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
+    } catch (e) {
+      throw mod = 0, e;
+    }
   };
   var __copyProps = (to, from, except, desc) => {
     if (from && typeof from === "object" || typeof from === "function") {
@@ -1439,9 +1443,9 @@ body{background:#f8fbfe!important;color:#405064!important}
     mod
   ));
 
-  // node_modules/scheduler/cjs/scheduler.development.js
+  // node_modules/.pnpm/scheduler@0.27.0/node_modules/scheduler/cjs/scheduler.development.js
   var require_scheduler_development = __commonJS({
-    "node_modules/scheduler/cjs/scheduler.development.js"(exports) {
+    "node_modules/.pnpm/scheduler@0.27.0/node_modules/scheduler/cjs/scheduler.development.js"(exports) {
       "use strict";
       (function() {
         function performWorkUntilDeadline() {
@@ -1698,9 +1702,9 @@ body{background:#f8fbfe!important;color:#405064!important}
     }
   });
 
-  // node_modules/scheduler/index.js
+  // node_modules/.pnpm/scheduler@0.27.0/node_modules/scheduler/index.js
   var require_scheduler = __commonJS({
-    "node_modules/scheduler/index.js"(exports, module) {
+    "node_modules/.pnpm/scheduler@0.27.0/node_modules/scheduler/index.js"(exports, module) {
       "use strict";
       if (false) {
         module.exports = null;
@@ -1710,9 +1714,9 @@ body{background:#f8fbfe!important;color:#405064!important}
     }
   });
 
-  // node_modules/react/cjs/react.development.js
+  // node_modules/.pnpm/react@19.2.6/node_modules/react/cjs/react.development.js
   var require_react_development = __commonJS({
-    "node_modules/react/cjs/react.development.js"(exports, module) {
+    "node_modules/.pnpm/react@19.2.6/node_modules/react/cjs/react.development.js"(exports, module) {
       "use strict";
       (function() {
         function defineDeprecationWarning(methodName, info) {
@@ -2682,9 +2686,9 @@ body{background:#f8fbfe!important;color:#405064!important}
     }
   });
 
-  // node_modules/react/index.js
+  // node_modules/.pnpm/react@19.2.6/node_modules/react/index.js
   var require_react = __commonJS({
-    "node_modules/react/index.js"(exports, module) {
+    "node_modules/.pnpm/react@19.2.6/node_modules/react/index.js"(exports, module) {
       "use strict";
       if (false) {
         module.exports = null;
@@ -2694,9 +2698,9 @@ body{background:#f8fbfe!important;color:#405064!important}
     }
   });
 
-  // node_modules/react-dom/cjs/react-dom.development.js
+  // node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/cjs/react-dom.development.js
   var require_react_dom_development = __commonJS({
-    "node_modules/react-dom/cjs/react-dom.development.js"(exports) {
+    "node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/cjs/react-dom.development.js"(exports) {
       "use strict";
       (function() {
         function noop() {
@@ -2938,9 +2942,9 @@ body{background:#f8fbfe!important;color:#405064!important}
     }
   });
 
-  // node_modules/react-dom/index.js
+  // node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/index.js
   var require_react_dom = __commonJS({
-    "node_modules/react-dom/index.js"(exports, module) {
+    "node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/index.js"(exports, module) {
       "use strict";
       if (false) {
         checkDCE();
@@ -2951,9 +2955,9 @@ body{background:#f8fbfe!important;color:#405064!important}
     }
   });
 
-  // node_modules/react-dom/cjs/react-dom-client.development.js
+  // node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/cjs/react-dom-client.development.js
   var require_react_dom_client_development = __commonJS({
-    "node_modules/react-dom/cjs/react-dom-client.development.js"(exports) {
+    "node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/cjs/react-dom-client.development.js"(exports) {
       "use strict";
       (function() {
         function findHook(fiber, id) {
@@ -22850,9 +22854,9 @@ body{background:#f8fbfe!important;color:#405064!important}
     }
   });
 
-  // node_modules/react-dom/client.js
+  // node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/client.js
   var require_client = __commonJS({
-    "node_modules/react-dom/client.js"(exports, module) {
+    "node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/client.js"(exports, module) {
       "use strict";
       if (false) {
         checkDCE();
@@ -22863,9 +22867,9 @@ body{background:#f8fbfe!important;color:#405064!important}
     }
   });
 
-  // node_modules/jszip/dist/jszip.min.js
+  // node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/dist/jszip.min.js
   var require_jszip_min = __commonJS({
-    "node_modules/jszip/dist/jszip.min.js"(exports, module) {
+    "node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/dist/jszip.min.js"(exports, module) {
       !(function(e) {
         if ("object" == typeof exports && "undefined" != typeof module) module.exports = e();
         else if ("function" == typeof define && define.amd) define([], e);
@@ -35261,9 +35265,9 @@ body{background:#f8fbfe!important;color:#405064!important}
     }
   });
 
-  // node_modules/react/cjs/react-jsx-runtime.development.js
+  // node_modules/.pnpm/react@19.2.6/node_modules/react/cjs/react-jsx-runtime.development.js
   var require_react_jsx_runtime_development = __commonJS({
-    "node_modules/react/cjs/react-jsx-runtime.development.js"(exports) {
+    "node_modules/.pnpm/react@19.2.6/node_modules/react/cjs/react-jsx-runtime.development.js"(exports) {
       "use strict";
       (function() {
         function getComponentNameFromType(type) {
@@ -35518,9 +35522,9 @@ body{background:#f8fbfe!important;color:#405064!important}
     }
   });
 
-  // node_modules/react/jsx-runtime.js
+  // node_modules/.pnpm/react@19.2.6/node_modules/react/jsx-runtime.js
   var require_jsx_runtime = __commonJS({
-    "node_modules/react/jsx-runtime.js"(exports, module) {
+    "node_modules/.pnpm/react@19.2.6/node_modules/react/jsx-runtime.js"(exports, module) {
       "use strict";
       if (false) {
         module.exports = null;
@@ -35536,7 +35540,7 @@ body{background:#f8fbfe!important;color:#405064!important}
   // app/page.tsx
   var import_react = __toESM(require_react(), 1);
 
-  // node_modules/pptxgenjs/dist/pptxgen.es.js
+  // node_modules/.pnpm/pptxgenjs@4.0.1/node_modules/pptxgenjs/dist/pptxgen.es.js
   var import_jszip = __toESM(require_jszip_min());
   function __awaiter(thisArg, _arguments, P, generator) {
     function adopt(value) {
@@ -48584,4 +48588,3 @@ react/cjs/react-jsx-runtime.development.js:
 </script>
 </body>
 </html>
-<!-- V70 GitHub Pages deployment refresh -->
