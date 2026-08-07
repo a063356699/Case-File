@@ -189,7 +189,7 @@ const correctedWebsiteOnlyUpdate = (record: RecordItem, date: string) => date ==
 ].some(name => String(record.caseName || "").includes(name)) || date === "2026-08-07" && ["自由路27", "大智路53", "大昌一路43"].some(address => String(record.address || "").includes(address));
 const dailyUpdateFields = (record: RecordItem, date: string) => {
   if (correctedWebsiteOnlyUpdate(record, date)) return [];
-  const restoredToday = dateOnly(record._restoredAt) === date && String(record.caseNameNote || "").includes(`${shortRocMonthDay(date)}重新上架`);
+  const restoredToday = String(record._restoredAt || "").slice(0, 10) === date && String(record.caseNameNote || "").includes(`${shortRocMonthDay(date)}重新上架`);
   const restoredAt = Date.parse(String(record.caseNameNoteModifiedAt || ""));
   const laterEdited = Number.isFinite(restoredAt) && Date.parse(String(record.lastModifiedAt || "")) > restoredAt;
   // 舊的重新上架資料可能仍保有舊欄位歷程；畫面不採用，但絕不改寫資料本身。
@@ -1560,7 +1560,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="brand"><h1>總表　管理模式 <small className="app-version">V78</small></h1></div>
+      <div className="brand"><h1>總表　管理模式 <small className="app-version">V79</small></h1></div>
       <div className="header-actions"><button className="ppt-export-button" onClick={() => { setPptExtraIds([]); setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button onClick={exportExcel}>匯出 Excel</button><label className="file-button">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button onClick={exportJson}>匯出 JSON</button><button className="key-tag" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button><span className="home-last-modified">最後修改: {latestModifiedAt ? displayHomeModifiedAt(latestModifiedAt) : "尚無紀錄"}</span></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
