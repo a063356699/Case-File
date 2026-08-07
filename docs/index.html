@@ -41043,6 +41043,7 @@ ${String(ex)}`);
   var INTAKE_KEY = "property-desk-intake-draft-v1";
   var PHOTO_INTAKE_CLEANUP_KEY = "property-desk-photo-intake-cleanup-v2";
   var TOUR_KEY = "property-desk-tour-plan-v1";
+  var PPT_WEEK_SELECTIONS_KEY = "property-desk-ppt-week-selections-v1";
   var DAILY_HIDDEN_KEY = "property-desk-daily-hidden-v1";
   var MISSING_REMINDER_DATE_KEY = "property-desk-missing-reminder-date-v1";
   var CLOUD_SESSION_KEY = "property-desk-supabase-session-v1";
@@ -42248,6 +42249,7 @@ ${String(ex)}`);
     const [pptCustomStart, setPptCustomStart] = (0, import_react.useState)("");
     const [pptCustomEnd, setPptCustomEnd] = (0, import_react.useState)("");
     const [pptCustomMeeting, setPptCustomMeeting] = (0, import_react.useState)("");
+    const pptWeekLoadedRef = (0, import_react.useRef)("");
     (0, import_react.useEffect)(() => {
       setPptCustomStart("");
       setPptCustomEnd("");
@@ -42260,10 +42262,31 @@ ${String(ex)}`);
         setPptCustomMeeting("");
         setPptExtraSearch("");
         setPptAdHocOpen(false);
+      }
+    }, [pptPickerOpen]);
+    (0, import_react.useEffect)(() => {
+      try {
+        const saved = JSON.parse(localStorage.getItem(PPT_WEEK_SELECTIONS_KEY) || "{}")[pptWeekStart] || {};
+        pptWeekLoadedRef.current = pptWeekStart;
+        setPptExtraIds(Array.isArray(saved.extraIds) ? saved.extraIds : []);
+        setPptAdHocRecords(Array.isArray(saved.adHocRecords) ? saved.adHocRecords : []);
+        setPptConfirmedSnapshots(saved.confirmedSnapshots && typeof saved.confirmedSnapshots === "object" ? saved.confirmedSnapshots : {});
+      } catch {
+        pptWeekLoadedRef.current = pptWeekStart;
+        setPptExtraIds([]);
         setPptAdHocRecords([]);
         setPptConfirmedSnapshots({});
       }
-    }, [pptPickerOpen]);
+    }, [pptWeekStart]);
+    (0, import_react.useEffect)(() => {
+      if (!storageReady || pptWeekLoadedRef.current !== pptWeekStart) return;
+      try {
+        const all = JSON.parse(localStorage.getItem(PPT_WEEK_SELECTIONS_KEY) || "{}");
+        all[pptWeekStart] = { extraIds: pptExtraIds, adHocRecords: pptAdHocRecords, confirmedSnapshots: pptConfirmedSnapshots };
+        localStorage.setItem(PPT_WEEK_SELECTIONS_KEY, JSON.stringify(all));
+      } catch {
+      }
+    }, [storageReady, pptWeekStart, pptExtraIds, pptAdHocRecords, pptConfirmedSnapshots]);
     const [tourItems, setTourItems] = (0, import_react.useState)([]);
     const [tourDate, setTourDate] = (0, import_react.useState)(today());
     const [tourTitle, setTourTitle] = (0, import_react.useState)(`${displayRocDate(today()).replace(/\//g, ".")}\u5718\u770B`);
@@ -43563,11 +43586,10 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       !internalView && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { className: "topbar", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
           "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V80" })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V81" })
         ] }) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "ppt-export-button", onClick: () => {
-            setPptExtraIds([]);
             setPptShowExtras(false);
             setPptPickerOpen(true);
           }, children: "\u7522\u751F PPT" }),

@@ -20,6 +20,7 @@ const SETTINGS_KEY = "property-desk-settings-v1";
 const INTAKE_KEY = "property-desk-intake-draft-v1";
 const PHOTO_INTAKE_CLEANUP_KEY = "property-desk-photo-intake-cleanup-v2";
 const TOUR_KEY = "property-desk-tour-plan-v1";
+const PPT_WEEK_SELECTIONS_KEY = "property-desk-ppt-week-selections-v1";
 const DAILY_HIDDEN_KEY = "property-desk-daily-hidden-v1";
 const MISSING_REMINDER_DATE_KEY = "property-desk-missing-reminder-date-v1";
 const CLOUD_SESSION_KEY = "property-desk-supabase-session-v1";
@@ -713,8 +714,29 @@ export default function Home() {
   const [pptCustomStart, setPptCustomStart] = useState("");
   const [pptCustomEnd, setPptCustomEnd] = useState("");
   const [pptCustomMeeting, setPptCustomMeeting] = useState("");
+  const pptWeekLoadedRef = useRef("");
   useEffect(() => { setPptCustomStart(""); setPptCustomEnd(""); setPptCustomMeeting(""); }, [pptWeekStart]);
-  useEffect(() => { if (!pptPickerOpen) { setPptCustomStart(""); setPptCustomEnd(""); setPptCustomMeeting(""); setPptExtraSearch(""); setPptAdHocOpen(false); setPptAdHocRecords([]); setPptConfirmedSnapshots({}); } }, [pptPickerOpen]);
+  useEffect(() => { if (!pptPickerOpen) { setPptCustomStart(""); setPptCustomEnd(""); setPptCustomMeeting(""); setPptExtraSearch(""); setPptAdHocOpen(false); } }, [pptPickerOpen]);
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(PPT_WEEK_SELECTIONS_KEY) || "{}")[pptWeekStart] || {};
+      pptWeekLoadedRef.current = pptWeekStart;
+      setPptExtraIds(Array.isArray(saved.extraIds) ? saved.extraIds : []);
+      setPptAdHocRecords(Array.isArray(saved.adHocRecords) ? saved.adHocRecords : []);
+      setPptConfirmedSnapshots(saved.confirmedSnapshots && typeof saved.confirmedSnapshots === "object" ? saved.confirmedSnapshots : {});
+    } catch {
+      pptWeekLoadedRef.current = pptWeekStart;
+      setPptExtraIds([]); setPptAdHocRecords([]); setPptConfirmedSnapshots({});
+    }
+  }, [pptWeekStart]);
+  useEffect(() => {
+    if (!storageReady || pptWeekLoadedRef.current !== pptWeekStart) return;
+    try {
+      const all = JSON.parse(localStorage.getItem(PPT_WEEK_SELECTIONS_KEY) || "{}");
+      all[pptWeekStart] = { extraIds: pptExtraIds, adHocRecords: pptAdHocRecords, confirmedSnapshots: pptConfirmedSnapshots };
+      localStorage.setItem(PPT_WEEK_SELECTIONS_KEY, JSON.stringify(all));
+    } catch {}
+  }, [storageReady, pptWeekStart, pptExtraIds, pptAdHocRecords, pptConfirmedSnapshots]);
   const [tourItems, setTourItems] = useState<TourItem[]>([]);
   const [tourDate, setTourDate] = useState(today());
   const [tourTitle, setTourTitle] = useState(`${displayRocDate(today()).replace(/\//g, ".")}團看`);
@@ -1563,8 +1585,8 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="brand"><h1>總表　管理模式 <small className="app-version">V80</small></h1></div>
-      <div className="header-actions"><button className="ppt-export-button" onClick={() => { setPptExtraIds([]); setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button onClick={exportExcel}>匯出 Excel</button><label className="file-button">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button onClick={exportJson}>匯出 JSON</button><button className="key-tag" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button><span className="home-last-modified">最後修改: {latestModifiedAt ? displayHomeModifiedAt(latestModifiedAt) : "尚無紀錄"}</span></div>
+      <div className="brand"><h1>總表　管理模式 <small className="app-version">V81</small></h1></div>
+      <div className="header-actions"><button className="ppt-export-button" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button onClick={exportExcel}>匯出 Excel</button><label className="file-button">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button onClick={exportJson}>匯出 JSON</button><button className="key-tag" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button><span className="home-last-modified">最後修改: {latestModifiedAt ? displayHomeModifiedAt(latestModifiedAt) : "尚無紀錄"}</span></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
       <button className={tab === "archive" ? "active" : ""} onClick={() => setTab("archive")}>封存{pendingArchiveCleanup.length > 0 && <small className="archive-pending-count">待下架 {pendingArchiveCleanup.length}</small>}</button>
