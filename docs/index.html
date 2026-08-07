@@ -41513,7 +41513,7 @@ ${String(ex)}`);
     const changed = Object.keys(next).filter((key) => !ignored.has(key) && !websiteTrackingKeys.has(key) && String(previous[key] || "") !== String(next[key] || ""));
     if (!changed.length) return next;
     const history = recordUpdateHistory(previous);
-    history[date] = [.../* @__PURE__ */ new Set([...history[date] || [], ...changed])];
+    history[date] = [...new Set(changed)];
     return { ...next, updateDate: date, lastModifiedAt: (/* @__PURE__ */ new Date()).toISOString(), _updateHistory: JSON.stringify(history) };
   };
   var isoLocalDate = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
@@ -43526,7 +43526,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       !internalView && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { className: "topbar", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
           "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V72" })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V73" })
         ] }) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "ppt-export-button", onClick: () => {
@@ -46099,7 +46099,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     const rocDay = displayRocDate(selectedDate);
     const updateRecords = records.filter((record) => !record.archived && !isExpired(record) && record.status === "\u59D4\u8A17\u4E2D" && (dailyUpdateFields(record, selectedDate).length > 0 || dateOnly(record._restoredAt) === selectedDate)).map((record) => {
       const changed = dailyUpdateFields(record, selectedDate);
-      return { ...record, caseNameNote: [record.caseNameNote, changed.length ? `\u66F4\u65B0\uFF1A${dailyChangedLabels(changed).join("\u3001")}` : ""].filter(Boolean).join("\u3000"), _dailyHighlight: JSON.stringify(changed), ...dateOnly(record._restoredAt) === selectedDate ? { _dailyAnnotation: `${rocDay}\u91CD\u65B0\u4E0A\u67B6`, _dailyAnnotationType: "restored" } : {} };
+      return { ...record, caseNameNote: changed.length ? `\u66F4\u65B0\uFF1A${dailyChangedLabels(changed).join("\u3001")}` : "", _dailyHighlight: JSON.stringify(changed), ...dateOnly(record._restoredAt) === selectedDate ? { _dailyAnnotation: `${rocDay}\u91CD\u65B0\u4E0A\u67B6`, _dailyAnnotationType: "restored" } : {} };
     });
     const removedRecords = records.filter((record) => !!record.archived && dateOnly(record._archiveActionDate || record.archived) === selectedDate).map((record) => ({ ...record, _dailyAnnotation: `${displayRocDate(record.archived)}${record.status || "\u4E0B\u67B6"}` }));
     const groups = [
