@@ -1390,6 +1390,18 @@ body{background:#f8fbfe!important;color:#405064!important}
 /* Visible release marker beside the home title. */
 .app-version{font-family:"Noto Sans TC","Microsoft JhengHei",sans-serif;font-size:11px;letter-spacing:0;color:var(--muted);font-weight:700;margin-left:7px;vertical-align:middle}
 
+/* 新增案件後的完成提醒 */
+.new-case-reminder-backdrop{z-index:210!important}
+.new-case-reminder-modal{width:min(620px,94vw)!important;background:#f5f9f6!important}
+.new-case-reminder-body{display:grid;gap:11px;padding:20px 24px}
+.new-case-reminder-meta{display:grid;gap:8px;margin:0 0 3px;padding:13px 15px;border:1px solid #ceddd4;border-radius:11px;background:#fff}
+.new-case-reminder-meta div{display:grid;grid-template-columns:46px 1fr;gap:10px;align-items:start}
+.new-case-reminder-meta dt{font-size:12px;font-weight:800;color:#557167}
+.new-case-reminder-meta dd{margin:0;font-weight:700;line-height:1.45;word-break:break-word}
+.new-case-reminder-check{display:flex;align-items:center;gap:11px;padding:13px 15px;border:1px solid #cbdcd2;border-radius:10px;background:#fff;color:#244d40;font-weight:800}
+.new-case-reminder-check input{width:19px;height:19px;accent-color:#1f7a5c}
+.new-case-reminder-check:has(input:checked){background:#e3f3eb;border-color:#84bfa4}
+
 /* 重新上架完整紀錄保留在備註；委託中列表僅在案名後方顯示月／日。 */
 .active-lead-table td.col-caseName .case-name-note{display:inline!important;margin:0 0 0 5px!important;color:#d71920!important;font-size:11px!important;font-weight:800!important;white-space:nowrap!important;line-height:1!important}
 .active-lead-table td.col-caseName .case-link{display:inline!important;width:auto!important;max-width:none!important;margin:0!important;text-align:center!important}
@@ -42222,6 +42234,7 @@ ${String(ex)}`);
     const [advancedFilterOpen, setAdvancedFilterOpen] = (0, import_react.useState)(false);
     const [advancedFilter, setAdvancedFilter] = (0, import_react.useState)(() => blankAdvancedFilter());
     const [editing, setEditing] = (0, import_react.useState)(null);
+    const [newCaseReminder, setNewCaseReminder] = (0, import_react.useState)(null);
     const [expiryReminderOpen, setExpiryReminderOpen] = (0, import_react.useState)(false);
     const [websitePoReminderOpen, setWebsitePoReminderOpen] = (0, import_react.useState)(false);
     const [archiveCleanupReminderOpen, setArchiveCleanupReminderOpen] = (0, import_react.useState)(false);
@@ -42803,7 +42816,21 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       setRecords((prev) => prev.some((r) => r.id === next.id) ? prev.map((r) => r.id === next.id ? next : r) : [next, ...prev]);
       setIntakeDrafts((previous) => previous.map((draft) => draft.linkedRecordId === next.id ? { ...draft, values: syncRecordToDraftValues(draft, next) } : draft));
       setEditing(null);
+      if (!existing) setNewCaseReminder({ ...next });
       flash(autoReopen ? "\u5DF2\u91CD\u65B0\u4E0A\u67B6\uFF0C\u4E26\u8A18\u9304\u5728\u6848\u540D\u5F8C\u65B9\u5099\u8A3B" : "\u7269\u4EF6\u5DF2\u5132\u5B58");
+    };
+    const saveNewCaseReminder = () => {
+      if (!newCaseReminder) return;
+      const savedAt = (/* @__PURE__ */ new Date()).toISOString();
+      setRecords((previous) => previous.map((record) => record.id === newCaseReminder.id ? {
+        ...record,
+        housingListingCompleted: newCaseReminder.housingListingCompleted || "",
+        newBookCompleted: newCaseReminder.newBookCompleted || "",
+        wangReviewCompleted: newCaseReminder.wangReviewCompleted || "",
+        lastModifiedAt: savedAt
+      } : record));
+      setNewCaseReminder(null);
+      flash("\u65B0\u6848\u4EF6\u5B8C\u6210\u63D0\u9192\u5DF2\u5132\u5B58");
     };
     const temporarilySaveRecord = () => {
       if (!editing) return;
@@ -43643,7 +43670,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       !internalView && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { className: "topbar", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
           "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V89" })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V90" })
         ] }) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "ppt-export-button", onClick: () => {
@@ -44495,6 +44522,39 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", onClick: resetPptCustomWeek, children: "\u6062\u5FA9\u9810\u8A2D\u9031\u671F" })
       ] }),
+      newCaseReminder && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "modal-backdrop new-case-reminder-backdrop", onMouseDown: (event) => event.target === event.currentTarget && setNewCaseReminder(null), children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal new-case-reminder-modal", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal-head", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u65B0\u589E\u6848\u4EF6" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", { children: "\u65B0\u6848\u4EF6\u5B8C\u6210\u63D0\u9192" })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "close", type: "button", onClick: () => setNewCaseReminder(null), children: "\xD7" })
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "new-case-reminder-body", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("dl", { className: "new-case-reminder-meta", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("dt", { children: "\u6848\u540D" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("dd", { children: newCaseReminder.caseName || "\u672A\u586B\u5BEB" })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("dt", { children: "\u5730\u5740" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("dd", { children: newCaseReminder.address || "\u672A\u586B\u5BEB" })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("dt", { children: "\u958B\u767C" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("dd", { children: developerFullNameText(newCaseReminder.developer || "", settings.personnel) || "\u672A\u586B\u5BEB" })
+            ] })
+          ] }),
+          [["housingListingCompleted", "\u623F\u7BA1\u4E0A\u67B6\u5B8C\u6210"], ["newBookCompleted", "NEW\u672C\u88FD\u4F5C\u5B8C\u6210"], ["wangReviewCompleted", "\u738B\u7E3D\u5BE9\u6838\u5B8C\u6210"]].map(([key, label]) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "new-case-reminder-check", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: newCaseReminder[key] === "1", onChange: (event) => setNewCaseReminder((previous) => previous ? { ...previous, [key]: event.target.checked ? "1" : "" } : previous) }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: label })
+          ] }, key))
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal-foot", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", onClick: () => setNewCaseReminder(null), children: "\u7A0D\u5F8C\u8655\u7406" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: "primary", onClick: saveNewCaseReminder, children: "\u5132\u5B58\u63D0\u9192" })
+        ] })
+      ] }) }),
       notice && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "toast", children: notice })
     ] });
   }

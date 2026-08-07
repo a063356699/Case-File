@@ -1383,6 +1383,18 @@ body{background:#f8fbfe!important;color:#405064!important}
 /* Visible release marker beside the home title. */
 .app-version{font-family:"Noto Sans TC","Microsoft JhengHei",sans-serif;font-size:11px;letter-spacing:0;color:var(--muted);font-weight:700;margin-left:7px;vertical-align:middle}
 
+/* 新增案件後的完成提醒 */
+.new-case-reminder-backdrop{z-index:210!important}
+.new-case-reminder-modal{width:min(620px,94vw)!important;background:#f5f9f6!important}
+.new-case-reminder-body{display:grid;gap:11px;padding:20px 24px}
+.new-case-reminder-meta{display:grid;gap:8px;margin:0 0 3px;padding:13px 15px;border:1px solid #ceddd4;border-radius:11px;background:#fff}
+.new-case-reminder-meta div{display:grid;grid-template-columns:46px 1fr;gap:10px;align-items:start}
+.new-case-reminder-meta dt{font-size:12px;font-weight:800;color:#557167}
+.new-case-reminder-meta dd{margin:0;font-weight:700;line-height:1.45;word-break:break-word}
+.new-case-reminder-check{display:flex;align-items:center;gap:11px;padding:13px 15px;border:1px solid #cbdcd2;border-radius:10px;background:#fff;color:#244d40;font-weight:800}
+.new-case-reminder-check input{width:19px;height:19px;accent-color:#1f7a5c}
+.new-case-reminder-check:has(input:checked){background:#e3f3eb;border-color:#84bfa4}
+
 /* 重新上架完整紀錄保留在備註；委託中列表僅在案名後方顯示月／日。 */
 .active-lead-table td.col-caseName .case-name-note{display:inline!important;margin:0 0 0 5px!important;color:#d71920!important;font-size:11px!important;font-weight:800!important;white-space:nowrap!important;line-height:1!important}
 .active-lead-table td.col-caseName .case-link{display:inline!important;width:auto!important;max-width:none!important;margin:0!important;text-align:center!important}
