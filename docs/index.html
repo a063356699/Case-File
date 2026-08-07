@@ -41065,6 +41065,8 @@ ${String(ex)}`);
   var CLOUD_SESSION_KEY = "property-desk-supabase-session-v1";
   var CASE_FILE_SUPABASE_URL = "https://oiywtmjbasoonfuxemtr.supabase.co";
   var CASE_FILE_SUPABASE_TABLE = "case_file_state";
+  var NEW_CASE_REMINDER_START_NO = "EG0507746";
+  var newCaseReminderPending = (record) => !["housingListingCompleted", "newBookCompleted", "wangReviewCompleted"].every((key) => record[key] === "1");
   var CASE_FILE_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_dhr81918k0zRtar14yepIA_ZWmTKT10";
   var newId = () => globalThis.crypto?.randomUUID?.() || `id-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   var fields = [
@@ -42235,6 +42237,7 @@ ${String(ex)}`);
     const [advancedFilter, setAdvancedFilter] = (0, import_react.useState)(() => blankAdvancedFilter());
     const [editing, setEditing] = (0, import_react.useState)(null);
     const [newCaseReminder, setNewCaseReminder] = (0, import_react.useState)(null);
+    const deferredNewCaseReminderIds = (0, import_react.useRef)(/* @__PURE__ */ new Set());
     const [expiryReminderOpen, setExpiryReminderOpen] = (0, import_react.useState)(false);
     const [websitePoReminderOpen, setWebsitePoReminderOpen] = (0, import_react.useState)(false);
     const [archiveCleanupReminderOpen, setArchiveCleanupReminderOpen] = (0, import_react.useState)(false);
@@ -42269,6 +42272,11 @@ ${String(ex)}`);
     const [pptCustomEnd, setPptCustomEnd] = (0, import_react.useState)("");
     const [pptCustomMeeting, setPptCustomMeeting] = (0, import_react.useState)("");
     const pptWeekLoadedRef = (0, import_react.useRef)("");
+    const reminderCandidate = records.find((record) => (record._newCaseReminderEnabled === "1" || record.propertyNo === NEW_CASE_REMINDER_START_NO) && newCaseReminderPending(record));
+    (0, import_react.useEffect)(() => {
+      if (!storageReady || editing || newCaseReminder || !reminderCandidate || deferredNewCaseReminderIds.current.has(reminderCandidate.id)) return;
+      setNewCaseReminder({ ...reminderCandidate });
+    }, [storageReady, editing, newCaseReminder, reminderCandidate]);
     (0, import_react.useEffect)(() => {
       setPptCustomStart("");
       setPptCustomEnd("");
@@ -42807,7 +42815,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
         caseNameNote: String(prepared.caseNameNote || "").includes(reopenNote) ? prepared.caseNameNote : [prepared.caseNameNote, reopenNote].filter(Boolean).join("\u3000"),
         caseNameNoteModifiedAt: (/* @__PURE__ */ new Date()).toISOString()
       } : prepared;
-      let next = existing ? _materialEditAt || autoReopen ? withTrackedUpdate(existing, preparedForSave) : { ...preparedForSave, updateDate: existing.updateDate, lastModifiedAt: existing.lastModifiedAt, _updateHistory: existing._updateHistory } : preparedForSave;
+      let next = existing ? _materialEditAt || autoReopen ? withTrackedUpdate(existing, preparedForSave) : { ...preparedForSave, updateDate: existing.updateDate, lastModifiedAt: existing.lastModifiedAt, _updateHistory: existing._updateHistory } : { ...preparedForSave, _newCaseReminderEnabled: "1" };
       if (autoReopen) {
         const history = recordUpdateHistory(next);
         if (history[today()]) history[today()] = history[today()].filter((key) => key !== "caseNameNote" && key !== "caseNameNoteModifiedAt");
@@ -42829,8 +42837,13 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
         wangReviewCompleted: newCaseReminder.wangReviewCompleted || "",
         lastModifiedAt: savedAt
       } : record));
+      deferredNewCaseReminderIds.current.add(newCaseReminder.id);
       setNewCaseReminder(null);
       flash("\u65B0\u6848\u4EF6\u5B8C\u6210\u63D0\u9192\u5DF2\u5132\u5B58");
+    };
+    const deferNewCaseReminder = () => {
+      if (newCaseReminder) deferredNewCaseReminderIds.current.add(newCaseReminder.id);
+      setNewCaseReminder(null);
     };
     const temporarilySaveRecord = () => {
       if (!editing) return;
@@ -43670,7 +43683,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       !internalView && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { className: "topbar", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
           "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V90" })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V91" })
         ] }) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "ppt-export-button", onClick: () => {
@@ -44522,13 +44535,13 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", onClick: resetPptCustomWeek, children: "\u6062\u5FA9\u9810\u8A2D\u9031\u671F" })
       ] }),
-      newCaseReminder && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "modal-backdrop new-case-reminder-backdrop", onMouseDown: (event) => event.target === event.currentTarget && setNewCaseReminder(null), children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal new-case-reminder-modal", children: [
+      newCaseReminder && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "modal-backdrop new-case-reminder-backdrop", onMouseDown: (event) => event.target === event.currentTarget && deferNewCaseReminder(), children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal new-case-reminder-modal", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal-head", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u65B0\u589E\u6848\u4EF6" }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", { children: "\u65B0\u6848\u4EF6\u5B8C\u6210\u63D0\u9192" })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "close", type: "button", onClick: () => setNewCaseReminder(null), children: "\xD7" })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "close", type: "button", onClick: deferNewCaseReminder, children: "\xD7" })
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "new-case-reminder-body", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("dl", { className: "new-case-reminder-meta", children: [
@@ -44551,7 +44564,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
           ] }, key))
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal-foot", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", onClick: () => setNewCaseReminder(null), children: "\u7A0D\u5F8C\u8655\u7406" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", onClick: deferNewCaseReminder, children: "\u7A0D\u5F8C\u8655\u7406" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: "primary", onClick: saveNewCaseReminder, children: "\u5132\u5B58\u63D0\u9192" })
         ] })
       ] }) }),
