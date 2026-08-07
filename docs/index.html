@@ -41459,7 +41459,14 @@ ${String(ex)}`);
     "\u8208\u9054\u6E2F\u5168\u65B0\u5927\u5730\u576A\u5927\u9762\u5BEC\u96FB\u68AF\u96D9\u8ECA\u8C6A\u5885",
     "\u9AD8\u96C4\u4E5D\u5982\u5546\u5708\u9AD8\u6295\u5831\u6574\u65B0\u56DB\u5957\u623F1\u6A13\u516C\u5BD3"
   ].some((name) => String(record.caseName || "").includes(name)) || date === "2026-08-07" && ["\u81EA\u7531\u8DEF27", "\u5927\u667A\u8DEF53", "\u5927\u660C\u4E00\u8DEF43"].some((address) => String(record.address || "").includes(address));
-  var dailyUpdateFields = (record, date) => correctedWebsiteOnlyUpdate(record, date) ? [] : (recordUpdateHistory(record)[date] || []).filter((key) => dailyActivityUpdateKeys.has(key));
+  var dailyUpdateFields = (record, date) => {
+    if (correctedWebsiteOnlyUpdate(record, date)) return [];
+    const restoredToday = dateOnly(record._restoredAt) === date && String(record.caseNameNote || "").includes(`${shortRocMonthDay(date)}\u91CD\u65B0\u4E0A\u67B6`);
+    const restoredAt = Date.parse(String(record.caseNameNoteModifiedAt || ""));
+    const laterEdited = Number.isFinite(restoredAt) && Date.parse(String(record.lastModifiedAt || "")) > restoredAt;
+    if (restoredToday && !laterEdited) return [];
+    return (recordUpdateHistory(record)[date] || []).filter((key) => dailyActivityUpdateKeys.has(key));
+  };
   var dailyChangedLabels = (keys) => [...new Set(keys.map((key) => ({
     area: "\u5730\u5340",
     caseName: "\u6848\u540D",
@@ -41757,11 +41764,6 @@ ${String(ex)}`);
         caseNameNoteModifiedAt: (/* @__PURE__ */ new Date()).toISOString(),
         _updateHistory: JSON.stringify(history)
       };
-    }
-    if (dateOnly(record._restoredAt) === today() && record._dailyRestoredHistoryClearedV77 !== "1") {
-      const history = recordUpdateHistory(record);
-      if (history[today()]) delete history[today()];
-      record = { ...record, _updateHistory: JSON.stringify(history), _dailyRestoredHistoryClearedV77: "1" };
     }
     if (String(record.caseName || "").includes("\u65B0\u5E02\u771F\u7965\u5BB63\u8F15\u9F61\u56DB\u5957\u623F\u8ECA\u5885")) {
       const history = recordUpdateHistory(record);
@@ -43559,7 +43561,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       !internalView && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { className: "topbar", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
           "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V77" })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V78" })
         ] }) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "ppt-export-button", onClick: () => {
