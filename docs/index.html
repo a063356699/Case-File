@@ -43603,7 +43603,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       !internalView && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { className: "topbar", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
           "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V84" })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V85" })
         ] }) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "ppt-export-button", onClick: () => {
@@ -44202,6 +44202,14 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", onClick: () => setPrintEditor(null), children: "\u53D6\u6D88" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", onClick: () => saveColorSheetIssue(printEditor.data), children: "\u5132\u5B58\u7F3A\u4EF6\u7D00\u9304" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "primary", type: "button", disabled: colorWorkbookDownloading, onClick: async () => {
+            const generalTax = String(printEditor.data.generalLandValueTax || "").trim();
+            const selfUseTax = String(printEditor.data.selfUseLandValueTax || "").trim();
+            const taxMessage = `\u8ACB\u78BA\u8A8D\u571F\u589E\u7A05\u8CC7\u6599\uFF1A
+\u4E00\u822C\u589E\u503C\u7A05\uFF1A${generalTax || "\u672A\u586B\u5BEB"}
+\u81EA\u7528\u589E\u503C\u7A05\uFF1A${selfUseTax || "\u672A\u586B\u5BEB"}
+
+\u662F\u5426\u78BA\u8A8D\u4E26\u4E0B\u8F09\u5F69\u8272\u8868 Excel\uFF1F`;
+            if (!window.confirm(taxMessage)) return;
             setColorWorkbookDownloading(true);
             flash("\u6B63\u5728\u5EFA\u7ACB\u5F69\u8272\u8868 Excel\u2026");
             try {
