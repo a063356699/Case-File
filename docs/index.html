@@ -1401,6 +1401,10 @@ body{background:#f8fbfe!important;color:#405064!important}
 .daily-activity .daily-table th.col-address,.daily-activity .daily-table td.col-address{width:12%!important}
 .daily-activity .daily-table th.col-notes,.daily-activity .daily-table td.col-notes{width:9%!important;white-space:pre-wrap!important;line-height:1.4!important}
 .daily-activity .daily-table td.col-parking,.daily-activity .daily-table td.col-parking *,.daily-activity .daily-table td.col-managementFee,.daily-activity .daily-table td.col-managementFee *{color:#111!important}
+
+/* 雲端帳號不得由公開頁面自行建立；帳號僅由管理者在 Supabase 後台邀請。 */
+.supabase-body .backup-actions button.primary{display:none!important}
+.supabase-body .backup-actions:has(button.primary)::after{content:"雲端帳號僅由管理者建立，無法自行註冊。";align-self:center;color:#79561b;font-size:12px;font-weight:700}
 </style>
 </head>
 <body>
@@ -43502,7 +43506,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       !internalView && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { className: "topbar", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
           "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V70" })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V71" })
         ] }) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "ppt-export-button", onClick: () => {
