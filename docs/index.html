@@ -42201,6 +42201,7 @@ ${String(ex)}`);
     const [internalView] = (0, import_react.useState)(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("view") === "internal");
     const [records, setRecords] = (0, import_react.useState)([]);
     const [settings, setSettings] = (0, import_react.useState)({ personnel: [], supabaseUrl: CASE_FILE_SUPABASE_URL, supabaseKey: CASE_FILE_SUPABASE_PUBLISHABLE_KEY, supabaseTable: CASE_FILE_SUPABASE_TABLE, supabaseRecord: "main", bookReviewCurrentDate: "2026-07-30", bookReviewNextDate: "2026-09-30" });
+    const [storageReady, setStorageReady] = (0, import_react.useState)(false);
     developerPersonnelForDisplay = settings.personnel;
     const [cloudSession, setCloudSession] = (0, import_react.useState)(null);
     const [tab, setTab] = (0, import_react.useState)("active");
@@ -42458,6 +42459,7 @@ ${String(ex)}`);
           setTourTitle(tour.title || `${displayRocDate(tour.date || today()).replace(/\//g, ".")}\u5718\u770B`);
         }
         setRecords(loadedRecords);
+        setStorageReady(true);
       } catch {
         setRecords([sample]);
       }
@@ -42537,8 +42539,8 @@ ${String(ex)}`);
       return () => window.removeEventListener("storage", syncAcrossTabs);
     }, []);
     (0, import_react.useEffect)(() => {
-      localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
-    }, [settings]);
+      if (storageReady) localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    }, [settings, storageReady]);
     (0, import_react.useEffect)(() => {
       localStorage.setItem(INTAKE_KEY, JSON.stringify({ raw: intakeRaw, drafts: intakeDrafts, selectedId: selectedIntakeId }));
     }, [intakeRaw, intakeDrafts, selectedIntakeId]);
@@ -43561,7 +43563,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       !internalView && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { className: "topbar", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
           "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V79" })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V80" })
         ] }) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "ppt-export-button", onClick: () => {

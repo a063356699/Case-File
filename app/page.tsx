@@ -666,6 +666,7 @@ export default function Home() {
   const [internalView] = useState(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("view") === "internal");
   const [records, setRecords] = useState<RecordItem[]>([]);
   const [settings, setSettings] = useState<Settings>({ personnel: [], supabaseUrl: CASE_FILE_SUPABASE_URL, supabaseKey: CASE_FILE_SUPABASE_PUBLISHABLE_KEY, supabaseTable: CASE_FILE_SUPABASE_TABLE, supabaseRecord: "main", bookReviewCurrentDate: "2026-07-30", bookReviewNextDate: "2026-09-30" });
+  const [storageReady, setStorageReady] = useState(false);
   developerPersonnelForDisplay = settings.personnel;
   const [cloudSession, setCloudSession] = useState<CloudSession | null>(null);
   const [tab, setTab] = useState<"active" | "archive" | "activity" | "inventory" | "tour" | "keys" | "public" | "settings" | "intake">("active");
@@ -849,6 +850,7 @@ export default function Home() {
       const savedIntake = localStorage.getItem(INTAKE_KEY); if (savedIntake) { const saved = JSON.parse(savedIntake); const drafts: IntakeData[] = saved.drafts || (saved.parsed ? [{ ...saved.parsed, raw: saved.raw || "" }] : []); if (!localStorage.getItem(PHOTO_INTAKE_CLEANUP_KEY)) { const legacyPhotoValues = new Map(drafts.filter(draft => draft.linkedRecordId).map(draft => [draft.linkedRecordId!, new Set(Object.entries(draft.values).filter(([key, value]) => value && (key.includes("進案文件") || key.includes("當下進案文件"))).map(([, value]) => value.trim()))])); loadedRecords = loadedRecords.map(record => { const values = legacyPhotoValues.get(record.id); const current = String(record.photoInfo || "").split(/[／/]/).map(value => value.trim()).filter(Boolean); return values && current.length && current.every(value => values.has(value)) ? { ...record, photoInfo: "" } : record; }); localStorage.setItem(PHOTO_INTAKE_CLEANUP_KEY, "1"); } const linkedDrafts = new Map(drafts.filter(draft => draft.linkedRecordId).map(draft => [draft.linkedRecordId!, draft])); loadedRecords = loadedRecords.map(record => { const draft = linkedDrafts.get(record.id); return draft ? intakeToRecord(draft, record) : record; }); setIntakeDrafts(drafts); setSelectedIntakeId(saved.selectedId || drafts[0]?.id || ""); setIntakeRaw(saved.raw || ""); }
       const savedTour = localStorage.getItem(TOUR_KEY); if (savedTour) { const tour = JSON.parse(savedTour); setTourItems(Array.isArray(tour.items) ? tour.items : []); setTourDate(tour.date || today()); setTourTitle(tour.title || `${displayRocDate(tour.date || today()).replace(/\//g, ".")}團看`); }
       setRecords(loadedRecords);
+      setStorageReady(true);
     } catch { setRecords([sample]); }
   }, []);
   useEffect(() => { if (internalView) setTab("public"); }, [internalView]);
@@ -912,7 +914,8 @@ export default function Home() {
     window.addEventListener("storage", syncAcrossTabs);
     return () => window.removeEventListener("storage", syncAcrossTabs);
   }, []);
-  useEffect(() => { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); }, [settings]);
+  // 先完成本機設定讀取，才允許寫回；避免匯入後被初始空白人員覆蓋。
+  useEffect(() => { if (storageReady) localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); }, [settings, storageReady]);
   useEffect(() => { localStorage.setItem(INTAKE_KEY, JSON.stringify({ raw: intakeRaw, drafts: intakeDrafts, selectedId: selectedIntakeId })); }, [intakeRaw, intakeDrafts, selectedIntakeId]);
   useEffect(() => { localStorage.setItem(TOUR_KEY, JSON.stringify({ date: tourDate, title: tourTitle, items: tourItems })); }, [tourDate, tourTitle, tourItems]);
 
@@ -1560,7 +1563,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="brand"><h1>總表　管理模式 <small className="app-version">V79</small></h1></div>
+      <div className="brand"><h1>總表　管理模式 <small className="app-version">V80</small></h1></div>
       <div className="header-actions"><button className="ppt-export-button" onClick={() => { setPptExtraIds([]); setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button onClick={exportExcel}>匯出 Excel</button><label className="file-button">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button onClick={exportJson}>匯出 JSON</button><button className="key-tag" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button><span className="home-last-modified">最後修改: {latestModifiedAt ? displayHomeModifiedAt(latestModifiedAt) : "尚無紀錄"}</span></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
