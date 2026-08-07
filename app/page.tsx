@@ -799,6 +799,14 @@ export default function Home() {
     setEditing(null);
   };
 
+  const copyEditingFeatures = async () => {
+    if (!editing) return;
+    const text = [1, 2, 3, 4].map(number => `${number}.${String(editing[`feature${number}`] || "").trim()}`).join("\n");
+    try { await navigator.clipboard.writeText(text); }
+    catch { const textarea = document.createElement("textarea"); textarea.value = text; textarea.style.position = "fixed"; textarea.style.opacity = "0"; document.body.appendChild(textarea); textarea.select(); document.execCommand("copy"); textarea.remove(); }
+    flash("已複製特色說明1～4");
+  };
+
   useEffect(() => {
     let toolbarAnchor = 0;
     const updateStickyListOffsets = () => {
@@ -1599,7 +1607,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="brand"><h1>總表　管理模式 <small className="app-version">V85</small></h1></div>
+      <div className="brand"><h1>總表　管理模式 <small className="app-version">V86</small></h1></div>
       <div className="header-actions"><button className="ppt-export-button" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button onClick={exportExcel}>匯出 Excel</button><label className="file-button">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button onClick={exportJson}>匯出 JSON</button><button className="key-tag" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button><span className="home-last-modified">最後修改: {latestModifiedAt ? displayHomeModifiedAt(latestModifiedAt) : "尚無紀錄"}</span></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -1653,7 +1661,7 @@ export default function Home() {
 <div className="modal-head-actions">{records.some(record => record.id === editing.id) && !editing.archived && (editing.status || "委託中") === "委託中" && <><button className="record-print-button" type="button" onClick={() => openRecordIntakeDraft(editing)}>進案草稿</button><button className={`record-print-button color${editing.colorSheetIssue ? " has-issue" : ""}`} type="button" onClick={() => { const attention = colorSheetAttention(editing.attentionNotes || "", editing.additionNotes || ""); setPrintEditor({ kind: "color", data: { ...editing, notes: attention, attentionNotes: attention, photos: [...(editing.photos || [])] } }); }}>{editing.colorSheetIssue ? "彩色表 Excel ●" : "彩色表 Excel"}</button><button className="record-print-button cover" type="button" onClick={() => printRecordDocument(editing, "cover")}>列印新進封面</button></>}<button className="close" type="button" onClick={requestCloseEditing}>×</button></div></div>
 <div className="form-grid record-edit-grid">{recordEditOrder.filter(key => key !== "area").map(key => {
   if (["feature2", "feature3", "feature4"].includes(key)) return null;
-  if (key === "feature1") return <div className="edit-cell edit-features" key="features">{["feature1", "feature2", "feature3", "feature4"].map(featureKey => <Field key={featureKey} fieldKey={featureKey} label={labels[featureKey]} record={editing} records={records} setRecord={updateEditingRecord}/>)}</div>;
+  if (key === "feature1") return <div className="edit-cell edit-features" key="features">{["feature1", "feature2", "feature3", "feature4"].map((featureKey, index) => <div className="editing-feature-row" key={featureKey}><Field fieldKey={featureKey} label={labels[featureKey]} record={editing} records={records} setRecord={updateEditingRecord}/>{index === 0 && <button type="button" className="copy-features-button" onClick={copyEditingFeatures}>複製特色1～4</button>}</div>)}</div>;
   const label = recordEditLabels[key] || labels[key] || key;
   return <div className={recordEditClass(key)} key={key}><Field fieldKey={key} label={label} record={editing} records={records} setRecord={updateEditingRecord}/></div>;
 })}</div>
