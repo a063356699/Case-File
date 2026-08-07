@@ -894,6 +894,8 @@ button:hover,.file-button:hover{border-color:#9fbad0;box-shadow:0 2px 8px #7895a
 .public-table td.col-area,.public-table th.col-area{vertical-align:middle!important;text-align:center!important}.public-table td.col-area .area-lines{height:100%;min-height:0!important;justify-content:center!important;align-items:center!important;text-align:center!important}
 .public-table td.col-road,.public-table td.col-frontage,.public-table td.col-depth,.public-table td.col-road *,.public-table td.col-frontage *,.public-table td.col-depth *{color:#111!important;font-weight:400!important}
 .daily-card .daily-table th.col-price,.daily-card .daily-table td.col-price{width:82px!important;min-width:82px!important;max-width:82px!important;vertical-align:middle!important;text-align:center!important}.daily-card .daily-table td.col-price .two-line-value{align-items:center!important;text-align:center!important}.daily-card .daily-table td.col-price .two-line-value b{color:#17242a!important;font-weight:800!important}.daily-card .daily-table td.col-price .price-reduction{display:block!important;color:#ff0000!important;font-weight:900!important}
+.daily-card .daily-table td.col-price:not(.daily-updated-cell) .two-line-value b,.daily-card .daily-table td.col-price:not(.daily-updated-cell) .two-line-value .price-reduction{color:#17242a!important;font-weight:800!important}
+.daily-card .daily-table td.col-price.daily-updated-cell .two-line-value b,.daily-card .daily-table td.col-price.daily-updated-cell .two-line-value .price-reduction{color:#ff0000!important;font-weight:900!important}
 .daily-date{flex-wrap:wrap;justify-content:flex-end}.daily-date button{min-width:58px;padding:8px 12px;border-color:#b9cfc4;background:#fff;color:#31584d}.daily-date button.selected{border-color:#397b67;background:#397b67;color:#fff}.daily-date>b{min-width:82px;color:#173f35;text-align:center}.daily-activity{padding-left:12px!important;padding-right:12px!important}.daily-card .table-wrap{overflow:visible!important}.daily-table table{width:100%!important;min-width:0!important;table-layout:fixed!important}.daily-table th,.daily-table td{position:static!important;left:auto!important;width:auto!important;min-width:0!important;max-width:none!important;padding:6px 3px!important;font-size:10px!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;overflow-wrap:anywhere!important;word-break:break-word!important}.daily-table th.col-dailyHide,.daily-table td.col-dailyHide{width:30px!important}.daily-table th.col-area,.daily-table td.col-area{width:4.5%!important}.daily-table th.col-caseName,.daily-table td.col-caseName{width:9.5%!important}.daily-table th.col-address,.daily-table td.col-address{width:12%!important}.daily-table th.col-notes,.daily-table td.col-notes{width:9%!important;white-space:pre-wrap!important;line-height:1.4!important}.daily-table td.col-parking,.daily-table td.col-parking *,.daily-table td.col-managementFee,.daily-table td.col-managementFee *{color:#111!important}.daily-activity:not(.compact) .daily-table td.col-caseName{cursor:pointer}.daily-activity:not(.compact) .daily-table td.col-caseName:hover{background:#edf7f2!important}.daily-activity:not(.compact) .daily-table td.col-caseName .public-case-name{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px}
 .expiry-settings-panel h3,.personnel-head h3{cursor:pointer}.expiry-settings-panel h3:hover,.personnel-head h3:hover{color:var(--green)}
 .expiry-settings-panel:not(.expiry-open)>p,.expiry-settings-panel:not(.expiry-open)>.form-grid{display:none}.expiry-settings-panel h3{display:flex;align-items:center;justify-content:space-between;margin:0}.expiry-toggle{padding:7px 14px;color:var(--green);border-color:#b9cfc4;background:#f3f8f4}
@@ -41756,6 +41758,11 @@ ${String(ex)}`);
         _updateHistory: JSON.stringify(history)
       };
     }
+    if (dateOnly(record._restoredAt) === today() && record._dailyRestoredHistoryClearedV77 !== "1") {
+      const history = recordUpdateHistory(record);
+      if (history[today()]) delete history[today()];
+      record = { ...record, _updateHistory: JSON.stringify(history), _dailyRestoredHistoryClearedV77: "1" };
+    }
     if (String(record.caseName || "").includes("\u65B0\u5E02\u771F\u7965\u5BB63\u8F15\u9F61\u56DB\u5957\u623F\u8ECA\u5885")) {
       const history = recordUpdateHistory(record);
       if (history[today()] && record._dailyUpdateNormalizedV75 !== "1") {
@@ -43552,7 +43559,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       !internalView && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { className: "topbar", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
           "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V76" })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V77" })
         ] }) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "ppt-export-button", onClick: () => {
@@ -46116,21 +46123,21 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       window.addEventListener("hide-daily-item", hide);
       return () => window.removeEventListener("hide-daily-item", hide);
     }, []);
-    const dateOnly = (value = "") => value.slice(0, 10);
+    const dateOnly2 = (value = "") => value.slice(0, 10);
     const yesterday = (() => {
       const date = /* @__PURE__ */ new Date(`${today()}T12:00:00`);
       date.setDate(date.getDate() - 1);
       return date.toISOString().slice(0, 10);
     })();
     const rocDay = displayRocDate(selectedDate);
-    const updateRecords = records.filter((record) => !record.archived && !isExpired(record) && record.status === "\u59D4\u8A17\u4E2D" && (dailyUpdateFields(record, selectedDate).length > 0 || dateOnly(record._restoredAt) === selectedDate)).map((record) => {
+    const updateRecords = records.filter((record) => !record.archived && !isExpired(record) && record.status === "\u59D4\u8A17\u4E2D" && (dailyUpdateFields(record, selectedDate).length > 0 || dateOnly2(record._restoredAt) === selectedDate)).map((record) => {
       const changed = dailyUpdateFields(record, selectedDate);
-      const restored = dateOnly(record._restoredAt) === selectedDate;
+      const restored = dateOnly2(record._restoredAt) === selectedDate;
       return { ...record, caseNameNote: changed.length ? `\u66F4\u65B0\uFF1A${dailyChangedLabels(changed).join("\u3001")}` : "", _dailyHighlight: JSON.stringify(changed), ...restored ? { _dailyAnnotation: `${shortRocMonthDay(selectedDate)}\u91CD\u65B0\u4E0A\u67B6`, _dailyAnnotationType: "restored" } : {} };
     });
-    const removedRecords = records.filter((record) => !!record.archived && dateOnly(record._archiveActionDate || record.archived) === selectedDate).map((record) => ({ ...record, _dailyAnnotation: `${displayRocDate(record.archived)}${record.status || "\u4E0B\u67B6"}` }));
+    const removedRecords = records.filter((record) => !!record.archived && dateOnly2(record._archiveActionDate || record.archived) === selectedDate).map((record) => ({ ...record, _dailyAnnotation: `${displayRocDate(record.archived)}${record.status || "\u4E0B\u67B6"}` }));
     const groups = [
-      { key: "added", title: "\u65B0\u589E\u7269\u4EF6", records: records.filter((record) => dateOnly(record.reportDate) === selectedDate) },
+      { key: "added", title: "\u65B0\u589E\u7269\u4EF6", records: records.filter((record) => dateOnly2(record.reportDate) === selectedDate) },
       { key: "updated", title: "\u66F4\u65B0\u7269\u4EF6", records: updateRecords },
       { key: "removed", title: "\u4E0B\u67B6\u7269\u4EF6", records: removedRecords }
     ].map((group) => ({ ...group, records: group.records.filter((record) => !hiddenItems.includes(`${selectedDate}|${group.key}|${record.id}`)).map((record) => compact ? record : { ...record, _dailyHideKey: `${selectedDate}|${group.key}|${record.id}` }) }));

@@ -406,6 +406,13 @@ const applySourceLayoutFixes = (records: RecordItem[]) => records.map(record => 
       _updateHistory: JSON.stringify(history),
     };
   }
+  // 重新上架只作為案名旁的註記，不應沿用原封存時的欄位更新紀錄。
+  // 若之後再修改真正欄位，withTrackedUpdate 會重新建立本次更新紀錄。
+  if (dateOnly(record._restoredAt) === today() && record._dailyRestoredHistoryClearedV77 !== "1") {
+    const history = recordUpdateHistory(record);
+    if (history[today()]) delete history[today()];
+    record = { ...record, _updateHistory: JSON.stringify(history), _dailyRestoredHistoryClearedV77: "1" };
+  }
   // V73 前的新市真祥家當日歷程被累加；依實際操作保留本次「總價」更新。
   if (String(record.caseName || "").includes("新市真祥家3輕齡四套房車墅")) {
     const history = recordUpdateHistory(record);
@@ -1552,7 +1559,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="brand"><h1>總表　管理模式 <small className="app-version">V76</small></h1></div>
+      <div className="brand"><h1>總表　管理模式 <small className="app-version">V77</small></h1></div>
       <div className="header-actions"><button className="ppt-export-button" onClick={() => { setPptExtraIds([]); setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button onClick={exportExcel}>匯出 Excel</button><label className="file-button">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button onClick={exportJson}>匯出 JSON</button><button className="key-tag" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button><span className="home-last-modified">最後修改: {latestModifiedAt ? displayHomeModifiedAt(latestModifiedAt) : "尚無紀錄"}</span></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
