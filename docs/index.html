@@ -41579,7 +41579,6 @@ ${String(ex)}`);
     const parts = displayRocDate(v).split("/");
     return parts.length === 3 ? `${parts[1]}/${parts[2]}` : displayRocDate(v);
   };
-  var compactRestoredNote = (value = "") => String(value || "").replace(/(\d{1,3})\/(\d{1,2})\/(\d{1,2})重新上架/g, "$2/$3").replace(/(\d{1,2}\/\d{1,2})重新上架/g, "$1");
   var normalizeDateInput = (v = "") => {
     let text = v.trim();
     if (!text) return "";
@@ -43553,7 +43552,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       !internalView && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { className: "topbar", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
           "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V75" })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V76" })
         ] }) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "ppt-export-button", onClick: () => {
@@ -46124,9 +46123,10 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       return date.toISOString().slice(0, 10);
     })();
     const rocDay = displayRocDate(selectedDate);
-    const updateRecords = records.filter((record) => !record.archived && !isExpired(record) && record.status === "\u59D4\u8A17\u4E2D" && dailyUpdateFields(record, selectedDate).length > 0).map((record) => {
+    const updateRecords = records.filter((record) => !record.archived && !isExpired(record) && record.status === "\u59D4\u8A17\u4E2D" && (dailyUpdateFields(record, selectedDate).length > 0 || dateOnly(record._restoredAt) === selectedDate)).map((record) => {
       const changed = dailyUpdateFields(record, selectedDate);
-      return { ...record, caseNameNote: `\u66F4\u65B0\uFF1A${dailyChangedLabels(changed).join("\u3001")}`, _dailyHighlight: JSON.stringify(changed) };
+      const restored = dateOnly(record._restoredAt) === selectedDate;
+      return { ...record, caseNameNote: changed.length ? `\u66F4\u65B0\uFF1A${dailyChangedLabels(changed).join("\u3001")}` : "", _dailyHighlight: JSON.stringify(changed), ...restored ? { _dailyAnnotation: `${shortRocMonthDay(selectedDate)}\u91CD\u65B0\u4E0A\u67B6`, _dailyAnnotationType: "restored" } : {} };
     });
     const removedRecords = records.filter((record) => !!record.archived && dateOnly(record._archiveActionDate || record.archived) === selectedDate).map((record) => ({ ...record, _dailyAnnotation: `${displayRocDate(record.archived)}${record.status || "\u4E0B\u67B6"}` }));
     const groups = [
@@ -47095,7 +47095,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
                 ] })
               ] }) : k === "caseName" ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "case-link", onClick: () => onEdit(r), children: chunkText(r.caseName || "\u2014", activeLead ? 12 : 15).map((line, lineIndex) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "case-name-line", children: line }, `${line}-${lineIndex}`)) }),
-                r.caseNameNote && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "case-name-note", children: activeLead ? compactRestoredNote(r.caseNameNote) : r.caseNameNote }),
+                r.caseNameNote && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "case-name-note", children: r.caseNameNote }),
                 activeLead && restoredLabel && !String(r.caseNameNote || "").includes("\u91CD\u65B0\u4E0A\u67B6") && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "restore-case-annotation", children: restoredLabel }),
                 archiveMode && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "archive-case-annotation", children: archiveLabel })
               ] }) : k === "status" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: `status ${displayStatus(r) === "\u59D4\u8A17\u4E2D" ? "live" : "off"}`, children: displayStatus(r) }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CellContent, { record: r, column: k }) }, k)),
