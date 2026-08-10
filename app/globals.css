@@ -1442,4 +1442,5 @@ body{background:#f8fbfe!important;color:#405064!important}
 .topbar-row .header-actions .action-export-json{background:#fff0e2!important;border-color:#e9bd91!important;color:#a45c22!important}
 .topbar-row .header-actions .action-keys{background:#fff4d8!important;border-color:#e7c46b!important;color:#96620f!important}
 .topbar-row .header-actions .action-keys b{background:#d79724!important;color:#fff!important}
+.excel-print .building-name-cell>i{font-size:11.5pt!important}
 @media(max-width:1160px){.topbar-row{padding:9px 16px!important;align-items:flex-start!important;flex-direction:column!important;gap:8px!important}.topbar-row .header-actions{width:100%!important;justify-content:flex-start!important}.topbar>.nav{padding:0 16px!important}}
