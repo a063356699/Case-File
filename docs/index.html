@@ -43727,7 +43727,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V106" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V107" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             bookReviewDueCount > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { className: "book-review-header-button", onClick: () => {
@@ -47675,17 +47675,11 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
         reportMobileResult(mobileEventId, false, message);
         return;
       }
-      if (!dueRecords.some((item) => item.id === record.id)) {
-        const message = `${record.caseName || record.propertyNo} \u5C1A\u672A\u5230\u78BA\u8A8D\u65E5\u671F`;
-        setScanMessage(message);
-        reportMobileResult(mobileEventId, false, message);
-        return;
-      }
       scannedSetRef.current.add(record.id);
       setScannedId(record.id);
       setScannedIds((previous) => [...previous, record.id]);
-      setScanMessage(`\u5DF2\u66F4\u65B0\u4ECA\u5929\u65E5\u671F\uFF1A${record.propertyNo} ${record.caseName || ""}`);
-      reportMobileResult(mobileEventId, true, "\u5DF2\u66F4\u65B0\u7269\u4EF6\u672C\u65E5\u671F");
+      setScanMessage(`\u59D4\u8A17\u4E2D\u7269\u4EF6\uFF0C\u5B8C\u6210\uFF0C\u4E0B\u4E00\u4EF6\uFF1A${record.propertyNo}`);
+      reportMobileResult(mobileEventId, true, "\u59D4\u8A17\u4E2D\u7269\u4EF6\uFF0C\u5B8C\u6210\uFF0C\u4E0B\u4E00\u4EF6");
       submit([{ record, status: record.bookLocationType || "\u67B6\u4E0A" }]);
     };
     const decodeWithJsQR = (source, width, height) => {
