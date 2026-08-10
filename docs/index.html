@@ -41441,6 +41441,18 @@ ${String(ex)}`);
       return {};
     }
   };
+  var editedFieldKeys = (record) => {
+    try {
+      const value = JSON.parse(record._editedFields || "[]");
+      return Array.isArray(value) ? value.map(String) : [];
+    } catch {
+      return [];
+    }
+  };
+  var trackedValue = (value) => {
+    const text = String(value ?? "").trim().replace(/\s+/g, "");
+    return /^(?:nan|null|undefined)$/i.test(text) ? "" : text;
+  };
   var websiteTrackingKeys = /* @__PURE__ */ new Set(["platform591", "platform591Expiry", "platform591None", "price5168", "price5168Expiry", "price5168None", "goldExposure", "goldExposureExpiry", "goldExposureNone", "yes319", "yes319None", "houseinfor", "houseinforNone", "homeWeb", "homeWebNone", "windowAd", "windowAdNone", "led", "ledNone"]);
   var dailyActivityUpdateKeys = /* @__PURE__ */ new Set([
     "area",
@@ -41490,7 +41502,11 @@ ${String(ex)}`);
     const restoredAt = Date.parse(String(record.caseNameNoteModifiedAt || ""));
     const laterEdited = Number.isFinite(restoredAt) && Date.parse(String(record.lastModifiedAt || "")) > restoredAt;
     if (restoredToday && !laterEdited) return [];
-    return (recordUpdateHistory(record)[date] || []).filter((key) => dailyActivityUpdateKeys.has(key));
+    return (recordUpdateHistory(record)[date] || []).filter((key) => dailyActivityUpdateKeys.has(key)).filter((key) => {
+      if (key === "builtYear" && /^(土地|建地|nan)?$/i.test(trackedValue(record.completionDate || record.builtYear))) return false;
+      if (key === "parking" && trackedValue(record.parking) === trackedValue(record.parkingOwnership) && !trackedValue(record.parkingType) && !trackedValue(record.parkingMethod) && !trackedValue(record.parkingNo)) return false;
+      return true;
+    });
   };
   var dailyChangedLabels = (keys) => [...new Set(keys.map((key) => ({
     area: "\u5730\u5340",
@@ -41542,9 +41558,10 @@ ${String(ex)}`);
     const weekdays = ["\u65E5", "\u4E00", "\u4E8C", "\u4E09", "\u56DB", "\u4E94", "\u516D"];
     return `${date.getFullYear() - 1911}\u5E74${date.getMonth() + 1}\u6708${date.getDate()}\u65E5 \u661F\u671F${weekdays[date.getDay()]} ${String(date.getHours()).padStart(2, "0")}\u9EDE${String(date.getMinutes()).padStart(2, "0")}\u5206${String(date.getSeconds()).padStart(2, "0")}\u79D2`;
   };
-  var withTrackedUpdate = (previous, next, date = today()) => {
+  var withTrackedUpdate = (previous, next, date = today(), onlyFields) => {
     const ignored = /* @__PURE__ */ new Set(["id", "updateDate", "lastModifiedAt", "groupViewDate", "_updateHistory", "_dailyAnnotation", "_dailyHighlight"]);
-    const changed = Object.keys(next).filter((key) => !ignored.has(key) && !websiteTrackingKeys.has(key) && String(previous[key] || "") !== String(next[key] || ""));
+    const candidates = onlyFields?.length ? onlyFields : Object.keys(next);
+    const changed = candidates.filter((key) => !ignored.has(key) && !websiteTrackingKeys.has(key) && trackedValue(previous[key]) !== trackedValue(next[key]));
     if (!changed.length) return next;
     const history = recordUpdateHistory(previous);
     history[date] = [...new Set(changed)];
@@ -42785,9 +42802,10 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
     const updateEditingRecord = (next) => setEditing((previous) => {
       if (!previous) return next;
       const ignored = /* @__PURE__ */ new Set(["id", "lastModifiedAt", "groupViewDate", "_updateHistory", "_dailyAnnotation", "_dailyHighlight"]);
-      const changed = Object.keys(next).filter((key) => !ignored.has(key) && !websiteTrackingKeys.has(key) && String(previous[key] || "") !== String(next[key] || ""));
+      const changed = Object.keys(next).filter((key) => !ignored.has(key) && !websiteTrackingKeys.has(key) && trackedValue(previous[key]) !== trackedValue(next[key]));
       if (!changed.length) return next;
-      return { ...next, _materialEditAt: "1", updateDate: changed.every((key) => key === "updateDate") ? next.updateDate : today(), lastModifiedAt: (/* @__PURE__ */ new Date()).toISOString() };
+      const edited = /* @__PURE__ */ new Set([...editedFieldKeys(previous), ...changed]);
+      return { ...next, _materialEditAt: "1", _editedFields: JSON.stringify([...edited]), updateDate: changed.every((key) => key === "updateDate") ? next.updateDate : today(), lastModifiedAt: (/* @__PURE__ */ new Date()).toISOString() };
     });
     const saveRecord = () => {
       if (!editing) return;
@@ -42822,7 +42840,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       const combinedFloor = [normalizedEditing.titleFloor, normalizedEditing.currentFloor].filter(Boolean).join("\uFF0F");
       const combinedParking = [normalizedEditing.parkingOwnership, normalizedEditing.parkingType, normalizedEditing.parkingMethod, normalizedEditing.parkingNo].filter(Boolean).join("\uFF0F");
       const preparedWithMarker = { ...normalizedEditing, school: schoolSummary(normalizedEditing), builtYear: normalizedEditing.completionDate ? String(Number(normalizedEditing.completionDate.split(/[./]/)[0])) : normalizedEditing.builtYear, floor: combinedFloor || normalizedEditing.floor, parking: combinedParking || normalizedEditing.parking, contractType: contractFromNo(normalizedEditing.propertyNo) || normalizedEditing.contractType, status: normalizedEditing.status || "\u59D4\u8A17\u4E2D", updateDate: normalizedEditing.updateDate || existing?.updateDate || today(), lastModifiedAt: normalizedEditing.lastModifiedAt || existing?.lastModifiedAt || "" };
-      const { _materialEditAt, ...prepared } = preparedWithMarker;
+      const { _materialEditAt, _editedFields, ...prepared } = preparedWithMarker;
       const autoReopen = Boolean(existing?.archived) && existing?.status === "\u5230\u671F\u4E0B\u67B6" && validDate(prepared.entrustEnd) && !isExpired(prepared);
       const reopenNote = `${shortRocMonthDay(today())}\u91CD\u65B0\u4E0A\u67B6`;
       const preparedForSave = autoReopen ? {
@@ -42833,7 +42851,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
         caseNameNote: String(prepared.caseNameNote || "").includes(reopenNote) ? prepared.caseNameNote : [prepared.caseNameNote, reopenNote].filter(Boolean).join("\u3000"),
         caseNameNoteModifiedAt: (/* @__PURE__ */ new Date()).toISOString()
       } : prepared;
-      let next = existing ? _materialEditAt || autoReopen ? withTrackedUpdate(existing, preparedForSave) : { ...preparedForSave, updateDate: existing.updateDate, lastModifiedAt: existing.lastModifiedAt, _updateHistory: existing._updateHistory } : { ...preparedForSave, _newCaseReminderEnabled: "1" };
+      let next = existing ? _materialEditAt || autoReopen ? withTrackedUpdate(existing, preparedForSave, today(), autoReopen ? void 0 : editedFieldKeys(preparedWithMarker)) : { ...preparedForSave, updateDate: existing.updateDate, lastModifiedAt: existing.lastModifiedAt, _updateHistory: existing._updateHistory } : { ...preparedForSave, _newCaseReminderEnabled: "1" };
       if (autoReopen) {
         const history = recordUpdateHistory(next);
         if (history[today()]) history[today()] = history[today()].filter((key) => key !== "caseNameNote" && key !== "caseNameNoteModifiedAt");
@@ -43703,7 +43721,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       !internalView && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { className: "topbar", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
           "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V96" })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V97" })
         ] }) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "ppt-export-button", onClick: () => {

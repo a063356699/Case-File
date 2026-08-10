@@ -186,6 +186,11 @@ const mergeSuppliedPersonnel = (people: Person[]) => {
   }));
 };
 const recordUpdateHistory = (record: RecordItem): Record<string, string[]> => { try { return JSON.parse(record._updateHistory || "{}"); } catch { return {}; } };
+const editedFieldKeys = (record: RecordItem): string[] => { try { const value = JSON.parse(record._editedFields || "[]"); return Array.isArray(value) ? value.map(String) : []; } catch { return []; } };
+const trackedValue = (value: unknown) => {
+  const text = String(value ?? "").trim().replace(/\s+/g, "");
+  return /^(?:nan|null|undefined)$/i.test(text) ? "" : text;
+};
 const websiteTrackingKeys = new Set(["platform591", "platform591Expiry", "platform591None", "price5168", "price5168Expiry", "price5168None", "goldExposure", "goldExposureExpiry", "goldExposureNone", "yes319", "yes319None", "houseinfor", "houseinforNone", "homeWeb", "homeWebNone", "windowAd", "windowAdNone", "led", "ledNone"]);
 const dailyActivityUpdateKeys = new Set([
   "area", "caseName", "caseNameNote", "address", "price", "reducedPrice", "direction", "completionDate", "builtYear",
@@ -203,7 +208,12 @@ const dailyUpdateFields = (record: RecordItem, date: string) => {
   const laterEdited = Number.isFinite(restoredAt) && Date.parse(String(record.lastModifiedAt || "")) > restoredAt;
   // 舊的重新上架資料可能仍保有舊欄位歷程；畫面不採用，但絕不改寫資料本身。
   if (restoredToday && !laterEdited) return [];
-  return (recordUpdateHistory(record)[date] || []).filter(key => dailyActivityUpdateKeys.has(key));
+  return (recordUpdateHistory(record)[date] || []).filter(key => dailyActivityUpdateKeys.has(key)).filter(key => {
+    // 舊資料的土地完工年／無車位組合由系統轉換產生，並不是這次人工修改。
+    if (key === "builtYear" && /^(土地|建地|nan)?$/i.test(trackedValue(record.completionDate || record.builtYear))) return false;
+    if (key === "parking" && trackedValue(record.parking) === trackedValue(record.parkingOwnership) && !trackedValue(record.parkingType) && !trackedValue(record.parkingMethod) && !trackedValue(record.parkingNo)) return false;
+    return true;
+  });
 };
 const dailyChangedLabels = (keys: string[]) => [...new Set(keys.map(key => ({
   area: "地區", caseName: "案名", caseNameNote: "案名", address: "地址", price: "總價", reducedPrice: "總價", direction: "朝向",
@@ -214,9 +224,10 @@ const dailyChangedLabels = (keys: string[]) => [...new Set(keys.map(key => ({
 } as Record<string, string>)[key] || labels[key] || key))];
 const displayModifiedAt = (value = "") => { if (!value) return ""; const date = new Date(value); if (Number.isNaN(date.getTime())) return value; return `${date.getFullYear() - 1911}/${date.getMonth() + 1}/${date.getDate()} ${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`; };
 const displayHomeModifiedAt = (value = "") => { if (!value) return ""; const date = new Date(value); if (Number.isNaN(date.getTime())) return value; const weekdays = ["日", "一", "二", "三", "四", "五", "六"]; return `${date.getFullYear() - 1911}年${date.getMonth() + 1}月${date.getDate()}日 星期${weekdays[date.getDay()]} ${String(date.getHours()).padStart(2, "0")}點${String(date.getMinutes()).padStart(2, "0")}分${String(date.getSeconds()).padStart(2, "0")}秒`; };
-const withTrackedUpdate = (previous: RecordItem, next: RecordItem, date = today()) => {
+const withTrackedUpdate = (previous: RecordItem, next: RecordItem, date = today(), onlyFields?: string[]) => {
   const ignored = new Set(["id", "updateDate", "lastModifiedAt", "groupViewDate", "_updateHistory", "_dailyAnnotation", "_dailyHighlight"]);
-  const changed = Object.keys(next).filter(key => !ignored.has(key) && !websiteTrackingKeys.has(key) && String(previous[key] || "") !== String(next[key] || ""));
+  const candidates = onlyFields?.length ? onlyFields : Object.keys(next);
+  const changed = candidates.filter(key => !ignored.has(key) && !websiteTrackingKeys.has(key) && trackedValue(previous[key]) !== trackedValue(next[key]));
   if (!changed.length) return next;
   const history = recordUpdateHistory(previous);
   // 每日物件動態只顯示本次儲存實際修改的欄位，不累加同一天較早的修改。
@@ -1099,9 +1110,10 @@ export default function Home() {
   const updateEditingRecord = (next: RecordItem) => setEditing(previous => {
     if (!previous) return next;
     const ignored = new Set(["id", "lastModifiedAt", "groupViewDate", "_updateHistory", "_dailyAnnotation", "_dailyHighlight"]);
-    const changed = Object.keys(next).filter(key => !ignored.has(key) && !websiteTrackingKeys.has(key) && String(previous[key] || "") !== String(next[key] || ""));
+    const changed = Object.keys(next).filter(key => !ignored.has(key) && !websiteTrackingKeys.has(key) && trackedValue(previous[key]) !== trackedValue(next[key]));
     if (!changed.length) return next;
-    return { ...next, _materialEditAt: "1", updateDate: changed.every(key => key === "updateDate") ? next.updateDate : today(), lastModifiedAt: new Date().toISOString() };
+    const edited = new Set([...editedFieldKeys(previous), ...changed]);
+    return { ...next, _materialEditAt: "1", _editedFields: JSON.stringify([...edited]), updateDate: changed.every(key => key === "updateDate") ? next.updateDate : today(), lastModifiedAt: new Date().toISOString() };
   });
   const saveRecord = () => {
     if (!editing) return;
@@ -1127,7 +1139,7 @@ export default function Home() {
     const combinedFloor = [normalizedEditing.titleFloor, normalizedEditing.currentFloor].filter(Boolean).join("／");
     const combinedParking = [normalizedEditing.parkingOwnership, normalizedEditing.parkingType, normalizedEditing.parkingMethod, normalizedEditing.parkingNo].filter(Boolean).join("／");
     const preparedWithMarker = { ...normalizedEditing, school: schoolSummary(normalizedEditing), builtYear: normalizedEditing.completionDate ? String(Number(normalizedEditing.completionDate.split(/[./]/)[0])) : normalizedEditing.builtYear, floor: combinedFloor || normalizedEditing.floor, parking: combinedParking || normalizedEditing.parking, contractType: contractFromNo(normalizedEditing.propertyNo) || normalizedEditing.contractType, status: normalizedEditing.status || "委託中", updateDate: normalizedEditing.updateDate || existing?.updateDate || today(), lastModifiedAt: normalizedEditing.lastModifiedAt || existing?.lastModifiedAt || "" };
-    const { _materialEditAt, ...prepared } = preparedWithMarker;
+    const { _materialEditAt, _editedFields, ...prepared } = preparedWithMarker;
     // 到期下架案件只要把委託結束改為今天或之後，即視為重新上架。
     const autoReopen = Boolean(existing?.archived) && existing?.status === "到期下架" && validDate(prepared.entrustEnd) && !isExpired(prepared);
     const reopenNote = `${shortRocMonthDay(today())}重新上架`;
@@ -1139,7 +1151,7 @@ export default function Home() {
       caseNameNote: String(prepared.caseNameNote || "").includes(reopenNote) ? prepared.caseNameNote : [prepared.caseNameNote, reopenNote].filter(Boolean).join("　"),
       caseNameNoteModifiedAt: new Date().toISOString(),
     } : prepared;
-    let next = existing ? (_materialEditAt || autoReopen ? withTrackedUpdate(existing, preparedForSave) : { ...preparedForSave, updateDate: existing.updateDate, lastModifiedAt: existing.lastModifiedAt, _updateHistory: existing._updateHistory }) : { ...preparedForSave, _newCaseReminderEnabled: "1" };
+    let next = existing ? (_materialEditAt || autoReopen ? withTrackedUpdate(existing, preparedForSave, today(), autoReopen ? undefined : editedFieldKeys(preparedWithMarker)) : { ...preparedForSave, updateDate: existing.updateDate, lastModifiedAt: existing.lastModifiedAt, _updateHistory: existing._updateHistory }) : { ...preparedForSave, _newCaseReminderEnabled: "1" };
     // 重新上架本身在每日動態只顯示「月/日重新上架」，不另列為「更新：案名」。
     if (autoReopen) {
       const history = recordUpdateHistory(next);
@@ -1685,7 +1697,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="brand"><h1>總表　管理模式 <small className="app-version">V96</small></h1></div>
+      <div className="brand"><h1>總表　管理模式 <small className="app-version">V97</small></h1></div>
       <div className="header-actions"><button className="ppt-export-button" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button onClick={exportExcel}>匯出 Excel</button><label className="file-button">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button onClick={exportJson}>匯出 JSON</button><button className="key-tag" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button><span className="home-last-modified">最後修改: {latestModifiedAt ? displayHomeModifiedAt(latestModifiedAt) : "尚無紀錄"}</span></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
