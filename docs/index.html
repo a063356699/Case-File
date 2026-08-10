@@ -43748,7 +43748,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V114" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V115" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             bookReviewDueCount > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { className: "book-review-header-button action-book-review", onClick: () => {
@@ -46521,7 +46521,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     const area = areaMatch?.[1] || "\u672A\u586B\u5730\u5340";
     const shortAddress = (areaMatch ? withoutCity.slice(area.length) : withoutCity).trim() || "\u672A\u586B\u5730\u5740";
     const caseName = intakeValue(draft.values, "\u6848\u540D").trim() || "\u672A\u547D\u540D\u6848\u4EF6";
-    const developer = developerFullNameText(intakeValue(draft.values, "\u958B\u767C\uFF11/\u958B\u767C\uFF12").trim()) || "\u672A\u586B\u958B\u767C";
+    const developer = (developerFullNameText(intakeValue(draft.values, "\u958B\u767C\uFF11/\u958B\u767C\uFF12").trim()) || "\u672A\u586B\u958B\u767C").replace(/[、，,]/g, "");
     const fileNamePart = (text) => String(text).replace(/[－–—]/g, "-").replace(/[\\/:*?"<>|／：＊？＂＜＞｜＼]/g, "-").replace(/\u3000/g, " ");
     return [area, caseName, shortAddress, developer].map(fileNamePart).join("-");
   };
