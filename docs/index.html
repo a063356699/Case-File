@@ -42286,9 +42286,9 @@ ${String(ex)}`);
     const pptWeekLoadedRef = (0, import_react.useRef)("");
     const reminderCandidate = records.find((record) => (record._newCaseReminderEnabled === "1" || record.propertyNo === NEW_CASE_REMINDER_START_NO) && newCaseReminderPending(record));
     (0, import_react.useEffect)(() => {
-      if (!storageReady || editing || newCaseReminder || !reminderCandidate || deferredNewCaseReminderIds.current.has(reminderCandidate.id)) return;
+      if (internalView || !storageReady || editing || newCaseReminder || !reminderCandidate || deferredNewCaseReminderIds.current.has(reminderCandidate.id)) return;
       setNewCaseReminder({ ...reminderCandidate });
-    }, [storageReady, editing, newCaseReminder, reminderCandidate]);
+    }, [internalView, storageReady, editing, newCaseReminder, reminderCandidate]);
     (0, import_react.useEffect)(() => {
       setPptCustomStart("");
       setPptCustomEnd("");
@@ -43703,7 +43703,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       !internalView && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { className: "topbar", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
           "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V95" })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V96" })
         ] }) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "ppt-export-button", onClick: () => {
@@ -44555,7 +44555,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", onClick: resetPptCustomWeek, children: "\u6062\u5FA9\u9810\u8A2D\u9031\u671F" })
       ] }),
-      newCaseReminder && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "modal-backdrop new-case-reminder-backdrop", onMouseDown: (event) => event.target === event.currentTarget && deferNewCaseReminder(), children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal new-case-reminder-modal", children: [
+      !internalView && newCaseReminder && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "modal-backdrop new-case-reminder-backdrop", onMouseDown: (event) => event.target === event.currentTarget && deferNewCaseReminder(), children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal new-case-reminder-modal", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal-head", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u65B0\u589E\u6848\u4EF6" }),
