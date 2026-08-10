@@ -708,6 +708,7 @@ export default function Home() {
   const [showingFollowUpDue, setShowingFollowUpDue] = useState("");
   const [advancedFilterOpen, setAdvancedFilterOpen] = useState(false);
   const [advancedFilter, setAdvancedFilter] = useState<AdvancedFilter>(() => blankAdvancedFilter());
+  const [bookReviewOpenRequest, setBookReviewOpenRequest] = useState(0);
   const [editing, setEditing] = useState<RecordItem | null>(null);
   const [newCaseReminder, setNewCaseReminder] = useState<RecordItem | null>(null);
   const deferredNewCaseReminderIds = useRef<Set<string>>(new Set());
@@ -989,6 +990,8 @@ export default function Home() {
 
   const archived = useMemo(() => sortArchivedRecords(records.filter(r => r.archived || isExpired(r) || r.status !== "委託中")), [records]);
   const active = useMemo(() => records.filter(r => !r.archived && !isExpired(r) && (r.status || "委託中") === "委託中"), [records]);
+  const bookReviewCycleStart = normalizeDateInput(settings.bookReviewCurrentDate || "") || "2026-07-30";
+  const bookReviewDueCount = today() >= bookReviewCycleStart ? active.filter(record => normalizeDateInput(record.bookLocationDate || "") !== today()).length : 0;
   const latestRecordModifiedAt = records.reduce((latest, record) => {
     const candidate = String(record.lastModifiedAt || record.caseNameNoteModifiedAt || record.reducedPriceModifiedAt || "");
     if (!candidate || Number.isNaN(new Date(candidate).getTime())) return latest;
@@ -1697,10 +1700,11 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="brand"><h1>總表　管理模式 <small className="app-version">V97</small></h1></div>
+      <div className="brand"><h1>總表　管理模式 <small className="app-version">V98</small></h1></div>
       <div className="header-actions"><button className="ppt-export-button" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button onClick={exportExcel}>匯出 Excel</button><label className="file-button">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button onClick={exportJson}>匯出 JSON</button><button className="key-tag" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button><span className="home-last-modified">最後修改: {latestModifiedAt ? displayHomeModifiedAt(latestModifiedAt) : "尚無紀錄"}</span></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
+      <button onClick={() => { setTab("active"); bookReviewDueCount ? setBookReviewOpenRequest(value => value + 1) : flash("目前沒有待確認的物件本"); }}>物件本確認 {bookReviewDueCount}</button>
       <button className={tab === "archive" ? "active" : ""} onClick={() => setTab("archive")}>封存{pendingArchiveCleanup.length > 0 && <small className="archive-pending-count">待下架 {pendingArchiveCleanup.length}</small>}</button>
       <button className={tab === "activity" ? "active" : ""} onClick={() => setTab("activity")}>每日物件動態</button>
       <button className={tab === "inventory" ? "active" : ""} onClick={() => setTab("inventory")}>物件庫存</button>
@@ -1712,7 +1716,7 @@ export default function Home() {
     </header>}
 
     {!internalView && tab === "active" && systemExpiryReminders.length > 0 && <div className="system-expiry-reminder"><b>系統到期提醒</b>{systemExpiryReminders.map(item => <span key={item.label}>{item.label}：{displayRocDate(item.date)} 到期{item.date < today() ? "（已到期）" : item.leadDays === 30 ? "（30天內）" : "（明天到期）"}</span>)}</div>}
-    {!internalView && tab === "active" && <PropertyBookReview records={records} settings={settings} submit={submitBookReviews} openRecord={setEditing}/>}
+    {!internalView && tab === "active" && <PropertyBookReview records={records} settings={settings} openRequest={bookReviewOpenRequest} submit={submitBookReviews} openRecord={setEditing}/>}
     {!internalView && tab === "active" && <BusinessReportInbox records={active} resolve={resolveMonthlyPropertyReport} archive={(record, status) => setArchiveChoice({ record, status, date: today() })}/>}
     {showingPublic && publicUnlocked && publicScope === "mine" && publicPerson && <MonthlyPropertyReport records={myProperties} person={publicPerson} submit={submitMonthlyPropertyReport}/>}
     {pptPickerOpen && selectedPptBaseRecords.length > 0 && <aside className="ppt-order-float"><b>調整本次排序</b><small>此順序會保留在本週</small><ol>{selectedPptBaseRecords.map((record, index) => <li key={record.id}><span>{index + 1}. {record.caseName || "未命名案件"}</span><div><button type="button" disabled={index === 0} onClick={() => movePptOrder(record.id, -1)}>↑</button><button type="button" disabled={index === selectedPptBaseRecords.length - 1} onClick={() => movePptOrder(record.id, 1)}>↓</button></div></li>)}</ol></aside>}
@@ -3139,12 +3143,13 @@ function CellContent({ record: r, column: k }: { record: RecordItem; column: str
   return <>{cellValue(r, k) || "—"}</>;
 }
 
-function PropertyBookReview({ records, settings, submit, openRecord }: { records: RecordItem[]; settings: Settings; submit: (reviews: Array<{ record: RecordItem; status: string }>) => void; openRecord: (record: RecordItem) => void }) {
+function PropertyBookReview({ records, settings, openRequest, submit, openRecord }: { records: RecordItem[]; settings: Settings; openRequest: number; submit: (reviews: Array<{ record: RecordItem; status: string }>) => void; openRecord: (record: RecordItem) => void }) {
   const cycleStart = normalizeDateInput(settings.bookReviewCurrentDate || "") || "2026-07-30";
   const nextCheckDate = normalizeDateInput(settings.bookReviewNextDate || "") || "2026-09-30";
   const reviewCycle = today() >= cycleStart ? `book-${cycleStart}` : "";
   const dueRecords = reviewCycle ? records.filter(record => !record.archived && !isExpired(record) && (record.status || "委託中") === "委託中" && normalizeDateInput(record.bookLocationDate || "") !== today()) : [];
   const [reviewOpen, setReviewOpen] = useState(false); const [reviewVisible, setReviewVisible] = useState(true); const [values, setValues] = useState<Record<string, string>>({}); const [scannerOpen, setScannerOpen] = useState(false); const [scannedId, setScannedId] = useState(""); const [scannedIds, setScannedIds] = useState<string[]>([]); const [scanMessage, setScanMessage] = useState(""); const [archivedScanRecord, setArchivedScanRecord] = useState<RecordItem | null>(null); const videoRef = useRef<HTMLVideoElement | null>(null); const streamRef = useRef<MediaStream | null>(null); const scannedSetRef = useRef<Set<string>>(new Set());
+  useEffect(() => { if (openRequest > 0) { setReviewVisible(true); setReviewOpen(true); } }, [openRequest]);
   const locateCode = (raw: string) => { const clean = String(raw || "").trim(); const record = records.find(item => clean.includes(item.propertyNo) || (item.address && clean.includes(item.address)) || (item.caseName && clean.includes(item.caseName))); if (!record) { const message = `警示：刷到的 QR Code 不在目前物件本：${clean || "未讀到內容"}`; setScanMessage(message); alert(message); return; } if (scannedSetRef.current.has(record.id)) { setScanMessage(`${record.propertyNo} 已掃描，請刷下一件`); return; } const archived = !!record.archived || isExpired(record) || (record.status || "委託中") !== "委託中"; if (archived) { scannedSetRef.current.add(record.id); setScannerOpen(false); setReviewOpen(true); setArchivedScanRecord(record); setScanMessage(`通知：${record.propertyNo}「${record.caseName || "未命名案件"}」已${record.status || "下架"}。`); return; } if (!dueRecords.some(item => item.id === record.id)) { setScanMessage(`${record.caseName || record.propertyNo} 尚未到確認日期`); return; } scannedSetRef.current.add(record.id); setScannedId(record.id); setScannedIds(previous => [...previous, record.id]); setScanMessage(`已更新今天日期：${record.propertyNo} ${record.caseName || ""}`); submit([{ record, status: record.bookLocationType || "架上" }]); };
   const decodeWithJsQR = (source: CanvasImageSource, width: number, height: number) => { const canvas = document.createElement("canvas"); canvas.width = width; canvas.height = height; const context = canvas.getContext("2d", { willReadFrequently: true }); if (!context) return ""; context.drawImage(source, 0, 0, width, height); const image = context.getImageData(0, 0, width, height); return jsQR(image.data, width, height, { inversionAttempts: "attemptBoth" })?.data || ""; };
   const decodeImage = async (file?: File) => { if (!file) return; try { const bitmap = await createImageBitmap(file); const Detector = (window as any).BarcodeDetector; let raw = ""; if (Detector) { const codes = await new Detector({ formats: ["qr_code"] }).detect(bitmap); raw = codes[0]?.rawValue || ""; } if (!raw) raw = decodeWithJsQR(bitmap, bitmap.width, bitmap.height); bitmap.close(); if (!raw) return alert("圖片中沒有辨識到QR Code，請換一張較清楚的照片"); locateCode(raw); } catch { alert("QR Code圖片讀取失敗，請換一張較清楚的照片"); } };

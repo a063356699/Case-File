@@ -42264,6 +42264,7 @@ ${String(ex)}`);
     const [showingFollowUpDue, setShowingFollowUpDue] = (0, import_react.useState)("");
     const [advancedFilterOpen, setAdvancedFilterOpen] = (0, import_react.useState)(false);
     const [advancedFilter, setAdvancedFilter] = (0, import_react.useState)(() => blankAdvancedFilter());
+    const [bookReviewOpenRequest, setBookReviewOpenRequest] = (0, import_react.useState)(0);
     const [editing, setEditing] = (0, import_react.useState)(null);
     const [newCaseReminder, setNewCaseReminder] = (0, import_react.useState)(null);
     const deferredNewCaseReminderIds = (0, import_react.useRef)(/* @__PURE__ */ new Set());
@@ -42647,6 +42648,8 @@ ${String(ex)}`);
     }, [tourDate, tourTitle, tourItems]);
     const archived = (0, import_react.useMemo)(() => sortArchivedRecords(records.filter((r) => r.archived || isExpired(r) || r.status !== "\u59D4\u8A17\u4E2D")), [records]);
     const active = (0, import_react.useMemo)(() => records.filter((r) => !r.archived && !isExpired(r) && (r.status || "\u59D4\u8A17\u4E2D") === "\u59D4\u8A17\u4E2D"), [records]);
+    const bookReviewCycleStart = normalizeDateInput(settings.bookReviewCurrentDate || "") || "2026-07-30";
+    const bookReviewDueCount = today() >= bookReviewCycleStart ? active.filter((record) => normalizeDateInput(record.bookLocationDate || "") !== today()).length : 0;
     const latestRecordModifiedAt = records.reduce((latest, record) => {
       const candidate = String(record.lastModifiedAt || record.caseNameNoteModifiedAt || record.reducedPriceModifiedAt || "");
       if (!candidate || Number.isNaN(new Date(candidate).getTime())) return latest;
@@ -43721,7 +43724,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       !internalView && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { className: "topbar", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
           "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V97" })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V98" })
         ] }) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "ppt-export-button", onClick: () => {
@@ -43747,6 +43750,13 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { className: tab === "active" ? "active" : "", onClick: () => setTab("active"), children: [
             "\u59D4\u8A17\u4E2D ",
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: active.length })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { onClick: () => {
+            setTab("active");
+            bookReviewDueCount ? setBookReviewOpenRequest((value) => value + 1) : flash("\u76EE\u524D\u6C92\u6709\u5F85\u78BA\u8A8D\u7684\u7269\u4EF6\u672C");
+          }, children: [
+            "\u7269\u4EF6\u672C\u78BA\u8A8D ",
+            bookReviewDueCount
           ] }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { className: tab === "archive" ? "active" : "", onClick: () => setTab("archive"), children: [
             "\u5C01\u5B58",
@@ -43776,7 +43786,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
           item.date < today() ? "\uFF08\u5DF2\u5230\u671F\uFF09" : item.leadDays === 30 ? "\uFF0830\u5929\u5167\uFF09" : "\uFF08\u660E\u5929\u5230\u671F\uFF09"
         ] }, item.label))
       ] }),
-      !internalView && tab === "active" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PropertyBookReview, { records, settings, submit: submitBookReviews, openRecord: setEditing }),
+      !internalView && tab === "active" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PropertyBookReview, { records, settings, openRequest: bookReviewOpenRequest, submit: submitBookReviews, openRecord: setEditing }),
       !internalView && tab === "active" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(BusinessReportInbox, { records: active, resolve: resolveMonthlyPropertyReport, archive: (record, status) => setArchiveChoice({ record, status, date: today() }) }),
       showingPublic && publicUnlocked && publicScope === "mine" && publicPerson && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(MonthlyPropertyReport, { records: myProperties, person: publicPerson, submit: submitMonthlyPropertyReport }),
       pptPickerOpen && selectedPptBaseRecords.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("aside", { className: "ppt-order-float", children: [
@@ -47604,7 +47614,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     }
     return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: cellValue(r, k) || "\u2014" });
   }
-  function PropertyBookReview({ records, settings, submit, openRecord }) {
+  function PropertyBookReview({ records, settings, openRequest, submit, openRecord }) {
     const cycleStart = normalizeDateInput(settings.bookReviewCurrentDate || "") || "2026-07-30";
     const nextCheckDate = normalizeDateInput(settings.bookReviewNextDate || "") || "2026-09-30";
     const reviewCycle = today() >= cycleStart ? `book-${cycleStart}` : "";
@@ -47620,6 +47630,12 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     const videoRef = (0, import_react.useRef)(null);
     const streamRef = (0, import_react.useRef)(null);
     const scannedSetRef = (0, import_react.useRef)(/* @__PURE__ */ new Set());
+    (0, import_react.useEffect)(() => {
+      if (openRequest > 0) {
+        setReviewVisible(true);
+        setReviewOpen(true);
+      }
+    }, [openRequest]);
     const locateCode = (raw) => {
       const clean = String(raw || "").trim();
       const record = records.find((item) => clean.includes(item.propertyNo) || item.address && clean.includes(item.address) || item.caseName && clean.includes(item.caseName));
