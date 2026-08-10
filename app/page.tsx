@@ -484,6 +484,12 @@ const sortActiveRecords = (items: RecordItem[]) => items.map((record, index) => 
   const date = String(a.record.reportDate || "9999-12-31").localeCompare(String(b.record.reportDate || "9999-12-31"), "zh-TW", { numeric: true });
   return date || a.index - b.index;
 }).map(item => item.record);
+// 封存依實際封存日（到期自動下架則以委託結束日）由新到舊排列。
+const sortArchivedRecords = (items: RecordItem[]) => items.map((record, index) => ({ record, index })).sort((a, b) => {
+  const dateOf = (item: RecordItem) => String(item.archived || item._archiveActionDate || item.entrustEnd || "");
+  const date = dateOf(b.record).localeCompare(dateOf(a.record), "zh-TW", { numeric: true });
+  return date || b.index - a.index;
+}).map(item => item.record);
 const chunkText = (value = "", size = 16) => { const actualSize = size === 20 ? 25 : size === 15 || size === 10 ? 12 : size; const chars = Array.from(value); return Array.from({ length: Math.ceil(chars.length / actualSize) }, (_, index) => chars.slice(index * actualSize, index * actualSize + actualSize).join("")); };
 let developerPersonnelForDisplay: Person[] = [];
 const knownDeveloperFullNames = ["王啟山", "王若芸", "王俞云", "王妤宸", "林玉環", "林顯昌", "林姿岑", "林俊嘉", "陳帝元", "陳珮菁", "陳信良", "郭建佑", "謝馨儀", "蔡宇育", "田庭宇", "吳佩玲", "黃文成", "買淑玲", "劉勝仁", "張小曼", "李享嶧", "阮氏金水", "宋喜輝", "柯育婷", "李麗卉", "施紹薇", "余沛臻", "葉翊緁", "楊巧甄"];
@@ -969,7 +975,7 @@ export default function Home() {
   useEffect(() => { if (storageReady) localStorage.setItem(INTAKE_KEY, JSON.stringify({ raw: intakeRaw, drafts: intakeDrafts, selectedId: selectedIntakeId })); }, [intakeRaw, intakeDrafts, selectedIntakeId, storageReady]);
   useEffect(() => { localStorage.setItem(TOUR_KEY, JSON.stringify({ date: tourDate, title: tourTitle, items: tourItems })); }, [tourDate, tourTitle, tourItems]);
 
-  const archived = useMemo(() => records.filter(r => r.archived || isExpired(r) || r.status !== "委託中"), [records]);
+  const archived = useMemo(() => sortArchivedRecords(records.filter(r => r.archived || isExpired(r) || r.status !== "委託中")), [records]);
   const active = useMemo(() => records.filter(r => !r.archived && !isExpired(r) && (r.status || "委託中") === "委託中"), [records]);
   const latestRecordModifiedAt = records.reduce((latest, record) => {
     const candidate = String(record.lastModifiedAt || record.caseNameNoteModifiedAt || record.reducedPriceModifiedAt || "");
@@ -1678,7 +1684,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="brand"><h1>總表　管理模式 <small className="app-version">V94</small></h1></div>
+      <div className="brand"><h1>總表　管理模式 <small className="app-version">V95</small></h1></div>
       <div className="header-actions"><button className="ppt-export-button" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button onClick={exportExcel}>匯出 Excel</button><label className="file-button">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button onClick={exportJson}>匯出 JSON</button><button className="key-tag" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button><span className="home-last-modified">最後修改: {latestModifiedAt ? displayHomeModifiedAt(latestModifiedAt) : "尚無紀錄"}</span></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>

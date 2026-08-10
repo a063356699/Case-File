@@ -41845,6 +41845,11 @@ ${String(ex)}`);
     const date = String(a.record.reportDate || "9999-12-31").localeCompare(String(b.record.reportDate || "9999-12-31"), "zh-TW", { numeric: true });
     return date || a.index - b.index;
   }).map((item) => item.record);
+  var sortArchivedRecords = (items) => items.map((record, index) => ({ record, index })).sort((a, b) => {
+    const dateOf = (item) => String(item.archived || item._archiveActionDate || item.entrustEnd || "");
+    const date = dateOf(b.record).localeCompare(dateOf(a.record), "zh-TW", { numeric: true });
+    return date || b.index - a.index;
+  }).map((item) => item.record);
   var chunkText = (value = "", size = 16) => {
     const actualSize = size === 20 ? 25 : size === 15 || size === 10 ? 12 : size;
     const chars = Array.from(value);
@@ -42623,7 +42628,7 @@ ${String(ex)}`);
     (0, import_react.useEffect)(() => {
       localStorage.setItem(TOUR_KEY, JSON.stringify({ date: tourDate, title: tourTitle, items: tourItems }));
     }, [tourDate, tourTitle, tourItems]);
-    const archived = (0, import_react.useMemo)(() => records.filter((r) => r.archived || isExpired(r) || r.status !== "\u59D4\u8A17\u4E2D"), [records]);
+    const archived = (0, import_react.useMemo)(() => sortArchivedRecords(records.filter((r) => r.archived || isExpired(r) || r.status !== "\u59D4\u8A17\u4E2D")), [records]);
     const active = (0, import_react.useMemo)(() => records.filter((r) => !r.archived && !isExpired(r) && (r.status || "\u59D4\u8A17\u4E2D") === "\u59D4\u8A17\u4E2D"), [records]);
     const latestRecordModifiedAt = records.reduce((latest, record) => {
       const candidate = String(record.lastModifiedAt || record.caseNameNoteModifiedAt || record.reducedPriceModifiedAt || "");
@@ -43698,7 +43703,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       !internalView && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { className: "topbar", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
           "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V94" })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V95" })
         ] }) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "ppt-export-button", onClick: () => {
