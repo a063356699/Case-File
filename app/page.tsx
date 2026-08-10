@@ -32,6 +32,12 @@ const newCaseReminderPending = (record: RecordItem) => !["housingListingComplete
 // signed-in user and the table's row-level security policy, never by this key.
 const CASE_FILE_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_dhr81918k0zRtar14yepIA_ZWmTKT10";
 const newId = () => globalThis.crypto?.randomUUID?.() || `id-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+const jsonExportFileName = (date = new Date()) => {
+  const rocYear = date.getFullYear() - 1911;
+  const period = date.getHours() < 12 ? "早上" : "下午";
+  const hour = date.getHours() % 12 || 12;
+  return `${rocYear}年${date.getMonth() + 1}月${date.getDate()}日${period}${hour}點${date.getMinutes()}分${String(date.getSeconds()).padStart(2, "0")}秒.json`;
+};
 
 const fields = [
   ["propertyNo", "物件編號"], ["type", "種類"], ["contractType", "契種"], ["status", "物件狀態"],
@@ -1208,7 +1214,7 @@ export default function Home() {
   };
 
   const download = (name: string, blob: Blob) => { const a = document.createElement("a"); const url = URL.createObjectURL(blob); a.href = url; a.download = name; a.style.display = "none"; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 3000); };
-  const exportJson = () => download(`物件總表_${today()}.json`, new Blob([JSON.stringify({ version: 2, exportedAt: new Date().toISOString(), settings: { personnel: settings.personnel, bookReviewCurrentDate: settings.bookReviewCurrentDate, bookReviewNextDate: settings.bookReviewNextDate, expiry591: settings.expiry591, expiry5168: settings.expiry5168, brokerExpiry: settings.brokerExpiry }, records }, null, 2)], { type: "application/json" }));
+  const exportJson = () => download(jsonExportFileName(), new Blob([JSON.stringify({ version: 2, exportedAt: new Date().toISOString(), settings: { personnel: settings.personnel, bookReviewCurrentDate: settings.bookReviewCurrentDate, bookReviewNextDate: settings.bookReviewNextDate, expiry591: settings.expiry591, expiry5168: settings.expiry5168, brokerExpiry: settings.brokerExpiry }, records }, null, 2)], { type: "application/json" }));
   const importJson = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]; if (!file) return;
     const reader = new FileReader(); reader.onload = () => { try {
@@ -1672,7 +1678,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="brand"><h1>總表　管理模式 <small className="app-version">V93</small></h1></div>
+      <div className="brand"><h1>總表　管理模式 <small className="app-version">V94</small></h1></div>
       <div className="header-actions"><button className="ppt-export-button" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button onClick={exportExcel}>匯出 Excel</button><label className="file-button">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button onClick={exportJson}>匯出 JSON</button><button className="key-tag" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button><span className="home-last-modified">最後修改: {latestModifiedAt ? displayHomeModifiedAt(latestModifiedAt) : "尚無紀錄"}</span></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>

@@ -41069,6 +41069,12 @@ ${String(ex)}`);
   var newCaseReminderPending = (record) => !["housingListingCompleted", "newBookCompleted", "wangReviewCompleted"].every((key) => record[key] === "1");
   var CASE_FILE_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_dhr81918k0zRtar14yepIA_ZWmTKT10";
   var newId = () => globalThis.crypto?.randomUUID?.() || `id-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  var jsonExportFileName = (date = /* @__PURE__ */ new Date()) => {
+    const rocYear = date.getFullYear() - 1911;
+    const period = date.getHours() < 12 ? "\u65E9\u4E0A" : "\u4E0B\u5348";
+    const hour = date.getHours() % 12 || 12;
+    return `${rocYear}\u5E74${date.getMonth() + 1}\u6708${date.getDate()}\u65E5${period}${hour}\u9EDE${date.getMinutes()}\u5206${String(date.getSeconds()).padStart(2, "0")}\u79D2.json`;
+  };
   var fields = [
     ["propertyNo", "\u7269\u4EF6\u7DE8\u865F"],
     ["type", "\u7A2E\u985E"],
@@ -42926,7 +42932,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
         a.remove();
       }, 3e3);
     };
-    const exportJson = () => download(`\u7269\u4EF6\u7E3D\u8868_${today()}.json`, new Blob([JSON.stringify({ version: 2, exportedAt: (/* @__PURE__ */ new Date()).toISOString(), settings: { personnel: settings.personnel, bookReviewCurrentDate: settings.bookReviewCurrentDate, bookReviewNextDate: settings.bookReviewNextDate, expiry591: settings.expiry591, expiry5168: settings.expiry5168, brokerExpiry: settings.brokerExpiry }, records }, null, 2)], { type: "application/json" }));
+    const exportJson = () => download(jsonExportFileName(), new Blob([JSON.stringify({ version: 2, exportedAt: (/* @__PURE__ */ new Date()).toISOString(), settings: { personnel: settings.personnel, bookReviewCurrentDate: settings.bookReviewCurrentDate, bookReviewNextDate: settings.bookReviewNextDate, expiry591: settings.expiry591, expiry5168: settings.expiry5168, brokerExpiry: settings.brokerExpiry }, records }, null, 2)], { type: "application/json" }));
     const importJson = (e) => {
       const file = e.target.files?.[0];
       if (!file) return;
@@ -43692,7 +43698,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       !internalView && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { className: "topbar", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
           "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V93" })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V94" })
         ] }) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "ppt-export-button", onClick: () => {
