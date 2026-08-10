@@ -1700,7 +1700,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="brand"><h1>總表　管理模式 <small className="app-version">V104</small></h1><span className="home-last-modified">最後修改: {latestModifiedAt ? displayHomeModifiedAt(latestModifiedAt) : "尚無紀錄"}</span></div>
+      <div className="brand"><h1>總表　管理模式 <small className="app-version">V105</small></h1><span className="home-last-modified">最後修改: {latestModifiedAt ? displayHomeModifiedAt(latestModifiedAt) : "尚無紀錄"}</span></div>
       <div className="header-actions">{bookReviewDueCount > 0 && <button className="book-review-header-button" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button onClick={exportExcel}>匯出 Excel</button><label className="file-button">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button onClick={exportJson}>匯出 JSON</button><button className="key-tag" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
