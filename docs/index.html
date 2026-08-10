@@ -43739,7 +43739,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V111" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V112" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             bookReviewDueCount > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { className: "book-review-header-button", onClick: () => {
@@ -48733,6 +48733,32 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     const [cloudEmail, setCloudEmail] = (0, import_react.useState)("");
     const [cloudPassword, setCloudPassword] = (0, import_react.useState)("");
     const updatePerson = (id, patch) => setSettings({ ...settings, personnel: settings.personnel.map((p) => p.id === id ? { ...p, ...patch } : p) });
+    const composingPersonFields = (0, import_react.useRef)(/* @__PURE__ */ new Set());
+    const personTextInput = (person, field, placeholder, type = "text") => {
+      const fieldId = `${person.id}:${field}`;
+      const normalize = (value) => field === "nationalId" ? value.toUpperCase() : value;
+      const save = (value) => updatePerson(person.id, { [field]: normalize(value) });
+      return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+        "input",
+        {
+          type,
+          value: person[field] || "",
+          placeholder,
+          onCompositionStart: () => composingPersonFields.current.add(fieldId),
+          onCompositionEnd: (event) => {
+            composingPersonFields.current.delete(fieldId);
+            save(event.currentTarget.value);
+          },
+          onChange: (event) => {
+            if (composingPersonFields.current.has(fieldId) || event.nativeEvent.isComposing) return;
+            save(event.target.value);
+          },
+          onBlur: (event) => {
+            if (!composingPersonFields.current.has(fieldId)) save(event.currentTarget.value);
+          }
+        }
+      );
+    };
     const removePerson = (id) => {
       if (!confirm("\u78BA\u5B9A\u522A\u9664\u9019\u4F4D\u4EBA\u54E1\uFF1F\u522A\u9664\u5F8C\u5E8F\u865F\u6703\u81EA\u52D5\u91CD\u65B0\u7DE8\u6392\u3002")) return;
       const currentScrollTop = window.scrollY;
@@ -48745,9 +48771,9 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     const formerPeople = sortPeopleBySequence(settings.personnel.filter((p) => p.status === "\u96E2\u8077"));
     const personRow = (p) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "person-row", children: [
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { className: "person-sequence", type: "number", min: "1", value: p.sequence || "", onChange: (e) => updatePerson(p.id, { sequence: e.target.value }), placeholder: "\u5E8F" }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { value: p.name, onChange: (e) => updatePerson(p.id, { name: e.target.value }), placeholder: "\u59D3\u540D" }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: p.nationalId, onChange: (e) => updatePerson(p.id, { nationalId: e.target.value.toUpperCase() }), placeholder: "\u8EAB\u5206\u8B49\u5B57\u865F" }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "tel", value: p.phone || "", onChange: (e) => updatePerson(p.id, { phone: e.target.value }), placeholder: "\u624B\u6A5F\u865F\u78BC" }),
+      personTextInput(p, "name", "\u59D3\u540D"),
+      personTextInput(p, "nationalId", "\u8EAB\u5206\u8B49\u5B57\u865F"),
+      personTextInput(p, "phone", "\u624B\u6A5F\u865F\u78BC", "tel"),
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", { value: p.role || "\u696D\u52D9", onChange: (e) => updatePerson(p.id, { role: e.target.value }), children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { children: "\u696D\u52D9" }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { children: "\u79D8\u66F8" })
