@@ -1700,11 +1700,10 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="brand"><h1>總表　管理模式 <small className="app-version">V98</small></h1></div>
-      <div className="header-actions"><button className="ppt-export-button" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button onClick={exportExcel}>匯出 Excel</button><label className="file-button">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button onClick={exportJson}>匯出 JSON</button><button className="key-tag" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button><span className="home-last-modified">最後修改: {latestModifiedAt ? displayHomeModifiedAt(latestModifiedAt) : "尚無紀錄"}</span></div>
+      <div className="brand"><h1>總表　管理模式 <small className="app-version">V99</small></h1></div>
+      <div className="header-actions">{bookReviewDueCount > 0 && <button className="book-review-header-button" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button onClick={exportExcel}>匯出 Excel</button><label className="file-button">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button onClick={exportJson}>匯出 JSON</button><button className="key-tag" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button><span className="home-last-modified">最後修改: {latestModifiedAt ? displayHomeModifiedAt(latestModifiedAt) : "尚無紀錄"}</span></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
-      <button onClick={() => { setTab("active"); bookReviewDueCount ? setBookReviewOpenRequest(value => value + 1) : flash("目前沒有待確認的物件本"); }}>物件本確認 {bookReviewDueCount}</button>
       <button className={tab === "archive" ? "active" : ""} onClick={() => setTab("archive")}>封存{pendingArchiveCleanup.length > 0 && <small className="archive-pending-count">待下架 {pendingArchiveCleanup.length}</small>}</button>
       <button className={tab === "activity" ? "active" : ""} onClick={() => setTab("activity")}>每日物件動態</button>
       <button className={tab === "inventory" ? "active" : ""} onClick={() => setTab("inventory")}>物件庫存</button>
