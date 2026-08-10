@@ -43683,7 +43683,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       !internalView && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { className: "topbar", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
           "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V91" })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V92" })
         ] }) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "ppt-export-button", onClick: () => {
@@ -46465,6 +46465,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       setFeaturesCopied(true);
       window.setTimeout(() => setFeaturesCopied(false), 1800);
     };
+    const isEntrustDate = (key) => key === "\u59D4\u8A17\u958B\u59CB" || key === "\u59D4\u8A17\u7D50\u675F";
     const draftCard = (item) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("article", { className: `draft-card ${draft?.id === item.id ? "selected" : ""}`, children: [
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "draft-summary", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: `kind-badge ${item.propertyKind === "\u7D14\u571F\u5730" ? "land" : ""}`, children: item.propertyKind === "\u7D14\u571F\u5730" ? "\u571F\u5730" : item.propertyKind }),
@@ -46566,13 +46567,17 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: draft.propertyKind === "\u7D14\u571F\u5730" ? "selected" : "", onClick: () => updateValue("\u7269\u4EF6\u578B\u614B", "\u571F\u5730"), children: "\u571F\u5730" }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u6240\u6709\u6B04\u4F4D\u90FD\u53EF\u4FEE\u6539\u5F8C\u518D\u5217\u5370" })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "intake-edit-grid", children: intakeEditFields.filter(([key]) => !isLandIntakeDraft(draft) || !landHiddenIntakeFields.has(key)).map(([key, label]) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: intakeFieldClass(key), children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: key === "\u7279\u8272\u8AAA\u660E1" ? "intake-feature-title" : "", children: [
-              label,
-              key === "\u7279\u8272\u8AAA\u660E1" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: "copy-features-button", onClick: copyFeatures, children: featuresCopied ? "\u5DF2\u8907\u88FD" : "\u8907\u88FD\u7279\u82721\uFF5E4" })
-            ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { value: intakeValue(draft.values, key), onChange: (e) => updateValue(key, e.target.value) })
-          ] }, key)) }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "intake-edit-grid", children: intakeEditFields.filter(([key]) => !isLandIntakeDraft(draft) || !landHiddenIntakeFields.has(key)).map(([key, label]) => {
+            const rawValue = intakeValue(draft.values, key);
+            const dateField = isEntrustDate(key);
+            return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: intakeFieldClass(key), children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: key === "\u7279\u8272\u8AAA\u660E1" ? "intake-feature-title" : "", children: [
+                label,
+                key === "\u7279\u8272\u8AAA\u660E1" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: "copy-features-button", onClick: copyFeatures, children: featuresCopied ? "\u5DF2\u8907\u88FD" : "\u8907\u88FD\u7279\u82721\uFF5E4" })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { inputMode: dateField ? "numeric" : void 0, placeholder: dateField ? "\u4F8B\u5982 115/8/6" : void 0, value: dateField ? displayRocDate(normalizeDateInput(rawValue)) : rawValue, onChange: (e) => updateValue(key, e.target.value), onBlur: dateField ? (e) => updateValue(key, normalizeDateInput(e.target.value)) : void 0 })
+            ] }, key);
+          }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "intake-modal-preview", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PrintableIntake, { draft }) })
         ] }) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "print-output-only", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PrintableIntake, { draft }) })
