@@ -12,7 +12,7 @@ type AdvancedFilter = Record<string, string>;
 type Person = { id: string; sequence?: string; name: string; nationalId: string; phone?: string; role?: "業務" | "秘書"; status: "在職" | "離職" };
 type Settings = { personnel: Person[]; staffName?: string; staffId?: string; supabaseUrl: string; supabaseKey: string; supabaseTable: string; supabaseRecord: string; expiry591?: string; expiry5168?: string; brokerExpiry?: string; bookReviewCurrentDate?: string; bookReviewNextDate?: string };
 type CloudSession = { accessToken: string; refreshToken?: string; email?: string };
-type IntakeData = { id: string; values: Record<string, string>; propertyKind: "房屋" | "純土地"; createdAt: string; raw?: string; linkedRecordId?: string; enteredAt?: string; groupViewDate?: string; printedForSalesAt?: string };
+type IntakeData = { id: string; values: Record<string, string>; propertyKind: "房屋" | "純土地"; createdAt: string; modifiedAt?: string; raw?: string; linkedRecordId?: string; enteredAt?: string; groupViewDate?: string; printedForSalesAt?: string };
 type TourItem = { id: string; recordId?: string; sequence: string; temporary?: boolean; data: RecordItem };
 
 const STORAGE_KEY = "property-desk-v1";
@@ -548,7 +548,8 @@ function parseIntakes(text: string): IntakeData[] {
     const values: Record<string, string> = {};
     headers.forEach((header, i) => { if (!header) return; const key = values[header] === undefined ? header : `${header}#${i}`; values[key] = data[i] || ""; });
     const type = intakeValue(values, "物件型態");
-    return { id: newId(), values, propertyKind: type.includes("土地") ? "純土地" : "房屋", createdAt: new Date().toISOString() };
+    const createdAt = new Date().toISOString();
+    return { id: newId(), values, propertyKind: type.includes("土地") ? "純土地" : "房屋", createdAt, modifiedAt: createdAt };
   });
 }
 
@@ -958,16 +959,23 @@ export default function Home() {
   }, []);
   // 先完成本機設定讀取，才允許寫回；避免匯入後被初始空白人員覆蓋。
   useEffect(() => { if (storageReady) localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); }, [settings, storageReady]);
-  useEffect(() => { localStorage.setItem(INTAKE_KEY, JSON.stringify({ raw: intakeRaw, drafts: intakeDrafts, selectedId: selectedIntakeId })); }, [intakeRaw, intakeDrafts, selectedIntakeId]);
+  // 等草稿讀取完成後才寫回，避免剛開新版本時用初始空白內容覆寫舊草稿。
+  useEffect(() => { if (storageReady) localStorage.setItem(INTAKE_KEY, JSON.stringify({ raw: intakeRaw, drafts: intakeDrafts, selectedId: selectedIntakeId })); }, [intakeRaw, intakeDrafts, selectedIntakeId, storageReady]);
   useEffect(() => { localStorage.setItem(TOUR_KEY, JSON.stringify({ date: tourDate, title: tourTitle, items: tourItems })); }, [tourDate, tourTitle, tourItems]);
 
   const archived = useMemo(() => records.filter(r => r.archived || isExpired(r) || r.status !== "委託中"), [records]);
   const active = useMemo(() => records.filter(r => !r.archived && !isExpired(r) && (r.status || "委託中") === "委託中"), [records]);
-  const latestModifiedAt = records.reduce((latest, record) => {
+  const latestRecordModifiedAt = records.reduce((latest, record) => {
     const candidate = String(record.lastModifiedAt || record.caseNameNoteModifiedAt || record.reducedPriceModifiedAt || "");
     if (!candidate || Number.isNaN(new Date(candidate).getTime())) return latest;
     return !latest || new Date(candidate).getTime() > new Date(latest).getTime() ? candidate : latest;
   }, "");
+  const latestDraftModifiedAt = intakeDrafts.reduce((latest, draft) => {
+    const candidate = String(draft.modifiedAt || draft.createdAt || "");
+    if (!candidate || Number.isNaN(new Date(candidate).getTime())) return latest;
+    return !latest || new Date(candidate).getTime() > new Date(latest).getTime() ? candidate : latest;
+  }, "");
+  const latestModifiedAt = !latestRecordModifiedAt || (latestDraftModifiedAt && new Date(latestDraftModifiedAt).getTime() > new Date(latestRecordModifiedAt).getTime()) ? latestDraftModifiedAt : latestRecordModifiedAt;
   const showingFollowUpRecords = active.filter(record => record.showingFollowUp === "暫停帶看／等待業務回覆");
   useEffect(() => {
     const dueToday = showingFollowUpRecords.filter(record => normalizeDateInput(record.showingFollowUpDueDate || "") === today());
@@ -1491,7 +1499,11 @@ export default function Home() {
           return [...map.values()];
         });
         if (data.settings) setSettings(previous => ({ ...previous, ...(data.settings.bookReviewCurrentDate ? { bookReviewCurrentDate: data.settings.bookReviewCurrentDate } : {}), ...(data.settings.bookReviewNextDate ? { bookReviewNextDate: data.settings.bookReviewNextDate } : {}), ...(data.settings.expiry591 ? { expiry591: data.settings.expiry591 } : {}), ...(data.settings.expiry5168 ? { expiry5168: data.settings.expiry5168 } : {}), ...(data.settings.brokerExpiry ? { brokerExpiry: data.settings.brokerExpiry } : {}), ...(Array.isArray(data.settings.personnel) && data.settings.personnel.length > 0 ? { personnel: mergeSuppliedPersonnel(data.settings.personnel) } : {}) }));
-        if (data.intake) { setIntakeRaw(data.intake.raw || ""); setIntakeDrafts(data.intake.drafts || []); setSelectedIntakeId(data.intake.selectedId || ""); }
+        if (data.intake) {
+          setIntakeRaw(previous => previous || data.intake.raw || "");
+          setIntakeDrafts(previous => mergeIntakeDrafts(previous, Array.isArray(data.intake.drafts) ? data.intake.drafts : []));
+          setSelectedIntakeId(previous => previous || data.intake.selectedId || "");
+        }
         if (data.tour) { setTourDate(data.tour.date || today()); setTourTitle(data.tour.title || ""); setTourItems(data.tour.items || []); }
         flash(automatic ? "已自動同步最新雲端資料" : "雲端資料已合併到本機");
       }
@@ -1586,10 +1598,12 @@ export default function Home() {
       return sameDraft || sameRecord ? [no || caseName || "未命名案件"] : [];
     });
     if (duplicateNames.length && !confirm(`發現相同案件：${duplicateNames.join("、")}\n資料已存在草稿或總表，仍要再次加入嗎？`)) return;
-    const saved = parsed.map(item => ({ ...item, raw: intakeRaw })); setIntakeDrafts(prev => [...saved.reverse(), ...prev]); setSelectedIntakeId(""); selectedIntakeRef.current = ""; setIntakeRaw(""); flash(`已新增 ${saved.length} 筆進案草稿`);
+    const stamp = new Date().toISOString();
+    const saved = parsed.map(item => ({ ...item, raw: intakeRaw, modifiedAt: stamp })); setIntakeDrafts(prev => [...saved.reverse(), ...prev]); setSelectedIntakeId(""); selectedIntakeRef.current = ""; setIntakeRaw(""); flash(`已新增 ${saved.length} 筆進案草稿`);
   };
   const addManualIntakeDraft = () => {
-    const draft: IntakeData = { id: newId(), values: {}, propertyKind: "房屋", createdAt: new Date().toISOString(), raw: "手動新增例外案件" };
+    const createdAt = new Date().toISOString();
+    const draft: IntakeData = { id: newId(), values: {}, propertyKind: "房屋", createdAt, modifiedAt: createdAt, raw: "手動新增例外案件" };
     setIntakeDrafts(previous => [draft, ...previous]);
     selectedIntakeRef.current = draft.id;
     setSelectedIntakeId(draft.id);
@@ -1598,7 +1612,7 @@ export default function Home() {
   const updateIntakeValue = (needle: string, value: string) => {
     const target = intakeDrafts.find(draft => draft.id === selectedIntakeId); if (!target) return;
     const values = { ...target.values }; const key = Object.keys(values).find(k => k.includes(needle)) || needle; values[key] = value;
-    const updated: IntakeData = { ...target, values, propertyKind: needle === "物件型態" ? (value.includes("土地") ? "純土地" : "房屋") : target.propertyKind };
+    const updated: IntakeData = { ...target, values, modifiedAt: new Date().toISOString(), propertyKind: needle === "物件型態" ? (value.includes("土地") ? "純土地" : "房屋") : target.propertyKind };
     setIntakeDrafts(prev => prev.map(draft => draft.id === updated.id ? updated : draft));
     if (updated.linkedRecordId) setRecords(prev => prev.map(record => record.id === updated.linkedRecordId ? normalizeRecordPings(intakeToRecord(updated, record)) : record));
   };
@@ -1617,7 +1631,7 @@ export default function Home() {
     const target = intakeDrafts.find(draft => draft.id === id);
     if (!target) return;
     const printedForSalesAt = target.printedForSalesAt ? undefined : new Date().toISOString();
-    setIntakeDrafts(previous => previous.map(draft => draft.id === id ? { ...draft, printedForSalesAt } : draft));
+    setIntakeDrafts(previous => previous.map(draft => draft.id === id ? { ...draft, printedForSalesAt, modifiedAt: new Date().toISOString() } : draft));
     flash(printedForSalesAt ? `已記錄「${intakeValue(target.values, "案名") || "未命名案件"}」列印草稿` : "已取消列印草稿紀錄");
   };
   const confirmIntake = (draftId?: string) => { const targetId = draftId || selectedIntakeRef.current; const target = targetId ? intakeDrafts.find(d => d.id === targetId) : intakeDraft; if (!target) return; const targetNo = intakeValue(target.values, "委託主約編號"); const existing = target.linkedRecordId ? records.find(record => record.id === target.linkedRecordId) : records.find(record => !!targetNo && record.propertyNo === targetNo); const record = intakeToRecord(target, existing); if (!record.propertyNo || !record.caseName) return flash("缺少物件編號或案名，請先確認表單內容"); if (existing) { const tracked = withTrackedUpdate(existing, record); setRecords(prev => prev.map(item => item.id === existing.id ? tracked : item)); setIntakeDrafts(prev => prev.map(draft => draft.id === target.id ? { ...draft, linkedRecordId: existing.id, enteredAt: draft.enteredAt || new Date().toISOString() } : draft)); flash("已連結並同步更新原總表資料"); return; } if (!confirm(`確定文件已收到，將「${record.caseName}」正式加入總表？`)) return; setRecords(prev => [record, ...prev]); setIntakeDrafts(prev => prev.map(draft => draft.id === target.id ? { ...draft, linkedRecordId: record.id, enteredAt: new Date().toISOString() } : draft)); flash("已正式進案；原貼串已保留並與總表連動"); };
@@ -1658,7 +1672,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="brand"><h1>總表　管理模式 <small className="app-version">V92</small></h1></div>
+      <div className="brand"><h1>總表　管理模式 <small className="app-version">V93</small></h1></div>
       <div className="header-actions"><button className="ppt-export-button" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button onClick={exportExcel}>匯出 Excel</button><label className="file-button">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button onClick={exportJson}>匯出 JSON</button><button className="key-tag" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button><span className="home-last-modified">最後修改: {latestModifiedAt ? displayHomeModifiedAt(latestModifiedAt) : "尚無紀錄"}</span></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -1846,6 +1860,19 @@ function ContactDirectory({ people }: { people: Person[] }) {
   const groupStarts = [1, 12, 23];
   return <section className="contact-directory"><h3>台慶文化崇明店～同仁通訊錄～</h3><div className="contact-table-scroll"><table><thead><tr>{groupStarts.map(start => <Fragment key={start}><th>序</th><th>姓名</th><th>手機</th></Fragment>)}</tr></thead><tbody>{Array.from({ length: 11 }, (_, row) => <tr key={row}>{groupStarts.map(start => { const sequence = start + row; const person = bySequence.get(sequence); return <Fragment key={sequence}><td>{sequence}</td><td>{person?.name || ""}</td><td>{person?.phone ? <a href={`tel:${String(person.phone).replace(/\D/g, "")}`}>{displayPhone(person.phone)}</a> : ""}</td></Fragment>; })}</tr>)}</tbody></table></div></section>;
 }
+
+const intakeDraftStamp = (draft: IntakeData) => Date.parse(draft.modifiedAt || draft.createdAt || "") || 0;
+const intakeDraftIdentity = (draft: IntakeData) => draft.linkedRecordId || intakeValue(draft.values, "委託主約編號").trim() || `${intakeValue(draft.values, "案名").trim()}|${intakeValue(draft.values, "物件(完整)地址").trim()}` || draft.id;
+const mergeIntakeDrafts = (localDrafts: IntakeData[], cloudDrafts: IntakeData[]) => {
+  const merged = new Map<string, IntakeData>();
+  [...cloudDrafts, ...localDrafts].forEach(draft => {
+    if (!draft?.id) return;
+    const key = intakeDraftIdentity(draft);
+    const existing = merged.get(key);
+    if (!existing || intakeDraftStamp(draft) >= intakeDraftStamp(existing)) merged.set(key, draft);
+  });
+  return [...merged.values()].sort((a, b) => intakeDraftStamp(b) - intakeDraftStamp(a));
+};
 
 const keySummaryLeft = [1, 2, 3, 5, 6, 7, 8, 17, 18, 19, 20, 21, 22, 23, 24, 33, 34, 35, 36, 37, 38, 39];
 const keySummaryRight = [49, 50, 51, 52, 53, 55, 56, 65, 66, 67, 68, 69, 70, 71, 72, 81, 82, 83, 85, 86, 87, 88];

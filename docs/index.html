@@ -42000,7 +42000,8 @@ ${String(ex)}`);
         values[key] = data[i] || "";
       });
       const type = intakeValue(values, "\u7269\u4EF6\u578B\u614B");
-      return { id: newId(), values, propertyKind: type.includes("\u571F\u5730") ? "\u7D14\u571F\u5730" : "\u623F\u5C4B", createdAt: (/* @__PURE__ */ new Date()).toISOString() };
+      const createdAt = (/* @__PURE__ */ new Date()).toISOString();
+      return { id: newId(), values, propertyKind: type.includes("\u571F\u5730") ? "\u7D14\u571F\u5730" : "\u623F\u5C4B", createdAt, modifiedAt: createdAt };
     });
   }
   function intakeValue(values, ...needles) {
@@ -42611,18 +42612,24 @@ ${String(ex)}`);
       if (storageReady) localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
     }, [settings, storageReady]);
     (0, import_react.useEffect)(() => {
-      localStorage.setItem(INTAKE_KEY, JSON.stringify({ raw: intakeRaw, drafts: intakeDrafts, selectedId: selectedIntakeId }));
-    }, [intakeRaw, intakeDrafts, selectedIntakeId]);
+      if (storageReady) localStorage.setItem(INTAKE_KEY, JSON.stringify({ raw: intakeRaw, drafts: intakeDrafts, selectedId: selectedIntakeId }));
+    }, [intakeRaw, intakeDrafts, selectedIntakeId, storageReady]);
     (0, import_react.useEffect)(() => {
       localStorage.setItem(TOUR_KEY, JSON.stringify({ date: tourDate, title: tourTitle, items: tourItems }));
     }, [tourDate, tourTitle, tourItems]);
     const archived = (0, import_react.useMemo)(() => records.filter((r) => r.archived || isExpired(r) || r.status !== "\u59D4\u8A17\u4E2D"), [records]);
     const active = (0, import_react.useMemo)(() => records.filter((r) => !r.archived && !isExpired(r) && (r.status || "\u59D4\u8A17\u4E2D") === "\u59D4\u8A17\u4E2D"), [records]);
-    const latestModifiedAt = records.reduce((latest, record) => {
+    const latestRecordModifiedAt = records.reduce((latest, record) => {
       const candidate = String(record.lastModifiedAt || record.caseNameNoteModifiedAt || record.reducedPriceModifiedAt || "");
       if (!candidate || Number.isNaN(new Date(candidate).getTime())) return latest;
       return !latest || new Date(candidate).getTime() > new Date(latest).getTime() ? candidate : latest;
     }, "");
+    const latestDraftModifiedAt = intakeDrafts.reduce((latest, draft) => {
+      const candidate = String(draft.modifiedAt || draft.createdAt || "");
+      if (!candidate || Number.isNaN(new Date(candidate).getTime())) return latest;
+      return !latest || new Date(candidate).getTime() > new Date(latest).getTime() ? candidate : latest;
+    }, "");
+    const latestModifiedAt = !latestRecordModifiedAt || latestDraftModifiedAt && new Date(latestDraftModifiedAt).getTime() > new Date(latestRecordModifiedAt).getTime() ? latestDraftModifiedAt : latestRecordModifiedAt;
     const showingFollowUpRecords = active.filter((record) => record.showingFollowUp === "\u66AB\u505C\u5E36\u770B\uFF0F\u7B49\u5F85\u696D\u52D9\u56DE\u8986");
     (0, import_react.useEffect)(() => {
       const dueToday = showingFollowUpRecords.filter((record) => normalizeDateInput(record.showingFollowUpDueDate || "") === today());
@@ -43420,9 +43427,9 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
           });
           if (data.settings) setSettings((previous) => ({ ...previous, ...data.settings.bookReviewCurrentDate ? { bookReviewCurrentDate: data.settings.bookReviewCurrentDate } : {}, ...data.settings.bookReviewNextDate ? { bookReviewNextDate: data.settings.bookReviewNextDate } : {}, ...data.settings.expiry591 ? { expiry591: data.settings.expiry591 } : {}, ...data.settings.expiry5168 ? { expiry5168: data.settings.expiry5168 } : {}, ...data.settings.brokerExpiry ? { brokerExpiry: data.settings.brokerExpiry } : {}, ...Array.isArray(data.settings.personnel) && data.settings.personnel.length > 0 ? { personnel: mergeSuppliedPersonnel(data.settings.personnel) } : {} }));
           if (data.intake) {
-            setIntakeRaw(data.intake.raw || "");
-            setIntakeDrafts(data.intake.drafts || []);
-            setSelectedIntakeId(data.intake.selectedId || "");
+            setIntakeRaw((previous) => previous || data.intake.raw || "");
+            setIntakeDrafts((previous) => mergeIntakeDrafts(previous, Array.isArray(data.intake.drafts) ? data.intake.drafts : []));
+            setSelectedIntakeId((previous) => previous || data.intake.selectedId || "");
           }
           if (data.tour) {
             setTourDate(data.tour.date || today());
@@ -43559,7 +43566,8 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       });
       if (duplicateNames.length && !confirm(`\u767C\u73FE\u76F8\u540C\u6848\u4EF6\uFF1A${duplicateNames.join("\u3001")}
 \u8CC7\u6599\u5DF2\u5B58\u5728\u8349\u7A3F\u6216\u7E3D\u8868\uFF0C\u4ECD\u8981\u518D\u6B21\u52A0\u5165\u55CE\uFF1F`)) return;
-      const saved = parsed.map((item) => ({ ...item, raw: intakeRaw }));
+      const stamp = (/* @__PURE__ */ new Date()).toISOString();
+      const saved = parsed.map((item) => ({ ...item, raw: intakeRaw, modifiedAt: stamp }));
       setIntakeDrafts((prev) => [...saved.reverse(), ...prev]);
       setSelectedIntakeId("");
       selectedIntakeRef.current = "";
@@ -43567,7 +43575,8 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       flash(`\u5DF2\u65B0\u589E ${saved.length} \u7B46\u9032\u6848\u8349\u7A3F`);
     };
     const addManualIntakeDraft = () => {
-      const draft = { id: newId(), values: {}, propertyKind: "\u623F\u5C4B", createdAt: (/* @__PURE__ */ new Date()).toISOString(), raw: "\u624B\u52D5\u65B0\u589E\u4F8B\u5916\u6848\u4EF6" };
+      const createdAt = (/* @__PURE__ */ new Date()).toISOString();
+      const draft = { id: newId(), values: {}, propertyKind: "\u623F\u5C4B", createdAt, modifiedAt: createdAt, raw: "\u624B\u52D5\u65B0\u589E\u4F8B\u5916\u6848\u4EF6" };
       setIntakeDrafts((previous) => [draft, ...previous]);
       selectedIntakeRef.current = draft.id;
       setSelectedIntakeId(draft.id);
@@ -43579,7 +43588,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       const values = { ...target.values };
       const key = Object.keys(values).find((k) => k.includes(needle)) || needle;
       values[key] = value;
-      const updated = { ...target, values, propertyKind: needle === "\u7269\u4EF6\u578B\u614B" ? value.includes("\u571F\u5730") ? "\u7D14\u571F\u5730" : "\u623F\u5C4B" : target.propertyKind };
+      const updated = { ...target, values, modifiedAt: (/* @__PURE__ */ new Date()).toISOString(), propertyKind: needle === "\u7269\u4EF6\u578B\u614B" ? value.includes("\u571F\u5730") ? "\u7D14\u571F\u5730" : "\u623F\u5C4B" : target.propertyKind };
       setIntakeDrafts((prev) => prev.map((draft) => draft.id === updated.id ? updated : draft));
       if (updated.linkedRecordId) setRecords((prev) => prev.map((record) => record.id === updated.linkedRecordId ? normalizeRecordPings(intakeToRecord(updated, record)) : record));
     };
@@ -43601,7 +43610,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       const target = intakeDrafts.find((draft) => draft.id === id);
       if (!target) return;
       const printedForSalesAt = target.printedForSalesAt ? void 0 : (/* @__PURE__ */ new Date()).toISOString();
-      setIntakeDrafts((previous) => previous.map((draft) => draft.id === id ? { ...draft, printedForSalesAt } : draft));
+      setIntakeDrafts((previous) => previous.map((draft) => draft.id === id ? { ...draft, printedForSalesAt, modifiedAt: (/* @__PURE__ */ new Date()).toISOString() } : draft));
       flash(printedForSalesAt ? `\u5DF2\u8A18\u9304\u300C${intakeValue(target.values, "\u6848\u540D") || "\u672A\u547D\u540D\u6848\u4EF6"}\u300D\u5217\u5370\u8349\u7A3F` : "\u5DF2\u53D6\u6D88\u5217\u5370\u8349\u7A3F\u7D00\u9304");
     };
     const confirmIntake = (draftId) => {
@@ -43683,7 +43692,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       !internalView && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { className: "topbar", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
           "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V92" })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V93" })
         ] }) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "ppt-export-button", onClick: () => {
@@ -45031,6 +45040,18 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       ] }) })
     ] });
   }
+  var intakeDraftStamp = (draft) => Date.parse(draft.modifiedAt || draft.createdAt || "") || 0;
+  var intakeDraftIdentity = (draft) => draft.linkedRecordId || intakeValue(draft.values, "\u59D4\u8A17\u4E3B\u7D04\u7DE8\u865F").trim() || `${intakeValue(draft.values, "\u6848\u540D").trim()}|${intakeValue(draft.values, "\u7269\u4EF6(\u5B8C\u6574)\u5730\u5740").trim()}` || draft.id;
+  var mergeIntakeDrafts = (localDrafts, cloudDrafts) => {
+    const merged = /* @__PURE__ */ new Map();
+    [...cloudDrafts, ...localDrafts].forEach((draft) => {
+      if (!draft?.id) return;
+      const key = intakeDraftIdentity(draft);
+      const existing = merged.get(key);
+      if (!existing || intakeDraftStamp(draft) >= intakeDraftStamp(existing)) merged.set(key, draft);
+    });
+    return [...merged.values()].sort((a, b) => intakeDraftStamp(b) - intakeDraftStamp(a));
+  };
   var keySummaryLeft = [1, 2, 3, 5, 6, 7, 8, 17, 18, 19, 20, 21, 22, 23, 24, 33, 34, 35, 36, 37, 38, 39];
   var keySummaryRight = [49, 50, 51, 52, 53, 55, 56, 65, 66, 67, 68, 69, 70, 71, 72, 81, 82, 83, 85, 86, 87, 88];
   async function downloadColorWorkbook(record, personnel = []) {
