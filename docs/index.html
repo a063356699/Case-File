@@ -1430,6 +1430,17 @@ body{background:#f8fbfe!important;color:#405064!important}
 /* 雲端帳號不得由公開頁面自行建立；帳號僅由管理者在 Supabase 後台邀請。 */
 .supabase-body .backup-actions button.primary{display:none!important}
 .supabase-body .backup-actions:has(button.primary)::after{content:"雲端帳號僅由管理者建立，無法自行註冊。";align-self:center;color:#79561b;font-size:12px;font-weight:700}
+
+/* 首頁標題固定兩列：第一列標題與功能、第二列最後修改與分頁。 */
+.topbar{display:block!important;grid-template-columns:none!important;grid-template-rows:none!important;align-items:initial!important;gap:0!important;height:auto!important;min-height:0!important;padding:0!important}
+.topbar-row{display:flex!important;width:100%!important;min-width:0!important;align-items:center!important;justify-content:space-between!important;gap:20px!important;padding:10px 20px!important;border-bottom:1px solid #dfe8ef!important}
+.topbar-row .brand{display:flex!important;flex:0 0 auto!important;min-width:max-content!important;align-items:center!important}
+.topbar-row .brand h1{display:block!important;margin:0!important;color:#304d69!important;font-size:23px!important;line-height:1.2!important;letter-spacing:.04em!important;white-space:nowrap!important}
+.topbar-row .header-actions{display:flex!important;flex:0 1 auto!important;min-width:0!important;align-items:center!important;justify-content:flex-end!important;gap:9px!important;flex-wrap:nowrap!important;overflow-x:auto!important;padding:0!important;position:static!important}
+.topbar-row .header-actions>*{flex:0 0 auto!important}.topbar-row .header-actions button,.topbar-row .header-actions .file-button{white-space:nowrap!important}
+.topbar>.nav{display:flex!important;grid-column:auto!important;grid-row:auto!important;order:initial!important;width:100%!important;min-width:0!important;height:42px!important;min-height:42px!important;margin:0!important;padding:0 20px!important;align-items:center!important;justify-content:flex-start!important;gap:8px!important;overflow-x:auto!important;white-space:nowrap!important;background:#fff!important;border:0!important;pointer-events:auto!important}
+.topbar>.nav .home-last-modified{position:static!important;display:inline-flex!important;flex:none!important;align-items:center!important;height:27px!important;margin:0 8px 0 0!important;padding:4px 9px!important;border:1px solid #d5e0ea!important;border-radius:8px!important;background:#f7fbff!important;color:#54718b!important;font-size:11px!important;font-weight:700!important;line-height:1.2!important;white-space:nowrap!important}
+@media(max-width:1160px){.topbar-row{padding:9px 16px!important;align-items:flex-start!important;flex-direction:column!important;gap:8px!important}.topbar-row .header-actions{width:100%!important;justify-content:flex-start!important}.topbar>.nav{padding:0 16px!important}}
 </style>
 </head>
 <body>
@@ -43727,7 +43738,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V108" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V109" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             bookReviewDueCount > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { className: "book-review-header-button", onClick: () => {
