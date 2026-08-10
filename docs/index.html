@@ -43724,7 +43724,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       !internalView && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { className: "topbar", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
           "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V99" })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V100" })
         ] }) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
           bookReviewDueCount > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { className: "book-review-header-button", onClick: () => {
@@ -47636,36 +47636,49 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
         setReviewOpen(true);
       }
     }, [openRequest]);
-    const locateCode = (raw) => {
+    const reportMobileResult = (id, ok, message) => {
+      if (!id) return;
+      void fetch("http://localhost:8765/api/mobile-qr-result", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id, ok, message }) }).catch(() => {
+      });
+    };
+    const locateCode = (raw, mobileEventId) => {
       const clean = String(raw || "").trim();
       const record = records.find((item) => clean.includes(item.propertyNo) || item.address && clean.includes(item.address) || item.caseName && clean.includes(item.caseName));
       if (!record) {
-        const message = `\u8B66\u793A\uFF1A\u5237\u5230\u7684 QR Code \u4E0D\u5728\u76EE\u524D\u7269\u4EF6\u672C\uFF1A${clean || "\u672A\u8B80\u5230\u5167\u5BB9"}`;
-        setScanMessage(message);
-        alert(message);
+        const message = `\u5237\u5230\u7684 QR Code \u4E0D\u5728\u76EE\u524D\u7269\u4EF6\u672C\uFF1A${clean || "\u672A\u8B80\u5230\u5167\u5BB9"}`;
+        setScanMessage(`\u8B66\u793A\uFF1A${message}`);
+        reportMobileResult(mobileEventId, false, message);
+        alert(`\u8B66\u793A\uFF1A${message}`);
         return;
       }
       if (scannedSetRef.current.has(record.id)) {
-        setScanMessage(`${record.propertyNo} \u5DF2\u6383\u63CF\uFF0C\u8ACB\u5237\u4E0B\u4E00\u4EF6`);
+        const message = `${record.propertyNo} \u5DF2\u6383\u63CF\uFF0C\u8ACB\u5237\u4E0B\u4E00\u4EF6`;
+        setScanMessage(message);
+        reportMobileResult(mobileEventId, false, message);
         return;
       }
       const archived = !!record.archived || isExpired(record) || (record.status || "\u59D4\u8A17\u4E2D") !== "\u59D4\u8A17\u4E2D";
       if (archived) {
+        const message = `${record.propertyNo}\u300C${record.caseName || "\u672A\u547D\u540D\u6848\u4EF6"}\u300D\u5DF2${record.status || "\u4E0B\u67B6"}`;
         scannedSetRef.current.add(record.id);
         setScannerOpen(false);
         setReviewOpen(true);
         setArchivedScanRecord(record);
-        setScanMessage(`\u901A\u77E5\uFF1A${record.propertyNo}\u300C${record.caseName || "\u672A\u547D\u540D\u6848\u4EF6"}\u300D\u5DF2${record.status || "\u4E0B\u67B6"}\u3002`);
+        setScanMessage(`\u901A\u77E5\uFF1A${message}\u3002`);
+        reportMobileResult(mobileEventId, false, message);
         return;
       }
       if (!dueRecords.some((item) => item.id === record.id)) {
-        setScanMessage(`${record.caseName || record.propertyNo} \u5C1A\u672A\u5230\u78BA\u8A8D\u65E5\u671F`);
+        const message = `${record.caseName || record.propertyNo} \u5C1A\u672A\u5230\u78BA\u8A8D\u65E5\u671F`;
+        setScanMessage(message);
+        reportMobileResult(mobileEventId, false, message);
         return;
       }
       scannedSetRef.current.add(record.id);
       setScannedId(record.id);
       setScannedIds((previous) => [...previous, record.id]);
       setScanMessage(`\u5DF2\u66F4\u65B0\u4ECA\u5929\u65E5\u671F\uFF1A${record.propertyNo} ${record.caseName || ""}`);
+      reportMobileResult(mobileEventId, true, "\u5DF2\u66F4\u65B0\u7269\u4EF6\u672C\u65E5\u671F");
       submit([{ record, status: record.bookLocationType || "\u67B6\u4E0A" }]);
     };
     const decodeWithJsQR = (source, width, height) => {
@@ -47704,7 +47717,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
           const response = await fetch(endpoint, { cache: "no-store" });
           if (!response.ok) return;
           const data = await response.json();
-          if (!stopped) (data.events || []).forEach((event) => event.code && locateCode(event.code));
+          if (!stopped) (data.events || []).forEach((event) => event.code && locateCode(event.code, event.id));
         } catch {
         }
       };
