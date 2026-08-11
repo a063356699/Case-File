@@ -44933,8 +44933,9 @@ ${changedLabels}
         }
         if (!reports[reportKey])
           return item;
+        const reportedDate = String(reports[reportKey].reportedAt || "").slice(0, 10) || today();
         reports[reportKey] = { ...reports[reportKey], adminHandledAt: handledAt };
-        return { ...item, _monthlyReports: JSON.stringify(reports), ...keepActive ? { updateDate: today(), lastModifiedAt: handledAt } : {} };
+        return { ...item, _monthlyReports: JSON.stringify(reports), ...keepActive ? { updateDate: reportedDate, lastModifiedAt: handledAt } : {} };
       }));
       flash(keepActive ? "\u5DF2\u78BA\u8A8D\u7DAD\u6301\u59D4\u8A17\u4E2D\uFF0C\u66F4\u65B0\u65E5\u671F\u5DF2\u66F4\u65B0" : "\u5DF2\u6A19\u793A\u8655\u7406\u5B8C\u6210");
     };
@@ -44949,7 +44950,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V155" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V156" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             bookReviewDueCount > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { className: "book-review-header-button action-book-review", onClick: () => {
@@ -49332,7 +49333,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
         return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "primary", onClick: () => archive(item.record, "\u4E0B\u67B6\u6D3D\u958B\u767C"), children: "\u78BA\u8A8D\u4E0B\u67B6" });
       if (item.report.status === "\u8ACB\u8DDF\u958B\u767C\u696D\u52D92\u78BA\u8A8D")
         return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "business-report-wait", children: "\u7B49\u5F85\u53E6\u4E00\u4F4D\u958B\u767C\u78BA\u8A8D\u59D4\u8A17\u4E2D" });
-      return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => resolve(item.record, item.key), children: "\u5DF2\u67E5\u770B\uFF0C\u7B49\u5F85\u518D\u6B21\u78BA\u8A8D" });
+      return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => resolve(item.record, item.key, true), children: "\u5DF2\u67E5\u770B\uFF0C\u7B49\u5F85\u518D\u6B21\u78BA\u8A8D" });
     };
     return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", { className: "business-report-inbox", children: [
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { children: [
@@ -49449,6 +49450,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       ] }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "monthly-report-list", children: eligibleRecords.map((record) => {
         const report = reportOf(record), choice = choices[record.id] || "";
+        const options = developerNameLines(record.developer).length > 1 ? reportOptions : reportOptions.filter((option) => option !== "\u8ACB\u8DDF\u958B\u767C\u696D\u52D92\u78BA\u8A8D");
         return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { id: `report-${record.id}`, className: `monthly-report-row pill-report-row ${report?.status === "\u5F85\u78BA\u8A8D" && report.dueDate <= today() ? "overdue" : ""} ${missingChoices.includes(record.id) ? "missing-choice" : ""}`, children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "monthly-report-case", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: record.caseName || record.propertyNo }),
@@ -49462,7 +49464,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
               displayRocDate(report.dueDate)
             ] })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "monthly-report-pills", children: reportOptions.map((option) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_react.Fragment, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "monthly-report-pills", children: options.map((option) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_react.Fragment, { children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: choice === option ? "selected" : "", disabled: !!choice && choice !== option, onClick: () => {
               setChoices((previous) => ({ ...previous, [record.id]: choice === option ? "" : option }));
               setMissingChoices((previous) => previous.filter((id) => id !== record.id));
