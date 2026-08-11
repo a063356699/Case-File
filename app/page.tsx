@@ -1143,17 +1143,48 @@ export default function Home() {
   }, [pptPickerOpen, pptOrderIds, pptExtraIds, pptAdHocRecords, pptConfirmedSnapshots, weeklyPptRecords.map(record => record.id).join("|"), selectedPptBaseRecords.map(record => record.id).join("|")]);
   useEffect(() => {
     if (!pptPreviewRecord) return;
+    const record = pptPreviewRecord;
+    const land = typeShort(record.type) === "土地" || /^(LG|LA)/i.test(record.propertyNo || "");
+    const clean = (value = "") => /^(?:0|無|0；無|0;無)$/.test(String(value).trim()) ? "" : String(value || "").trim();
+    const num = (value = "") => String(value || "").replace(/,/g, "").match(/-?\d+(?:\.\d+)?/)?.[0] || "";
+    const price = clean(record.reducedPrice || record.price).replace(/萬/g, "");
+    const landPing = num(record.landPing);
+    const unitPrice = price && landPing ? `$${Math.round(Number(price) * 10000 / Number(landPing)).toLocaleString("en-US")}` : "";
+    const linkedDraft = intakeDrafts.find(draft => draft.id === record._intakeDraftId || draft.linkedRecordId === record.id);
+    const draftValue = (...keys: string[]) => linkedDraft ? intakeValue(linkedDraft.values, ...keys) : "";
     const overlay = document.createElement("div"); overlay.className = "ppt-slide-preview-backdrop";
-    const card = document.createElement("section"); card.className = "ppt-slide-preview";
-    const close = document.createElement("button"); close.type = "button"; close.className = "close"; close.textContent = "×"; close.addEventListener("click", () => setPptPreviewRecord(null));
-    const title = document.createElement("h2"); title.textContent = pptPreviewRecord.caseName || "未命名案件";
-    const address = document.createElement("p"); address.className = "ppt-slide-preview-address"; address.textContent = `地址：${pptPreviewRecord.address || "未填寫"}`;
-    const developer = document.createElement("p"); developer.className = "ppt-slide-preview-developer"; developer.textContent = `開發：${developerFullNameText(pptPreviewRecord.developer) || "未填寫"}`;
-    const price = document.createElement("strong"); price.className = "ppt-slide-preview-price"; price.textContent = `${String(pptPreviewRecord.price || "—").replace(/萬/g, "")}萬`;
+    const close = document.createElement("button"); close.type = "button"; close.className = "ppt-slide-preview-close"; close.textContent = "×"; close.title = "關閉預覽"; close.addEventListener("click", () => setPptPreviewRecord(null));
+    const slide = document.createElement("section"); slide.className = `ppt-slide-preview ${land ? "land" : "house"}`;
+    const top = document.createElement("div"); top.className = "ppt-slide-preview-top";
+    const addTop = (label: string, value: string, className: string) => { const item = document.createElement("div"); item.className = className; const tag = document.createElement("b"); tag.textContent = label; const text = document.createElement("span"); text.textContent = value; item.append(tag, text); top.append(item); };
+    addTop("案名", record.caseName || "", "ppt-slide-preview-case"); addTop("地址", record.address || "", "ppt-slide-preview-address");
+    const body = document.createElement("div"); body.className = "ppt-slide-preview-body";
+    const left = document.createElement("div"); left.className = "ppt-slide-preview-left";
+    const head = document.createElement("div"); head.className = "ppt-slide-preview-salehead";
+    const developer = document.createElement("div"); developer.className = "ppt-slide-preview-developer"; developer.innerHTML = "<b>開發</b>"; const developerValue = document.createElement("strong"); developerValue.textContent = developerFullNameText(record.developer) || ""; developer.append(developerValue);
+    const priceBox = document.createElement("div"); priceBox.className = "ppt-slide-preview-pricebox"; priceBox.innerHTML = `<b>${land ? "開價" : "委託總價"}</b><strong>${price}</strong><em>萬</em>`;
+    head.append(developer, priceBox); left.append(head);
     const fields = document.createElement("div"); fields.className = "ppt-slide-preview-fields";
-    [["總地坪", pptPreviewRecord.landPing], ["總建坪", pptPreviewRecord.buildingPing], ["室內坪", pptPreviewRecord.indoorPing], ["格局", pptPreviewRecord.layout], ["樓層", pptPreviewRecord.floor], ["朝向", pptPreviewRecord.direction], ["車位", pptPreviewRecord.parking], ["管理費", pptPreviewRecord.managementFee], ["現況", pptPreviewRecord.currentState], ["鑰匙", pptPreviewRecord.key]].forEach(([label, value]) => { const item = document.createElement("span"); item.textContent = `${label}：${value || "—"}`; fields.append(item); });
-    const note = document.createElement("p"); note.className = "ppt-slide-preview-note"; note.textContent = pptPreviewRecord.notes || "";
-    card.append(close, title, address, developer, price, fields, note); overlay.append(card); overlay.addEventListener("mousedown", event => { if (event.target === overlay) setPptPreviewRecord(null); }); document.body.append(overlay);
+    const addField = (label: string, value: string) => { const item = document.createElement("div"); const tag = document.createElement("b"); tag.textContent = label; const text = document.createElement("span"); text.textContent = value; item.append(tag, text); fields.append(item); };
+    if (land) {
+      addField("總地坪", landPing ? `${landPing}坪` : ""); addField("每坪單價", unitPrice);
+      addField("臨路", num(record.road) ? `${num(record.road)}米` : clean(record.road)); addField("座向", clean(record.direction));
+      addField("面寬", num(record.frontage) ? `${num(record.frontage)}米` : clean(record.frontage)); addField("深度", num(record.depth) ? `${num(record.depth)}米` : clean(record.depth));
+      addField("建蔽率／容積率", [clean(record.coverage), clean(record.far)].filter(Boolean).join("／")); addField("使用分區", clean(record.zoning));
+    } else {
+      addField("總地坪", landPing ? `${landPing}坪` : ""); addField("總建坪", num(record.buildingPing) ? `${num(record.buildingPing)}坪` : "");
+      addField("室內坪", num(record.indoorPing) ? `${num(record.indoorPing)}坪` : ""); addField("格局", clean(record.layout));
+      addField("面寬", num(record.frontage) ? `${num(record.frontage)}米` : clean(record.frontage)); addField("深度", num(record.depth) ? `${num(record.depth)}米` : clean(record.depth));
+      addField("臨路", num(record.road) ? `${num(record.road)}米` : clean(record.road)); addField("樓層", clean(record.floor));
+      addField("朝向", clean(record.direction)); addField("車位", clean(record.parking));
+      addField("管理費", /^\$?0(?:\.0+)?(?:元)?$/.test(record.managementFee || "") ? "無" : record.managementFee ? `${record.managementFee.replace(/\s*\/月\s*$/, "")}/月` : ""); addField("完工日&屋齡", `${draftValue("建築完成日期") || record.completionDate || record.builtYear || ""} ${ageOf(record)}`.trim());
+      addField("社區名稱", draftValue("大樓名稱") || record.communityName); addField("現況", clean(record.currentState)); addField("鑰匙", clean(record.key));
+    }
+    left.append(fields);
+    const note = document.createElement("div"); note.className = "ppt-slide-preview-note"; note.innerHTML = "<b>備註</b>"; const noteText = document.createElement("span"); noteText.textContent = displayNoteSegments(record.notes).join("；"); note.append(noteText); left.append(note);
+    const footer = document.createElement("div"); footer.className = "ppt-slide-preview-footer"; footer.textContent = `進案報件日期：${displayRocDate(record.reportDate) || ""}`; const no = document.createElement("span"); no.textContent = `物件編號：${record.propertyNo || ""}`; footer.append(no); left.append(footer);
+    const right = document.createElement("div"); right.className = "ppt-slide-preview-right"; ["", ""].forEach(() => { const frame = document.createElement("div"); frame.className = "ppt-slide-preview-frame"; right.append(frame); });
+    body.append(left, right); slide.append(top, body); overlay.append(close, slide); overlay.addEventListener("mousedown", event => { if (event.target === overlay) setPptPreviewRecord(null); }); document.body.append(overlay);
     return () => overlay.remove();
   }, [pptPreviewRecord]);
   const removeFromPptWeek = (record: RecordItem) => setRecords(previous => previous.map(item => {
@@ -1792,7 +1823,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V124</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V125</small></h1></div>
       <div className="header-actions">{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
