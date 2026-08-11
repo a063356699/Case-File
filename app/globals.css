@@ -384,6 +384,7 @@ button:hover,.file-button:hover{border-color:#9fbad0;box-shadow:0 2px 8px #7895a
 .internal-public-app .daily-activity.compact .daily-table th.col-caseName,.internal-public-app .daily-activity.compact .daily-table td.col-caseName{min-width:180px!important}
 .internal-public-app .daily-activity.compact .daily-table th.col-address,.internal-public-app .daily-activity.compact .daily-table td.col-address{min-width:220px!important}
 .internal-public-app .daily-activity.compact .daily-table th.col-notes,.internal-public-app .daily-activity.compact .daily-table td.col-notes{min-width:180px!important}
+.daily-card.updated .daily-table td.daily-updated-cell,.daily-card.updated .daily-table td.daily-updated-cell *{color:#e00000!important;font-weight:900!important}
 .record-edit-modal .draft-save-note{color:#e45b92;font-size:14px;font-weight:900;white-space:nowrap}
 .restore-in-editor{background:#e4f1eb!important;border-color:#8fb6a5!important;color:#15513f!important;font-weight:900!important}
 .ppt-picker-modal{width:min(1080px,96vw)!important;max-height:90vh!important}

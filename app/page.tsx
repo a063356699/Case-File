@@ -207,12 +207,14 @@ const dailyUpdateFields = (record: RecordItem, date: string) => {
   const laterEdited = Number.isFinite(restoredAt) && Date.parse(String(record.lastModifiedAt || "")) > restoredAt;
   // 舊的重新上架資料可能仍保有舊欄位歷程；畫面不採用，但絕不改寫資料本身。
   if (restoredToday && !laterEdited) return [];
-  return (recordUpdateHistory(record)[date] || []).filter(key => dailyActivityUpdateKeys.has(key)).filter(key => {
+  const fields = (recordUpdateHistory(record)[date] || []).filter(key => dailyActivityUpdateKeys.has(key)).filter(key => {
     // 舊資料的土地完工年／無車位組合由系統轉換產生，並不是這次人工修改。
     if (key === "builtYear" && /^(土地|建地|nan)?$/i.test(trackedValue(record.completionDate || record.builtYear))) return false;
     if (key === "parking" && trackedValue(record.parking) === trackedValue(record.parkingOwnership) && !trackedValue(record.parkingType) && !trackedValue(record.parkingMethod) && !trackedValue(record.parkingNo)) return false;
     return true;
   });
+  const displayColumn: Record<string, string> = { caseNameNote: "caseName", completionDate: "age", builtYear: "age", titleFloor: "floor", currentFloor: "floor", registryIndoorPing: "indoorPing", registryBuildingPing: "buildingPing", landSharePing: "landPing", parkingOwnership: "parking", parkingType: "parking", parkingMethod: "parking", parkingNo: "parking", coverage: "coverageFar", far: "coverageFar" };
+  return [...new Set(fields.map(key => displayColumn[key] || key))];
 };
 const dailyChangedLabels = (keys: string[]) => [...new Set(keys.map(key => ({
   area: "地區", caseName: "案名", caseNameNote: "案名", address: "地址", price: "總價", reducedPrice: "總價", direction: "朝向",
@@ -1915,7 +1917,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V146</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V147</small></h1></div>
       <div className="header-actions">{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
