@@ -44948,7 +44948,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V153" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V154" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             bookReviewDueCount > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { className: "book-review-header-button action-book-review", onClick: () => {
@@ -49418,19 +49418,16 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       return null;
     const reportOptions = ["\u59D4\u8A17\u4E2D", "\u8ACB\u8DDF\u958B\u767C\u696D\u52D92\u78BA\u8A8D", "\u552E\u51FA\u4E0B\u67B6", "\u4E0B\u67B6\u6D3D\u958B\u767C", "\u5F85\u78BA\u8A8D"];
     const submitAll = () => {
-      const missing = eligibleRecords.filter((record) => !choices[record.id]);
-      if (missing.length) {
-        setMissingChoices(missing.map((record) => record.id));
-        setTimeout(() => document.getElementById(`report-${missing[0].id}`)?.scrollIntoView({ behavior: "smooth", block: "center" }), 50);
-        return alert(`\u9084\u6709 ${missing.length} \u7B46\u7269\u4EF6\u5C1A\u672A\u9078\u64C7\u56DE\u5831`);
-      }
-      const missingReason = eligibleRecords.find((record) => choices[record.id] === "\u4E0B\u67B6\u6D3D\u958B\u767C" && !String(reasons[record.id] || "").trim());
+      const selected = eligibleRecords.filter((record) => !!choices[record.id]);
+      if (!selected.length)
+        return alert("\u8ACB\u81F3\u5C11\u9078\u64C7\u4E00\u7B46\u7269\u4EF6\u56DE\u5831");
+      const missingReason = selected.find((record) => choices[record.id] === "\u4E0B\u67B6\u6D3D\u958B\u767C" && !String(reasons[record.id] || "").trim());
       if (missingReason) {
         setMissingChoices([missingReason.id]);
         setTimeout(() => document.getElementById(`report-${missingReason.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" }), 50);
         return alert(`${missingReason.caseName || missingReason.propertyNo} \u5FC5\u9808\u586B\u5BEB\u4E0B\u67B6\u539F\u56E0`);
       }
-      eligibleRecords.forEach((record) => submit(record, choices[record.id], reasons[record.id] || ""));
+      selected.forEach((record) => submit(record, choices[record.id], reasons[record.id] || ""));
       setChoices({});
       setReasons({});
       setMissingChoices([]);
