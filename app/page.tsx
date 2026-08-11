@@ -1884,7 +1884,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V135</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V136</small></h1></div>
       <div className="header-actions">{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -2984,7 +2984,6 @@ function DailyActivity({ records, compact = false, onEdit }: { records: RecordIt
   const adjacentDateLabel = (date: string) => `${displayRocDate(date)}（${["日", "一", "二", "三", "四", "五", "六"][new Date(`${date}T12:00:00`).getDay()]}）`;
   const previousDate = addDaysIso(selectedDate, -1);
   const nextDate = addDaysIso(selectedDate, 1);
-  const nextIsToday = nextDate === today();
   const rocDay = displayRocDate(selectedDate);
   const updateRecords = records.filter(record => !record.archived && !isExpired(record) && record.status === "委託中" && (dailyUpdateFields(record, selectedDate).length > 0 || dateOnly(record._restoredAt) === selectedDate)).map(record => { const changed = dailyUpdateFields(record, selectedDate); const restored = dateOnly(record._restoredAt) === selectedDate; return { ...record, caseNameNote: changed.length ? `更新：${dailyChangedLabels(changed).join("、")}` : "", _dailyHighlight: JSON.stringify(changed), ...(restored ? { _dailyAnnotation: `${shortRocMonthDay(selectedDate)}重新上架`, _dailyAnnotationType: "restored" } : {}) }; });
   const removedRecords = records.filter(record => !!record.archived && dateOnly(record._archiveActionDate || record.archived) === selectedDate).map(record => ({ ...record, _dailyAnnotation: `${displayRocDate(record.archived)}${record.status || "下架"}` }));
@@ -2997,10 +2996,10 @@ function DailyActivity({ records, compact = false, onEdit }: { records: RecordIt
   return <section className={`daily-activity${compact ? " compact" : ""}`} onClick={event => { if (!onEdit) return; const cell = (event.target as HTMLElement).closest("td.col-caseName"); if (!cell) return; const article = cell.closest("article.daily-card"); const row = cell.closest("tbody tr:not(.area-group-row)"); if (!article || !row) return; const groupIndex = Array.from(event.currentTarget.querySelectorAll("article.daily-card")).indexOf(article); const rowIndex = Array.from(article.querySelectorAll("tbody tr:not(.area-group-row)")).indexOf(row); const record = sortActiveRecords(groups[groupIndex]?.records || [])[rowIndex]; if (record) onEdit(record); }}>
     <div className="daily-activity-head">
       <div>
-        <h2>{compact ? "每日物件動態" : "每日物件動態"}</h2>
+        <h2>{compact ? "每日物件動態" : "每日物件動態"}　{adjacentDateLabel(selectedDate)}</h2>
         {!compact && <p>查看每日新增、下架與到期物件</p>}
       </div>
-      <div className="daily-date"><button type="button" className="daily-yesterday" onClick={() => setSelectedDate(previousDate)}>← {adjacentDateLabel(previousDate)}</button><button type="button" className={`daily-today${selectedDate === today() ? " selected" : ""}`} onClick={() => setSelectedDate(today())}>今天</button><button type="button" className="daily-next" disabled={selectedDate >= today()} onClick={() => setSelectedDate(nextDate)}>{nextIsToday ? `今天 ${adjacentDateLabel(nextDate)}` : `${adjacentDateLabel(nextDate)} →`}</button><input aria-label="選擇每日物件動態日期" type="date" value={selectedDate} max={today()} onChange={event => setSelectedDate(event.target.value)}/></div>
+      <div className="daily-date"><button type="button" className="daily-yesterday" onClick={() => setSelectedDate(previousDate)}>← {adjacentDateLabel(previousDate)}</button><button type="button" className="daily-next" disabled={selectedDate >= today()} onClick={() => setSelectedDate(nextDate)}>{adjacentDateLabel(nextDate)} →</button><button type="button" className={`daily-today${selectedDate === today() ? " selected" : ""}`} onClick={() => setSelectedDate(today())}>今天</button><input aria-label="選擇每日物件動態日期" type="date" value={selectedDate} max={today()} onChange={event => setSelectedDate(event.target.value)}/></div>
     </div>
     <div className="daily-cards">
       {groups.map(group => <article className={`daily-card ${group.key}`} key={group.key}>

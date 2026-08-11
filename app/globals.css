@@ -1314,7 +1314,7 @@ body{background:#f8fbfe!important;color:#405064!important}
 /* V34 daily date controls and advanced search sources. */
 .daily-activity-head .daily-date{
   display:grid!important;
-  grid-template-columns:minmax(155px,auto) 72px minmax(170px,auto) minmax(155px,190px)!important;
+  grid-template-columns:minmax(155px,auto) minmax(170px,auto) 72px minmax(155px,190px)!important;
   align-items:stretch!important;
   justify-content:end!important;
   gap:10px!important;

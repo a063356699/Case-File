@@ -1321,7 +1321,7 @@ body{background:#f8fbfe!important;color:#405064!important}
 /* V34 daily date controls and advanced search sources. */
 .daily-activity-head .daily-date{
   display:grid!important;
-  grid-template-columns:minmax(155px,auto) 72px minmax(170px,auto) minmax(155px,190px)!important;
+  grid-template-columns:minmax(155px,auto) minmax(170px,auto) 72px minmax(155px,190px)!important;
   align-items:stretch!important;
   justify-content:end!important;
   gap:10px!important;
@@ -44875,7 +44875,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V135" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V136" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             bookReviewDueCount > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { className: "book-review-header-button action-book-review", onClick: () => {
@@ -47638,7 +47638,6 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     const adjacentDateLabel = (date) => `${displayRocDate(date)}\uFF08${["\u65E5", "\u4E00", "\u4E8C", "\u4E09", "\u56DB", "\u4E94", "\u516D"][(/* @__PURE__ */ new Date(`${date}T12:00:00`)).getDay()]}\uFF09`;
     const previousDate = addDaysIso(selectedDate, -1);
     const nextDate2 = addDaysIso(selectedDate, 1);
-    const nextIsToday = nextDate2 === today();
     const rocDay = displayRocDate(selectedDate);
     const updateRecords = records.filter((record) => !record.archived && !isExpired(record) && record.status === "\u59D4\u8A17\u4E2D" && (dailyUpdateFields(record, selectedDate).length > 0 || dateOnly(record._restoredAt) === selectedDate)).map((record) => {
       const changed = dailyUpdateFields(record, selectedDate);
@@ -47669,7 +47668,11 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     }, children: [
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "daily-activity-head", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", { children: compact ? "\u6BCF\u65E5\u7269\u4EF6\u52D5\u614B" : "\u6BCF\u65E5\u7269\u4EF6\u52D5\u614B" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h2", { children: [
+            compact ? "\u6BCF\u65E5\u7269\u4EF6\u52D5\u614B" : "\u6BCF\u65E5\u7269\u4EF6\u52D5\u614B",
+            "\u3000",
+            adjacentDateLabel(selectedDate)
+          ] }),
           !compact && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "\u67E5\u770B\u6BCF\u65E5\u65B0\u589E\u3001\u4E0B\u67B6\u8207\u5230\u671F\u7269\u4EF6" })
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "daily-date", children: [
@@ -47677,8 +47680,11 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
             "\u2190 ",
             adjacentDateLabel(previousDate)
           ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { type: "button", className: "daily-next", disabled: selectedDate >= today(), onClick: () => setSelectedDate(nextDate2), children: [
+            adjacentDateLabel(nextDate2),
+            " \u2192"
+          ] }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: `daily-today${selectedDate === today() ? " selected" : ""}`, onClick: () => setSelectedDate(today()), children: "\u4ECA\u5929" }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: "daily-next", disabled: selectedDate >= today(), onClick: () => setSelectedDate(nextDate2), children: nextIsToday ? `\u4ECA\u5929 ${adjacentDateLabel(nextDate2)}` : `${adjacentDateLabel(nextDate2)} \u2192` }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { "aria-label": "\u9078\u64C7\u6BCF\u65E5\u7269\u4EF6\u52D5\u614B\u65E5\u671F", type: "date", value: selectedDate, max: today(), onChange: (event) => setSelectedDate(event.target.value) })
         ] })
       ] }),
