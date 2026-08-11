@@ -1388,20 +1388,20 @@ body{background:#f8fbfe!important;color:#405064!important}
 
 /* V131: preview typography follows the exported 10 x 7.5 inch PPT layout. */
 .ppt-slide-preview{container-type:inline-size;font-family:"DFKai-SB","標楷體",serif}
-.ppt-slide-preview-top b{font-size:20px!important;line-height:1}
-.ppt-slide-preview-top span{font-size:31px!important;line-height:1.05;text-overflow:clip!important}
-.ppt-slide-preview.land .ppt-slide-preview-case span{font-size:35px!important}
-.ppt-slide-preview-address span{font-size:24px!important;white-space:normal!important;overflow-wrap:anywhere;display:flex;align-items:center;justify-content:center;height:100%;max-height:none!important}
-.ppt-slide-preview-developer>b{font-size:19px!important}
-.ppt-slide-preview-developer strong{font-size:24px!important;line-height:1.05}
-.ppt-slide-preview-pricebox>b{font-size:23px!important}
-.ppt-slide-preview-pricebox strong{font-size:46px!important}
-.ppt-slide-preview-pricebox em{font-size:20px!important}
-.ppt-slide-preview-fields b{font-size:21px!important;line-height:1}
-.ppt-slide-preview-fields span{font-size:26px!important;line-height:1.05;text-overflow:clip!important}
-.ppt-slide-preview-note b{font-size:21px!important}
-.ppt-slide-preview-note span{font-size:20px!important;line-height:1.15}
-.ppt-slide-preview-footer{font-size:14px!important}
+.ppt-slide-preview-top b{font-size:17.5px!important;line-height:1}
+.ppt-slide-preview-top span{font-size:28.5px!important;line-height:1.05;text-overflow:clip!important}
+.ppt-slide-preview.land .ppt-slide-preview-case span{font-size:32.5px!important}
+.ppt-slide-preview-address span{font-size:21.5px!important;white-space:normal!important;overflow-wrap:anywhere;display:flex;align-items:center;justify-content:center;height:100%;max-height:none!important}
+.ppt-slide-preview-developer>b{font-size:16.5px!important}
+.ppt-slide-preview-developer strong{font-size:21.5px!important;line-height:1.05}
+.ppt-slide-preview-pricebox>b{font-size:20.5px!important}
+.ppt-slide-preview-pricebox strong{font-size:43.5px!important}
+.ppt-slide-preview-pricebox em{font-size:17.5px!important}
+.ppt-slide-preview-fields b{font-size:18.5px!important;line-height:1}
+.ppt-slide-preview-fields span{font-size:23.5px!important;line-height:1.05;text-overflow:clip!important}
+.ppt-slide-preview-note b{font-size:18.5px!important}
+.ppt-slide-preview-note span{font-size:17.5px!important;line-height:1.15}
+.ppt-slide-preview-footer{font-size:11.5px!important}
 .ppt-adhoc-backdrop{background:#17372fc7!important}.ppt-adhoc-modal{background:#eef4f1!important;border:2px solid #7fa497!important}.ppt-adhoc-modal .modal-head{background:#dcece5!important;border-bottom:2px solid #8fb0a3!important}.ppt-adhoc-modal .modal-head span{display:inline-block;padding:4px 9px;border-radius:999px;background:#1f5a4a;color:#fff!important;font-size:12px!important;letter-spacing:.08em!important}.ppt-adhoc-modal .modal-head h2{color:#173f35;font-size:27px}.ppt-adhoc-modal .modal-head p{color:#784727!important;font-weight:700}.ppt-adhoc-grid{background:#eef4f1!important;padding:20px!important}.ppt-adhoc-grid .field{padding:10px;border:1px solid #bfd1c9;border-radius:10px;background:#fff}.ppt-adhoc-grid .field>span{color:#234f42!important;font-size:13px!important;font-weight:900!important}.ppt-adhoc-grid .field input,.ppt-adhoc-grid .field select,.ppt-adhoc-grid .field textarea{border:1px solid #91aa9f!important;background:#f9fcfa!important}.ppt-adhoc-modal .modal-foot{background:#dcece5!important;border-top:2px solid #8fb0a3!important}
 /* Visible release marker beside the home title. */
 .app-version{font-family:"Noto Sans TC","Microsoft JhengHei",sans-serif;font-size:11px;letter-spacing:0;color:var(--muted);font-weight:700;margin-left:7px;vertical-align:middle}
