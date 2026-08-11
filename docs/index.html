@@ -43793,7 +43793,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V119" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V120" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             bookReviewDueCount > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { className: "book-review-header-button action-book-review", onClick: () => {
@@ -47955,7 +47955,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
         reports = JSON.parse(record._monthlyReports || "{}");
       } catch {
       }
-      return Object.entries(reports).map(([key, report]) => ({ record, key, report })).filter((item) => item.report?.status && item.report.status !== "\u59D4\u8A17\u4E2D" && !item.report.adminHandledAt);
+      return Object.entries(reports).map(([key, report]) => ({ record, key, report })).filter((item) => item.report?.status && !item.report.adminHandledAt);
     }).sort((a, b) => String(b.report.reportedAt || "").localeCompare(String(a.report.reportedAt || "")));
     if (!items.length) return null;
     const developers = Array.from(new Set(items.flatMap((item) => developerNameLines(item.record.developer))));
