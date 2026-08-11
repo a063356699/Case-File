@@ -392,6 +392,8 @@ button:hover,.file-button:hover{border-color:#9fbad0;box-shadow:0 2px 8px #7895a
 .internal-public-app .daily-activity.compact .daily-table th.col-address,.internal-public-app .daily-activity.compact .daily-table td.col-address{min-width:220px!important}
 .internal-public-app .daily-activity.compact .daily-table th.col-notes,.internal-public-app .daily-activity.compact .daily-table td.col-notes{min-width:180px!important}
 .daily-card.updated .daily-table td.daily-updated-cell,.daily-card.updated .daily-table td.daily-updated-cell *{color:#e00000!important;font-weight:900!important}
+.daily-card.updated .daily-table td.col-price .daily-price-reduction-updated{color:#e00000!important;font-weight:900!important}
+.daily-card.updated .daily-table td.col-price.daily-updated-cell .price-reduction:not(.daily-price-reduction-updated){color:#17242a!important;font-weight:800!important}
 @media(max-width:760px){
   .internal-public-app .daily-activity.compact .daily-activity-head{display:block!important;width:100%!important}
   .internal-public-app .daily-activity.compact .daily-date{width:100%!important;margin-top:10px!important;grid-template-columns:minmax(0,1.25fr) minmax(0,1.25fr) 62px minmax(108px,.9fr)!important;gap:5px!important;justify-content:stretch!important}
@@ -44942,7 +44944,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V150" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V151" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             bookReviewDueCount > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { className: "book-review-header-button action-book-review", onClick: () => {
@@ -48896,9 +48898,16 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       const price = String(r.price || "").replace(/\s*萬(?:元)?\s*/g, "").trim();
       const adjusted = String(r.reducedPrice || "").replace(/\s*萬(?:元)?\s*/g, "").trim();
       const label = adjustedPriceLabel(price, adjusted);
+      const dailyFields = (() => {
+        try {
+          return JSON.parse(r._dailyHighlight || "[]");
+        } catch {
+          return [];
+        }
+      })();
       return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "two-line-value", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: price || "\u2014" }),
-        label && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "price-reduction", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { className: dailyFields.includes("price") ? "daily-price-original-updated" : "", children: price || "\u2014" }),
+        label && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: `price-reduction${dailyFields.includes("reducedPrice") ? " daily-price-reduction-updated" : ""}`, children: [
           label,
           adjusted
         ] })
