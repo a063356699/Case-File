@@ -1500,6 +1500,15 @@ body{background:#f8fbfe!important;color:#405064!important}
 .book-review-confirm{display:inline-flex;align-items:center;justify-content:flex-end;gap:7px}.book-review-confirm button{padding:4px 8px!important;font-size:12px!important;line-height:1.2!important;white-space:nowrap}
 /* 首頁功能按鈕用色區分，方便一眼辨識。 */
 .topbar-row .header-actions .action-book-review{background:#e4f1f7!important;border-color:#9dc6da!important;color:#28627e!important}
+.topbar-row .header-actions .action-monthly-progress{background:#e8f6ef!important;border-color:#91c9ae!important;color:#176b4b!important}
+.book-review-complete-message{padding:32px;text-align:center;font-size:20px;font-weight:800;color:#267353}
+.monthly-progress-backdrop{z-index:1250}
+.monthly-progress-modal{width:min(980px,calc(100vw - 32px));max-height:calc(100vh - 40px);overflow:auto;background:#fff;border-radius:18px;box-shadow:0 24px 70px #17344c55}
+.monthly-progress-modal>header{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid #d7e5ec}
+.monthly-progress-modal>header>div{display:flex;flex-direction:column;gap:4px}.monthly-progress-modal>header b{font-size:24px;color:#143f56}.monthly-progress-modal>header span{color:#667b88}
+.monthly-progress-note{margin:16px 20px;padding:11px 14px;border-radius:10px;background:#fff8df;color:#795914;font-weight:700}
+.monthly-progress-list{padding:0 20px 18px}.monthly-progress-row{display:grid;grid-template-columns:1.1fr .7fr .7fr .85fr 1.7fr .9fr;align-items:center;gap:10px;padding:13px 12px;border-bottom:1px solid #dce8ee}.monthly-progress-labels{background:#eaf4f8;border-radius:10px 10px 0 0;color:#31576b}.monthly-progress-row em{font-style:normal;font-weight:800}.monthly-progress-row.has-pending em,.monthly-progress-row.has-pending>span:nth-child(4){color:#c83e35;font-weight:900}.monthly-progress-row.is-complete em{color:#16815a}.monthly-progress-modal>footer{display:flex;justify-content:flex-end;padding:0 20px 20px}.monthly-progress-empty{text-align:center;padding:24px;color:#71818b}
+@media(max-width:700px){.monthly-progress-row{grid-template-columns:1fr 1fr 1fr}.monthly-progress-labels{display:none}.monthly-progress-row>span:nth-child(2)::before{content:"應確認："}.monthly-progress-row>span:nth-child(3)::before{content:"已完成："}.monthly-progress-row>span:nth-child(4)::before{content:"尚未回報："}.monthly-progress-row>span:nth-child(5){grid-column:1/-1}.monthly-progress-row>span:nth-child(5)::before{content:"最後回報："}}
 .topbar-row .header-actions .action-ppt{background:#5c9dce!important;border-color:#5c9dce!important;color:#fff!important}
 .topbar-row .header-actions .action-excel{background:#e2f3ea!important;border-color:#9fcdb1!important;color:#20734c!important}
 .topbar-row .header-actions .action-import-json{background:#eee9fa!important;border-color:#c3b3e5!important;color:#65489a!important}
