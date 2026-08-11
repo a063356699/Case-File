@@ -43823,9 +43823,9 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       if (!changed.length)
         return next;
       const edited = /* @__PURE__ */ new Set([...editedFieldKeys(previous), ...changed]);
-      return { ...next, _materialEditAt: "1", _editedFields: JSON.stringify([...edited]), updateDate: changed.every((key) => key === "updateDate") ? next.updateDate : today(), lastModifiedAt: (/* @__PURE__ */ new Date()).toISOString() };
+      return { ...next, _materialEditAt: "1", _editedFields: JSON.stringify([...edited]), lastModifiedAt: (/* @__PURE__ */ new Date()).toISOString() };
     });
-    const saveRecord = () => {
+    const saveRecord = (publishDaily = false) => {
       if (!editing)
         return;
       const normalizedEditing = normalizeRecordPings(clearImportedLandLabels({
@@ -43872,7 +43872,17 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
         caseNameNote: String(prepared.caseNameNote || "").includes(reopenNote) ? prepared.caseNameNote : [prepared.caseNameNote, reopenNote].filter(Boolean).join("\u3000"),
         caseNameNoteModifiedAt: (/* @__PURE__ */ new Date()).toISOString()
       } : prepared;
-      let next = existing ? _materialEditAt || autoReopen ? withTrackedUpdate(existing, preparedForSave, today(), autoReopen ? void 0 : editedFieldKeys(preparedWithMarker)) : { ...preparedForSave, updateDate: existing.updateDate, lastModifiedAt: existing.lastModifiedAt, _updateHistory: existing._updateHistory } : { ...preparedForSave };
+      const changedFields = existing ? editedFieldKeys(preparedWithMarker).filter((key) => trackedValue(existing[key]) !== trackedValue(preparedForSave[key])) : [];
+      if (existing && changedFields.length) {
+        const changedLabels = changedFields.map((key) => labels[key] || recordEditLabels[key] || key).join("\u3001");
+        const action = publishDaily ? "\u5132\u5B58\u4E26\u767C\u5E03\u5230\u6BCF\u65E5\u7269\u4EF6\u52D5\u614B" : "\u50C5\u5132\u5B58\uFF0C\u4E0D\u767C\u5E03\u5230\u6BCF\u65E5\u7269\u4EF6\u52D5\u614B";
+        if (!confirm(`\u672C\u6B21\u4FEE\u6539\u6B04\u4F4D\uFF1A
+${changedLabels}
+
+\u78BA\u5B9A\u8981${action}\u55CE\uFF1F`))
+          return;
+      }
+      let next = existing ? autoReopen ? withTrackedUpdate(existing, preparedForSave, today()) : _materialEditAt ? publishDaily ? withTrackedUpdate(existing, preparedForSave, today(), changedFields) : { ...preparedForSave, updateDate: existing.updateDate, lastModifiedAt: (/* @__PURE__ */ new Date()).toISOString(), _updateHistory: existing._updateHistory } : { ...preparedForSave, updateDate: existing.updateDate, lastModifiedAt: existing.lastModifiedAt, _updateHistory: existing._updateHistory } : { ...preparedForSave };
       if (autoReopen) {
         const history = recordUpdateHistory(next);
         if (history[today()])
@@ -44899,7 +44909,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V143" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V144" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             bookReviewDueCount > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { className: "book-review-header-button action-book-review", onClick: () => {
@@ -45483,7 +45493,10 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "record-save-actions", children: [
             editing._intakeDraftId && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "draft-save-note", children: "\u5C1A\u672A\u9032\u6848\uFF5E\u9032\u6848\u8349\u7A3F\u4E2D" }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", onClick: temporarilySaveRecord, children: "\u66AB\u5B58" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "primary", onClick: saveRecord, children: editing._intakeDraftId ? "\u540C\u6B65\u66F4\u65B0\u8349\u7A3F" : "\u5132\u5B58\u7269\u4EF6" })
+            editing._intakeDraftId ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "primary", onClick: () => saveRecord(false), children: "\u540C\u6B65\u66F4\u65B0\u8349\u7A3F" }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", onClick: () => saveRecord(false), children: "\u50C5\u5132\u5B58" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "primary", onClick: () => saveRecord(true), children: "\u5132\u5B58\u4E26\u767C\u5E03\u6BCF\u65E5\u52D5\u614B" })
+            ] })
           ] })
         ] })
       ] }) }),
