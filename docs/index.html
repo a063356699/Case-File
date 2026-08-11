@@ -43202,6 +43202,13 @@ ${String(ex)}`);
       const closeTopModalWithEscape = (event) => {
         if (event.key !== "Escape")
           return;
+        const pptPreview = document.querySelector(".ppt-slide-preview-backdrop");
+        if (pptPreview?.getClientRects().length) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          pptPreview.querySelector(".ppt-slide-preview-close")?.click();
+          return;
+        }
         const backdrops = [...document.querySelectorAll(".modal-backdrop, .qr-scanner-backdrop")].filter((element) => {
           const style = window.getComputedStyle(element);
           return style.display !== "none" && style.visibility !== "hidden" && element.getClientRects().length > 0;
@@ -44837,7 +44844,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V129" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V130" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             bookReviewDueCount > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { className: "book-review-header-button action-book-review", onClick: () => {

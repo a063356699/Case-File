@@ -880,6 +880,13 @@ export default function Home() {
   useEffect(() => {
     const closeTopModalWithEscape = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
+      const pptPreview = document.querySelector<HTMLElement>(".ppt-slide-preview-backdrop");
+      if (pptPreview?.getClientRects().length) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        pptPreview.querySelector<HTMLButtonElement>(".ppt-slide-preview-close")?.click();
+        return;
+      }
       const backdrops = [...document.querySelectorAll<HTMLElement>(".modal-backdrop, .qr-scanner-backdrop")].filter(element => {
         const style = window.getComputedStyle(element);
         return style.display !== "none" && style.visibility !== "hidden" && element.getClientRects().length > 0;
@@ -1870,7 +1877,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V129</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V130</small></h1></div>
       <div className="header-actions">{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
