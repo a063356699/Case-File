@@ -1509,6 +1509,10 @@ body{background:#f8fbfe!important;color:#405064!important}
 /* 首頁功能按鈕用色區分，方便一眼辨識。 */
 .topbar-row .header-actions .action-book-review{background:#e4f1f7!important;border-color:#9dc6da!important;color:#28627e!important}
 .topbar-row .header-actions .action-monthly-progress{background:#e8f6ef!important;border-color:#91c9ae!important;color:#176b4b!important}
+.business-report-case>.business-report-address{width:100%;margin-top:5px!important}
+.business-report-action-meta{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex:none}
+.business-report-action-meta>button{flex:none;white-space:nowrap;padding:6px 9px;font-size:12px}
+@media(max-width:900px){.business-report-action-meta{align-items:flex-end;flex-direction:column;gap:5px}}
 .book-review-complete-message{padding:32px;text-align:center;font-size:20px;font-weight:800;color:#267353}
 .monthly-progress-backdrop{z-index:1250}
 .monthly-progress-modal{width:min(980px,calc(100vw - 32px));max-height:calc(100vh - 40px);overflow:auto;background:#fff;border-radius:18px;box-shadow:0 24px 70px #17344c55}
@@ -44990,7 +44994,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V165" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V166" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -49504,16 +49508,9 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
             developerFullNameText(item.record.developer) || "\u672A\u586B"
           ] })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "business-report-address-row", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { className: "business-report-address", children: [
-            "\u5730\u5740\uFF1A",
-            item.record.address || "\u672A\u586B\u5730\u5740"
-          ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { className: "business-report-person", children: [
-            item.report.personName || "\u696D\u52D9\u4EBA\u54E1",
-            "\u3000",
-            new Date(item.report.reportedAt || Date.now()).toLocaleString("zh-TW")
-          ] })
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { className: "business-report-address", children: [
+          "\u5730\u5740\uFF1A",
+          item.record.address || "\u672A\u586B\u5730\u5740"
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "business-report-action-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
@@ -49521,7 +49518,14 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("em", { children: item.report.status }),
             item.report.reason ? `\u3000\u539F\u56E0\uFF1A${item.report.reason}` : ""
           ] }),
-          action(item)
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "business-report-action-meta", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { className: "business-report-person", children: [
+              item.report.personName || "\u696D\u52D9\u4EBA\u54E1",
+              "\u3000",
+              new Date(item.report.reportedAt || Date.now()).toLocaleString("zh-TW")
+            ] }),
+            action(item)
+          ] })
         ] }),
         item.report.status === "\u5F85\u78BA\u8A8D" && item.report.dueDate && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("i", { children: [
           "\u4E0B\u6B21\u78BA\u8A8D\uFF1A",
