@@ -394,8 +394,19 @@ button:hover,.file-button:hover{border-color:#9fbad0;box-shadow:0 2px 8px #7895a
 .daily-card.updated .daily-table td.daily-updated-cell,.daily-card.updated .daily-table td.daily-updated-cell *{color:#e00000!important;font-weight:900!important}
 @media(max-width:760px){
   .internal-public-app .daily-activity.compact .daily-activity-head{display:block!important;width:100%!important}
-  .internal-public-app .daily-activity.compact .daily-date{width:100%!important;margin-top:10px!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;justify-content:stretch!important}
+  .internal-public-app .daily-activity.compact .daily-date{width:100%!important;margin-top:10px!important;grid-template-columns:minmax(0,1.25fr) minmax(0,1.25fr) 62px minmax(108px,.9fr)!important;gap:5px!important;justify-content:stretch!important}
   .internal-public-app .daily-activity.compact .daily-date button,.internal-public-app .daily-activity.compact .daily-date input{width:100%!important;max-width:none!important}
+  .internal-public-app .daily-activity.compact .daily-date button{padding:7px 4px!important;font-size:14px!important;white-space:nowrap!important}
+  .internal-public-app .daily-activity.compact .daily-date input{padding:6px 4px!important;font-size:14px!important}
+  .internal-public-app .monthly-report-pills{display:flex!important;flex-wrap:nowrap!important;gap:5px!important;width:100%!important;overflow-x:auto!important;padding-bottom:3px!important;-webkit-overflow-scrolling:touch!important}
+  .internal-public-app .monthly-report-pills button{flex:0 0 auto!important;width:auto!important;padding:7px 9px!important;font-size:13px!important;white-space:nowrap!important}
+  .internal-public-app .monthly-report-pills .inline-report-reason{flex:0 0 170px!important;min-width:170px!important}
+  .internal-public-app .logged-person{font-size:13px!important}
+  .internal-public-app .public-head .public-logout{font-size:16px!important}
+  .internal-public-app .public-head .scope-tabs button{font-size:14px!important;font-weight:900!important;padding:8px 5px!important}
+  .internal-public-app .public-head h2{font-size:22px!important}
+  .internal-public-app .monthly-report-case>b{font-size:16px!important}
+  .internal-public-app .monthly-report-case>small{font-size:13px!important}
 }
 .record-edit-modal .draft-save-note{color:#e45b92;font-size:14px;font-weight:900;white-space:nowrap}
 .restore-in-editor{background:#e4f1eb!important;border-color:#8fb6a5!important;color:#15513f!important;font-weight:900!important}
@@ -44931,7 +44942,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V149" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V150" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             bookReviewDueCount > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { className: "book-review-header-button action-book-review", onClick: () => {
