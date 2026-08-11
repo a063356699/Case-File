@@ -737,6 +737,7 @@ export default function Home() {
   const [pptAdHocDraft, setPptAdHocDraft] = useState<RecordItem>(() => blankRecord());
   const [pptAdHocRecords, setPptAdHocRecords] = useState<RecordItem[]>([]);
   const [pptConfirmedSnapshots, setPptConfirmedSnapshots] = useState<Record<string, RecordItem>>({});
+  const [pptPreviewRecord, setPptPreviewRecord] = useState<RecordItem | null>(null);
   const [pptShowExtras, setPptShowExtras] = useState(false);
   const [pptExtraIds, setPptExtraIds] = useState<string[]>([]);
   const [pptOrderIds, setPptOrderIds] = useState<string[]>([]);
@@ -1088,6 +1089,49 @@ export default function Home() {
     [ids[index], ids[target]] = [ids[target], ids[index]];
     setPptOrderIds(ids);
   };
+  const setPptSequence = (id: string, value: string) => {
+    const ids = selectedPptBaseRecords.map(record => record.id);
+    const from = ids.indexOf(id);
+    const requested = Math.round(Number(value));
+    if (from < 0 || !Number.isFinite(requested)) return;
+    ids.splice(from, 1);
+    ids.splice(Math.max(0, Math.min(ids.length, requested - 1)), 0, id);
+    setPptOrderIds(ids);
+  };
+  useEffect(() => {
+    if (!pptPickerOpen) return;
+    const body = document.querySelector<HTMLElement>(".ppt-picker-body");
+    if (!body) return;
+    const host = document.createElement("section");
+    host.className = "ppt-inline-order-editor";
+    host.innerHTML = "<b>本次 PPT 順序</b><small>直接修改序號即可重排；圖可先查看該件 PPT 預覽。</small>";
+    selectedPptBaseRecords.forEach((record, index) => {
+      const row = document.createElement("div");
+      const input = document.createElement("input"); input.type = "number"; input.min = "1"; input.max = String(selectedPptBaseRecords.length); input.value = String(index + 1); input.title = "修改順序";
+      input.addEventListener("change", () => setPptSequence(record.id, input.value));
+      const name = document.createElement("span"); name.textContent = record.caseName || record.propertyNo || "未命名案件";
+      const image = document.createElement("button"); image.type = "button"; image.textContent = "圖"; image.title = "查看 PPT 預覽";
+      image.addEventListener("click", () => setPptPreviewRecord(pptConfirmedSnapshots[record.id] || record));
+      row.append(input, name, image); host.append(row);
+    });
+    body.prepend(host);
+    return () => host.remove();
+  }, [pptPickerOpen, pptOrderIds, pptExtraIds, pptAdHocRecords, pptConfirmedSnapshots, selectedPptBaseRecords.map(record => record.id).join("|")]);
+  useEffect(() => {
+    if (!pptPreviewRecord) return;
+    const overlay = document.createElement("div"); overlay.className = "ppt-slide-preview-backdrop";
+    const card = document.createElement("section"); card.className = "ppt-slide-preview";
+    const close = document.createElement("button"); close.type = "button"; close.className = "close"; close.textContent = "×"; close.addEventListener("click", () => setPptPreviewRecord(null));
+    const title = document.createElement("h2"); title.textContent = pptPreviewRecord.caseName || "未命名案件";
+    const address = document.createElement("p"); address.className = "ppt-slide-preview-address"; address.textContent = `地址：${pptPreviewRecord.address || "未填寫"}`;
+    const developer = document.createElement("p"); developer.className = "ppt-slide-preview-developer"; developer.textContent = `開發：${developerFullNameText(pptPreviewRecord.developer) || "未填寫"}`;
+    const price = document.createElement("strong"); price.className = "ppt-slide-preview-price"; price.textContent = `${String(pptPreviewRecord.price || "—").replace(/萬/g, "")}萬`;
+    const fields = document.createElement("div"); fields.className = "ppt-slide-preview-fields";
+    [["總地坪", pptPreviewRecord.landPing], ["總建坪", pptPreviewRecord.buildingPing], ["室內坪", pptPreviewRecord.indoorPing], ["格局", pptPreviewRecord.layout], ["樓層", pptPreviewRecord.floor], ["朝向", pptPreviewRecord.direction], ["車位", pptPreviewRecord.parking], ["管理費", pptPreviewRecord.managementFee], ["現況", pptPreviewRecord.currentState], ["鑰匙", pptPreviewRecord.key]].forEach(([label, value]) => { const item = document.createElement("span"); item.textContent = `${label}：${value || "—"}`; fields.append(item); });
+    const note = document.createElement("p"); note.className = "ppt-slide-preview-note"; note.textContent = pptPreviewRecord.notes || "";
+    card.append(close, title, address, developer, price, fields, note); overlay.append(card); overlay.addEventListener("mousedown", event => { if (event.target === overlay) setPptPreviewRecord(null); }); document.body.append(overlay);
+    return () => overlay.remove();
+  }, [pptPreviewRecord]);
   const removeFromPptWeek = (record: RecordItem) => setRecords(previous => previous.map(item => {
     if (item.id !== record.id) return item;
     const excluded = [...new Set([...pptStoredList(item._pptExcludedWeeks), selectedPptWeek.start])];
@@ -1724,7 +1768,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V122</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V123</small></h1></div>
       <div className="header-actions">{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
