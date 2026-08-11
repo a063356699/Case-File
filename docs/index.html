@@ -42221,8 +42221,11 @@ ${String(ex)}`);
         return false;
       return true;
     });
+    const reducedPriceEditedToday = String(record.reducedPriceModifiedAt || "").slice(0, 10) === date;
+    const originalPriceEditedToday = String(record.priceModifiedAt || "").slice(0, 10) === date;
+    const correctedFields = reducedPriceEditedToday && !originalPriceEditedToday && fields2.includes("price") && !fields2.includes("reducedPrice") ? [...fields2.filter((key) => key !== "price"), "reducedPrice"] : fields2;
     const displayColumn = { caseNameNote: "caseName", completionDate: "age", builtYear: "age", titleFloor: "floor", currentFloor: "floor", registryIndoorPing: "indoorPing", registryBuildingPing: "buildingPing", landSharePing: "landPing", parkingOwnership: "parking", parkingType: "parking", parkingMethod: "parking", parkingNo: "parking", coverage: "coverageFar", far: "coverageFar" };
-    return [...new Set(fields2.map((key) => displayColumn[key] || key))];
+    return [...new Set(correctedFields.map((key) => displayColumn[key] || key))];
   };
   var dailyChangedLabels = (keys) => [...new Set(keys.map((key) => ({
     area: "\u5730\u5340",
@@ -42279,7 +42282,7 @@ ${String(ex)}`);
     return `${date.getFullYear() - 1911}\u5E74${date.getMonth() + 1}\u6708${date.getDate()}\u65E5 \u661F\u671F${weekdays[date.getDay()]} ${String(date.getHours()).padStart(2, "0")}\u9EDE${String(date.getMinutes()).padStart(2, "0")}\u5206${String(date.getSeconds()).padStart(2, "0")}\u79D2`;
   };
   var withTrackedUpdate = (previous, next, date = today(), onlyFields) => {
-    const ignored = /* @__PURE__ */ new Set(["id", "updateDate", "lastModifiedAt", "groupViewDate", "_updateHistory", "_dailyAnnotation", "_dailyHighlight"]);
+    const ignored = /* @__PURE__ */ new Set(["id", "updateDate", "lastModifiedAt", "priceModifiedAt", "reducedPriceModifiedAt", "groupViewDate", "_updateHistory", "_dailyAnnotation", "_dailyHighlight"]);
     const candidates = onlyFields?.length ? onlyFields : Object.keys(next);
     const changed = candidates.filter((key) => !ignored.has(key) && !websiteTrackingKeys.has(key) && trackedValue(previous[key]) !== trackedValue(next[key]));
     if (!changed.length)
@@ -43854,7 +43857,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
     const updateEditingRecord = (next) => setEditing((previous) => {
       if (!previous)
         return next;
-      const ignored = /* @__PURE__ */ new Set(["id", "lastModifiedAt", "groupViewDate", "_updateHistory", "_dailyAnnotation", "_dailyHighlight"]);
+      const ignored = /* @__PURE__ */ new Set(["id", "lastModifiedAt", "priceModifiedAt", "reducedPriceModifiedAt", "groupViewDate", "_updateHistory", "_dailyAnnotation", "_dailyHighlight"]);
       const changed = Object.keys(next).filter((key) => !ignored.has(key) && !websiteTrackingKeys.has(key) && trackedValue(previous[key]) !== trackedValue(next[key]));
       if (!changed.length)
         return next;
@@ -44945,7 +44948,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V152" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V153" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             bookReviewDueCount > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { className: "book-review-header-button action-book-review", onClick: () => {
@@ -50015,7 +50018,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "price-pair", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "field", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u958B\u50F9\uFF08\u842C\uFF09" }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { inputMode: "decimal", value: record.price || "", onChange: (e) => setRecord({ ...record, price: e.target.value }) })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { inputMode: "decimal", value: record.price || "", onChange: (e) => setRecord({ ...record, price: e.target.value, priceModifiedAt: (/* @__PURE__ */ new Date()).toISOString() }) })
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "field reduced-price-field", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
