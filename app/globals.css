@@ -322,6 +322,9 @@ button:hover,.file-button:hover{border-color:#9fbad0;box-shadow:0 2px 8px #7895a
   .print-document>.excel-print{display:block!important;width:210mm!important;height:296mm!important;min-height:296mm!important;max-height:296mm!important;margin:0!important;box-sizing:border-box!important;overflow:hidden!important;page-break-after:always!important;break-after:page!important}
   .print-document>.checklist-page{display:grid!important;width:210mm!important;height:295mm!important;min-height:295mm!important;max-height:295mm!important;margin:0!important;grid-template-rows:7mm 12mm 27mm 97mm 56mm 57mm 18mm 3mm!important;page-break-before:auto!important;break-before:auto!important;page-break-after:auto!important;break-after:auto!important;box-sizing:border-box!important;overflow:hidden!important}
 }
+
+/* V128: keep the in-app preview 10% smaller; exported PPT dimensions are unchanged. */
+.ppt-slide-preview{max-width:900px}
 .draft-actions button:disabled,.draft-editor-head button:disabled{opacity:1!important;background:#dcece5!important;color:#195747!important;border-color:#a9cbbd!important;font-weight:800!important;cursor:default!important}
 .draft-summary>span:nth-child(3),.draft-summary>span:nth-child(5){left:-30px!important}
 .draft-summary>span:nth-child(3){left:-20px!important}

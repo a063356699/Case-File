@@ -1288,9 +1288,11 @@ export default function Home() {
   };
   const temporarilySaveRecord = () => {
     if (!editing) return;
+    const isNewRecord = !editing._intakeDraftId && !records.some(record => record.id === editing.id);
     const savedAt = new Date().toISOString();
     const next = normalizeRecordPings(clearImportedLandLabels({
       ...editing,
+      ...(isNewRecord ? { _newCaseReminderEnabled: "1" } : {}),
       developer: developerFullNameText(editing.developer || "", settings.personnel) || editing.developer,
       ...Object.fromEntries([...dateKeys].map(key => [key, normalizeDateInput(editing[key] || "")])),
       completionDate: normalizeDateInput(editing.completionDate || ""),
@@ -1571,6 +1573,23 @@ export default function Home() {
     settings: { personnel: settings.personnel, bookReviewCurrentDate: settings.bookReviewCurrentDate, bookReviewNextDate: settings.bookReviewNextDate, expiry591: settings.expiry591, expiry5168: settings.expiry5168, brokerExpiry: settings.brokerExpiry },
     intake: { raw: intakeRaw, drafts: intakeDrafts, selectedId: selectedIntakeId },
     tour: { date: tourDate, title: tourTitle, items: tourItems },
+    pptWeeks: (() => {
+      try {
+        const weeks = JSON.parse(localStorage.getItem(PPT_WEEK_SELECTIONS_KEY) || "{}");
+        return Object.fromEntries(Object.entries(weeks).map(([week, value]) => {
+          const saved = value && typeof value === "object" ? value as { extraIds?: string[]; orderIds?: string[]; adHocRecords?: RecordItem[]; confirmedSnapshots?: Record<string, RecordItem> } : {};
+          return [week, {
+            extraIds: Array.isArray(saved.extraIds) ? saved.extraIds : [],
+            orderIds: Array.isArray(saved.orderIds) ? saved.orderIds : [],
+            adHocRecords: Array.isArray(saved.adHocRecords) ? saved.adHocRecords.map(({ photos, ...record }) => record) : [],
+            confirmedSnapshots: Object.fromEntries(Object.entries(saved.confirmedSnapshots || {}).map(([id, snapshot]) => {
+              const { photos, ...record } = snapshot;
+              return [id, record];
+            })),
+          }];
+        }));
+      } catch { return {}; }
+    })(),
   });
   const cloudTokenExpiresSoon = (token = "") => {
     try {
@@ -1634,6 +1653,35 @@ export default function Home() {
           setSelectedIntakeId(previous => previous || data.intake.selectedId || "");
         }
         if (data.tour) { setTourDate(data.tour.date || today()); setTourTitle(data.tour.title || ""); setTourItems(data.tour.items || []); }
+        if (data.pptWeeks && typeof data.pptWeeks === "object") {
+          try {
+            const localWeeks = JSON.parse(localStorage.getItem(PPT_WEEK_SELECTIONS_KEY) || "{}");
+            const mergedWeeks = { ...localWeeks, ...data.pptWeeks };
+            Object.entries(data.pptWeeks).forEach(([week, value]) => {
+              const cloudWeek = value && typeof value === "object" ? value as { adHocRecords?: RecordItem[]; confirmedSnapshots?: Record<string, RecordItem> } : {};
+              const localWeek = localWeeks[week] || {};
+              const localSnapshots = localWeek.confirmedSnapshots || {};
+              const localAdHoc = new Map<string, RecordItem>((localWeek.adHocRecords || []).map((record: RecordItem) => [record.id, record]));
+              mergedWeeks[week] = {
+                ...localWeek,
+                ...cloudWeek,
+                adHocRecords: (cloudWeek.adHocRecords || []).map(record => ({ ...localAdHoc.get(record.id), ...record, photos: localAdHoc.get(record.id)?.photos || [] })),
+                confirmedSnapshots: Object.fromEntries(Object.entries(cloudWeek.confirmedSnapshots || {}).map(([id, record]) => {
+                  const local = localSnapshots[id] || records.find(item => item.id === id);
+                  return [id, { ...local, ...record, photos: local?.photos || [] }];
+                })),
+              };
+            });
+            localStorage.setItem(PPT_WEEK_SELECTIONS_KEY, JSON.stringify(mergedWeeks));
+            const current = mergedWeeks[pptWeekStart] || {};
+            setPptExtraIds(Array.isArray(current.extraIds) ? current.extraIds : []);
+            setPptOrderIds(Array.isArray(current.orderIds) ? current.orderIds : []);
+            setPptAdHocRecords(Array.isArray(current.adHocRecords) ? current.adHocRecords : []);
+            setPptConfirmedSnapshots(current.confirmedSnapshots && typeof current.confirmedSnapshots === "object" ? current.confirmedSnapshots : {});
+          } catch {}
+        } else {
+          window.setTimeout(() => { void supabasePush(true); }, 0);
+        }
         flash(automatic ? "已自動同步最新雲端資料" : "雲端資料已合併到本機");
       }
     } catch { flash(automatic ? "自動同步失敗，請檢查雲端登入" : "雲端讀取失敗，請檢查登入與設定"); }
@@ -1650,7 +1698,7 @@ export default function Home() {
     } catch { flash(signUp ? "註冊失敗，請檢查 Email 與密碼" : "登入失敗，請檢查 Email 與密碼"); }
   };
   const supabaseSignOut = () => { setCloudSession(null); localStorage.removeItem(CLOUD_SESSION_KEY); flash("已登出雲端帳號"); };
-  const cloudSnapshot = JSON.stringify({ records, personnel: settings.personnel, expiry591: settings.expiry591, expiry5168: settings.expiry5168, brokerExpiry: settings.brokerExpiry, intakeRaw, intakeDrafts, selectedIntakeId, tourDate, tourTitle, tourItems });
+  const cloudSnapshot = JSON.stringify({ records, personnel: settings.personnel, expiry591: settings.expiry591, expiry5168: settings.expiry5168, brokerExpiry: settings.brokerExpiry, intakeRaw, intakeDrafts, selectedIntakeId, tourDate, tourTitle, tourItems, pptWeekStart, pptExtraIds, pptOrderIds, pptAdHocRecords, pptConfirmedSnapshots });
   useEffect(() => {
     if (!cloudSyncBaselineRef.current) { cloudSyncBaselineRef.current = cloudSnapshot; return; }
     if (cloudSyncBaselineRef.current === cloudSnapshot) return;
@@ -1822,7 +1870,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V127</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V128</small></h1></div>
       <div className="header-actions">{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
