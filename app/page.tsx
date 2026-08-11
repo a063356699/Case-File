@@ -1921,7 +1921,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V157</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V158</small></h1></div>
       <div className="header-actions">{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -3315,7 +3315,7 @@ function CellContent({ record: r, column: k }: { record: RecordItem; column: str
   if (k === "direction") return <>{directionShort(r.direction) || "—"}</>;
   if (k === "dailyHide") return r._dailyHideKey ? <button className="daily-hide-button" type="button" title="不顯示於前台每日物件動態" onClick={() => window.dispatchEvent(new CustomEvent("hide-daily-item", { detail: r._dailyHideKey }))}>刪</button> : null;
   if (k === "propertyNo" && r._dailyHideKey) return <span className="daily-property-number"><button type="button" title="不顯示於前台每日物件動態" onClick={() => window.dispatchEvent(new CustomEvent("hide-daily-item", { detail: r._dailyHideKey }))}>刪</button><span>{r.propertyNo || "—"}</span></span>;
-  if (k === "propertyNo" && r._showEntrustEndInPropertyNo === "1") { const remaining = daysUntil(r.entrustEnd); const expiring = remaining >= 0 && remaining <= 30; return <span className="mine-property-number"><b>{r.propertyNo || "—"}</b><small className={expiring ? "expiring" : ""}>結束：{displayRocDate(r.entrustEnd) || "—"}</small></span>; }
+  if (k === "propertyNo" && r._showEntrustEndInPropertyNo === "1") { const remaining = daysUntil(r.entrustEnd); const expiring = remaining >= 0 && remaining <= 30; return <span className="mine-property-number"><b>{r.propertyNo || "—"}</b><small className={expiring ? "expiring" : ""}>{displayRocDate(r.entrustEnd) || "—"}到期</small></span>; }
   if (k === "area") { const district = districtFromAddress(r.address) || String(r.area || "").trim(); const lineSize = Array.from(district).length === 4 ? 2 : 4; return <span className="area-lines">{chunkText(district, lineSize).map((line, index) => <span key={`${line}-${index}`}>{line}</span>)}</span>; }
   if (k === "housingRemoval") return r.housingDownDate ? <small className="archive-down-note">{displayRocDate(r.housingDownDate)}下架</small> : <span className="archive-down-pending">待下架</span>;
   if (k === "entrustPeriod") return <span className="two-line-value entrust-period-value"><span>{displayRocDate(r.entrustStart) || "—"}</span><span>{displayRocDate(r.entrustEnd) || "—"}</span></span>;
