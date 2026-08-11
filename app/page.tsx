@@ -746,10 +746,10 @@ export default function Home() {
   const [pptCustomEnd, setPptCustomEnd] = useState("");
   const [pptCustomMeeting, setPptCustomMeeting] = useState("");
   const pptWeekLoadedRef = useRef("");
-  const reminderCandidate = records.find(record => record._newCaseReminderEnabled === "1" && newCaseReminderPending(record));
+  const reminderCandidate = records.find(record => record._newCaseReminderEnabled === "1" && newCaseReminderPending(record) && !deferredNewCaseReminderIds.current.has(record.id));
   useEffect(() => {
     // 業務內部總表僅供查看；新案件完成提醒只在管理模式處理。
-    if (internalView || !storageReady || editing || newCaseReminder || !reminderCandidate || deferredNewCaseReminderIds.current.has(reminderCandidate.id)) return;
+    if (internalView || !storageReady || editing || newCaseReminder || !reminderCandidate) return;
     setNewCaseReminder({ ...reminderCandidate });
   }, [internalView, storageReady, editing, newCaseReminder, reminderCandidate]);
   useEffect(() => { setPptCustomStart(""); setPptCustomEnd(""); setPptCustomMeeting(""); }, [pptWeekStart]);
@@ -1884,7 +1884,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V134</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V135</small></h1></div>
       <div className="header-actions">{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>

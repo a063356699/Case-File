@@ -43040,9 +43040,9 @@ ${String(ex)}`);
     const [pptCustomEnd, setPptCustomEnd] = (0, import_react.useState)("");
     const [pptCustomMeeting, setPptCustomMeeting] = (0, import_react.useState)("");
     const pptWeekLoadedRef = (0, import_react.useRef)("");
-    const reminderCandidate = records.find((record) => record._newCaseReminderEnabled === "1" && newCaseReminderPending(record));
+    const reminderCandidate = records.find((record) => record._newCaseReminderEnabled === "1" && newCaseReminderPending(record) && !deferredNewCaseReminderIds.current.has(record.id));
     (0, import_react.useEffect)(() => {
-      if (internalView || !storageReady || editing || newCaseReminder || !reminderCandidate || deferredNewCaseReminderIds.current.has(reminderCandidate.id))
+      if (internalView || !storageReady || editing || newCaseReminder || !reminderCandidate)
         return;
       setNewCaseReminder({ ...reminderCandidate });
     }, [internalView, storageReady, editing, newCaseReminder, reminderCandidate]);
@@ -44875,7 +44875,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V134" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V135" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             bookReviewDueCount > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { className: "book-review-header-button action-book-review", onClick: () => {
