@@ -1290,6 +1290,10 @@ body{background:#f8fbfe!important;color:#405064!important}
 .inventory-inline-detail>div{grid-template-columns:82px minmax(160px,auto) 1fr!important;padding:4px 7px!important;font-size:10px!important;font-weight:400!important;line-height:1.15!important}
 .inventory-inline-detail b,.inventory-inline-detail span{font-size:10px!important;font-weight:400!important}
 .inventory-inline-detail em{font-style:normal;font-size:9px!important;font-weight:400!important;color:#55758d}
+.monthly-detail-list>div{grid-template-columns:100px minmax(180px,auto) 1fr 64px!important}
+.monthly-detail-list>div>strong{justify-self:end;color:#a33f39;font-size:14px;font-weight:900;white-space:nowrap}
+.inventory-inline-detail>div{grid-template-columns:100px minmax(160px,auto) 1fr 58px!important}
+.inventory-detail-modal .modal-foot>b{margin-right:auto;color:#a33f39;font-size:18px}
 .stock-detail-list>div{grid-template-columns:minmax(210px,auto) 1fr!important}
 
 /* Book review participates in the regular reminder-modal layer. */
@@ -44927,7 +44931,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V148" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V149" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             bookReviewDueCount > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { className: "book-review-header-button action-book-review", onClick: () => {
@@ -49541,7 +49545,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     };
     const monthlyRows = allNames.map((name) => {
       const entered = categoryTotals(monthlyEntry, name), archived = categoryTotals(monthlyArchive, name);
-      const total = { exclusiveHouse: entered.exclusiveHouse + archived.exclusiveHouse, exclusiveLand: entered.exclusiveLand + archived.exclusiveLand, generalHouse: entered.generalHouse + archived.generalHouse, generalLand: entered.generalLand + archived.generalLand, rental: entered.rental + archived.rental, total: entered.total + archived.total };
+      const total = { ...entered };
       return { name, entered, archived, total };
     }).filter((row) => row.total.total > 0).sort((a, b) => b.total.total - a.total.total || a.name.localeCompare(b.name, "zh-TW"));
     const stockRows = allNames.map((name) => {
@@ -49572,10 +49576,8 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       ] }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: record.address || "\u672A\u586B\u5730\u5740" })
     ] });
-    const monthlyItemsFor = (name) => [
-      ...monthlyEntry.filter((record) => weightFor(record, name) > 0).map((record) => ({ record, action: "\u672C\u6708\u9032\u6848" })),
-      ...monthlyArchive.filter((record) => weightFor(record, name) > 0).map((record) => ({ record, action: "\u672C\u6708\u4E0B\u67B6" }))
-    ];
+    const monthlyArchiveIds = new Set(monthlyArchive.map((record) => record.id));
+    const monthlyItemsFor = (name) => monthlyEntry.filter((record) => weightFor(record, name) > 0).map((record) => ({ record, action: monthlyArchiveIds.has(record.id) ? "\u672C\u6708\u9032\u6848\uFF0F\u4E0B\u67B6" : "\u672C\u6708\u9032\u6848", weight: weightFor(record, name) }));
     const monthlyDetailItems = monthlyDetailName ? monthlyItemsFor(monthlyDetailName) : [];
     const stockDetailRecords = stockDetailName ? activeRecords.filter((record) => weightFor(record, stockDetailName) > 0).sort((a, b) => {
       const rank = (record) => /^[A-Z]A/i.test(String(record.propertyNo || "")) ? 0 : /^[A-Z]G/i.test(String(record.propertyNo || "")) ? 1 : 2;
@@ -49760,15 +49762,19 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
                   /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: categorySummary(row.archived) }),
                   /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { className: "inventory-total", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "inventory-count-button", onClick: () => setMonthlyDetailName(row.name), children: categorySummary(row.total, true) }) })
                 ] }),
-                monthlyExpanded && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("tr", { className: "inventory-month-detail-row", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { colSpan: 4, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "inventory-case-list inventory-inline-detail", children: monthlyItemsFor(row.name).map(({ record, action }, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+                monthlyExpanded && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("tr", { className: "inventory-month-detail-row", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { colSpan: 4, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "inventory-case-list inventory-inline-detail", children: monthlyItemsFor(row.name).map(({ record, action, weight }, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
                   /* @__PURE__ */ (0, import_jsx_runtime.jsx)("em", { children: action }),
-                  inventoryCaseLine(record)
+                  inventoryCaseLine(record),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("strong", { children: [
+                    numberText(weight),
+                    "\u4EF6"
+                  ] })
                 ] }, `${record.id}-${action}-${index}`)) }) }) })
               ] }, row.name)),
               !monthlyRows.length && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("tr", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { colSpan: 4, className: "inventory-empty", children: "\u672C\u6708\u76EE\u524D\u6C92\u6709\u9032\u6848\u6216\u4E0B\u67B6\u7D00\u9304" }) })
             ] })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "\u672C\u6708\u4EF6\u6578\uFF1D\u672C\u6708\u9032\u6848\uFF0B\u672C\u6708\u4E0B\u67B6\uFF1B\u91CD\u65B0\u4E0A\u67B6\u4E0D\u91CD\u8907\u8A08\u5165\u9032\u6848\u7D71\u8A08\u3002\u672C\u6708\u4E0B\u67B6\u53EA\u8A08\u7B97\u672C\u6708\u9032\u6848\u5F8C\u53C8\u5728\u540C\u6708\u4E0B\u67B6\u7684\u6848\u4EF6" })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "\u672C\u6708\u4EF6\u6578\u4EE5\u6848\u4EF6\u53BB\u91CD\u8A08\u7B97\uFF1B\u672C\u6708\u9032\u6848\u5F8C\u53C8\u5728\u540C\u6708\u4E0B\u67B6\uFF0C\u4ECD\u53EA\u8A08\u539F\u672C\u7684 1 \u4EF6\u6216\u5171\u540C\u958B\u767C\u7684\u5206\u6524\u4EF6\u6578\u3002\u91CD\u65B0\u4E0A\u67B6\u4E0D\u91CD\u8907\u8A08\u5165\u3002" })
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "inventory-panel stock-inventory-panel", id: "stock-inventory-image", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "inventory-panel-title", children: [
@@ -49813,18 +49819,29 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u672C\u6708\u4EF6\u6578\u660E\u7D30" }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h2", { children: [
               monthlyDetailName,
-              "\u3000",
+              "\u3000\u7E3D\u8A08 ",
               numberText(monthlyRows.find((row) => row.name === monthlyDetailName)?.total.total || 0),
               "\u4EF6"
             ] })
           ] }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "close", onClick: () => setMonthlyDetailName(""), children: "\xD7" })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "inventory-case-list monthly-detail-list", children: monthlyDetailItems.map(({ record, action }, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "inventory-case-list monthly-detail-list", children: monthlyDetailItems.map(({ record, action, weight }, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("em", { children: action }),
-          inventoryCaseLine(record)
+          inventoryCaseLine(record),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("strong", { children: [
+            numberText(weight),
+            "\u4EF6"
+          ] })
         ] }, `${record.id}-${action}-${index}`)) }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "modal-foot", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => setMonthlyDetailName(""), children: "\u5B8C\u6210" }) })
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal-foot", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("b", { children: [
+            "\u7E3D\u8A08\uFF1A",
+            numberText(monthlyRows.find((row) => row.name === monthlyDetailName)?.total.total || 0),
+            "\u4EF6"
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => setMonthlyDetailName(""), children: "\u5B8C\u6210" })
+        ] })
       ] }) }),
       stockDetailName && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "modal-backdrop", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal inventory-detail-modal", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal-head", children: [

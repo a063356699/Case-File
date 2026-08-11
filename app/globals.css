@@ -1283,6 +1283,10 @@ body{background:#f8fbfe!important;color:#405064!important}
 .inventory-inline-detail>div{grid-template-columns:82px minmax(160px,auto) 1fr!important;padding:4px 7px!important;font-size:10px!important;font-weight:400!important;line-height:1.15!important}
 .inventory-inline-detail b,.inventory-inline-detail span{font-size:10px!important;font-weight:400!important}
 .inventory-inline-detail em{font-style:normal;font-size:9px!important;font-weight:400!important;color:#55758d}
+.monthly-detail-list>div{grid-template-columns:100px minmax(180px,auto) 1fr 64px!important}
+.monthly-detail-list>div>strong{justify-self:end;color:#a33f39;font-size:14px;font-weight:900;white-space:nowrap}
+.inventory-inline-detail>div{grid-template-columns:100px minmax(160px,auto) 1fr 58px!important}
+.inventory-detail-modal .modal-foot>b{margin-right:auto;color:#a33f39;font-size:18px}
 .stock-detail-list>div{grid-template-columns:minmax(210px,auto) 1fr!important}
 
 /* Book review participates in the regular reminder-modal layer. */

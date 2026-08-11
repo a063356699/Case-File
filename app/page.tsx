@@ -1917,7 +1917,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V148</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V149</small></h1></div>
       <div className="header-actions">{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -3460,7 +3460,7 @@ function BusinessInventory({ records, people }: { records: RecordItem[]; people:
   };
   const monthlyRows = allNames.map(name => {
     const entered = categoryTotals(monthlyEntry, name), archived = categoryTotals(monthlyArchive, name);
-    const total = { exclusiveHouse: entered.exclusiveHouse + archived.exclusiveHouse, exclusiveLand: entered.exclusiveLand + archived.exclusiveLand, generalHouse: entered.generalHouse + archived.generalHouse, generalLand: entered.generalLand + archived.generalLand, rental: entered.rental + archived.rental, total: entered.total + archived.total };
+    const total = { ...entered };
     return { name, entered, archived, total };
   }).filter(row => row.total.total > 0).sort((a, b) => b.total.total - a.total.total || a.name.localeCompare(b.name, "zh-TW"));
   const stockRows = allNames.map(name => {
@@ -3478,10 +3478,8 @@ function BusinessInventory({ records, people }: { records: RecordItem[]; people:
   const categorySummary = (values: { exclusiveHouse: number; exclusiveLand: number; generalHouse: number; generalLand: number; rental: number; total: number }, totalOnly = false) => <div className="inventory-category-summary">{totalOnly ? <b>{categoryText(values, true)}</b> : <span>{categoryText(values)}</span>}</div>;
   const shortPropertyNo = (record: RecordItem) => String(record.propertyNo || "").match(/^[A-Za-z]{2}/)?.[0]?.toUpperCase() || String(record.propertyNo || "").slice(0, 2);
   const inventoryCaseLine = (record: RecordItem) => <><b>{shortPropertyNo(record)}　{record.caseName || "未命名案件"}</b><span>{record.address || "未填地址"}</span></>;
-  const monthlyItemsFor = (name: string) => [
-    ...monthlyEntry.filter(record => weightFor(record, name) > 0).map(record => ({ record, action: "本月進案" })),
-    ...monthlyArchive.filter(record => weightFor(record, name) > 0).map(record => ({ record, action: "本月下架" })),
-  ];
+  const monthlyArchiveIds = new Set(monthlyArchive.map(record => record.id));
+  const monthlyItemsFor = (name: string) => monthlyEntry.filter(record => weightFor(record, name) > 0).map(record => ({ record, action: monthlyArchiveIds.has(record.id) ? "本月進案／下架" : "本月進案", weight: weightFor(record, name) }));
   const monthlyDetailItems = monthlyDetailName ? monthlyItemsFor(monthlyDetailName) : [];
   const stockDetailRecords = stockDetailName ? activeRecords.filter(record => weightFor(record, stockDetailName) > 0).sort((a, b) => { const rank = (record: RecordItem) => /^[A-Z]A/i.test(String(record.propertyNo || "")) ? 0 : /^[A-Z]G/i.test(String(record.propertyNo || "")) ? 1 : 2; return rank(a) - rank(b) || String(a.propertyNo || "").localeCompare(String(b.propertyNo || ""), "zh-TW"); }) : [];
   const exportInventoryCanvas = (kind: "monthly" | "stock") => {
@@ -3509,15 +3507,15 @@ function BusinessInventory({ records, people }: { records: RecordItem[]; people:
     <div className="inventory-columns"><div className="inventory-panel monthly-inventory-panel" id="monthly-inventory-image">
       <div className="inventory-panel-title"><h3>{rocMonth}進案統計　總件數 :{numberText(monthlyGrandTotal)}件</h3><div className="inventory-title-actions"><button onClick={() => exportInventoryCanvas("monthly")}>產圖</button><button onClick={() => setMonthlyExpanded(value => !value)}>{monthlyExpanded ? "收合" : "展開"}</button></div></div>
       <table><colgroup><col style={{width:"16%"}}/><col style={{width:"46%"}}/><col style={{width:"20%"}}/><col style={{width:"18%"}}/></colgroup><thead><tr><th>人員</th><th>本月進案</th><th>本月下架</th><th>本月件數</th></tr></thead>
-      <tbody>{monthlyRows.map(row => <Fragment key={row.name}><tr><td>{row.name}</td><td>{categorySummary(row.entered)}</td><td>{categorySummary(row.archived)}</td><td className="inventory-total"><button className="inventory-count-button" onClick={() => setMonthlyDetailName(row.name)}>{categorySummary(row.total, true)}</button></td></tr>{monthlyExpanded && <tr className="inventory-month-detail-row"><td colSpan={4}><div className="inventory-case-list inventory-inline-detail">{monthlyItemsFor(row.name).map(({ record, action }, index) => <div key={`${record.id}-${action}-${index}`}><em>{action}</em>{inventoryCaseLine(record)}</div>)}</div></td></tr>}</Fragment>)}{!monthlyRows.length && <tr><td colSpan={4} className="inventory-empty">本月目前沒有進案或下架紀錄</td></tr>}</tbody></table>
-      <small>本月件數＝本月進案＋本月下架；重新上架不重複計入進案統計。本月下架只計算本月進案後又在同月下架的案件</small>
+      <tbody>{monthlyRows.map(row => <Fragment key={row.name}><tr><td>{row.name}</td><td>{categorySummary(row.entered)}</td><td>{categorySummary(row.archived)}</td><td className="inventory-total"><button className="inventory-count-button" onClick={() => setMonthlyDetailName(row.name)}>{categorySummary(row.total, true)}</button></td></tr>{monthlyExpanded && <tr className="inventory-month-detail-row"><td colSpan={4}><div className="inventory-case-list inventory-inline-detail">{monthlyItemsFor(row.name).map(({ record, action, weight }, index) => <div key={`${record.id}-${action}-${index}`}><em>{action}</em>{inventoryCaseLine(record)}<strong>{numberText(weight)}件</strong></div>)}</div></td></tr>}</Fragment>)}{!monthlyRows.length && <tr><td colSpan={4} className="inventory-empty">本月目前沒有進案或下架紀錄</td></tr>}</tbody></table>
+      <small>本月件數以案件去重計算；本月進案後又在同月下架，仍只計原本的 1 件或共同開發的分攤件數。重新上架不重複計入。</small>
     </div>
     <div className="inventory-panel stock-inventory-panel" id="stock-inventory-image">
       <div className="inventory-panel-title"><h3>目前人員總件數表　總件數 :{numberText(stockGrandTotal)}件</h3><button onClick={() => exportInventoryCanvas("stock")}>產圖</button></div>
       <table><thead><tr><th rowSpan={2}>人員</th><th colSpan={2}>專約</th><th colSpan={2}>一般約</th><th rowSpan={2}>租件</th><th rowSpan={2}>總件數</th></tr><tr><th>房屋</th><th>土地</th><th>房屋</th><th>土地</th></tr></thead>
       <tbody>{stockRows.map(row => <tr key={row.name}><td>{row.name}</td><td>{numberText(row.exclusiveHouse)}</td><td>{numberText(row.exclusiveLand)}</td><td>{numberText(row.generalHouse)}</td><td>{numberText(row.generalLand)}</td><td>{numberText(row.rental)}</td><td className="inventory-total"><button className="inventory-count-button" onClick={() => setStockDetailName(row.name)}>{numberText(row.total)}</button></td></tr>)}</tbody></table>
     </div></div>
-    {monthlyDetailName && <div className="modal-backdrop"><div className="modal inventory-detail-modal"><div className="modal-head"><div><span>本月件數明細</span><h2>{monthlyDetailName}　{numberText(monthlyRows.find(row => row.name === monthlyDetailName)?.total.total || 0)}件</h2></div><button className="close" onClick={() => setMonthlyDetailName("")}>×</button></div><div className="inventory-case-list monthly-detail-list">{monthlyDetailItems.map(({ record, action }, index) => <div key={`${record.id}-${action}-${index}`}><em>{action}</em>{inventoryCaseLine(record)}</div>)}</div><div className="modal-foot"><button onClick={() => setMonthlyDetailName("")}>完成</button></div></div></div>}
+    {monthlyDetailName && <div className="modal-backdrop"><div className="modal inventory-detail-modal"><div className="modal-head"><div><span>本月件數明細</span><h2>{monthlyDetailName}　總計 {numberText(monthlyRows.find(row => row.name === monthlyDetailName)?.total.total || 0)}件</h2></div><button className="close" onClick={() => setMonthlyDetailName("")}>×</button></div><div className="inventory-case-list monthly-detail-list">{monthlyDetailItems.map(({ record, action, weight }, index) => <div key={`${record.id}-${action}-${index}`}><em>{action}</em>{inventoryCaseLine(record)}<strong>{numberText(weight)}件</strong></div>)}</div><div className="modal-foot"><b>總計：{numberText(monthlyRows.find(row => row.name === monthlyDetailName)?.total.total || 0)}件</b><button onClick={() => setMonthlyDetailName("")}>完成</button></div></div></div>}
     {stockDetailName && <div className="modal-backdrop"><div className="modal inventory-detail-modal"><div className="modal-head"><div><span>目前總件數明細</span><h2>{stockDetailName}　{numberText(stockRows.find(row => row.name === stockDetailName)?.total || 0)}件</h2></div><button className="close" onClick={() => setStockDetailName("")}>×</button></div><div className="inventory-case-list monthly-detail-list stock-detail-list">{stockDetailRecords.map(record => <div key={record.id}>{inventoryCaseLine(record)}</div>)}</div><div className="modal-foot"><button onClick={() => setStockDetailName("")}>完成</button></div></div></div>}
   </section>;
 }
