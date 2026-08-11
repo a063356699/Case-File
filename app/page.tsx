@@ -747,8 +747,17 @@ export default function Home() {
   const [pptCustomEnd, setPptCustomEnd] = useState("");
   const [pptCustomMeeting, setPptCustomMeeting] = useState("");
   const pptWeekLoadedRef = useRef("");
-  const isIntakeReminderRecord = (record: RecordItem) => record._newCaseReminderSource === "intake" || intakeDrafts.some(draft => draft.linkedRecordId === record.id);
-  const pendingIntakeReminderRecords = records.filter(record => record._newCaseReminderEnabled === "1" && isIntakeReminderRecord(record) && newCaseReminderPending(record) && !deferredNewCaseReminderIds.current.has(record.id));
+  const reminderAnchorRecord = records.find(record => String(record.address || "").includes("富農街一段188巷40號"));
+  const reminderAnchorDraft = reminderAnchorRecord ? intakeDrafts.find(draft => draft.linkedRecordId === reminderAnchorRecord.id) : undefined;
+  const reminderAnchorTime = reminderAnchorDraft?.enteredAt || reminderAnchorDraft?.createdAt || "";
+  const intakeReminderDraft = (record: RecordItem) => intakeDrafts.find(draft => draft.linkedRecordId === record.id && !!draft.enteredAt);
+  const isIntakeReminderRecord = (record: RecordItem) => {
+    if (record._newCaseReminderSource === "intake") return true;
+    const draft = intakeReminderDraft(record);
+    if (!draft || !reminderAnchorTime) return false;
+    return (draft.enteredAt || draft.createdAt || "") >= reminderAnchorTime;
+  };
+  const pendingIntakeReminderRecords = records.filter(record => isIntakeReminderRecord(record) && newCaseReminderPending(record) && !deferredNewCaseReminderIds.current.has(record.id));
   const reminderCandidate = pendingIntakeReminderRecords[0];
   const newCaseReminderBatchRecords = newCaseReminderBatchIds.map(id => records.find(record => record.id === id) || (newCaseReminder?.id === id ? newCaseReminder : null)).filter((record): record is RecordItem => !!record);
   useEffect(() => {
@@ -982,6 +991,12 @@ export default function Home() {
     localStorage.setItem(cleanupKey, "1");
   }, [records.length]);
   useEffect(() => { if (records.length) localStorage.setItem(STORAGE_KEY, JSON.stringify(records)); }, [records]);
+  useEffect(() => {
+    if (!storageReady) return;
+    setRecords(previous => previous.map(record => String(record.address || "").includes("富農街一段188巷40號")
+      ? { ...record, _newCaseReminderEnabled: "1", _newCaseReminderSource: "intake", housingListingCompleted: "1", newBookCompleted: "1", wangReviewCompleted: "1" }
+      : record));
+  }, [storageReady]);
   useEffect(() => {
     const syncAcrossTabs = (event: StorageEvent) => {
       if (event.key === STORAGE_KEY && event.newValue) {
@@ -1886,7 +1901,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V141</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V143</small></h1></div>
       <div className="header-actions">{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
