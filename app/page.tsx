@@ -991,7 +991,10 @@ export default function Home() {
   const archived = useMemo(() => sortArchivedRecords(records.filter(r => r.archived || isExpired(r) || r.status !== "委託中")), [records]);
   const active = useMemo(() => records.filter(r => !r.archived && !isExpired(r) && (r.status || "委託中") === "委託中"), [records]);
   const bookReviewCycleStart = normalizeDateInput(settings.bookReviewCurrentDate || "") || "2026-07-30";
-  const bookReviewDueCount = today() >= bookReviewCycleStart ? active.filter(record => normalizeDateInput(record.bookLocationDate || "") !== today()).length : 0;
+  const bookReviewDueCount = today() >= bookReviewCycleStart ? active.filter(record => {
+    const confirmedDate = normalizeDateInput(record._bookReviewAt || record.bookLocationDate || "");
+    return !confirmedDate || confirmedDate < bookReviewCycleStart;
+  }).length : 0;
   const latestRecordModifiedAt = records.reduce((latest, record) => {
     const candidate = String(record.lastModifiedAt || record.caseNameNoteModifiedAt || record.reducedPriceModifiedAt || "");
     if (!candidate || Number.isNaN(new Date(candidate).getTime())) return latest;
@@ -1721,7 +1724,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V121</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V122</small></h1></div>
       <div className="header-actions">{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
