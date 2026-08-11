@@ -1909,7 +1909,9 @@ export default function Home() {
       if (item.id !== record.id) return item;
       let reports: Record<string, any> = {}; try { reports = JSON.parse(item._monthlyReports || "{}"); } catch {}
       if (!reports[reportKey]) return item;
-      const reportedDate = String(reports[reportKey].reportedAt || "").slice(0, 10) || today();
+      const reportedAtValue = String(reports[reportKey].reportedAt || "");
+      const reportedAtDate = reportedAtValue ? new Date(reportedAtValue) : new Date();
+      const reportedDate = Number.isNaN(reportedAtDate.getTime()) ? today() : isoLocalDate(reportedAtDate);
       reports[reportKey] = { ...reports[reportKey], adminHandledAt: handledAt };
       return { ...item, _monthlyReports: JSON.stringify(reports), ...(keepActive ? { updateDate: reportedDate, lastModifiedAt: handledAt } : {}) };
     }));
@@ -1921,7 +1923,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V159</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V160</small></h1></div>
       <div className="header-actions">{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>

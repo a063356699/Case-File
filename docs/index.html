@@ -44935,7 +44935,9 @@ ${changedLabels}
         }
         if (!reports[reportKey])
           return item;
-        const reportedDate = String(reports[reportKey].reportedAt || "").slice(0, 10) || today();
+        const reportedAtValue = String(reports[reportKey].reportedAt || "");
+        const reportedAtDate = reportedAtValue ? new Date(reportedAtValue) : /* @__PURE__ */ new Date();
+        const reportedDate = Number.isNaN(reportedAtDate.getTime()) ? today() : isoLocalDate(reportedAtDate);
         reports[reportKey] = { ...reports[reportKey], adminHandledAt: handledAt };
         return { ...item, _monthlyReports: JSON.stringify(reports), ...keepActive ? { updateDate: reportedDate, lastModifiedAt: handledAt } : {} };
       }));
@@ -44952,7 +44954,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V159" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V160" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             bookReviewDueCount > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { className: "book-review-header-button action-book-review", onClick: () => {
