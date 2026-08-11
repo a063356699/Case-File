@@ -1721,7 +1721,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V120</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V121</small></h1></div>
       <div className="header-actions">{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -3169,7 +3169,11 @@ function PropertyBookReview({ records, settings, openRequest, submit, openRecord
   const cycleStart = normalizeDateInput(settings.bookReviewCurrentDate || "") || "2026-07-30";
   const nextCheckDate = normalizeDateInput(settings.bookReviewNextDate || "") || "2026-09-30";
   const reviewCycle = today() >= cycleStart ? `book-${cycleStart}` : "";
-  const dueRecords = reviewCycle ? records.filter(record => !record.archived && !isExpired(record) && (record.status || "委託中") === "委託中" && normalizeDateInput(record.bookLocationDate || "") !== today()) : [];
+  // 一輪物件本確認只需完成一次；確認日在本次起始日之後（例如 8/10 完成 7/30 這輪）即不再列入。
+  const dueRecords = reviewCycle ? records.filter(record => {
+    const confirmedDate = normalizeDateInput(record._bookReviewAt || record.bookLocationDate || "");
+    return !record.archived && !isExpired(record) && (record.status || "委託中") === "委託中" && (!confirmedDate || confirmedDate < cycleStart);
+  }) : [];
   const [reviewOpen, setReviewOpen] = useState(false); const [reviewVisible, setReviewVisible] = useState(true); const [values, setValues] = useState<Record<string, string>>({}); const [scannerOpen, setScannerOpen] = useState(false); const [scannedId, setScannedId] = useState(""); const [scannedIds, setScannedIds] = useState<string[]>([]); const [scanMessage, setScanMessage] = useState(""); const [archivedScanRecord, setArchivedScanRecord] = useState<RecordItem | null>(null); const videoRef = useRef<HTMLVideoElement | null>(null); const streamRef = useRef<MediaStream | null>(null); const scannedSetRef = useRef<Set<string>>(new Set());
   useEffect(() => { if (openRequest > 0) { setReviewVisible(true); setReviewOpen(true); } }, [openRequest]);
   const reportMobileResult = (id: number | undefined, ok: boolean, message: string) => { if (!id) return; void fetch("http://localhost:8765/api/mobile-qr-result", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id, ok, message }) }).catch(() => {}); };

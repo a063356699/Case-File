@@ -43793,7 +43793,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V120" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V121" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             bookReviewDueCount > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { className: "book-review-header-button action-book-review", onClick: () => {
@@ -47691,7 +47691,10 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     const cycleStart = normalizeDateInput(settings.bookReviewCurrentDate || "") || "2026-07-30";
     const nextCheckDate = normalizeDateInput(settings.bookReviewNextDate || "") || "2026-09-30";
     const reviewCycle = today() >= cycleStart ? `book-${cycleStart}` : "";
-    const dueRecords = reviewCycle ? records.filter((record) => !record.archived && !isExpired(record) && (record.status || "\u59D4\u8A17\u4E2D") === "\u59D4\u8A17\u4E2D" && normalizeDateInput(record.bookLocationDate || "") !== today()) : [];
+    const dueRecords = reviewCycle ? records.filter((record) => {
+      const confirmedDate = normalizeDateInput(record._bookReviewAt || record.bookLocationDate || "");
+      return !record.archived && !isExpired(record) && (record.status || "\u59D4\u8A17\u4E2D") === "\u59D4\u8A17\u4E2D" && (!confirmedDate || confirmedDate < cycleStart);
+    }) : [];
     const [reviewOpen, setReviewOpen] = (0, import_react.useState)(false);
     const [reviewVisible, setReviewVisible] = (0, import_react.useState)(true);
     const [values, setValues] = (0, import_react.useState)({});
