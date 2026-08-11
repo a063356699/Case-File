@@ -1460,10 +1460,7 @@ body{background:#f8fbfe!important;color:#405064!important}
 
 /* PPT 選擇畫面內的排序與單件預覽。 */
 .ppt-order-float{display:none!important}
-.ppt-inline-order-editor{border:1px solid #b9d5e9;background:#f5fbff;border-radius:10px;padding:10px;margin:0 0 12px;display:grid;gap:6px}
-.ppt-inline-order-editor>b{color:#265d85;font-size:16px}.ppt-inline-order-editor>small{color:#65778a}
-.ppt-inline-order-editor>div{display:grid;grid-template-columns:48px minmax(0,1fr) 44px;gap:8px;align-items:center}
-.ppt-inline-order-editor input{width:48px;text-align:center;padding:5px}.ppt-inline-order-editor span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ppt-inline-order-editor button{padding:5px 8px;background:#eef5ff;border-color:#94b8d9;color:#235d8b;font-weight:800}
+.ppt-case-row.auto>strong{display:flex;justify-content:center;align-items:center}.ppt-sequence-input{width:42px;min-width:42px;padding:4px;text-align:center;font:inherit}.ppt-preview-button{padding:5px 8px!important;background:#eef5ff!important;border-color:#94b8d9!important;color:#235d8b!important;font-weight:800!important}
 .ppt-slide-preview-backdrop{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.62);display:grid;place-items:center;padding:22px}
 .ppt-slide-preview{position:relative;width:min(960px,94vw);min-height:min(540px,82vh);background:#fff;box-shadow:0 16px 45px rgba(0,0,0,.35);padding:42px 54px;display:flex;flex-direction:column;gap:16px}
 .ppt-slide-preview .close{position:absolute;right:12px;top:10px}.ppt-slide-preview h2{margin:0;font-size:clamp(28px,4vw,48px);text-align:center}.ppt-slide-preview-address{text-align:center;font-size:20px;margin:0}.ppt-slide-preview-developer{background:#fff0df;padding:10px 14px;width:max-content;margin:0;font-size:20px;color:#235bd0;font-weight:800}.ppt-slide-preview-price{font-size:52px;color:#e41c18;text-align:center}.ppt-slide-preview-fields{display:grid;grid-template-columns:repeat(2,1fr);gap:14px 30px;font-size:21px;border-top:2px solid #222;padding-top:18px}.ppt-slide-preview-note{margin-top:auto;min-height:54px;border-top:1px solid #777;padding-top:10px;font-size:18px;white-space:pre-wrap}

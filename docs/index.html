@@ -1467,10 +1467,7 @@ body{background:#f8fbfe!important;color:#405064!important}
 
 /* PPT 選擇畫面內的排序與單件預覽。 */
 .ppt-order-float{display:none!important}
-.ppt-inline-order-editor{border:1px solid #b9d5e9;background:#f5fbff;border-radius:10px;padding:10px;margin:0 0 12px;display:grid;gap:6px}
-.ppt-inline-order-editor>b{color:#265d85;font-size:16px}.ppt-inline-order-editor>small{color:#65778a}
-.ppt-inline-order-editor>div{display:grid;grid-template-columns:48px minmax(0,1fr) 44px;gap:8px;align-items:center}
-.ppt-inline-order-editor input{width:48px;text-align:center;padding:5px}.ppt-inline-order-editor span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ppt-inline-order-editor button{padding:5px 8px;background:#eef5ff;border-color:#94b8d9;color:#235d8b;font-weight:800}
+.ppt-case-row.auto>strong{display:flex;justify-content:center;align-items:center}.ppt-sequence-input{width:42px;min-width:42px;padding:4px;text-align:center;font:inherit}.ppt-preview-button{padding:5px 8px!important;background:#eef5ff!important;border-color:#94b8d9!important;color:#235d8b!important;font-weight:800!important}
 .ppt-slide-preview-backdrop{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.62);display:grid;place-items:center;padding:22px}
 .ppt-slide-preview{position:relative;width:min(960px,94vw);min-height:min(540px,82vh);background:#fff;box-shadow:0 16px 45px rgba(0,0,0,.35);padding:42px 54px;display:flex;flex-direction:column;gap:16px}
 .ppt-slide-preview .close{position:absolute;right:12px;top:10px}.ppt-slide-preview h2{margin:0;font-size:clamp(28px,4vw,48px);text-align:center}.ppt-slide-preview-address{text-align:center;font-size:20px;margin:0}.ppt-slide-preview-developer{background:#fff0df;padding:10px 14px;width:max-content;margin:0;font-size:20px;color:#235bd0;font-weight:800}.ppt-slide-preview-price{font-size:52px;color:#e41c18;text-align:center}.ppt-slide-preview-fields{display:grid;grid-template-columns:repeat(2,1fr);gap:14px 30px;font-size:21px;border-top:2px solid #222;padding-top:18px}.ppt-slide-preview-note{margin-top:auto;min-height:54px;border-top:1px solid #777;padding-top:10px;font-size:18px;white-space:pre-wrap}
@@ -42835,32 +42832,46 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
     (0, import_react.useEffect)(() => {
       if (!pptPickerOpen) return;
       const body = document.querySelector(".ppt-picker-body");
-      if (!body) return;
-      const host = document.createElement("section");
-      host.className = "ppt-inline-order-editor";
-      host.innerHTML = "<b>\u672C\u6B21 PPT \u9806\u5E8F</b><small>\u76F4\u63A5\u4FEE\u6539\u5E8F\u865F\u5373\u53EF\u91CD\u6392\uFF1B\u5716\u53EF\u5148\u67E5\u770B\u8A72\u4EF6 PPT \u9810\u89BD\u3002</small>";
-      selectedPptBaseRecords.forEach((record, index) => {
-        const row = document.createElement("div");
-        const input = document.createElement("input");
-        input.type = "number";
-        input.min = "1";
-        input.max = String(selectedPptBaseRecords.length);
-        input.value = String(index + 1);
-        input.title = "\u4FEE\u6539\u9806\u5E8F";
-        input.addEventListener("change", () => setPptSequence(record.id, input.value));
-        const name = document.createElement("span");
-        name.textContent = record.caseName || record.propertyNo || "\u672A\u547D\u540D\u6848\u4EF6";
-        const image = document.createElement("button");
-        image.type = "button";
-        image.textContent = "\u5716";
-        image.title = "\u67E5\u770B PPT \u9810\u89BD";
-        image.addEventListener("click", () => setPptPreviewRecord(pptConfirmedSnapshots[record.id] || record));
-        row.append(input, name, image);
-        host.append(row);
+      const list = body?.querySelector(".ppt-case-list");
+      if (!body || !list) return;
+      const rows = Array.from(list.querySelectorAll(".ppt-case-row.auto"));
+      const rowById = /* @__PURE__ */ new Map();
+      rows.forEach((row, index) => {
+        const record = weeklyPptRecords.find((item) => item.id === row.dataset.pptRecordId) || weeklyPptRecords[index];
+        if (!record) return;
+        row.dataset.pptRecordId = record.id;
+        rowById.set(record.id, row);
+        const order = Math.max(0, selectedPptBaseRecords.findIndex((item) => item.id === record.id)) + 1;
+        const marker = row.querySelector("strong");
+        if (marker) {
+          marker.textContent = "";
+          const input = document.createElement("input");
+          input.className = "ppt-sequence-input";
+          input.type = "number";
+          input.min = "1";
+          input.max = String(selectedPptBaseRecords.length);
+          input.value = String(order);
+          input.title = "\u4FEE\u6539\u9806\u5E8F";
+          input.addEventListener("change", () => setPptSequence(record.id, input.value));
+          marker.append(input);
+        }
+        const actions = row.querySelector(".ppt-inline-confirm");
+        actions?.querySelectorAll(".ppt-preview-button").forEach((button) => button.remove());
+        if (actions) {
+          const preview = document.createElement("button");
+          preview.type = "button";
+          preview.className = "ppt-preview-button";
+          preview.textContent = "\u5716";
+          preview.title = "\u67E5\u770B PPT \u9810\u89BD";
+          preview.addEventListener("click", () => setPptPreviewRecord(pptConfirmedSnapshots[record.id] || record));
+          actions.append(preview);
+        }
       });
-      body.prepend(host);
-      return () => host.remove();
-    }, [pptPickerOpen, pptOrderIds, pptExtraIds, pptAdHocRecords, pptConfirmedSnapshots, selectedPptBaseRecords.map((record) => record.id).join("|")]);
+      selectedPptBaseRecords.forEach((record) => {
+        const row = rowById.get(record.id);
+        if (row) list.append(row);
+      });
+    }, [pptPickerOpen, pptOrderIds, pptExtraIds, pptAdHocRecords, pptConfirmedSnapshots, weeklyPptRecords.map((record) => record.id).join("|"), selectedPptBaseRecords.map((record) => record.id).join("|")]);
     (0, import_react.useEffect)(() => {
       if (!pptPreviewRecord) return;
       const overlay = document.createElement("div");
@@ -43885,7 +43896,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V123" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V124" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             bookReviewDueCount > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { className: "book-review-header-button action-book-review", onClick: () => {

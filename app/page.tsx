@@ -1101,22 +1101,46 @@ export default function Home() {
   useEffect(() => {
     if (!pptPickerOpen) return;
     const body = document.querySelector<HTMLElement>(".ppt-picker-body");
-    if (!body) return;
-    const host = document.createElement("section");
-    host.className = "ppt-inline-order-editor";
-    host.innerHTML = "<b>本次 PPT 順序</b><small>直接修改序號即可重排；圖可先查看該件 PPT 預覽。</small>";
-    selectedPptBaseRecords.forEach((record, index) => {
-      const row = document.createElement("div");
-      const input = document.createElement("input"); input.type = "number"; input.min = "1"; input.max = String(selectedPptBaseRecords.length); input.value = String(index + 1); input.title = "修改順序";
-      input.addEventListener("change", () => setPptSequence(record.id, input.value));
-      const name = document.createElement("span"); name.textContent = record.caseName || record.propertyNo || "未命名案件";
-      const image = document.createElement("button"); image.type = "button"; image.textContent = "圖"; image.title = "查看 PPT 預覽";
-      image.addEventListener("click", () => setPptPreviewRecord(pptConfirmedSnapshots[record.id] || record));
-      row.append(input, name, image); host.append(row);
+    const list = body?.querySelector<HTMLElement>(".ppt-case-list");
+    if (!body || !list) return;
+    const rows = Array.from(list.querySelectorAll<HTMLElement>(".ppt-case-row.auto"));
+    const rowById = new Map<string, HTMLElement>();
+    rows.forEach((row, index) => {
+      const record = weeklyPptRecords.find(item => item.id === row.dataset.pptRecordId) || weeklyPptRecords[index];
+      if (!record) return;
+      row.dataset.pptRecordId = record.id;
+      rowById.set(record.id, row);
+      const order = Math.max(0, selectedPptBaseRecords.findIndex(item => item.id === record.id)) + 1;
+      const marker = row.querySelector<HTMLElement>("strong");
+      if (marker) {
+        marker.textContent = "";
+        const input = document.createElement("input");
+        input.className = "ppt-sequence-input";
+        input.type = "number";
+        input.min = "1";
+        input.max = String(selectedPptBaseRecords.length);
+        input.value = String(order);
+        input.title = "修改順序";
+        input.addEventListener("change", () => setPptSequence(record.id, input.value));
+        marker.append(input);
+      }
+      const actions = row.querySelector<HTMLElement>(".ppt-inline-confirm");
+      actions?.querySelectorAll(".ppt-preview-button").forEach(button => button.remove());
+      if (actions) {
+        const preview = document.createElement("button");
+        preview.type = "button";
+        preview.className = "ppt-preview-button";
+        preview.textContent = "圖";
+        preview.title = "查看 PPT 預覽";
+        preview.addEventListener("click", () => setPptPreviewRecord(pptConfirmedSnapshots[record.id] || record));
+        actions.append(preview);
+      }
     });
-    body.prepend(host);
-    return () => host.remove();
-  }, [pptPickerOpen, pptOrderIds, pptExtraIds, pptAdHocRecords, pptConfirmedSnapshots, selectedPptBaseRecords.map(record => record.id).join("|")]);
+    selectedPptBaseRecords.forEach(record => {
+      const row = rowById.get(record.id);
+      if (row) list.append(row);
+    });
+  }, [pptPickerOpen, pptOrderIds, pptExtraIds, pptAdHocRecords, pptConfirmedSnapshots, weeklyPptRecords.map(record => record.id).join("|"), selectedPptBaseRecords.map(record => record.id).join("|")]);
   useEffect(() => {
     if (!pptPreviewRecord) return;
     const overlay = document.createElement("div"); overlay.className = "ppt-slide-preview-backdrop";
@@ -1768,7 +1792,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V123</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V124</small></h1></div>
       <div className="header-actions">{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
