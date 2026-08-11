@@ -392,6 +392,11 @@ button:hover,.file-button:hover{border-color:#9fbad0;box-shadow:0 2px 8px #7895a
 .internal-public-app .daily-activity.compact .daily-table th.col-address,.internal-public-app .daily-activity.compact .daily-table td.col-address{min-width:220px!important}
 .internal-public-app .daily-activity.compact .daily-table th.col-notes,.internal-public-app .daily-activity.compact .daily-table td.col-notes{min-width:180px!important}
 .daily-card.updated .daily-table td.daily-updated-cell,.daily-card.updated .daily-table td.daily-updated-cell *{color:#e00000!important;font-weight:900!important}
+@media(max-width:760px){
+  .internal-public-app .daily-activity.compact .daily-activity-head{display:block!important;width:100%!important}
+  .internal-public-app .daily-activity.compact .daily-date{width:100%!important;margin-top:10px!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;justify-content:stretch!important}
+  .internal-public-app .daily-activity.compact .daily-date button,.internal-public-app .daily-activity.compact .daily-date input{width:100%!important;max-width:none!important}
+}
 .record-edit-modal .draft-save-note{color:#e45b92;font-size:14px;font-weight:900;white-space:nowrap}
 .restore-in-editor{background:#e4f1eb!important;border-color:#8fb6a5!important;color:#15513f!important;font-weight:900!important}
 .ppt-picker-modal{width:min(1080px,96vw)!important;max-height:90vh!important}
@@ -44922,7 +44927,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V147" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V148" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             bookReviewDueCount > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { className: "book-review-header-button action-book-review", onClick: () => {
