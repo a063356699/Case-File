@@ -1412,6 +1412,7 @@ body{background:#f8fbfe!important;color:#405064!important}
 .ppt-slide-preview-note span{font-size:17.5px!important;line-height:1.15}
 .ppt-slide-preview-footer{font-size:11.5px!important}
 .ppt-slide-preview-canvas{display:block;height:auto;max-height:90vh}
+.new-case-reminder-list-modal{width:min(1380px,97vw)!important}.new-case-reminder-table-wrap{padding:18px 22px;overflow:auto}.new-case-reminder-table{width:100%;min-width:1080px;border-collapse:collapse;background:#fff}.new-case-reminder-table th,.new-case-reminder-table td{border:1px solid #d7dfda;padding:10px;text-align:center;vertical-align:middle}.new-case-reminder-table th{background:#e5eee9;color:#31584d;white-space:nowrap}.new-case-reminder-table td:nth-child(1),.new-case-reminder-table td:nth-child(2){text-align:left}.new-case-reminder-table td:first-child b,.new-case-reminder-table td:first-child small{display:block}.new-case-reminder-table td:first-child small{margin-top:4px;color:#728087}.new-case-reminder-table input[type="checkbox"]{width:22px;height:22px;accent-color:#1f5a4a}
 .ppt-adhoc-backdrop{background:#17372fc7!important}.ppt-adhoc-modal{background:#eef4f1!important;border:2px solid #7fa497!important}.ppt-adhoc-modal .modal-head{background:#dcece5!important;border-bottom:2px solid #8fb0a3!important}.ppt-adhoc-modal .modal-head span{display:inline-block;padding:4px 9px;border-radius:999px;background:#1f5a4a;color:#fff!important;font-size:12px!important;letter-spacing:.08em!important}.ppt-adhoc-modal .modal-head h2{color:#173f35;font-size:27px}.ppt-adhoc-modal .modal-head p{color:#784727!important;font-weight:700}.ppt-adhoc-grid{background:#eef4f1!important;padding:20px!important}.ppt-adhoc-grid .field{padding:10px;border:1px solid #bfd1c9;border-radius:10px;background:#fff}.ppt-adhoc-grid .field>span{color:#234f42!important;font-size:13px!important;font-weight:900!important}.ppt-adhoc-grid .field input,.ppt-adhoc-grid .field select,.ppt-adhoc-grid .field textarea{border:1px solid #91aa9f!important;background:#f9fcfa!important}.ppt-adhoc-modal .modal-foot{background:#dcece5!important;border-top:2px solid #8fb0a3!important}
 /* Visible release marker beside the home title. */
 .app-version{font-family:"Noto Sans TC","Microsoft JhengHei",sans-serif;font-size:11px;letter-spacing:0;color:var(--muted);font-weight:700;margin-left:7px;vertical-align:middle}
@@ -43004,6 +43005,7 @@ ${String(ex)}`);
     const [bookReviewOpenRequest, setBookReviewOpenRequest] = (0, import_react.useState)(0);
     const [editing, setEditing] = (0, import_react.useState)(null);
     const [newCaseReminder, setNewCaseReminder] = (0, import_react.useState)(null);
+    const [newCaseReminderBatchIds, setNewCaseReminderBatchIds] = (0, import_react.useState)([]);
     const deferredNewCaseReminderIds = (0, import_react.useRef)(/* @__PURE__ */ new Set());
     const [expiryReminderOpen, setExpiryReminderOpen] = (0, import_react.useState)(false);
     const [websitePoReminderOpen, setWebsitePoReminderOpen] = (0, import_react.useState)(false);
@@ -43040,28 +43042,15 @@ ${String(ex)}`);
     const [pptCustomEnd, setPptCustomEnd] = (0, import_react.useState)("");
     const [pptCustomMeeting, setPptCustomMeeting] = (0, import_react.useState)("");
     const pptWeekLoadedRef = (0, import_react.useRef)("");
-    const reminderCandidate = records.find((record) => record._newCaseReminderEnabled === "1" && newCaseReminderPending(record) && !deferredNewCaseReminderIds.current.has(record.id));
-    (0, import_react.useEffect)(() => {
-      if (!storageReady)
-        return;
-      setRecords((previous) => {
-        const anchorIndex = previous.findIndex((record) => String(record.caseName || "").trim() === "\u6771\u5340\u5FA9\u8208\u5B78\u5340\u6574\u65B0\u56DB\u5957\u623F\u8ECA\u5885");
-        if (anchorIndex <= 0)
-          return previous;
-        let changed = false;
-        const next = previous.map((record, index) => {
-          if (index >= anchorIndex || record._newCaseReminderEnabled === "1" || !newCaseReminderPending(record))
-            return record;
-          changed = true;
-          return { ...record, _newCaseReminderEnabled: "1" };
-        });
-        return changed ? next : previous;
-      });
-    }, [storageReady]);
+    const isIntakeReminderRecord = (record) => record._newCaseReminderSource === "intake" || intakeDrafts.some((draft) => draft.linkedRecordId === record.id);
+    const pendingIntakeReminderRecords = records.filter((record) => record._newCaseReminderEnabled === "1" && isIntakeReminderRecord(record) && newCaseReminderPending(record) && !deferredNewCaseReminderIds.current.has(record.id));
+    const reminderCandidate = pendingIntakeReminderRecords[0];
+    const newCaseReminderBatchRecords = newCaseReminderBatchIds.map((id) => records.find((record) => record.id === id) || (newCaseReminder?.id === id ? newCaseReminder : null)).filter((record) => !!record);
     (0, import_react.useEffect)(() => {
       if (internalView || !storageReady || editing || newCaseReminder || !reminderCandidate)
         return;
       setNewCaseReminder({ ...reminderCandidate });
+      setNewCaseReminderBatchIds(pendingIntakeReminderRecords.map((record) => record.id));
     }, [internalView, storageReady, editing, newCaseReminder, reminderCandidate]);
     (0, import_react.useEffect)(() => {
       setPptCustomStart("");
@@ -43866,7 +43855,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
         caseNameNote: String(prepared.caseNameNote || "").includes(reopenNote) ? prepared.caseNameNote : [prepared.caseNameNote, reopenNote].filter(Boolean).join("\u3000"),
         caseNameNoteModifiedAt: (/* @__PURE__ */ new Date()).toISOString()
       } : prepared;
-      let next = existing ? _materialEditAt || autoReopen ? withTrackedUpdate(existing, preparedForSave, today(), autoReopen ? void 0 : editedFieldKeys(preparedWithMarker)) : { ...preparedForSave, updateDate: existing.updateDate, lastModifiedAt: existing.lastModifiedAt, _updateHistory: existing._updateHistory } : { ...preparedForSave, _newCaseReminderEnabled: "1" };
+      let next = existing ? _materialEditAt || autoReopen ? withTrackedUpdate(existing, preparedForSave, today(), autoReopen ? void 0 : editedFieldKeys(preparedWithMarker)) : { ...preparedForSave, updateDate: existing.updateDate, lastModifiedAt: existing.lastModifiedAt, _updateHistory: existing._updateHistory } : { ...preparedForSave };
       if (autoReopen) {
         const history = recordUpdateHistory(next);
         if (history[today()])
@@ -43876,38 +43865,33 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       setRecords((prev) => prev.some((r) => r.id === next.id) ? prev.map((r) => r.id === next.id ? next : r) : [next, ...prev]);
       setIntakeDrafts((previous) => previous.map((draft) => draft.linkedRecordId === next.id ? { ...draft, values: syncRecordToDraftValues(draft, next) } : draft));
       setEditing(null);
-      if (!existing)
-        setNewCaseReminder({ ...next });
       flash(autoReopen ? "\u5DF2\u91CD\u65B0\u4E0A\u67B6\uFF0C\u4E26\u8A18\u9304\u5728\u6848\u540D\u5F8C\u65B9\u5099\u8A3B" : "\u7269\u4EF6\u5DF2\u5132\u5B58");
     };
     const saveNewCaseReminder = () => {
-      if (!newCaseReminder)
+      if (!newCaseReminderBatchIds.length)
         return;
-      const savedAt = (/* @__PURE__ */ new Date()).toISOString();
-      setRecords((previous) => previous.map((record) => record.id === newCaseReminder.id ? {
-        ...record,
-        housingListingCompleted: newCaseReminder.housingListingCompleted || "",
-        newBookCompleted: newCaseReminder.newBookCompleted || "",
-        wangReviewCompleted: newCaseReminder.wangReviewCompleted || "",
-        lastModifiedAt: savedAt
-      } : record));
-      deferredNewCaseReminderIds.current.add(newCaseReminder.id);
+      newCaseReminderBatchIds.forEach((id) => deferredNewCaseReminderIds.current.add(id));
       setNewCaseReminder(null);
+      setNewCaseReminderBatchIds([]);
       flash("\u65B0\u6848\u4EF6\u5B8C\u6210\u63D0\u9192\u5DF2\u5132\u5B58");
     };
     const deferNewCaseReminder = () => {
-      if (newCaseReminder)
-        deferredNewCaseReminderIds.current.add(newCaseReminder.id);
+      newCaseReminderBatchIds.forEach((id) => deferredNewCaseReminderIds.current.add(id));
       setNewCaseReminder(null);
+      setNewCaseReminderBatchIds([]);
+    };
+    const updateNewCaseReminderItem = (id, key, checked) => {
+      const value = checked ? "1" : "";
+      const savedAt = (/* @__PURE__ */ new Date()).toISOString();
+      setRecords((previous) => previous.map((record) => record.id === id ? { ...record, [key]: value, lastModifiedAt: savedAt } : record));
+      setNewCaseReminder((previous) => previous?.id === id ? { ...previous, [key]: value, lastModifiedAt: savedAt } : previous);
     };
     const temporarilySaveRecord = () => {
       if (!editing)
         return;
-      const isNewRecord = !editing._intakeDraftId && !records.some((record) => record.id === editing.id);
       const savedAt = (/* @__PURE__ */ new Date()).toISOString();
       const next = normalizeRecordPings(clearImportedLandLabels({
         ...editing,
-        ...isNewRecord ? { _newCaseReminderEnabled: "1" } : {},
         developer: developerFullNameText(editing.developer || "", settings.personnel) || editing.developer,
         ...Object.fromEntries([...dateKeys].map((key) => [key, normalizeDateInput(editing[key] || "")])),
         completionDate: normalizeDateInput(editing.completionDate || ""),
@@ -44803,20 +44787,23 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
         return flash("\u7F3A\u5C11\u7269\u4EF6\u7DE8\u865F\u6216\u6848\u540D\uFF0C\u8ACB\u5148\u78BA\u8A8D\u8868\u55AE\u5167\u5BB9");
       if (existing) {
         const firstFormalEntry = !target.enteredAt;
-        const tracked = { ...withTrackedUpdate(existing, record), ...firstFormalEntry ? { _newCaseReminderEnabled: "1" } : {} };
+        const tracked = { ...withTrackedUpdate(existing, record), ...firstFormalEntry ? { _newCaseReminderEnabled: "1", _newCaseReminderSource: "intake" } : {} };
         setRecords((prev) => prev.map((item) => item.id === existing.id ? tracked : item));
         setIntakeDrafts((prev) => prev.map((draft) => draft.id === target.id ? { ...draft, linkedRecordId: existing.id, enteredAt: draft.enteredAt || (/* @__PURE__ */ new Date()).toISOString() } : draft));
-        if (firstFormalEntry)
+        if (firstFormalEntry) {
           setNewCaseReminder({ ...tracked });
+          setNewCaseReminderBatchIds((previous) => [.../* @__PURE__ */ new Set([...previous, ...pendingIntakeReminderRecords.map((item) => item.id), tracked.id])]);
+        }
         flash(firstFormalEntry ? "\u5DF2\u6B63\u5F0F\u9032\u6848\uFF1B\u8ACB\u5B8C\u6210\u65B0\u6848\u4EF6\u63D0\u9192" : "\u5DF2\u9023\u7D50\u4E26\u540C\u6B65\u66F4\u65B0\u539F\u7E3D\u8868\u8CC7\u6599");
         return;
       }
       if (!confirm(`\u78BA\u5B9A\u6587\u4EF6\u5DF2\u6536\u5230\uFF0C\u5C07\u300C${record.caseName}\u300D\u6B63\u5F0F\u52A0\u5165\u7E3D\u8868\uFF1F`))
         return;
-      const entered = { ...record, _newCaseReminderEnabled: "1" };
+      const entered = { ...record, _newCaseReminderEnabled: "1", _newCaseReminderSource: "intake" };
       setRecords((prev) => [entered, ...prev]);
       setIntakeDrafts((prev) => prev.map((draft) => draft.id === target.id ? { ...draft, linkedRecordId: entered.id, enteredAt: (/* @__PURE__ */ new Date()).toISOString() } : draft));
       setNewCaseReminder({ ...entered });
+      setNewCaseReminderBatchIds((previous) => [.../* @__PURE__ */ new Set([...previous, ...pendingIntakeReminderRecords.map((item) => item.id), entered.id])]);
       flash("\u5DF2\u6B63\u5F0F\u9032\u6848\uFF1B\u8ACB\u5B8C\u6210\u65B0\u6848\u4EF6\u63D0\u9192");
     };
     const removeIntakeDraft = (id) => {
@@ -44895,7 +44882,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V139" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V140" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             bookReviewDueCount > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { className: "book-review-header-button action-book-review", onClick: () => {
@@ -45763,35 +45750,41 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", onClick: resetPptCustomWeek, children: "\u6062\u5FA9\u9810\u8A2D\u9031\u671F" })
       ] }),
-      !internalView && newCaseReminder && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "modal-backdrop new-case-reminder-backdrop", onMouseDown: (event) => event.target === event.currentTarget && deferNewCaseReminder(), children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal new-case-reminder-modal", children: [
+      !internalView && newCaseReminder && newCaseReminderBatchRecords.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "modal-backdrop new-case-reminder-backdrop", onMouseDown: (event) => event.target === event.currentTarget && deferNewCaseReminder(), children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal new-case-reminder-modal new-case-reminder-list-modal", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal-head", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u65B0\u589E\u6848\u4EF6" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", { children: "\u65B0\u6848\u4EF6\u5B8C\u6210\u63D0\u9192" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h2", { children: [
+              "\u65B0\u6848\u4EF6\u5B8C\u6210\u63D0\u9192\u3000",
+              newCaseReminderBatchRecords.length,
+              " \u7B46"
+            ] })
           ] }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "close", type: "button", onClick: deferNewCaseReminder, children: "\xD7" })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "new-case-reminder-body", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("dl", { className: "new-case-reminder-meta", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("dt", { children: "\u6848\u540D" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("dd", { children: newCaseReminder.caseName || "\u672A\u586B\u5BEB" })
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "new-case-reminder-table-wrap", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("table", { className: "new-case-reminder-table", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("thead", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "\u6848\u540D" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "\u5730\u5740" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "\u958B\u767C" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "\u9032\u6848\u65E5\u671F" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "\u623F\u7BA1\u4E0A\u67B6\u5B8C\u6210" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "NEW \u672C\u88FD\u4F5C\u5B8C\u6210" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "\u738B\u7E3D\u5BE9\u6838\u5B8C\u6210" })
+          ] }) }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("tbody", { children: newCaseReminderBatchRecords.map((record) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("td", { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: record.caseName || "\u672A\u547D\u540D\u6848\u4EF6" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: record.propertyNo || "\u2014" })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("dt", { children: "\u5730\u5740" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("dd", { children: newCaseReminder.address || "\u672A\u586B\u5BEB" })
-            ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("dt", { children: "\u958B\u767C" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("dd", { children: developerFullNameText(newCaseReminder.developer || "", settings.personnel) || "\u672A\u586B\u5BEB" })
-            ] })
-          ] }),
-          [["housingListingCompleted", "\u623F\u7BA1\u4E0A\u67B6\u5B8C\u6210"], ["newBookCompleted", "NEW\u672C\u88FD\u4F5C\u5B8C\u6210"], ["wangReviewCompleted", "\u738B\u7E3D\u5BE9\u6838\u5B8C\u6210"]].map(([key, label]) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "new-case-reminder-check", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: newCaseReminder[key] === "1", onChange: (event) => setNewCaseReminder((previous) => previous ? { ...previous, [key]: event.target.checked ? "1" : "" } : previous) }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: label })
-          ] }, key))
-        ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: record.address || "\u672A\u586B\u5BEB\u5730\u5740" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: developerFullNameText(record.developer || "", settings.personnel) || "\u672A\u586B\u5BEB" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: displayRocDate(record.reportDate) || "\u2014" }),
+            ["housingListingCompleted", "newBookCompleted", "wangReviewCompleted"].map((key) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: record[key] === "1", onChange: (event) => updateNewCaseReminderItem(record.id, key, event.target.checked) }) }, key))
+          ] }, record.id)) })
+        ] }) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal-foot", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u4F86\u6E90\uFF1A\u9032\u6848\u8349\u7A3F\u9EDE\u9078\u300C\u9032\u6848\u300D" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", onClick: deferNewCaseReminder, children: "\u7A0D\u5F8C\u8655\u7406" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: "primary", onClick: saveNewCaseReminder, children: "\u5132\u5B58\u63D0\u9192" })
         ] })
