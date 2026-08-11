@@ -714,6 +714,7 @@ export default function Home() {
   const [advancedFilter, setAdvancedFilter] = useState<AdvancedFilter>(() => blankAdvancedFilter());
   const [bookReviewOpenRequest, setBookReviewOpenRequest] = useState(0);
   const [monthlyProgressOpen, setMonthlyProgressOpen] = useState(false);
+  const [frontLastLogins, setFrontLastLogins] = useState<Record<string, string>>({});
   const [editing, setEditing] = useState<RecordItem | null>(null);
   const [newCaseReminder, setNewCaseReminder] = useState<RecordItem | null>(null);
   const [newCaseReminderBatchIds, setNewCaseReminderBatchIds] = useState<string[]>([]);
@@ -1749,6 +1750,17 @@ export default function Home() {
     } catch { flash(signUp ? "註冊失敗，請檢查 Email 與密碼" : "登入失敗，請檢查 Email 與密碼"); }
   };
   const supabaseSignOut = () => { setCloudSession(null); localStorage.removeItem(CLOUD_SESSION_KEY); flash("已登出雲端帳號"); };
+  const openMonthlyProgress = async () => {
+    setMonthlyProgressOpen(true);
+    if (!cloudSession?.accessToken) return;
+    try {
+      const session = await refreshCloudSession();
+      if (!session) return;
+      const response = await fetch(`${CASE_FILE_SUPABASE_URL}/rest/v1/case_file_front_access?select=person_id,last_entered_at`, { headers: cloudHeaders(session) });
+      const rows = await response.json();
+      if (response.ok && Array.isArray(rows)) setFrontLastLogins(Object.fromEntries(rows.map((row: { person_id: string; last_entered_at: string }) => [row.person_id, row.last_entered_at])));
+    } catch {}
+  };
   const cloudSnapshot = JSON.stringify({ records, personnel: settings.personnel, expiry591: settings.expiry591, expiry5168: settings.expiry5168, brokerExpiry: settings.brokerExpiry, intakeRaw, intakeDrafts, selectedIntakeId, tourDate, tourTitle, tourItems, pptWeekStart, pptExtraIds, pptOrderIds, pptAdHocRecords, pptConfirmedSnapshots });
   useEffect(() => {
     if (!cloudSyncBaselineRef.current) { cloudSyncBaselineRef.current = cloudSnapshot; return; }
@@ -1771,6 +1783,9 @@ export default function Home() {
   const openPublic = () => { setTab("public"); setPublicUnlocked(false); setPublicPersonId(""); setPublicScope("mine"); setPassword(""); };
   const logoutPublic = () => { localStorage.removeItem("case-file-public-daily-login"); setPublicUnlocked(false); setPublicPersonId(""); setPublicScope("mine"); setPublicExpiryFilter("all"); setPublicQuery(""); setPassword(""); flash("已登出業務帳號"); };
   const rememberPublicLogin = (personId: string) => localStorage.setItem("case-file-public-daily-login", JSON.stringify({ date: today(), personId }));
+  const recordPublicEntry = async (nationalId: string) => {
+    try { await fetch(`${CASE_FILE_SUPABASE_URL}/rest/v1/rpc/case_file_front_touch`, { method: "POST", headers: { apikey: CASE_FILE_SUPABASE_PUBLISHABLE_KEY, "Content-Type": "application/json" }, body: JSON.stringify({ p_national_id: nationalId }) }); } catch {}
+  };
   useEffect(() => {
     if (!(internalView || tab === "public") || !publicUnlocked) return;
     const header = document.querySelector<HTMLElement>(".public-head");
@@ -1788,7 +1803,7 @@ export default function Home() {
     const activePeople = settings.personnel.filter(p => (p.status || "在職") === "在職" && normalizeLoginId(p.nationalId));
     const loginId = normalizeLoginId(password);
     const person = activePeople.find(p => loginId === normalizeLoginId(p.nationalId));
-    if (person) { setPublicPersonId(person.id); setPublicScope("mine"); setPublicUnlocked(true); rememberPublicLogin(person.id); setPassword(""); return; }
+    if (person) { setPublicPersonId(person.id); setPublicScope("mine"); setPublicUnlocked(true); rememberPublicLogin(person.id); setPassword(""); void recordPublicEntry(loginId); return; }
     if (!loginId) return flash("請輸入身分證字號");
     try {
       const response = await fetch(`${CASE_FILE_SUPABASE_URL}/rest/v1/rpc/case_file_front_login`, { method: "POST", headers: { apikey: CASE_FILE_SUPABASE_PUBLISHABLE_KEY, "Content-Type": "application/json" }, body: JSON.stringify({ p_national_id: loginId }) });
@@ -1924,8 +1939,8 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V164</small></h1></div>
-      <div className="header-actions"><button className="action-monthly-progress" onClick={() => setMonthlyProgressOpen(true)}>45天確認進度</button>{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V165</small></h1></div>
+      <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
       <button className={tab === "archive" ? "active" : ""} onClick={() => setTab("archive")}>封存{pendingArchiveCleanup.length > 0 && <small className="archive-pending-count">待下架 {pendingArchiveCleanup.length}</small>}</button>
@@ -1941,7 +1956,7 @@ export default function Home() {
 
     {!internalView && tab === "active" && systemExpiryReminders.length > 0 && <div className="system-expiry-reminder"><b>系統到期提醒</b>{systemExpiryReminders.map(item => <span key={item.label}>{item.label}：{displayRocDate(item.date)} 到期{item.date < today() ? "（已到期）" : item.leadDays === 30 ? "（30天內）" : "（明天到期）"}</span>)}</div>}
     {!internalView && tab === "active" && <PropertyBookReview records={records} settings={settings} openRequest={bookReviewOpenRequest} submit={submitBookReviews} openRecord={setEditing}/>}
-    {monthlyProgressOpen && <MonthlyConfirmationProgress records={active} people={settings.personnel} close={() => setMonthlyProgressOpen(false)}/>}
+    {monthlyProgressOpen && <MonthlyConfirmationProgress records={active} people={settings.personnel} lastLogins={frontLastLogins} close={() => setMonthlyProgressOpen(false)}/>}
     {!internalView && tab === "active" && <BusinessReportInbox records={active} resolve={resolveMonthlyPropertyReport} archive={(record, status) => setArchiveChoice({ record, status, date: today() })}/>}
     {showingPublic && publicUnlocked && publicScope === "mine" && publicPerson && <MonthlyPropertyReport records={myProperties} person={publicPerson} submit={submitMonthlyPropertyReport}/>}
     {pptPickerOpen && selectedPptBaseRecords.length > 0 && <aside className="ppt-order-float"><b>調整本次排序</b><small>此順序會保留在本週</small><ol>{selectedPptBaseRecords.map((record, index) => <li key={record.id}><span>{index + 1}. {record.caseName || "未命名案件"}</span><div><button type="button" disabled={index === 0} onClick={() => movePptOrder(record.id, -1)}>↑</button><button type="button" disabled={index === selectedPptBaseRecords.length - 1} onClick={() => movePptOrder(record.id, 1)}>↓</button></div></li>)}</ol></aside>}
@@ -3400,7 +3415,7 @@ function PropertyBookReview({ records, settings, openRequest, submit, openRecord
   return <div className="modal-backdrop book-review-reminder-backdrop"><section className={`book-review-panel ${reviewOpen ? "book-review-open" : "book-review-collapsed"}`}><div className="book-review-head" role="button" tabIndex={0} onClick={() => setReviewOpen(open => !open)} onKeyDown={event => (event.key === "Enter" || event.key === " ") && setReviewOpen(open => !open)}><div className="book-review-title"><b>物件本確認</b><span>本次確認：{displayRocDate(cycleStart)}　下次確認：{displayRocDate(nextCheckDate)}</span></div><div className="book-review-actions" onClick={event => event.stopPropagation()} onKeyDown={event => event.stopPropagation()}><strong>{dueRecords.length} 筆待確認</strong>{reviewOpen && <><button onClick={() => { setScanMessage(""); setArchivedScanRecord(null); setScannerOpen(true); }}>掃描QR Code</button><label className="file-button">上傳QR圖片<input type="file" accept="image/*" capture="environment" onChange={event => { decodeImage(event.target.files?.[0]); event.target.value = ""; }}/></label></>}<button className="close book-review-close" title="關閉" onClick={() => setReviewVisible(false)}>×</button></div></div>{reviewOpen && <>{archivedScanRecord && <div className="book-archived-scan-notice"><span>{archivedScanRecord.propertyNo}「{archivedScanRecord.caseName || "未命名案件"}」已{archivedScanRecord.status || "下架"}</span><button type="button" onClick={() => { setReviewVisible(false); openRecord(archivedScanRecord); }}>開啟案件編輯</button><button type="button" onClick={() => setArchivedScanRecord(null)}>留在掃描</button></div>}<div className="book-review-list">{groupedDueRecords.map(group => <Fragment key={group.area}><div className="book-review-area"><span>{group.area}</span><small>{group.items.length}筆</small></div>{group.items.map(record => <div id={`book-review-${record.id}`} className="book-review-row" key={record.id}><div><b>{record.caseName || record.propertyNo}</b><small className="book-record-line"><span>{record.propertyNo}</span><span>{record.address || "未填地址"}</span></small></div><div className="book-review-side"><small className="book-current-note">{displayRocDate(record.bookLocationDate || "") || "未填日期"}　{record.bookLocationType || "未填位置"}</small><div className="book-review-confirm"><strong className="book-scan-status">待確認</strong><button type="button" onClick={() => submit([{ record, status: statusOf(record) }])}>今日確認</button></div></div></div>)}</Fragment>)}</div><div className="book-review-foot"><span>本次已掃描 {scannedIds.length} 筆</span></div></>}{scannerOpen && <div className="qr-scanner-backdrop"><div className="qr-scanner-modal"><div><b>連續掃描物件QR Code</b><button className="close" onClick={() => setScannerOpen(false)}>×</button></div><video ref={videoRef} playsInline muted/><strong className="qr-scan-count">已掃描 {scannedIds.length} 筆</strong><p>{scanMessage || "將QR Code放在畫面中央，掃完一件可直接刷下一件。"}</p><button className="primary qr-scan-done" onClick={() => setScannerOpen(false)}>掃描完成</button></div></div>}</section></div>;
 }
 
-function MonthlyConfirmationProgress({ records, people, close }: { records: RecordItem[]; people: Person[]; close: () => void }) {
+function MonthlyConfirmationProgress({ records, people, lastLogins, close }: { records: RecordItem[]; people: Person[]; lastLogins: Record<string, string>; close: () => void }) {
   const activePeople = people.filter(person => person.status === "在職" && person.role !== "秘書");
   const progress = activePeople.map(person => {
     const assigned = records.filter(record => nameMatches(record.developer, person.name)).filter(record => {
@@ -3410,9 +3425,9 @@ function MonthlyConfirmationProgress({ records, people, close }: { records: Reco
     const reportOf = (record: RecordItem) => { try { return (Object.values(JSON.parse(record._monthlyReports || "{}")) as any[]).filter(report => report.personId === person.id).sort((a, b) => String(b.reportedAt || "").localeCompare(String(a.reportedAt || "")))[0]; } catch { return undefined; } };
     const pending = assigned.filter(record => { const report = reportOf(record); if (!report) return true; if (report.status === "待確認") return String(report.dueDate || "") <= today(); const date = String(report.reportedAt || "").slice(0, 10); return !date || Math.floor((Date.parse(`${today()}T00:00:00`) - Date.parse(`${date}T00:00:00`)) / 86400000) >= 45; });
     const latest = assigned.map(reportOf).filter(Boolean).sort((a, b) => String(b.reportedAt || "").localeCompare(String(a.reportedAt || "")))[0];
-    return { person, total: assigned.length, pending: pending.length, completed: Math.max(0, assigned.length - pending.length), latest: latest?.reportedAt || "" };
+    return { person, total: assigned.length, pending: pending.length, completed: Math.max(0, assigned.length - pending.length), latest: latest?.reportedAt || "", lastLogin: lastLogins[person.id] || "" };
   });
-  return <div className="modal-backdrop monthly-progress-backdrop"><section className="monthly-progress-modal"><header><div><b>45天確認進度</b><span>查看業務目前尚未完成的回報</span></div><button className="close" onClick={close}>×</button></header><div className="monthly-progress-note">管理端以「是否已送出回報」判斷；尚未回報不等同尚未登入前台。</div><div className="monthly-progress-list"><div className="monthly-progress-row monthly-progress-labels"><b>業務</b><b>應確認</b><b>已完成</b><b>尚未回報</b><b>最後回報</b><b>狀態</b></div>{progress.map(item => <div className={`monthly-progress-row ${item.pending ? "has-pending" : "is-complete"}`} key={item.person.id}><strong>{item.person.name}</strong><span>{item.total} 件</span><span>{item.completed} 件</span><span>{item.pending} 件</span><span>{item.latest ? new Date(item.latest).toLocaleString("zh-TW") : "尚無回報"}</span><em>{item.pending ? "尚未完成" : "全數完成"}</em></div>)}{!progress.length && <p className="monthly-progress-empty">尚未設定在職業務人員。</p>}</div><footer><button className="primary" onClick={close}>關閉</button></footer></section></div>;
+  return <div className="modal-backdrop monthly-progress-backdrop"><section className="monthly-progress-modal"><header><div><b>45天確認進度</b><span>查看業務進入前台與回報進度</span></div><button className="close" onClick={close}>×</button></header><div className="monthly-progress-list"><div className="monthly-progress-row monthly-progress-labels"><b>業務</b><b>應確認</b><b>已完成</b><b>尚未回報</b><b>最後進入前台</b><b>最後回報</b><b>狀態</b></div>{progress.map(item => <div className={`monthly-progress-row ${item.pending ? "has-pending" : "is-complete"}`} key={item.person.id}><strong>{item.person.name}</strong><span>{item.total} 件</span><span>{item.completed} 件</span><span>{item.pending} 件</span><span>{item.lastLogin ? new Date(item.lastLogin).toLocaleString("zh-TW") : "尚無進入紀錄"}</span><span>{item.latest ? new Date(item.latest).toLocaleString("zh-TW") : "尚無回報"}</span><em>{item.pending ? "尚未完成" : "全數完成"}</em></div>)}{!progress.length && <p className="monthly-progress-empty">尚未設定在職業務人員。</p>}</div><footer><button className="primary" onClick={close}>關閉</button></footer></section></div>;
 }
 
 function BusinessReportInbox({ records, resolve, archive }: { records: RecordItem[]; resolve: (record: RecordItem, reportKey: string, keepActive?: boolean) => void; archive: (record: RecordItem, status: string) => void }) {

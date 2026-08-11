@@ -1515,8 +1515,8 @@ body{background:#f8fbfe!important;color:#405064!important}
 .monthly-progress-modal>header{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid #d7e5ec}
 .monthly-progress-modal>header>div{display:flex;flex-direction:column;gap:4px}.monthly-progress-modal>header b{font-size:24px;color:#143f56}.monthly-progress-modal>header span{color:#667b88}
 .monthly-progress-note{margin:16px 20px;padding:11px 14px;border-radius:10px;background:#fff8df;color:#795914;font-weight:700}
-.monthly-progress-list{padding:0 20px 18px}.monthly-progress-row{display:grid;grid-template-columns:1.1fr .7fr .7fr .85fr 1.7fr .9fr;align-items:center;gap:10px;padding:13px 12px;border-bottom:1px solid #dce8ee}.monthly-progress-labels{background:#eaf4f8;border-radius:10px 10px 0 0;color:#31576b}.monthly-progress-row em{font-style:normal;font-weight:800}.monthly-progress-row.has-pending em,.monthly-progress-row.has-pending>span:nth-child(4){color:#c83e35;font-weight:900}.monthly-progress-row.is-complete em{color:#16815a}.monthly-progress-modal>footer{display:flex;justify-content:flex-end;padding:0 20px 20px}.monthly-progress-empty{text-align:center;padding:24px;color:#71818b}
-@media(max-width:700px){.monthly-progress-row{grid-template-columns:1fr 1fr 1fr}.monthly-progress-labels{display:none}.monthly-progress-row>span:nth-child(2)::before{content:"應確認："}.monthly-progress-row>span:nth-child(3)::before{content:"已完成："}.monthly-progress-row>span:nth-child(4)::before{content:"尚未回報："}.monthly-progress-row>span:nth-child(5){grid-column:1/-1}.monthly-progress-row>span:nth-child(5)::before{content:"最後回報："}}
+.monthly-progress-list{padding:16px 20px 18px}.monthly-progress-row{display:grid;grid-template-columns:1fr .65fr .65fr .8fr 1.55fr 1.55fr .85fr;align-items:center;gap:10px;padding:13px 12px;border-bottom:1px solid #dce8ee}.monthly-progress-labels{background:#eaf4f8;border-radius:10px 10px 0 0;color:#31576b}.monthly-progress-row em{font-style:normal;font-weight:800}.monthly-progress-row.has-pending em,.monthly-progress-row.has-pending>span:nth-child(4){color:#c83e35;font-weight:900}.monthly-progress-row.is-complete em{color:#16815a}.monthly-progress-modal>footer{display:flex;justify-content:flex-end;padding:0 20px 20px}.monthly-progress-empty{text-align:center;padding:24px;color:#71818b}
+@media(max-width:700px){.monthly-progress-row{grid-template-columns:1fr 1fr 1fr}.monthly-progress-labels{display:none}.monthly-progress-row>span:nth-child(2)::before{content:"應確認："}.monthly-progress-row>span:nth-child(3)::before{content:"已完成："}.monthly-progress-row>span:nth-child(4)::before{content:"尚未回報："}.monthly-progress-row>span:nth-child(5),.monthly-progress-row>span:nth-child(6){grid-column:1/-1}.monthly-progress-row>span:nth-child(5)::before{content:"最後進入前台："}.monthly-progress-row>span:nth-child(6)::before{content:"最後回報："}}
 .topbar-row .header-actions .action-ppt{background:#5c9dce!important;border-color:#5c9dce!important;color:#fff!important}
 .topbar-row .header-actions .action-excel{background:#e2f3ea!important;border-color:#9fcdb1!important;color:#20734c!important}
 .topbar-row .header-actions .action-import-json{background:#eee9fa!important;border-color:#c3b3e5!important;color:#65489a!important}
@@ -43059,6 +43059,7 @@ ${String(ex)}`);
     const [advancedFilter, setAdvancedFilter] = (0, import_react.useState)(() => blankAdvancedFilter());
     const [bookReviewOpenRequest, setBookReviewOpenRequest] = (0, import_react.useState)(0);
     const [monthlyProgressOpen, setMonthlyProgressOpen] = (0, import_react.useState)(false);
+    const [frontLastLogins, setFrontLastLogins] = (0, import_react.useState)({});
     const [editing, setEditing] = (0, import_react.useState)(null);
     const [newCaseReminder, setNewCaseReminder] = (0, import_react.useState)(null);
     const [newCaseReminderBatchIds, setNewCaseReminderBatchIds] = (0, import_react.useState)([]);
@@ -44669,6 +44670,21 @@ ${changedLabels}
       localStorage.removeItem(CLOUD_SESSION_KEY);
       flash("\u5DF2\u767B\u51FA\u96F2\u7AEF\u5E33\u865F");
     };
+    const openMonthlyProgress = async () => {
+      setMonthlyProgressOpen(true);
+      if (!cloudSession?.accessToken)
+        return;
+      try {
+        const session = await refreshCloudSession();
+        if (!session)
+          return;
+        const response = await fetch(`${CASE_FILE_SUPABASE_URL}/rest/v1/case_file_front_access?select=person_id,last_entered_at`, { headers: cloudHeaders(session) });
+        const rows = await response.json();
+        if (response.ok && Array.isArray(rows))
+          setFrontLastLogins(Object.fromEntries(rows.map((row) => [row.person_id, row.last_entered_at])));
+      } catch {
+      }
+    };
     const cloudSnapshot = JSON.stringify({ records, personnel: settings.personnel, expiry591: settings.expiry591, expiry5168: settings.expiry5168, brokerExpiry: settings.brokerExpiry, intakeRaw, intakeDrafts, selectedIntakeId, tourDate, tourTitle, tourItems, pptWeekStart, pptExtraIds, pptOrderIds, pptAdHocRecords, pptConfirmedSnapshots });
     (0, import_react.useEffect)(() => {
       if (!cloudSyncBaselineRef.current) {
@@ -44721,6 +44737,12 @@ ${changedLabels}
       flash("\u5DF2\u767B\u51FA\u696D\u52D9\u5E33\u865F");
     };
     const rememberPublicLogin = (personId) => localStorage.setItem("case-file-public-daily-login", JSON.stringify({ date: today(), personId }));
+    const recordPublicEntry = async (nationalId) => {
+      try {
+        await fetch(`${CASE_FILE_SUPABASE_URL}/rest/v1/rpc/case_file_front_touch`, { method: "POST", headers: { apikey: CASE_FILE_SUPABASE_PUBLISHABLE_KEY, "Content-Type": "application/json" }, body: JSON.stringify({ p_national_id: nationalId }) });
+      } catch {
+      }
+    };
     (0, import_react.useEffect)(() => {
       if (!(internalView || tab === "public") || !publicUnlocked)
         return;
@@ -44749,6 +44771,7 @@ ${changedLabels}
         setPublicUnlocked(true);
         rememberPublicLogin(person.id);
         setPassword("");
+        void recordPublicEntry(loginId);
         return;
       }
       if (!loginId)
@@ -44967,10 +44990,10 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V164" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V165" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => setMonthlyProgressOpen(true), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
             bookReviewDueCount > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { className: "book-review-header-button action-book-review", onClick: () => {
               setTab("active");
               setBookReviewOpenRequest((value) => value + 1);
@@ -45032,7 +45055,7 @@ ${changedLabels}
         ] }, item.label))
       ] }),
       !internalView && tab === "active" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PropertyBookReview, { records, settings, openRequest: bookReviewOpenRequest, submit: submitBookReviews, openRecord: setEditing }),
-      monthlyProgressOpen && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(MonthlyConfirmationProgress, { records: active, people: settings.personnel, close: () => setMonthlyProgressOpen(false) }),
+      monthlyProgressOpen && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(MonthlyConfirmationProgress, { records: active, people: settings.personnel, lastLogins: frontLastLogins, close: () => setMonthlyProgressOpen(false) }),
       !internalView && tab === "active" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(BusinessReportInbox, { records: active, resolve: resolveMonthlyPropertyReport, archive: (record, status) => setArchiveChoice({ record, status, date: today() }) }),
       showingPublic && publicUnlocked && publicScope === "mine" && publicPerson && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(MonthlyPropertyReport, { records: myProperties, person: publicPerson, submit: submitMonthlyPropertyReport }),
       pptPickerOpen && selectedPptBaseRecords.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("aside", { className: "ppt-order-float", children: [
@@ -49361,7 +49384,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       ] }) })
     ] }) });
   }
-  function MonthlyConfirmationProgress({ records, people, close }) {
+  function MonthlyConfirmationProgress({ records, people, lastLogins, close }) {
     const activePeople = people.filter((person) => person.status === "\u5728\u8077" && person.role !== "\u79D8\u66F8");
     const progress = activePeople.map((person) => {
       const assigned = records.filter((record) => nameMatches(record.developer, person.name)).filter((record) => {
@@ -49385,23 +49408,23 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
         return !date || Math.floor((Date.parse(`${today()}T00:00:00`) - Date.parse(`${date}T00:00:00`)) / 864e5) >= 45;
       });
       const latest = assigned.map(reportOf).filter(Boolean).sort((a, b) => String(b.reportedAt || "").localeCompare(String(a.reportedAt || "")))[0];
-      return { person, total: assigned.length, pending: pending.length, completed: Math.max(0, assigned.length - pending.length), latest: latest?.reportedAt || "" };
+      return { person, total: assigned.length, pending: pending.length, completed: Math.max(0, assigned.length - pending.length), latest: latest?.reportedAt || "", lastLogin: lastLogins[person.id] || "" };
     });
     return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "modal-backdrop monthly-progress-backdrop", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", { className: "monthly-progress-modal", children: [
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u67E5\u770B\u696D\u52D9\u76EE\u524D\u5C1A\u672A\u5B8C\u6210\u7684\u56DE\u5831" })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u67E5\u770B\u696D\u52D9\u9032\u5165\u524D\u53F0\u8207\u56DE\u5831\u9032\u5EA6" })
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "close", onClick: close, children: "\xD7" })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "monthly-progress-note", children: "\u7BA1\u7406\u7AEF\u4EE5\u300C\u662F\u5426\u5DF2\u9001\u51FA\u56DE\u5831\u300D\u5224\u65B7\uFF1B\u5C1A\u672A\u56DE\u5831\u4E0D\u7B49\u540C\u5C1A\u672A\u767B\u5165\u524D\u53F0\u3002" }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "monthly-progress-list", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "monthly-progress-row monthly-progress-labels", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u696D\u52D9" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u61C9\u78BA\u8A8D" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u5DF2\u5B8C\u6210" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u5C1A\u672A\u56DE\u5831" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u6700\u5F8C\u9032\u5165\u524D\u53F0" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u6700\u5F8C\u56DE\u5831" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u72C0\u614B" })
         ] }),
@@ -49419,6 +49442,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
             item.pending,
             " \u4EF6"
           ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: item.lastLogin ? new Date(item.lastLogin).toLocaleString("zh-TW") : "\u5C1A\u7121\u9032\u5165\u7D00\u9304" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: item.latest ? new Date(item.latest).toLocaleString("zh-TW") : "\u5C1A\u7121\u56DE\u5831" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("em", { children: item.pending ? "\u5C1A\u672A\u5B8C\u6210" : "\u5168\u6578\u5B8C\u6210" })
         ] }, item.person.id)),

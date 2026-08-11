@@ -1,5 +1,42 @@
 -- 前台登入只回傳前台會使用的欄位；後台 case_file_state 完整資料不變。
 -- 此函式已部署至公司 Supabase 專案。
+create table if not exists public.case_file_front_access (
+  person_id text primary key,
+  person_name text not null default '',
+  last_entered_at timestamptz not null default now()
+);
+alter table public.case_file_front_access enable row level security;
+drop policy if exists "authenticated can read front access" on public.case_file_front_access;
+create policy "authenticated can read front access" on public.case_file_front_access for select to authenticated using (true);
+grant select on public.case_file_front_access to authenticated;
+
+create or replace function public.case_file_front_touch(p_national_id text)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_person jsonb;
+begin
+  select person into v_person
+  from public.case_file_state state,
+  jsonb_array_elements(coalesce(state.data->'settings'->'personnel', '[]'::jsonb)) person
+  where state.id = 'main'
+    and upper(regexp_replace(coalesce(person->>'nationalId', ''), '\s+', '', 'g')) = upper(regexp_replace(coalesce(p_national_id, ''), '\s+', '', 'g'))
+    and coalesce(person->>'status', '在職') = '在職'
+    and length(regexp_replace(coalesce(p_national_id, ''), '\s+', '', 'g')) >= 8
+  limit 1;
+  if v_person is null then return false; end if;
+  insert into public.case_file_front_access(person_id, person_name, last_entered_at)
+  values (v_person->>'id', coalesce(v_person->>'name', ''), now())
+  on conflict (person_id) do update set person_name = excluded.person_name, last_entered_at = excluded.last_entered_at;
+  return true;
+end;
+$$;
+revoke all on function public.case_file_front_touch(text) from public;
+grant execute on function public.case_file_front_touch(text) to anon, authenticated;
+
 create or replace function public.case_file_front_login(p_national_id text)
 returns jsonb
 language plpgsql
@@ -22,6 +59,10 @@ begin
     and length(regexp_replace(coalesce(p_national_id, ''), '\s+', '', 'g')) >= 8
   limit 1;
   if v_person is null then return null; end if;
+
+  insert into public.case_file_front_access(person_id, person_name, last_entered_at)
+  values (v_person->>'id', coalesce(v_person->>'name', ''), now())
+  on conflict (person_id) do update set person_name = excluded.person_name, last_entered_at = excluded.last_entered_at;
 
   select coalesce(jsonb_agg(person - 'nationalId'), '[]'::jsonb)
   into v_people
