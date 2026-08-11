@@ -41109,7 +41109,6 @@ ${String(ex)}`);
   var CLOUD_SESSION_KEY = "property-desk-supabase-session-v1";
   var CASE_FILE_SUPABASE_URL = "https://oiywtmjbasoonfuxemtr.supabase.co";
   var CASE_FILE_SUPABASE_TABLE = "case_file_state";
-  var NEW_CASE_REMINDER_START_NO = "EG0507746";
   var newCaseReminderPending = (record) => !["housingListingCompleted", "newBookCompleted", "wangReviewCompleted"].every((key) => record[key] === "1");
   var CASE_FILE_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_dhr81918k0zRtar14yepIA_ZWmTKT10";
   var newId = () => globalThis.crypto?.randomUUID?.() || `id-${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -42347,7 +42346,7 @@ ${String(ex)}`);
     const [pptCustomEnd, setPptCustomEnd] = (0, import_react.useState)("");
     const [pptCustomMeeting, setPptCustomMeeting] = (0, import_react.useState)("");
     const pptWeekLoadedRef = (0, import_react.useRef)("");
-    const reminderCandidate = records.find((record) => (record._newCaseReminderEnabled === "1" || record.propertyNo === NEW_CASE_REMINDER_START_NO) && newCaseReminderPending(record));
+    const reminderCandidate = records.find((record) => record._newCaseReminderEnabled === "1" && newCaseReminderPending(record));
     (0, import_react.useEffect)(() => {
       if (internalView || !storageReady || editing || newCaseReminder || !reminderCandidate || deferredNewCaseReminderIds.current.has(reminderCandidate.id)) return;
       setNewCaseReminder({ ...reminderCandidate });
@@ -43906,9 +43905,11 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
         return;
       }
       if (!confirm(`\u78BA\u5B9A\u6587\u4EF6\u5DF2\u6536\u5230\uFF0C\u5C07\u300C${record.caseName}\u300D\u6B63\u5F0F\u52A0\u5165\u7E3D\u8868\uFF1F`)) return;
-      setRecords((prev) => [record, ...prev]);
-      setIntakeDrafts((prev) => prev.map((draft) => draft.id === target.id ? { ...draft, linkedRecordId: record.id, enteredAt: (/* @__PURE__ */ new Date()).toISOString() } : draft));
-      flash("\u5DF2\u6B63\u5F0F\u9032\u6848\uFF1B\u539F\u8CBC\u4E32\u5DF2\u4FDD\u7559\u4E26\u8207\u7E3D\u8868\u9023\u52D5");
+      const entered = { ...record, _newCaseReminderEnabled: "1" };
+      setRecords((prev) => [entered, ...prev]);
+      setIntakeDrafts((prev) => prev.map((draft) => draft.id === target.id ? { ...draft, linkedRecordId: entered.id, enteredAt: (/* @__PURE__ */ new Date()).toISOString() } : draft));
+      setNewCaseReminder({ ...entered });
+      flash("\u5DF2\u6B63\u5F0F\u9032\u6848\uFF1B\u8ACB\u5B8C\u6210\u65B0\u6848\u4EF6\u63D0\u9192");
     };
     const removeIntakeDraft = (id) => {
       const target = intakeDrafts.find((d) => d.id === id);
@@ -43977,7 +43978,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V126" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V127" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             bookReviewDueCount > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { className: "book-review-header-button action-book-review", onClick: () => {

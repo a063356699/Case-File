@@ -26,7 +26,6 @@ const MISSING_REMINDER_DATE_KEY = "property-desk-missing-reminder-date-v1";
 const CLOUD_SESSION_KEY = "property-desk-supabase-session-v1";
 const CASE_FILE_SUPABASE_URL = "https://oiywtmjbasoonfuxemtr.supabase.co";
 const CASE_FILE_SUPABASE_TABLE = "case_file_state";
-const NEW_CASE_REMINDER_START_NO = "EG0507746";
 const newCaseReminderPending = (record: RecordItem) => !["housingListingCompleted", "newBookCompleted", "wangReviewCompleted"].every(key => record[key] === "1");
 // This is Supabase's browser-safe publishable key. Access is protected by the
 // signed-in user and the table's row-level security policy, never by this key.
@@ -747,7 +746,7 @@ export default function Home() {
   const [pptCustomEnd, setPptCustomEnd] = useState("");
   const [pptCustomMeeting, setPptCustomMeeting] = useState("");
   const pptWeekLoadedRef = useRef("");
-  const reminderCandidate = records.find(record => (record._newCaseReminderEnabled === "1" || record.propertyNo === NEW_CASE_REMINDER_START_NO) && newCaseReminderPending(record));
+  const reminderCandidate = records.find(record => record._newCaseReminderEnabled === "1" && newCaseReminderPending(record));
   useEffect(() => {
     // 業務內部總表僅供查看；新案件完成提醒只在管理模式處理。
     if (internalView || !storageReady || editing || newCaseReminder || !reminderCandidate || deferredNewCaseReminderIds.current.has(reminderCandidate.id)) return;
@@ -1777,7 +1776,7 @@ export default function Home() {
     setIntakeDrafts(previous => previous.map(draft => draft.id === id ? { ...draft, printedForSalesAt, modifiedAt: new Date().toISOString() } : draft));
     flash(printedForSalesAt ? `已記錄「${intakeValue(target.values, "案名") || "未命名案件"}」列印草稿` : "已取消列印草稿紀錄");
   };
-  const confirmIntake = (draftId?: string) => { const targetId = draftId || selectedIntakeRef.current; const target = targetId ? intakeDrafts.find(d => d.id === targetId) : intakeDraft; if (!target) return; const targetNo = intakeValue(target.values, "委託主約編號"); const existing = target.linkedRecordId ? records.find(record => record.id === target.linkedRecordId) : records.find(record => !!targetNo && record.propertyNo === targetNo); const record = intakeToRecord(target, existing); if (!record.propertyNo || !record.caseName) return flash("缺少物件編號或案名，請先確認表單內容"); if (existing) { const tracked = withTrackedUpdate(existing, record); setRecords(prev => prev.map(item => item.id === existing.id ? tracked : item)); setIntakeDrafts(prev => prev.map(draft => draft.id === target.id ? { ...draft, linkedRecordId: existing.id, enteredAt: draft.enteredAt || new Date().toISOString() } : draft)); flash("已連結並同步更新原總表資料"); return; } if (!confirm(`確定文件已收到，將「${record.caseName}」正式加入總表？`)) return; setRecords(prev => [record, ...prev]); setIntakeDrafts(prev => prev.map(draft => draft.id === target.id ? { ...draft, linkedRecordId: record.id, enteredAt: new Date().toISOString() } : draft)); flash("已正式進案；原貼串已保留並與總表連動"); };
+  const confirmIntake = (draftId?: string) => { const targetId = draftId || selectedIntakeRef.current; const target = targetId ? intakeDrafts.find(d => d.id === targetId) : intakeDraft; if (!target) return; const targetNo = intakeValue(target.values, "委託主約編號"); const existing = target.linkedRecordId ? records.find(record => record.id === target.linkedRecordId) : records.find(record => !!targetNo && record.propertyNo === targetNo); const record = intakeToRecord(target, existing); if (!record.propertyNo || !record.caseName) return flash("缺少物件編號或案名，請先確認表單內容"); if (existing) { const tracked = withTrackedUpdate(existing, record); setRecords(prev => prev.map(item => item.id === existing.id ? tracked : item)); setIntakeDrafts(prev => prev.map(draft => draft.id === target.id ? { ...draft, linkedRecordId: existing.id, enteredAt: draft.enteredAt || new Date().toISOString() } : draft)); flash("已連結並同步更新原總表資料"); return; } if (!confirm(`確定文件已收到，將「${record.caseName}」正式加入總表？`)) return; const entered = { ...record, _newCaseReminderEnabled: "1" }; setRecords(prev => [entered, ...prev]); setIntakeDrafts(prev => prev.map(draft => draft.id === target.id ? { ...draft, linkedRecordId: entered.id, enteredAt: new Date().toISOString() } : draft)); setNewCaseReminder({ ...entered }); flash("已正式進案；請完成新案件提醒"); };
   const removeIntakeDraft = (id: string) => { const target = intakeDrafts.find(d => d.id === id); if (!target || !confirm(`確定刪除「${intakeValue(target.values, "案名") || "未命名草稿"}」？`)) return; setIntakeDrafts(prev => prev.filter(d => d.id !== id)); if (selectedIntakeId === id) setSelectedIntakeId(""); };
   const updateIntakeDraftCaseName = (id: string, caseName: string) => setIntakeDrafts(previous => previous.map(draft => { if (draft.id !== id) return draft; const key = Object.keys(draft.values).find(name => name.includes("案名")) || "案名"; return { ...draft, values: { ...draft.values, [key]: caseName } }; }));
   const submitMonthlyPropertyReport = (record: RecordItem, status: string, reason: string) => {
@@ -1823,7 +1822,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V126</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V127</small></h1></div>
       <div className="header-actions">{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
