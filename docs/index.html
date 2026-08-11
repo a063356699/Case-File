@@ -43556,7 +43556,32 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       setPublicScope("mine");
       setPassword("");
     };
+    const logoutPublic = () => {
+      localStorage.removeItem("case-file-public-daily-login");
+      setPublicUnlocked(false);
+      setPublicPersonId("");
+      setPublicScope("mine");
+      setPublicExpiryFilter("all");
+      setPublicQuery("");
+      setPassword("");
+      flash("\u5DF2\u767B\u51FA\u696D\u52D9\u5E33\u865F");
+    };
     const rememberPublicLogin = (personId) => localStorage.setItem("case-file-public-daily-login", JSON.stringify({ date: today(), personId }));
+    (0, import_react.useEffect)(() => {
+      if (!(internalView || tab === "public") || !publicUnlocked) return;
+      const header = document.querySelector(".public-head");
+      if (!header || header.querySelector(".public-logout")) return;
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "public-logout";
+      button.textContent = "\u767B\u51FA";
+      button.addEventListener("click", logoutPublic);
+      header.append(button);
+      return () => {
+        button.removeEventListener("click", logoutPublic);
+        button.remove();
+      };
+    }, [internalView, tab, publicUnlocked]);
     const unlock = async () => {
       const normalizeLoginId = (value = "") => value.trim().replace(/\s+/g, "").toUpperCase();
       const activePeople = settings.personnel.filter((p) => (p.status || "\u5728\u8077") === "\u5728\u8077" && normalizeLoginId(p.nationalId));
@@ -43719,6 +43744,13 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
         }
       });
       const updatesDate = status === "\u59D4\u8A17\u4E2D";
+      void fetch(`${CASE_FILE_SUPABASE_URL}/rest/v1/rpc/case_file_front_report`, {
+        method: "POST",
+        headers: { apikey: CASE_FILE_SUPABASE_PUBLISHABLE_KEY, "Content-Type": "application/json" },
+        body: JSON.stringify({ p_person_id: publicPerson.id, p_record_id: record.id, p_status: status, p_reason: reason.trim() })
+      }).then((response) => {
+        if (!response.ok) throw new Error("front report sync failed");
+      }).catch(() => flash("\u56DE\u5831\u66AB\u5B58\u65BC\u9019\u53F0\u88DD\u7F6E\uFF1B\u96F2\u7AEF\u540C\u6B65\u5931\u6557\uFF0C\u8ACB\u78BA\u8A8D\u7DB2\u8DEF\u5F8C\u518D\u9001\u51FA"));
       setRecords((previous) => previous.map((item) => item.id === record.id ? { ...item, _monthlyReports: JSON.stringify(reports), ...updatesDate ? { updateDate: today(), lastModifiedAt: (/* @__PURE__ */ new Date()).toISOString() } : {} } : item));
       flash(status === "\u5F85\u78BA\u8A8D" ? `\u5DF2\u8A2D\u5B9A ${displayRocDate(dueDate)} \u518D\u6B21\u78BA\u8A8D` : "\u7269\u4EF6\u56DE\u5831\u5B8C\u6210");
     };
@@ -43748,7 +43780,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V115" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V116" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             bookReviewDueCount > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { className: "book-review-header-button action-book-review", onClick: () => {

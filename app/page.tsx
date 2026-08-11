@@ -1569,7 +1569,20 @@ export default function Home() {
   }, [cloudSession?.accessToken, cloudSession?.email, settings.supabaseUrl, settings.supabaseKey, settings.supabaseTable, settings.supabaseRecord]);
 
   const openPublic = () => { setTab("public"); setPublicUnlocked(false); setPublicPersonId(""); setPublicScope("mine"); setPassword(""); };
+  const logoutPublic = () => { localStorage.removeItem("case-file-public-daily-login"); setPublicUnlocked(false); setPublicPersonId(""); setPublicScope("mine"); setPublicExpiryFilter("all"); setPublicQuery(""); setPassword(""); flash("已登出業務帳號"); };
   const rememberPublicLogin = (personId: string) => localStorage.setItem("case-file-public-daily-login", JSON.stringify({ date: today(), personId }));
+  useEffect(() => {
+    if (!(internalView || tab === "public") || !publicUnlocked) return;
+    const header = document.querySelector<HTMLElement>(".public-head");
+    if (!header || header.querySelector(".public-logout")) return;
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "public-logout";
+    button.textContent = "登出";
+    button.addEventListener("click", logoutPublic);
+    header.append(button);
+    return () => { button.removeEventListener("click", logoutPublic); button.remove(); };
+  }, [internalView, tab, publicUnlocked]);
   const unlock = async () => {
     const normalizeLoginId = (value = "") => value.trim().replace(/\s+/g, "").toUpperCase();
     const activePeople = settings.personnel.filter(p => (p.status || "在職") === "在職" && normalizeLoginId(p.nationalId));
@@ -1680,6 +1693,14 @@ export default function Home() {
       }
     });
     const updatesDate = status === "委託中";
+    // 業務前台不使用管理者帳號；回報時只寫入這一筆確認紀錄，讓手機與電腦讀到同一份資料。
+    void fetch(`${CASE_FILE_SUPABASE_URL}/rest/v1/rpc/case_file_front_report`, {
+      method: "POST",
+      headers: { apikey: CASE_FILE_SUPABASE_PUBLISHABLE_KEY, "Content-Type": "application/json" },
+      body: JSON.stringify({ p_person_id: publicPerson.id, p_record_id: record.id, p_status: status, p_reason: reason.trim() })
+    }).then(response => {
+      if (!response.ok) throw new Error("front report sync failed");
+    }).catch(() => flash("回報暫存於這台裝置；雲端同步失敗，請確認網路後再送出"));
     setRecords(previous => previous.map(item => item.id === record.id ? { ...item, _monthlyReports: JSON.stringify(reports), ...(updatesDate ? { updateDate: today(), lastModifiedAt: new Date().toISOString() } : {}) } : item));
     flash(status === "待確認" ? `已設定 ${displayRocDate(dueDate)} 再次確認` : "物件回報完成");
   };
@@ -1700,7 +1721,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V115</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V116</small></h1></div>
       <div className="header-actions">{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
