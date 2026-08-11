@@ -1160,37 +1160,44 @@ export default function Home() {
     const draftValue = (...keys: string[]) => linkedDraft ? intakeValue(linkedDraft.values, ...keys) : "";
     const overlay = document.createElement("div"); overlay.className = "ppt-slide-preview-backdrop";
     const close = document.createElement("button"); close.type = "button"; close.className = "ppt-slide-preview-close"; close.textContent = "×"; close.title = "關閉預覽"; close.addEventListener("click", () => setPptPreviewRecord(null));
-    const slide = document.createElement("section"); slide.className = `ppt-slide-preview ${land ? "land" : "house"}`;
-    const top = document.createElement("div"); top.className = "ppt-slide-preview-top";
-    const addTop = (label: string, value: string, className: string) => { const item = document.createElement("div"); item.className = className; const tag = document.createElement("b"); tag.textContent = label; const text = document.createElement("span"); text.textContent = value; item.append(tag, text); top.append(item); };
-    addTop("案名", record.caseName || "", "ppt-slide-preview-case"); addTop("地址", record.address || "", "ppt-slide-preview-address");
-    const body = document.createElement("div"); body.className = "ppt-slide-preview-body";
-    const left = document.createElement("div"); left.className = "ppt-slide-preview-left";
-    const head = document.createElement("div"); head.className = "ppt-slide-preview-salehead";
-    const developer = document.createElement("div"); developer.className = "ppt-slide-preview-developer"; developer.innerHTML = "<b>開發</b>"; const developerValue = document.createElement("strong"); developerValue.textContent = developerFullNameText(record.developer) || ""; developer.append(developerValue);
-    const priceBox = document.createElement("div"); priceBox.className = "ppt-slide-preview-pricebox"; priceBox.innerHTML = `<b>${land ? "開價" : "委託總價"}</b><strong>${price}</strong><em>萬</em>`;
-    head.append(developer, priceBox); left.append(head);
-    const fields = document.createElement("div"); fields.className = "ppt-slide-preview-fields";
-    const addField = (label: string, value: string) => { const item = document.createElement("div"); const tag = document.createElement("b"); tag.textContent = label; const text = document.createElement("span"); text.textContent = value; item.append(tag, text); fields.append(item); };
+    const slide = document.createElement("canvas"); slide.className = "ppt-slide-preview ppt-slide-preview-canvas"; slide.width = 1000; slide.height = 750;
+    const context = slide.getContext("2d"); if (!context) return;
+    const px = (inch: number) => inch * 100;
+    const fontPx = (pt: number) => pt * 100 / 72;
+    const font = '"DFKai-SB","標楷體",serif';
+    const line = (x: number, y: number, w: number) => { context.beginPath(); context.moveTo(px(x), px(y)); context.lineTo(px(x + w), px(y)); context.strokeStyle = "#555"; context.lineWidth = 1; context.stroke(); };
+    const draw = (value: string, x: number, y: number, w: number, h: number, pt: number, options: { color?: string; bold?: boolean; align?: CanvasTextAlign; wrap?: boolean } = {}) => {
+      const text = String(value || ""); let size = pt; const maxWidth = px(w) - 4;
+      const setFont = () => { context.font = `${options.bold ? "bold " : ""}${fontPx(size)}px ${font}`; };
+      setFont(); while (size > 8 && !options.wrap && context.measureText(text).width > maxWidth) { size -= .5; setFont(); }
+      context.fillStyle = options.color || "#000"; context.textAlign = options.align || "center"; context.textBaseline = "middle";
+      const anchorX = options.align === "left" ? px(x) + 2 : options.align === "right" ? px(x + w) - 2 : px(x + w / 2);
+      if (!options.wrap) { context.fillText(text, anchorX, px(y + h / 2), maxWidth); return; }
+      const rows: string[] = []; let row = "";
+      Array.from(text).forEach(char => { const next = row + char; if (row && context.measureText(next).width > maxWidth) { rows.push(row); row = char; } else row = next; }); if (row) rows.push(row);
+      while (size > 8 && rows.length * fontPx(size) * 1.08 > px(h)) { size -= .5; setFont(); }
+      rows.slice(0, 3).forEach((item, index) => context.fillText(item, anchorX, px(y + h / 2) + (index - (rows.length - 1) / 2) * fontPx(size) * 1.08, maxWidth));
+    };
+    const alignedLabel = (label: string, x: number, y: number, pt = 15) => { const chars = Array.from(label); chars.forEach((char, index) => draw(char, x + (chars.length === 1 ? .34 : index * (.68 / (chars.length - 1))), y, .22, .4, pt)); };
+    const field = (label: string, value: string, x: number, y: number, w: number, valuePt = 19, labelPt = 15, lineOffset = .39) => { alignedLabel(label, x, y, labelPt); draw("：", x + .88, y, .2, .36, 15); draw(value, x + 1.08, y - .04, w - 1.08, .44, valuePt); line(x + 1.08, y + lineOffset, w - 1.13); };
+    context.fillStyle = "#fff"; context.fillRect(0, 0, 1000, 750);
+    draw("案名", .05, .16, .72, .55, 14); draw(record.caseName || "", .78, .08, 5.23, .72, (land ? 28 : 25) - 2);
+    draw("地址", 6.08, .16, .68, .55, 14); draw(record.address || "", 6.78, .08, 3.12, .72, 17, { wrap: true }); line(0, .84, 10);
+    context.fillStyle = "#fce9d9"; context.fillRect(0, px(.87), px(2.756), px(land ? .94 : .787));
+    draw("開發", .06, land ? 1.14 : 1.07, .58, .35, 13, { bold: true }); draw(developerFullNameText(record.developer) || "", .66, land ? 1.08 : 1, 2.09, .52, 17, { bold: true, color: "#0000ff" });
+    draw(land ? "開價" : "委託總價", 2.76, land ? 1.15 : 1.08, 1.12, .38, 16, { align: "right" }); draw("：", 3.9, land ? 1.15 : 1.08, .2, .38, 16); draw(price, 4.1, .89, 1.48, .72, 35, { bold: true, color: "#e00000" }); draw("萬", 5.55, 1.24, .3, .3, 14); line(0, land ? 1.82 : 1.68, 6.05);
     if (land) {
-      addField("總地坪", landPing ? `${landPing}坪` : ""); addField("每坪單價", unitPrice);
-      addField("臨路", num(record.road) ? `${num(record.road)}米` : clean(record.road)); addField("座向", clean(record.direction));
-      addField("面寬", num(record.frontage) ? `${num(record.frontage)}米` : clean(record.frontage)); addField("深度", num(record.depth) ? `${num(record.depth)}米` : clean(record.depth));
-      addField("建蔽率／容積率", [clean(record.coverage), clean(record.far)].filter(Boolean).join("／")); addField("使用分區", clean(record.zoning));
+      field("總地坪", landPing ? `${landPing}坪` : "", .08, 2.12, 2.85, 23, 18, .58); field("每坪單價", unitPrice, 3.02, 2.12, 2.82, 23, 18, .58);
+      field("臨路", num(record.road) ? `${num(record.road)}米` : clean(record.road), .08, 3.19, 2.85, 23, 18, .58); field("座向", record.direction, 3.02, 3.19, 2.82, 23, 18, .58);
+      field("面寬", num(record.frontage) ? `${num(record.frontage)}米` : clean(record.frontage), .08, 4.26, 2.85, 23, 18, .58); field("深度", num(record.depth) ? `${num(record.depth)}米` : clean(record.depth), 3.02, 4.26, 2.82, 23, 18, .58);
+      field("建蔽容積", [record.coverage, record.far].filter(Boolean).join("／"), .08, 5.33, 2.85, 18, 12, .58); field("使用分區", record.zoning, 3.02, 5.33, 2.82, 20, 18, .58);
     } else {
-      addField("總地坪", landPing ? `${landPing}坪` : ""); addField("總建坪", num(record.buildingPing) ? `${num(record.buildingPing)}坪` : "");
-      addField("室內坪", num(record.indoorPing) ? `${num(record.indoorPing)}坪` : ""); addField("格局", clean(record.layout));
-      addField("面寬", num(record.frontage) ? `${num(record.frontage)}米` : clean(record.frontage)); addField("深度", num(record.depth) ? `${num(record.depth)}米` : clean(record.depth));
-      addField("臨路", num(record.road) ? `${num(record.road)}米` : clean(record.road)); addField("樓層", clean(record.floor));
-      addField("朝向", clean(record.direction)); addField("車位", clean(record.parking));
-      addField("管理費", /^\$?0(?:\.0+)?(?:元)?$/.test(record.managementFee || "") ? "無" : record.managementFee ? `${record.managementFee.replace(/\s*\/月\s*$/, "")}/月` : ""); addField("完工日&屋齡", `${draftValue("建築完成日期") || record.completionDate || record.builtYear || ""} ${ageOf(record)}`.trim());
-      addField("社區名稱", draftValue("大樓名稱") || record.communityName); addField("現況", clean(record.currentState)); addField("鑰匙", clean(record.key));
+      const entries: [string,string,string,string,number][] = [["總地坪",landPing ? `${landPing}坪` : "","總建坪",num(record.buildingPing) ? `${num(record.buildingPing)}坪` : "",1.8],["室內坪",num(record.indoorPing) ? `${num(record.indoorPing)}坪` : "","格局",record.layout || "",2.36],["面寬",num(record.frontage) ? `${num(record.frontage)}米` : clean(record.frontage),"深度",num(record.depth) ? `${num(record.depth)}米` : clean(record.depth),2.92],["臨路",num(record.road) ? `${num(record.road)}米` : clean(record.road),"樓層",floorPptDisplay(record.floor),3.48],["朝向",record.direction || "","車位",parkingShort(record.parking),4.04],["管理費",/^\$?0(?:\.0+)?(?:元)?$/.test(record.managementFee || "") ? "無0" : record.managementFee || "","社區名稱",draftValue("大樓名稱") || record.communityName || "",4.6],["完工日期",draftValue("建築完成日期") || record.completionDate || record.builtYear || "","屋齡",ageOf(record),5.16],["現況",record.currentState || "","鑰匙",record.key || "",5.72]];
+      entries.forEach(([leftLabel,leftValue,rightLabel,rightValue,y]) => { field(leftLabel,leftValue,.08,y,2.85); field(rightLabel,rightValue,3.02,y,2.82,rightLabel === "車位" ? 15.5 : rightLabel === "社區名稱" || rightLabel === "完工日期" ? 16 : 19); });
     }
-    left.append(fields);
-    const note = document.createElement("div"); note.className = "ppt-slide-preview-note"; note.innerHTML = "<b>備註</b>"; const noteText = document.createElement("span"); noteText.textContent = displayNoteSegments(record.notes).join("；"); note.append(noteText); left.append(note);
-    const footer = document.createElement("div"); footer.className = "ppt-slide-preview-footer"; footer.textContent = `進案報件日期：${displayRocDate(record.reportDate) || ""}`; const no = document.createElement("span"); no.textContent = `物件編號：${record.propertyNo || ""}`; footer.append(no); left.append(footer);
-    const right = document.createElement("div"); right.className = "ppt-slide-preview-right"; ["", ""].forEach(() => { const frame = document.createElement("div"); frame.className = "ppt-slide-preview-frame"; right.append(frame); });
-    body.append(left, right); slide.append(top, body); overlay.append(close, slide); overlay.addEventListener("mousedown", event => { if (event.target === overlay) setPptPreviewRecord(null); }); document.body.append(overlay);
+    const notesY = land ? 6.4 : 6.28; alignedLabel("備註", .08, notesY); draw("：", .96, notesY, .2, .36, 15); draw(displayNoteSegments(record.notes).join("；"), 1.16, notesY, 4.61, .72, 14, { align: "left", wrap: true });
+    line(0, 7.18, 6.05); draw(`進案報件日期：${displayRocDate(record.reportDate) || ""}`, .05, 7.22, 2.8, .24, 9, { align: "left" }); draw(`物件編號：${record.propertyNo || ""}`, 3.1, 7.22, 2.9, .24, 9);
+    overlay.append(close, slide); overlay.addEventListener("mousedown", event => { if (event.target === overlay) setPptPreviewRecord(null); }); document.body.append(overlay);
     return () => overlay.remove();
   }, [pptPreviewRecord]);
   const removeFromPptWeek = (record: RecordItem) => setRecords(previous => previous.map(item => {
@@ -1877,7 +1884,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V133</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V134</small></h1></div>
       <div className="header-actions">{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -2974,7 +2981,10 @@ function DailyActivity({ records, compact = false, onEdit }: { records: RecordIt
   useEffect(() => { localStorage.setItem(DAILY_HIDDEN_KEY, JSON.stringify(hiddenItems)); }, [hiddenItems]);
   useEffect(() => { const hide = (event: Event) => { const key = (event as CustomEvent<string>).detail; if (key) setHiddenItems(previous => [...new Set([...previous, key])]); }; window.addEventListener("hide-daily-item", hide); return () => window.removeEventListener("hide-daily-item", hide); }, []);
   const dateOnly = (value = "") => value.slice(0, 10);
-  const yesterday = (() => { const date = new Date(`${today()}T12:00:00`); date.setDate(date.getDate() - 1); return date.toISOString().slice(0, 10); })();
+  const adjacentDateLabel = (date: string) => `${displayRocDate(date)}（${["日", "一", "二", "三", "四", "五", "六"][new Date(`${date}T12:00:00`).getDay()]}）`;
+  const previousDate = addDaysIso(selectedDate, -1);
+  const nextDate = addDaysIso(selectedDate, 1);
+  const nextIsToday = nextDate === today();
   const rocDay = displayRocDate(selectedDate);
   const updateRecords = records.filter(record => !record.archived && !isExpired(record) && record.status === "委託中" && (dailyUpdateFields(record, selectedDate).length > 0 || dateOnly(record._restoredAt) === selectedDate)).map(record => { const changed = dailyUpdateFields(record, selectedDate); const restored = dateOnly(record._restoredAt) === selectedDate; return { ...record, caseNameNote: changed.length ? `更新：${dailyChangedLabels(changed).join("、")}` : "", _dailyHighlight: JSON.stringify(changed), ...(restored ? { _dailyAnnotation: `${shortRocMonthDay(selectedDate)}重新上架`, _dailyAnnotationType: "restored" } : {}) }; });
   const removedRecords = records.filter(record => !!record.archived && dateOnly(record._archiveActionDate || record.archived) === selectedDate).map(record => ({ ...record, _dailyAnnotation: `${displayRocDate(record.archived)}${record.status || "下架"}` }));
@@ -2990,7 +3000,7 @@ function DailyActivity({ records, compact = false, onEdit }: { records: RecordIt
         <h2>{compact ? "每日物件動態" : "每日物件動態"}</h2>
         {!compact && <p>查看每日新增、下架與到期物件</p>}
       </div>
-      <div className="daily-date"><button type="button" className="daily-yesterday" onClick={() => setSelectedDate(addDaysIso(selectedDate, -1))}>← 前一天</button><button type="button" className={`daily-today${selectedDate === today() ? " selected" : ""}`} onClick={() => setSelectedDate(today())}>今天</button><input aria-label="選擇每日物件動態日期" type="date" value={selectedDate} onChange={event => setSelectedDate(event.target.value)}/></div>
+      <div className="daily-date"><button type="button" className="daily-yesterday" onClick={() => setSelectedDate(previousDate)}>← {adjacentDateLabel(previousDate)}</button><button type="button" className={`daily-today${selectedDate === today() ? " selected" : ""}`} onClick={() => setSelectedDate(today())}>今天</button><button type="button" className="daily-next" disabled={selectedDate >= today()} onClick={() => setSelectedDate(nextDate)}>{nextIsToday ? `今天 ${adjacentDateLabel(nextDate)}` : `${adjacentDateLabel(nextDate)} →`}</button><input aria-label="選擇每日物件動態日期" type="date" value={selectedDate} max={today()} onChange={event => setSelectedDate(event.target.value)}/></div>
     </div>
     <div className="daily-cards">
       {groups.map(group => <article className={`daily-card ${group.key}`} key={group.key}>

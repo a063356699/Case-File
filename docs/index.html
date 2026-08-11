@@ -1321,7 +1321,7 @@ body{background:#f8fbfe!important;color:#405064!important}
 /* V34 daily date controls and advanced search sources. */
 .daily-activity-head .daily-date{
   display:grid!important;
-  grid-template-columns:100px 72px minmax(155px,190px)!important;
+  grid-template-columns:minmax(155px,auto) 72px minmax(170px,auto) minmax(155px,190px)!important;
   align-items:stretch!important;
   justify-content:end!important;
   gap:10px!important;
@@ -1332,6 +1332,8 @@ body{background:#f8fbfe!important;color:#405064!important}
 .daily-activity-head .daily-date .daily-yesterday.selected{border-color:#527895!important;background:#527895!important;color:#fff!important}
 .daily-activity-head .daily-date .daily-today{border-color:#9acbb9!important;background:#e7f6ef!important;color:#17654e!important}
 .daily-activity-head .daily-date .daily-today.selected{border-color:#278267!important;background:#278267!important;color:#fff!important}
+.daily-activity-head .daily-date .daily-next{border-color:#cbbd9a!important;background:#fff8e7!important;color:#76581e!important}
+.daily-activity-head .daily-date .daily-next:disabled{opacity:.42;cursor:not-allowed;transform:none}
 .daily-activity-head .daily-date input{width:100%!important;min-width:0!important;height:42px!important;margin:0!important}
 .advanced-source-choices{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
 .advanced-source-choices label{display:flex;align-items:center;gap:7px;min-width:150px;padding:10px 14px;border:1px solid var(--line);border-radius:10px;background:#f7faf8;cursor:pointer}
@@ -1409,6 +1411,7 @@ body{background:#f8fbfe!important;color:#405064!important}
 .ppt-slide-preview-note b{font-size:18.5px!important}
 .ppt-slide-preview-note span{font-size:17.5px!important;line-height:1.15}
 .ppt-slide-preview-footer{font-size:11.5px!important}
+.ppt-slide-preview-canvas{display:block;height:auto;max-height:90vh}
 .ppt-adhoc-backdrop{background:#17372fc7!important}.ppt-adhoc-modal{background:#eef4f1!important;border:2px solid #7fa497!important}.ppt-adhoc-modal .modal-head{background:#dcece5!important;border-bottom:2px solid #8fb0a3!important}.ppt-adhoc-modal .modal-head span{display:inline-block;padding:4px 9px;border-radius:999px;background:#1f5a4a;color:#fff!important;font-size:12px!important;letter-spacing:.08em!important}.ppt-adhoc-modal .modal-head h2{color:#173f35;font-size:27px}.ppt-adhoc-modal .modal-head p{color:#784727!important;font-weight:700}.ppt-adhoc-grid{background:#eef4f1!important;padding:20px!important}.ppt-adhoc-grid .field{padding:10px;border:1px solid #bfd1c9;border-radius:10px;background:#fff}.ppt-adhoc-grid .field>span{color:#234f42!important;font-size:13px!important;font-weight:900!important}.ppt-adhoc-grid .field input,.ppt-adhoc-grid .field select,.ppt-adhoc-grid .field textarea{border:1px solid #91aa9f!important;background:#f9fcfa!important}.ppt-adhoc-modal .modal-foot{background:#dcece5!important;border-top:2px solid #8fb0a3!important}
 /* Visible release marker beside the home title. */
 .app-version{font-family:"Noto Sans TC","Microsoft JhengHei",sans-serif;font-size:11px;letter-spacing:0;color:var(--muted);font-weight:700;margin-left:7px;vertical-align:middle}
@@ -43641,100 +43644,111 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       close.textContent = "\xD7";
       close.title = "\u95DC\u9589\u9810\u89BD";
       close.addEventListener("click", () => setPptPreviewRecord(null));
-      const slide = document.createElement("section");
-      slide.className = `ppt-slide-preview ${land ? "land" : "house"}`;
-      const top = document.createElement("div");
-      top.className = "ppt-slide-preview-top";
-      const addTop = (label, value, className) => {
-        const item = document.createElement("div");
-        item.className = className;
-        const tag = document.createElement("b");
-        tag.textContent = label;
-        const text = document.createElement("span");
-        text.textContent = value;
-        item.append(tag, text);
-        top.append(item);
+      const slide = document.createElement("canvas");
+      slide.className = "ppt-slide-preview ppt-slide-preview-canvas";
+      slide.width = 1e3;
+      slide.height = 750;
+      const context = slide.getContext("2d");
+      if (!context)
+        return;
+      const px = (inch) => inch * 100;
+      const fontPx = (pt) => pt * 100 / 72;
+      const font = '"DFKai-SB","\u6A19\u6977\u9AD4",serif';
+      const line = (x, y, w) => {
+        context.beginPath();
+        context.moveTo(px(x), px(y));
+        context.lineTo(px(x + w), px(y));
+        context.strokeStyle = "#555";
+        context.lineWidth = 1;
+        context.stroke();
       };
-      addTop("\u6848\u540D", record.caseName || "", "ppt-slide-preview-case");
-      addTop("\u5730\u5740", record.address || "", "ppt-slide-preview-address");
-      const body = document.createElement("div");
-      body.className = "ppt-slide-preview-body";
-      const left = document.createElement("div");
-      left.className = "ppt-slide-preview-left";
-      const head = document.createElement("div");
-      head.className = "ppt-slide-preview-salehead";
-      const developer = document.createElement("div");
-      developer.className = "ppt-slide-preview-developer";
-      developer.innerHTML = "<b>\u958B\u767C</b>";
-      const developerValue = document.createElement("strong");
-      developerValue.textContent = developerFullNameText(record.developer) || "";
-      developer.append(developerValue);
-      const priceBox = document.createElement("div");
-      priceBox.className = "ppt-slide-preview-pricebox";
-      priceBox.innerHTML = `<b>${land ? "\u958B\u50F9" : "\u59D4\u8A17\u7E3D\u50F9"}</b><strong>${price}</strong><em>\u842C</em>`;
-      head.append(developer, priceBox);
-      left.append(head);
-      const fields2 = document.createElement("div");
-      fields2.className = "ppt-slide-preview-fields";
-      const addField = (label, value) => {
-        const item = document.createElement("div");
-        const tag = document.createElement("b");
-        tag.textContent = label;
-        const text = document.createElement("span");
-        text.textContent = value;
-        item.append(tag, text);
-        fields2.append(item);
+      const draw = (value, x, y, w, h, pt, options = {}) => {
+        const text = String(value || "");
+        let size = pt;
+        const maxWidth = px(w) - 4;
+        const setFont = () => {
+          context.font = `${options.bold ? "bold " : ""}${fontPx(size)}px ${font}`;
+        };
+        setFont();
+        while (size > 8 && !options.wrap && context.measureText(text).width > maxWidth) {
+          size -= 0.5;
+          setFont();
+        }
+        context.fillStyle = options.color || "#000";
+        context.textAlign = options.align || "center";
+        context.textBaseline = "middle";
+        const anchorX = options.align === "left" ? px(x) + 2 : options.align === "right" ? px(x + w) - 2 : px(x + w / 2);
+        if (!options.wrap) {
+          context.fillText(text, anchorX, px(y + h / 2), maxWidth);
+          return;
+        }
+        const rows = [];
+        let row = "";
+        Array.from(text).forEach((char) => {
+          const next = row + char;
+          if (row && context.measureText(next).width > maxWidth) {
+            rows.push(row);
+            row = char;
+          } else
+            row = next;
+        });
+        if (row)
+          rows.push(row);
+        while (size > 8 && rows.length * fontPx(size) * 1.08 > px(h)) {
+          size -= 0.5;
+          setFont();
+        }
+        rows.slice(0, 3).forEach((item, index) => context.fillText(item, anchorX, px(y + h / 2) + (index - (rows.length - 1) / 2) * fontPx(size) * 1.08, maxWidth));
       };
+      const alignedLabel = (label, x, y, pt = 15) => {
+        const chars = Array.from(label);
+        chars.forEach((char, index) => draw(char, x + (chars.length === 1 ? 0.34 : index * (0.68 / (chars.length - 1))), y, 0.22, 0.4, pt));
+      };
+      const field = (label, value, x, y, w, valuePt = 19, labelPt = 15, lineOffset = 0.39) => {
+        alignedLabel(label, x, y, labelPt);
+        draw("\uFF1A", x + 0.88, y, 0.2, 0.36, 15);
+        draw(value, x + 1.08, y - 0.04, w - 1.08, 0.44, valuePt);
+        line(x + 1.08, y + lineOffset, w - 1.13);
+      };
+      context.fillStyle = "#fff";
+      context.fillRect(0, 0, 1e3, 750);
+      draw("\u6848\u540D", 0.05, 0.16, 0.72, 0.55, 14);
+      draw(record.caseName || "", 0.78, 0.08, 5.23, 0.72, (land ? 28 : 25) - 2);
+      draw("\u5730\u5740", 6.08, 0.16, 0.68, 0.55, 14);
+      draw(record.address || "", 6.78, 0.08, 3.12, 0.72, 17, { wrap: true });
+      line(0, 0.84, 10);
+      context.fillStyle = "#fce9d9";
+      context.fillRect(0, px(0.87), px(2.756), px(land ? 0.94 : 0.787));
+      draw("\u958B\u767C", 0.06, land ? 1.14 : 1.07, 0.58, 0.35, 13, { bold: true });
+      draw(developerFullNameText(record.developer) || "", 0.66, land ? 1.08 : 1, 2.09, 0.52, 17, { bold: true, color: "#0000ff" });
+      draw(land ? "\u958B\u50F9" : "\u59D4\u8A17\u7E3D\u50F9", 2.76, land ? 1.15 : 1.08, 1.12, 0.38, 16, { align: "right" });
+      draw("\uFF1A", 3.9, land ? 1.15 : 1.08, 0.2, 0.38, 16);
+      draw(price, 4.1, 0.89, 1.48, 0.72, 35, { bold: true, color: "#e00000" });
+      draw("\u842C", 5.55, 1.24, 0.3, 0.3, 14);
+      line(0, land ? 1.82 : 1.68, 6.05);
       if (land) {
-        addField("\u7E3D\u5730\u576A", landPing ? `${landPing}\u576A` : "");
-        addField("\u6BCF\u576A\u55AE\u50F9", unitPrice);
-        addField("\u81E8\u8DEF", num(record.road) ? `${num(record.road)}\u7C73` : clean(record.road));
-        addField("\u5EA7\u5411", clean(record.direction));
-        addField("\u9762\u5BEC", num(record.frontage) ? `${num(record.frontage)}\u7C73` : clean(record.frontage));
-        addField("\u6DF1\u5EA6", num(record.depth) ? `${num(record.depth)}\u7C73` : clean(record.depth));
-        addField("\u5EFA\u853D\u7387\uFF0F\u5BB9\u7A4D\u7387", [clean(record.coverage), clean(record.far)].filter(Boolean).join("\uFF0F"));
-        addField("\u4F7F\u7528\u5206\u5340", clean(record.zoning));
+        field("\u7E3D\u5730\u576A", landPing ? `${landPing}\u576A` : "", 0.08, 2.12, 2.85, 23, 18, 0.58);
+        field("\u6BCF\u576A\u55AE\u50F9", unitPrice, 3.02, 2.12, 2.82, 23, 18, 0.58);
+        field("\u81E8\u8DEF", num(record.road) ? `${num(record.road)}\u7C73` : clean(record.road), 0.08, 3.19, 2.85, 23, 18, 0.58);
+        field("\u5EA7\u5411", record.direction, 3.02, 3.19, 2.82, 23, 18, 0.58);
+        field("\u9762\u5BEC", num(record.frontage) ? `${num(record.frontage)}\u7C73` : clean(record.frontage), 0.08, 4.26, 2.85, 23, 18, 0.58);
+        field("\u6DF1\u5EA6", num(record.depth) ? `${num(record.depth)}\u7C73` : clean(record.depth), 3.02, 4.26, 2.82, 23, 18, 0.58);
+        field("\u5EFA\u853D\u5BB9\u7A4D", [record.coverage, record.far].filter(Boolean).join("\uFF0F"), 0.08, 5.33, 2.85, 18, 12, 0.58);
+        field("\u4F7F\u7528\u5206\u5340", record.zoning, 3.02, 5.33, 2.82, 20, 18, 0.58);
       } else {
-        addField("\u7E3D\u5730\u576A", landPing ? `${landPing}\u576A` : "");
-        addField("\u7E3D\u5EFA\u576A", num(record.buildingPing) ? `${num(record.buildingPing)}\u576A` : "");
-        addField("\u5BA4\u5167\u576A", num(record.indoorPing) ? `${num(record.indoorPing)}\u576A` : "");
-        addField("\u683C\u5C40", clean(record.layout));
-        addField("\u9762\u5BEC", num(record.frontage) ? `${num(record.frontage)}\u7C73` : clean(record.frontage));
-        addField("\u6DF1\u5EA6", num(record.depth) ? `${num(record.depth)}\u7C73` : clean(record.depth));
-        addField("\u81E8\u8DEF", num(record.road) ? `${num(record.road)}\u7C73` : clean(record.road));
-        addField("\u6A13\u5C64", clean(record.floor));
-        addField("\u671D\u5411", clean(record.direction));
-        addField("\u8ECA\u4F4D", clean(record.parking));
-        addField("\u7BA1\u7406\u8CBB", /^\$?0(?:\.0+)?(?:元)?$/.test(record.managementFee || "") ? "\u7121" : record.managementFee ? `${record.managementFee.replace(/\s*\/月\s*$/, "")}/\u6708` : "");
-        addField("\u5B8C\u5DE5\u65E5&\u5C4B\u9F61", `${draftValue("\u5EFA\u7BC9\u5B8C\u6210\u65E5\u671F") || record.completionDate || record.builtYear || ""} ${ageOf(record)}`.trim());
-        addField("\u793E\u5340\u540D\u7A31", draftValue("\u5927\u6A13\u540D\u7A31") || record.communityName);
-        addField("\u73FE\u6CC1", clean(record.currentState));
-        addField("\u9470\u5319", clean(record.key));
+        const entries = [["\u7E3D\u5730\u576A", landPing ? `${landPing}\u576A` : "", "\u7E3D\u5EFA\u576A", num(record.buildingPing) ? `${num(record.buildingPing)}\u576A` : "", 1.8], ["\u5BA4\u5167\u576A", num(record.indoorPing) ? `${num(record.indoorPing)}\u576A` : "", "\u683C\u5C40", record.layout || "", 2.36], ["\u9762\u5BEC", num(record.frontage) ? `${num(record.frontage)}\u7C73` : clean(record.frontage), "\u6DF1\u5EA6", num(record.depth) ? `${num(record.depth)}\u7C73` : clean(record.depth), 2.92], ["\u81E8\u8DEF", num(record.road) ? `${num(record.road)}\u7C73` : clean(record.road), "\u6A13\u5C64", floorPptDisplay(record.floor), 3.48], ["\u671D\u5411", record.direction || "", "\u8ECA\u4F4D", parkingShort(record.parking), 4.04], ["\u7BA1\u7406\u8CBB", /^\$?0(?:\.0+)?(?:元)?$/.test(record.managementFee || "") ? "\u71210" : record.managementFee || "", "\u793E\u5340\u540D\u7A31", draftValue("\u5927\u6A13\u540D\u7A31") || record.communityName || "", 4.6], ["\u5B8C\u5DE5\u65E5\u671F", draftValue("\u5EFA\u7BC9\u5B8C\u6210\u65E5\u671F") || record.completionDate || record.builtYear || "", "\u5C4B\u9F61", ageOf(record), 5.16], ["\u73FE\u6CC1", record.currentState || "", "\u9470\u5319", record.key || "", 5.72]];
+        entries.forEach(([leftLabel, leftValue, rightLabel, rightValue, y]) => {
+          field(leftLabel, leftValue, 0.08, y, 2.85);
+          field(rightLabel, rightValue, 3.02, y, 2.82, rightLabel === "\u8ECA\u4F4D" ? 15.5 : rightLabel === "\u793E\u5340\u540D\u7A31" || rightLabel === "\u5B8C\u5DE5\u65E5\u671F" ? 16 : 19);
+        });
       }
-      left.append(fields2);
-      const note = document.createElement("div");
-      note.className = "ppt-slide-preview-note";
-      note.innerHTML = "<b>\u5099\u8A3B</b>";
-      const noteText = document.createElement("span");
-      noteText.textContent = displayNoteSegments(record.notes).join("\uFF1B");
-      note.append(noteText);
-      left.append(note);
-      const footer = document.createElement("div");
-      footer.className = "ppt-slide-preview-footer";
-      footer.textContent = `\u9032\u6848\u5831\u4EF6\u65E5\u671F\uFF1A${displayRocDate(record.reportDate) || ""}`;
-      const no = document.createElement("span");
-      no.textContent = `\u7269\u4EF6\u7DE8\u865F\uFF1A${record.propertyNo || ""}`;
-      footer.append(no);
-      left.append(footer);
-      const right = document.createElement("div");
-      right.className = "ppt-slide-preview-right";
-      ["", ""].forEach(() => {
-        const frame = document.createElement("div");
-        frame.className = "ppt-slide-preview-frame";
-        right.append(frame);
-      });
-      body.append(left, right);
-      slide.append(top, body);
+      const notesY = land ? 6.4 : 6.28;
+      alignedLabel("\u5099\u8A3B", 0.08, notesY);
+      draw("\uFF1A", 0.96, notesY, 0.2, 0.36, 15);
+      draw(displayNoteSegments(record.notes).join("\uFF1B"), 1.16, notesY, 4.61, 0.72, 14, { align: "left", wrap: true });
+      line(0, 7.18, 6.05);
+      draw(`\u9032\u6848\u5831\u4EF6\u65E5\u671F\uFF1A${displayRocDate(record.reportDate) || ""}`, 0.05, 7.22, 2.8, 0.24, 9, { align: "left" });
+      draw(`\u7269\u4EF6\u7DE8\u865F\uFF1A${record.propertyNo || ""}`, 3.1, 7.22, 2.9, 0.24, 9);
       overlay.append(close, slide);
       overlay.addEventListener("mousedown", (event) => {
         if (event.target === overlay)
@@ -44861,7 +44875,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V133" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V134" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             bookReviewDueCount > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { className: "book-review-header-button action-book-review", onClick: () => {
@@ -47621,11 +47635,10 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       return () => window.removeEventListener("hide-daily-item", hide);
     }, []);
     const dateOnly = (value = "") => value.slice(0, 10);
-    const yesterday = (() => {
-      const date = /* @__PURE__ */ new Date(`${today()}T12:00:00`);
-      date.setDate(date.getDate() - 1);
-      return date.toISOString().slice(0, 10);
-    })();
+    const adjacentDateLabel = (date) => `${displayRocDate(date)}\uFF08${["\u65E5", "\u4E00", "\u4E8C", "\u4E09", "\u56DB", "\u4E94", "\u516D"][(/* @__PURE__ */ new Date(`${date}T12:00:00`)).getDay()]}\uFF09`;
+    const previousDate = addDaysIso(selectedDate, -1);
+    const nextDate2 = addDaysIso(selectedDate, 1);
+    const nextIsToday = nextDate2 === today();
     const rocDay = displayRocDate(selectedDate);
     const updateRecords = records.filter((record) => !record.archived && !isExpired(record) && record.status === "\u59D4\u8A17\u4E2D" && (dailyUpdateFields(record, selectedDate).length > 0 || dateOnly(record._restoredAt) === selectedDate)).map((record) => {
       const changed = dailyUpdateFields(record, selectedDate);
@@ -47660,9 +47673,13 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
           !compact && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "\u67E5\u770B\u6BCF\u65E5\u65B0\u589E\u3001\u4E0B\u67B6\u8207\u5230\u671F\u7269\u4EF6" })
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "daily-date", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: "daily-yesterday", onClick: () => setSelectedDate(addDaysIso(selectedDate, -1)), children: "\u2190 \u524D\u4E00\u5929" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { type: "button", className: "daily-yesterday", onClick: () => setSelectedDate(previousDate), children: [
+            "\u2190 ",
+            adjacentDateLabel(previousDate)
+          ] }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: `daily-today${selectedDate === today() ? " selected" : ""}`, onClick: () => setSelectedDate(today()), children: "\u4ECA\u5929" }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { "aria-label": "\u9078\u64C7\u6BCF\u65E5\u7269\u4EF6\u52D5\u614B\u65E5\u671F", type: "date", value: selectedDate, onChange: (event) => setSelectedDate(event.target.value) })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: "daily-next", disabled: selectedDate >= today(), onClick: () => setSelectedDate(nextDate2), children: nextIsToday ? `\u4ECA\u5929 ${adjacentDateLabel(nextDate2)}` : `${adjacentDateLabel(nextDate2)} \u2192` }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { "aria-label": "\u9078\u64C7\u6BCF\u65E5\u7269\u4EF6\u52D5\u614B\u65E5\u671F", type: "date", value: selectedDate, max: today(), onChange: (event) => setSelectedDate(event.target.value) })
         ] })
       ] }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "daily-cards", children: groups.map((group) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("article", { className: `daily-card ${group.key}`, children: [

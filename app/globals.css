@@ -1314,7 +1314,7 @@ body{background:#f8fbfe!important;color:#405064!important}
 /* V34 daily date controls and advanced search sources. */
 .daily-activity-head .daily-date{
   display:grid!important;
-  grid-template-columns:100px 72px minmax(155px,190px)!important;
+  grid-template-columns:minmax(155px,auto) 72px minmax(170px,auto) minmax(155px,190px)!important;
   align-items:stretch!important;
   justify-content:end!important;
   gap:10px!important;
@@ -1325,6 +1325,8 @@ body{background:#f8fbfe!important;color:#405064!important}
 .daily-activity-head .daily-date .daily-yesterday.selected{border-color:#527895!important;background:#527895!important;color:#fff!important}
 .daily-activity-head .daily-date .daily-today{border-color:#9acbb9!important;background:#e7f6ef!important;color:#17654e!important}
 .daily-activity-head .daily-date .daily-today.selected{border-color:#278267!important;background:#278267!important;color:#fff!important}
+.daily-activity-head .daily-date .daily-next{border-color:#cbbd9a!important;background:#fff8e7!important;color:#76581e!important}
+.daily-activity-head .daily-date .daily-next:disabled{opacity:.42;cursor:not-allowed;transform:none}
 .daily-activity-head .daily-date input{width:100%!important;min-width:0!important;height:42px!important;margin:0!important}
 .advanced-source-choices{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
 .advanced-source-choices label{display:flex;align-items:center;gap:7px;min-width:150px;padding:10px 14px;border:1px solid var(--line);border-radius:10px;background:#f7faf8;cursor:pointer}
@@ -1402,6 +1404,7 @@ body{background:#f8fbfe!important;color:#405064!important}
 .ppt-slide-preview-note b{font-size:18.5px!important}
 .ppt-slide-preview-note span{font-size:17.5px!important;line-height:1.15}
 .ppt-slide-preview-footer{font-size:11.5px!important}
+.ppt-slide-preview-canvas{display:block;height:auto;max-height:90vh}
 .ppt-adhoc-backdrop{background:#17372fc7!important}.ppt-adhoc-modal{background:#eef4f1!important;border:2px solid #7fa497!important}.ppt-adhoc-modal .modal-head{background:#dcece5!important;border-bottom:2px solid #8fb0a3!important}.ppt-adhoc-modal .modal-head span{display:inline-block;padding:4px 9px;border-radius:999px;background:#1f5a4a;color:#fff!important;font-size:12px!important;letter-spacing:.08em!important}.ppt-adhoc-modal .modal-head h2{color:#173f35;font-size:27px}.ppt-adhoc-modal .modal-head p{color:#784727!important;font-weight:700}.ppt-adhoc-grid{background:#eef4f1!important;padding:20px!important}.ppt-adhoc-grid .field{padding:10px;border:1px solid #bfd1c9;border-radius:10px;background:#fff}.ppt-adhoc-grid .field>span{color:#234f42!important;font-size:13px!important;font-weight:900!important}.ppt-adhoc-grid .field input,.ppt-adhoc-grid .field select,.ppt-adhoc-grid .field textarea{border:1px solid #91aa9f!important;background:#f9fcfa!important}.ppt-adhoc-modal .modal-foot{background:#dcece5!important;border-top:2px solid #8fb0a3!important}
 /* Visible release marker beside the home title. */
 .app-version{font-family:"Noto Sans TC","Microsoft JhengHei",sans-serif;font-size:11px;letter-spacing:0;color:var(--muted);font-weight:700;margin-left:7px;vertical-align:middle}
