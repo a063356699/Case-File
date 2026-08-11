@@ -1451,6 +1451,12 @@ body{background:#f8fbfe!important;color:#405064!important}
 .topbar-row .header-actions .action-keys b{background:#d79724!important;color:#fff!important}
 .excel-print .building-name-cell>i{font-size:11.5pt!important}
 @media(max-width:1160px){.topbar-row{padding:9px 16px!important;align-items:flex-start!important;flex-direction:column!important;gap:8px!important}.topbar-row .header-actions{width:100%!important;justify-content:flex-start!important}.topbar>.nav{padding:0 16px!important}}
+
+/* 前台第一列固定為登錄人員、我的物件與登出。 */
+.internal-public-app .public-head>div{display:flex!important;align-items:center!important;flex-wrap:nowrap!important;gap:5px!important}
+.internal-public-app .public-head .scope-tabs{display:flex!important;grid-template-columns:none!important;flex:1!important;width:auto!important;gap:4px!important}
+.internal-public-app .public-head .scope-tabs button{display:inline-flex!important;align-items:center!important;width:auto!important;padding:5px 8px!important}
+.internal-public-app .public-head .public-logout{display:inline-flex!important;align-items:center!important;white-space:nowrap!important;padding:5px 9px!important}
 </style>
 </head>
 <body>
@@ -43780,7 +43786,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V117" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V118" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             bookReviewDueCount > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { className: "book-review-header-button action-book-review", onClick: () => {
