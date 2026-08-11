@@ -44785,10 +44785,13 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       if (!record.propertyNo || !record.caseName)
         return flash("\u7F3A\u5C11\u7269\u4EF6\u7DE8\u865F\u6216\u6848\u540D\uFF0C\u8ACB\u5148\u78BA\u8A8D\u8868\u55AE\u5167\u5BB9");
       if (existing) {
-        const tracked = withTrackedUpdate(existing, record);
+        const firstFormalEntry = !target.enteredAt;
+        const tracked = { ...withTrackedUpdate(existing, record), ...firstFormalEntry ? { _newCaseReminderEnabled: "1" } : {} };
         setRecords((prev) => prev.map((item) => item.id === existing.id ? tracked : item));
         setIntakeDrafts((prev) => prev.map((draft) => draft.id === target.id ? { ...draft, linkedRecordId: existing.id, enteredAt: draft.enteredAt || (/* @__PURE__ */ new Date()).toISOString() } : draft));
-        flash("\u5DF2\u9023\u7D50\u4E26\u540C\u6B65\u66F4\u65B0\u539F\u7E3D\u8868\u8CC7\u6599");
+        if (firstFormalEntry)
+          setNewCaseReminder({ ...tracked });
+        flash(firstFormalEntry ? "\u5DF2\u6B63\u5F0F\u9032\u6848\uFF1B\u8ACB\u5B8C\u6210\u65B0\u6848\u4EF6\u63D0\u9192" : "\u5DF2\u9023\u7D50\u4E26\u540C\u6B65\u66F4\u65B0\u539F\u7E3D\u8868\u8CC7\u6599");
         return;
       }
       if (!confirm(`\u78BA\u5B9A\u6587\u4EF6\u5DF2\u6536\u5230\uFF0C\u5C07\u300C${record.caseName}\u300D\u6B63\u5F0F\u52A0\u5165\u7E3D\u8868\uFF1F`))
@@ -44875,7 +44878,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V136" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V137" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             bookReviewDueCount > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { className: "book-review-header-button action-book-review", onClick: () => {
