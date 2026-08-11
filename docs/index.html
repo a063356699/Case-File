@@ -44994,7 +44994,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V166" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V167" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -50352,31 +50352,21 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     const [cloudEmail, setCloudEmail] = (0, import_react.useState)("");
     const [cloudPassword, setCloudPassword] = (0, import_react.useState)("");
     const updatePerson = (id, patch) => setSettings({ ...settings, personnel: settings.personnel.map((p) => p.id === id ? { ...p, ...patch } : p) });
-    const composingPersonFields = (0, import_react.useRef)(/* @__PURE__ */ new Set());
     const personTextInput = (person, field, placeholder, type = "text") => {
-      const fieldId = `${person.id}:${field}`;
       const normalize = (value) => field === "nationalId" ? value.toUpperCase() : value;
       const save = (value) => updatePerson(person.id, { [field]: normalize(value) });
       return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
         "input",
         {
           type,
-          value: person[field] || "",
+          defaultValue: person[field] || "",
           placeholder,
-          onCompositionStart: () => composingPersonFields.current.add(fieldId),
-          onCompositionEnd: (event) => {
-            composingPersonFields.current.delete(fieldId);
-            save(event.currentTarget.value);
-          },
           onChange: (event) => {
-            if (composingPersonFields.current.has(fieldId) || event.nativeEvent.isComposing)
-              return;
-            save(event.target.value);
-          },
-          onBlur: (event) => {
-            if (!composingPersonFields.current.has(fieldId))
+            if (!event.nativeEvent.isComposing)
               save(event.currentTarget.value);
-          }
+          },
+          onCompositionEnd: (event) => save(event.currentTarget.value),
+          onBlur: (event) => save(event.currentTarget.value)
         }
       );
     };

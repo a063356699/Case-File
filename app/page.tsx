@@ -1939,7 +1939,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V166</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V167</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -3629,17 +3629,13 @@ function SettingsPanel({ settings, setSettings, supabasePush, supabasePull, clou
   const [cloudEmail, setCloudEmail] = useState("");
   const [cloudPassword, setCloudPassword] = useState("");
   const updatePerson = (id: string, patch: Partial<Person>) => setSettings({ ...settings, personnel: settings.personnel.map(p => p.id === id ? { ...p, ...patch } : p) });
-  // 中文輸入法組字期間不能重畫受控欄位，否則選字會被拆成錯誤字元。
-  const composingPersonFields = useRef(new Set<string>());
   const personTextInput = (person: Person, field: "name" | "nationalId" | "phone", placeholder: string, type = "text") => {
-    const fieldId = `${person.id}:${field}`;
     const normalize = (value: string) => field === "nationalId" ? value.toUpperCase() : value;
     const save = (value: string) => updatePerson(person.id, { [field]: normalize(value) } as Partial<Person>);
-    return <input type={type} value={person[field] || ""} placeholder={placeholder}
-      onCompositionStart={() => composingPersonFields.current.add(fieldId)}
-      onCompositionEnd={event => { composingPersonFields.current.delete(fieldId); save(event.currentTarget.value); }}
-      onChange={event => { if (composingPersonFields.current.has(fieldId) || event.nativeEvent.isComposing) return; save(event.target.value); }}
-      onBlur={event => { if (!composingPersonFields.current.has(fieldId)) save(event.currentTarget.value); }} />;
+    return <input type={type} defaultValue={person[field] || ""} placeholder={placeholder}
+      onChange={event => { if (!event.nativeEvent.isComposing) save(event.currentTarget.value); }}
+      onCompositionEnd={event => save(event.currentTarget.value)}
+      onBlur={event => save(event.currentTarget.value)} />;
   };
   const removePerson = (id: string) => {
     if (!confirm("確定刪除這位人員？刪除後序號會自動重新編排。")) return;
