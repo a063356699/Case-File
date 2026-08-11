@@ -1450,3 +1450,10 @@ body{background:#f8fbfe!important;color:#405064!important}
 .internal-public-app .public-head .scope-tabs{display:flex!important;grid-template-columns:none!important;flex:1!important;width:auto!important;gap:4px!important}
 .internal-public-app .public-head .scope-tabs button{display:inline-flex!important;align-items:center!important;width:auto!important;padding:5px 8px!important}
 .internal-public-app .public-head .public-logout{display:inline-flex!important;align-items:center!important;white-space:nowrap!important;padding:5px 9px!important}
+
+/* 前台：第一排帳號與登出，第二排功能分頁。 */
+.internal-public-app .public-head>div{flex-wrap:wrap!important}
+.internal-public-app .public-head .logged-person{order:1!important}
+.internal-public-app .public-head .public-logout{order:2!important;background:#d94a42!important;border-color:#bd3029!important;color:#fff!important;font-weight:900!important;box-shadow:0 2px 0 #9e2823!important}
+.internal-public-app .public-head .scope-tabs{order:3!important;flex-basis:100%!important;width:100%!important;display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;margin-top:4px!important}
+.internal-public-app .public-head .scope-tabs button{justify-content:center!important;width:100%!important}
