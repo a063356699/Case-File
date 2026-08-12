@@ -1057,14 +1057,15 @@ export default function Home() {
       const items = seeds.map((seed, index) => {
         const current = records.find(record => (seed.propertyNo && String(record.propertyNo || "") === seed.propertyNo) || String(record.address || "") === seed.address || String(record.caseName || "") === seed.caseName);
         const prior = existing?.items.find(item => String(item.data.address || "") === seed.address || String(item.data.caseName || "") === seed.caseName);
-        const data = current || prior?.data || ({ id: `history-1150812-${index + 1}`, status: "委託中", ...seed } as RecordItem);
-        return { id: `history-${date}-${index + 1}`, recordId: current?.id || prior?.recordId, sequence: String(index + 1), data: { ...data, ...(!current ? seed : {}), _tourHistorySnapshot: "1" } } as TourItem;
+        const activeSaved = tourItems.find(item => String(item.data.address || "") === seed.address || String(item.data.caseName || "") === seed.caseName);
+        const data = current || prior?.data || activeSaved?.data || ({ id: `history-1150812-${index + 1}`, status: "委託中", ...seed } as RecordItem);
+        return { id: `history-${date}-${index + 1}`, recordId: current?.id || prior?.recordId || activeSaved?.recordId, sequence: String(index + 1), data: { ...seed, ...data, _tourHistorySnapshot: "1" } } as TourItem;
       });
       const entry: TourHistory = { id: existing?.id || "recovered-2026-08-12", date, title: "115.08.12團看", items, completedAt: existing?.completedAt || date };
-      const unchanged = existing && existing.items.length === 5 && existing.items.every((item, index) => item.data.caseName === seeds[index]?.caseName);
+      const unchanged = existing && existing.items.length === 5 && existing.items.every((item, index) => item.data.caseName === seeds[index]?.caseName && Object.keys(item.data || {}).length > 45);
       return unchanged ? previous : [entry, ...previous.filter(item => normalizeDateInput(item.date) !== date)].sort((a, b) => String(b.date).localeCompare(String(a.date)));
     });
-  }, [storageReady, records]);
+  }, [storageReady, records, tourItems]);
 
   const archived = useMemo(() => sortArchivedRecords(records.filter(r => r.archived || isExpired(r) || r.status !== "委託中")), [records]);
   const active = useMemo(() => records.filter(r => !r.archived && !isExpired(r) && (r.status || "委託中") === "委託中"), [records]);
@@ -1997,7 +1998,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V182</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V183</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -2162,6 +2163,14 @@ function TourPlanner({ records, drafts, items, setItems, history, setHistory, ed
     setTourTitle(entry.title);
     notify(`已叫回 ${entry.title}，可再次產生圖片或列印`);
   };
+  const createNewTour = () => {
+    if (items.length && !confirm("要建立新的團看路線嗎？目前尚未完成的本次清單會先保留在畫面外，請先確認不需要再使用。")) return;
+    const nextDate = today();
+    setItems([]);
+    setTourDate(nextDate);
+    setTourTitle(`${displayRocDate(nextDate).replace(/\//g, ".")}團看`);
+    notify("已建立新的本次團看路線，請加入案件");
+  };
   const exportTourImage = () => {
     if (!ordered.length) return notify("請先加入團看物件");
     try {
@@ -2198,7 +2207,7 @@ function TourPlanner({ records, drafts, items, setItems, history, setHistory, ed
   };
   return <>
     <section className="content tour-page">
-      <div className="list-head"><SectionTitle title="團看安排" subtitle="挑選尚未團看的委託中物件，再依本次路線自行編排序號"/><div className="tour-head-actions"><label className="tour-title-field">圖片標題<input type="text" value={tourTitle} onChange={event => setTourTitle(event.target.value)} placeholder="例如：115.07.28團看"/></label><button onClick={() => setPickerOpen(true)}>＋ 尚未團看物件</button><button onClick={openTemporary}>＋ 臨時案件</button></div></div>
+      <div className="list-head"><SectionTitle title="團看安排" subtitle="挑選尚未團看的委託中物件，再依本次路線自行編排序號"/><div className="tour-head-actions"><button onClick={createNewTour}>＋ 新增本次團看</button><label className="tour-title-field">圖片標題<input type="text" value={tourTitle} onChange={event => setTourTitle(event.target.value)} placeholder="例如：115.08.13團看"/></label><button onClick={() => setPickerOpen(true)}>＋ 尚未團看物件</button><button onClick={openTemporary}>＋ 臨時案件</button></div></div>
       <div className="tour-list-head"><h3>本次團看路線</h3><div className="tour-copy-actions"><span>{items.length} 筆</span><button onClick={copyRoute}>複製文字</button><button className="primary" onClick={exportTourImage}>產生圖片（本次團看路線）</button></div></div>
       <div className="table-wrap tour-table"><table><thead><tr><th className="tour-remove"></th><th className="tour-sequence">序</th>{tourDisplayColumns.map(column => <th key={column} className={`tour-${column}`}>{tourColumnLabel[column].split("\n").map((line, index) => <Fragment key={line}>{index > 0 && <br/>}{line}</Fragment>)}</th>)}</tr></thead><tbody>{ordered.map(item => { const record = sourceOf(item); return <tr key={item.id}><td className="tour-remove"><button className="danger" title="移除" onClick={() => setItems(items.filter(current => current.id !== item.id))}>刪</button></td><td className="tour-sequence"><input type="number" min="1" value={item.sequence} onChange={event => updateItem(item.id, { sequence: event.target.value })}/></td>{tourDisplayColumns.map(column => <td key={column} className={`tour-${column}`}>{column === "caseName" ? <button className="case-link" onClick={() => record._intakeDraftId ? editRecord({ ...record, _editSource: "draft" }) : item.temporary ? editTemporary(item) : editRecord(record)}>{record.caseName || "未命名案件"}</button> : renderValue(record, column)}</td>)}</tr>;})}</tbody></table>{!items.length && <div className="contact-empty">目前尚未安排團看</div>}</div>
       <div className="tour-page-bottom"><div className="tour-complete-actions"><label>團看日期<input type="date" value={tourDate} onChange={event => setTourDate(event.target.value)}/></label><button className="primary" disabled={!items.length || !tourDate} onClick={() => { if (confirm(`確定完成 ${items.length} 筆團看，並將 ${displayRocDate(tourDate)} 寫入物件與草稿的團看日期？`)) { saveTourHistory(); complete(tourDate, items.map(item => item.recordId).filter(Boolean) as string[], items.map(item => item.data._intakeDraftId).filter(Boolean)); } }}>完成團看</button></div></div>
