@@ -1026,7 +1026,7 @@ export default function Home() {
   // 等草稿讀取完成後才寫回，避免剛開新版本時用初始空白內容覆寫舊草稿。
   useEffect(() => { if (storageReady) localStorage.setItem(INTAKE_KEY, JSON.stringify({ raw: intakeRaw, drafts: intakeDrafts, selectedId: selectedIntakeId })); }, [intakeRaw, intakeDrafts, selectedIntakeId, storageReady]);
   useEffect(() => { localStorage.setItem(TOUR_KEY, JSON.stringify({ date: tourDate, title: tourTitle, items: tourItems, modifiedAt: tourModifiedAt, history: tourHistory })); }, [tourDate, tourTitle, tourItems, tourModifiedAt, tourHistory]);
-  // V180 起保留完成團看歷史；先把舊資料中已有團看日期、但當時尚未建立歷史的案件補成可查看列表。
+  // V181 起保留完成團看歷史；先把舊資料中已有團看日期、但當時尚未建立歷史的案件補成可查看列表。
   useEffect(() => {
     if (!storageReady) return;
     const byDate = new Map<string, TourItem[]>();
@@ -1039,6 +1039,30 @@ export default function Home() {
       const known = new Set(previous.map(item => item.date));
       const recovered = [...byDate.entries()].filter(([date]) => !known.has(date)).map(([date, items]) => ({ id: `recovered-${date}`, date, title: `${displayRocDate(date).replace(/\//g, ".")}團看`, items, completedAt: date }));
       return recovered.length ? [...recovered, ...previous].sort((a, b) => String(b.date).localeCompare(String(a.date))) : previous;
+    });
+  }, [storageReady, records]);
+  // 115/8/12 已完成團看的五筆，補回當時路線快照。前兩筆雖已不在現有委託中，歷史仍須可重新列印。
+  useEffect(() => {
+    if (!storageReady) return;
+    const date = "2026-08-12";
+    const seeds = [
+      { propertyNo: "", caseName: "【永康區】中正二街 地坪近百坪甲工廠房", address: "台南市永康區中正二街172號", developer: "陳帝元", price: "3188" },
+      { propertyNo: "", caseName: "永康四維商圈｜低總價樓中樓四房", address: "台南市永康區四維街37號五樓之2", developer: "謝馨儀、張小曼", price: "588" },
+      { propertyNo: "EG0507746", caseName: "東區復興學區整新四套房車墅", address: "台南市東區富農街一段188巷40號", developer: "陳珮菁", price: "1788" },
+      { propertyNo: "EG0540823", caseName: "東區仁和新世界整新明亮通風三房", address: "台南市東區仁和路79號6樓之3", developer: "柯育婷、蔡宇育", price: "786" },
+      { propertyNo: "EG0522899", caseName: "東門圓環一樓套房＋平車", address: "台南市東區東門路一段84號之13", developer: "張小曼", price: "298" },
+    ];
+    setTourHistory(previous => {
+      const existing = previous.find(item => normalizeDateInput(item.date) === date);
+      const items = seeds.map((seed, index) => {
+        const current = records.find(record => (seed.propertyNo && String(record.propertyNo || "") === seed.propertyNo) || String(record.address || "") === seed.address || String(record.caseName || "") === seed.caseName);
+        const prior = existing?.items.find(item => String(item.data.address || "") === seed.address || String(item.data.caseName || "") === seed.caseName);
+        const data = current || prior?.data || ({ id: `history-1150812-${index + 1}`, status: "委託中", ...seed } as RecordItem);
+        return { id: `history-${date}-${index + 1}`, recordId: current?.id || prior?.recordId, sequence: String(index + 1), data: { ...data, ...(!current ? seed : {}) } } as TourItem;
+      });
+      const entry: TourHistory = { id: existing?.id || "recovered-2026-08-12", date, title: "115.08.12團看", items, completedAt: existing?.completedAt || date };
+      const unchanged = existing && existing.items.length === 5 && existing.items.every((item, index) => item.data.caseName === seeds[index]?.caseName);
+      return unchanged ? previous : [entry, ...previous.filter(item => normalizeDateInput(item.date) !== date)].sort((a, b) => String(b.date).localeCompare(String(a.date)));
     });
   }, [storageReady, records]);
 
@@ -1973,7 +1997,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V180</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V181</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -2128,6 +2152,14 @@ function TourPlanner({ records, drafts, items, setItems, history, setHistory, ed
     const entry: TourHistory = { id: newId(), date: tourDate, title: tourTitle || `${displayRocDate(tourDate).replace(/\//g, ".")}團看`, items: items.map(item => ({ ...item, data: { ...item.data } })), completedAt: new Date().toISOString() };
     setHistory(previous => [entry, ...previous.filter(item => !(item.date === entry.date && item.title === entry.title))].slice(0, 100));
   };
+  const restoreTourHistory = (entry: TourHistory) => {
+    if (!entry.items.length) return;
+    if (!confirm(`叫回「${entry.title}」的 ${entry.items.length} 筆團看路線？目前正在編排的路線不會刪除，請您確認後再自行調整。`)) return;
+    setItems(entry.items.map(item => ({ ...item, id: newId(), data: { ...item.data } })));
+    setTourDate(entry.date);
+    setTourTitle(entry.title);
+    notify(`已叫回 ${entry.title}，可再次產生圖片或列印`);
+  };
   const exportTourImage = () => {
     if (!ordered.length) return notify("請先加入團看物件");
     try {
@@ -2168,7 +2200,7 @@ function TourPlanner({ records, drafts, items, setItems, history, setHistory, ed
       <div className="tour-list-head"><h3>本次團看路線</h3><div className="tour-copy-actions"><span>{items.length} 筆</span><button onClick={copyRoute}>複製文字</button><button className="primary" onClick={exportTourImage}>產生圖片（本次團看路線）</button></div></div>
       <div className="table-wrap tour-table"><table><thead><tr><th className="tour-remove"></th><th className="tour-sequence">序</th>{tourDisplayColumns.map(column => <th key={column} className={`tour-${column}`}>{tourColumnLabel[column].split("\n").map((line, index) => <Fragment key={line}>{index > 0 && <br/>}{line}</Fragment>)}</th>)}</tr></thead><tbody>{ordered.map(item => { const record = sourceOf(item); return <tr key={item.id}><td className="tour-remove"><button className="danger" title="移除" onClick={() => setItems(items.filter(current => current.id !== item.id))}>刪</button></td><td className="tour-sequence"><input type="number" min="1" value={item.sequence} onChange={event => updateItem(item.id, { sequence: event.target.value })}/></td>{tourDisplayColumns.map(column => <td key={column} className={`tour-${column}`}>{column === "caseName" ? <button className="case-link" onClick={() => record._intakeDraftId ? editRecord({ ...record, _editSource: "draft" }) : item.temporary ? editTemporary(item) : editRecord(record)}>{record.caseName || "未命名案件"}</button> : renderValue(record, column)}</td>)}</tr>;})}</tbody></table>{!items.length && <div className="contact-empty">目前尚未安排團看</div>}</div>
       <div className="tour-page-bottom"><div className="tour-complete-actions"><label>團看日期<input type="date" value={tourDate} onChange={event => setTourDate(event.target.value)}/></label><button className="primary" disabled={!items.length || !tourDate} onClick={() => { if (confirm(`確定完成 ${items.length} 筆團看，並將 ${displayRocDate(tourDate)} 寫入物件與草稿的團看日期？`)) { saveTourHistory(); complete(tourDate, items.map(item => item.recordId).filter(Boolean) as string[], items.map(item => item.data._intakeDraftId).filter(Boolean)); } }}>完成團看</button></div></div>
-      {history.length > 0 && <section className="tour-history"><h3>歷史團看路線</h3>{history.map(entry => <details key={entry.id}><summary>{displayRocDate(entry.date)}　{entry.title}　{entry.items.length} 筆</summary><ol>{entry.items.slice().sort((a, b) => Number(a.sequence || 9999) - Number(b.sequence || 9999)).map(item => <li key={item.id}><b>{item.data.caseName || "未命名案件"}</b><span>{item.data.address || ""}</span><em>{developerFullNameText(item.data.developer) || ""}</em></li>)}</ol></details>)}</section>}
+      {history.length > 0 && <section className="tour-history"><h3>歷史團看路線</h3>{history.map(entry => <details key={entry.id}><summary>{displayRocDate(entry.date)}　{entry.title}　{entry.items.length} 筆</summary><div className="tour-history-actions"><button className="primary" onClick={() => restoreTourHistory(entry)}>叫回此路線</button><span>叫回後可直接再次產生圖片或列印</span></div><ol>{entry.items.slice().sort((a, b) => Number(a.sequence || 9999) - Number(b.sequence || 9999)).map(item => <li key={item.id}><b>{item.data.caseName || "未命名案件"}</b><span>{item.data.address || ""}</span><em>{developerFullNameText(item.data.developer) || ""}</em></li>)}</ol></details>)}</section>}
     </section>
     {pickerOpen && <div className="modal-backdrop" onMouseDown={event => event.target === event.currentTarget && setPickerOpen(false)}><div className="modal tour-picker-modal"><div className="modal-head"><div><span>目前尚未安排團看</span><h2>選擇本次團看物件</h2></div><button className="close" onClick={() => setPickerOpen(false)}>×</button></div><div className="tour-picker-filters"><input value={search} onChange={event => setSearch(event.target.value)} placeholder="搜尋案名、地址、開發"/><label><span>進案日期起</span><input type="date" value={reportDateFrom} onChange={event => setReportDateFrom(event.target.value)}/></label><label><span>進案日期迄</span><input type="date" value={reportDateTo} onChange={event => setReportDateTo(event.target.value)}/></label><select value={developerFilter} onChange={event => setDeveloperFilter(event.target.value)}><option value="">全部開發人員</option>{developers.map(name => <option key={name}>{name}</option>)}</select><select value={propertyKindFilter} onChange={event => setPropertyKindFilter(event.target.value)}><option value="">土地＋房屋</option><option value="土地">土地</option><option value="房屋">房屋</option></select><button type="button" onClick={() => { setSearch(""); setReportDateFrom(""); setReportDateTo(""); setDeveloperFilter(""); setPropertyKindFilter(""); }}>清除篩選</button></div><div className="tour-candidate-list"><div className="tour-candidate-head"><b>案名</b><b>地址</b><b>開發</b><b>開價</b><b>現況</b><b>進案日期</b><b></b></div>{available.map(record => <div className="tour-candidate-row" key={record.id}><button className="case-link candidate-case-link" onClick={() => editRecord(record._intakeDraftId ? { ...record, _editSource: "draft" } : record)}>{record.caseName || "未命名案件"}</button><span>{record.address}</span><em>{developerFullNameText(record.developer) || "未填開發"}</em><span>{record.price ? `${String(record.price).replace(/\s*萬(?:元)?\s*/g, "")}萬` : "—"}</span><span>{record.currentState || "—"}</span><span className={record._intakeDraftId ? "not-entered" : ""}>{record._intakeDraftId ? "尚未進案" : displayRocDate(record.reportDate) || "—"}</span><button className="candidate-add" onClick={() => addRecord(record)}>＋ 加入</button></div>)}{!available.length && <div className="contact-empty">沒有符合篩選條件的尚未團看物件</div>}</div>
 <div className="modal-foot"><span>共 {available.length} 筆</span><button onClick={copyAvailable}>複製目前列表</button><button className="primary" onClick={() => setPickerOpen(false)}>完成挑選</button></div></div></div>}
