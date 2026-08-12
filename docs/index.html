@@ -1658,12 +1658,12 @@ body{background:#f8fbfe!important;color:#405064!important}
           }
         }
         function push(heap, node) {
-          var index2 = heap.length;
+          var index = heap.length;
           heap.push(node);
-          a: for (; 0 < index2; ) {
-            var parentIndex = index2 - 1 >>> 1, parent = heap[parentIndex];
+          a: for (; 0 < index; ) {
+            var parentIndex = index - 1 >>> 1, parent = heap[parentIndex];
             if (0 < compare(parent, node))
-              heap[parentIndex] = node, heap[index2] = parent, index2 = parentIndex;
+              heap[parentIndex] = node, heap[index] = parent, index = parentIndex;
             else break a;
           }
         }
@@ -1675,12 +1675,12 @@ body{background:#f8fbfe!important;color:#405064!important}
           var first = heap[0], last = heap.pop();
           if (last !== first) {
             heap[0] = last;
-            a: for (var index2 = 0, length = heap.length, halfLength = length >>> 1; index2 < halfLength; ) {
-              var leftIndex = 2 * (index2 + 1) - 1, left = heap[leftIndex], rightIndex = leftIndex + 1, right = heap[rightIndex];
+            a: for (var index = 0, length = heap.length, halfLength = length >>> 1; index < halfLength; ) {
+              var leftIndex = 2 * (index + 1) - 1, left = heap[leftIndex], rightIndex = leftIndex + 1, right = heap[rightIndex];
               if (0 > compare(left, last))
-                rightIndex < length && 0 > compare(right, left) ? (heap[index2] = right, heap[rightIndex] = last, index2 = rightIndex) : (heap[index2] = left, heap[leftIndex] = last, index2 = leftIndex);
+                rightIndex < length && 0 > compare(right, left) ? (heap[index] = right, heap[rightIndex] = last, index = rightIndex) : (heap[index] = left, heap[leftIndex] = last, index = leftIndex);
               else if (rightIndex < length && 0 > compare(right, last))
-                heap[index2] = right, heap[rightIndex] = last, index2 = rightIndex;
+                heap[index] = right, heap[rightIndex] = last, index = rightIndex;
               else break a;
             }
           }
@@ -2093,8 +2093,8 @@ body{background:#f8fbfe!important;color:#405064!important}
             return escaperLookup[match];
           });
         }
-        function getElementKey(element, index2) {
-          return "object" === typeof element && null !== element && null != element.key ? (checkKeyStringCoercion(element.key), escape("" + element.key)) : index2.toString(36);
+        function getElementKey(element, index) {
+          return "object" === typeof element && null !== element && null != element.key ? (checkKeyStringCoercion(element.key), escape("" + element.key)) : index.toString(36);
         }
         function resolveThenable(thenable) {
           switch (thenable.status) {
@@ -3118,10 +3118,10 @@ body{background:#f8fbfe!important;color:#405064!important}
             fiber = fiber.next, id--;
           return fiber;
         }
-        function copyWithSetImpl(obj, path, index2, value) {
-          if (index2 >= path.length) return value;
-          var key = path[index2], updated = isArrayImpl(obj) ? obj.slice() : assign({}, obj);
-          updated[key] = copyWithSetImpl(obj[key], path, index2 + 1, value);
+        function copyWithSetImpl(obj, path, index, value) {
+          if (index >= path.length) return value;
+          var key = path[index], updated = isArrayImpl(obj) ? obj.slice() : assign({}, obj);
+          updated[key] = copyWithSetImpl(obj[key], path, index + 1, value);
           return updated;
         }
         function copyWithRename(obj, oldPath, newPath) {
@@ -3138,21 +3138,21 @@ body{background:#f8fbfe!important;color:#405064!important}
             return copyWithRenameImpl(obj, oldPath, newPath, 0);
           }
         }
-        function copyWithRenameImpl(obj, oldPath, newPath, index2) {
-          var oldKey = oldPath[index2], updated = isArrayImpl(obj) ? obj.slice() : assign({}, obj);
-          index2 + 1 === oldPath.length ? (updated[newPath[index2]] = updated[oldKey], isArrayImpl(updated) ? updated.splice(oldKey, 1) : delete updated[oldKey]) : updated[oldKey] = copyWithRenameImpl(
+        function copyWithRenameImpl(obj, oldPath, newPath, index) {
+          var oldKey = oldPath[index], updated = isArrayImpl(obj) ? obj.slice() : assign({}, obj);
+          index + 1 === oldPath.length ? (updated[newPath[index]] = updated[oldKey], isArrayImpl(updated) ? updated.splice(oldKey, 1) : delete updated[oldKey]) : updated[oldKey] = copyWithRenameImpl(
             obj[oldKey],
             oldPath,
             newPath,
-            index2 + 1
+            index + 1
           );
           return updated;
         }
-        function copyWithDeleteImpl(obj, path, index2) {
-          var key = path[index2], updated = isArrayImpl(obj) ? obj.slice() : assign({}, obj);
-          if (index2 + 1 === path.length)
+        function copyWithDeleteImpl(obj, path, index) {
+          var key = path[index], updated = isArrayImpl(obj) ? obj.slice() : assign({}, obj);
+          if (index + 1 === path.length)
             return isArrayImpl(updated) ? updated.splice(key, 1) : delete updated[key], updated;
-          updated[key] = copyWithDeleteImpl(obj[key], path, index2 + 1);
+          updated[key] = copyWithDeleteImpl(obj[key], path, index + 1);
           return updated;
         }
         function shouldSuspendImpl() {
@@ -4043,13 +4043,13 @@ body{background:#f8fbfe!important;color:#405064!important}
           root2.shellSuspendCounter = 0;
           var entanglements = root2.entanglements, expirationTimes = root2.expirationTimes, hiddenUpdates = root2.hiddenUpdates;
           for (remainingLanes = previouslyPendingLanes & ~remainingLanes; 0 < remainingLanes; ) {
-            var index2 = 31 - clz32(remainingLanes), lane = 1 << index2;
-            entanglements[index2] = 0;
-            expirationTimes[index2] = -1;
-            var hiddenUpdatesForLane = hiddenUpdates[index2];
+            var index = 31 - clz32(remainingLanes), lane = 1 << index;
+            entanglements[index] = 0;
+            expirationTimes[index] = -1;
+            var hiddenUpdatesForLane = hiddenUpdates[index];
             if (null !== hiddenUpdatesForLane)
-              for (hiddenUpdates[index2] = null, index2 = 0; index2 < hiddenUpdatesForLane.length; index2++) {
-                var update = hiddenUpdatesForLane[index2];
+              for (hiddenUpdates[index] = null, index = 0; index < hiddenUpdatesForLane.length; index++) {
+                var update = hiddenUpdatesForLane[index];
                 null !== update && (update.lane &= -536870913);
               }
             remainingLanes &= ~lane;
@@ -4067,8 +4067,8 @@ body{background:#f8fbfe!important;color:#405064!important}
         function markRootEntangled(root2, entangledLanes) {
           var rootEntangledLanes = root2.entangledLanes |= entangledLanes;
           for (root2 = root2.entanglements; rootEntangledLanes; ) {
-            var index2 = 31 - clz32(rootEntangledLanes), lane = 1 << index2;
-            lane & entangledLanes | root2[index2] & entangledLanes && (root2[index2] |= entangledLanes);
+            var index = 31 - clz32(rootEntangledLanes), lane = 1 << index;
+            lane & entangledLanes | root2[index] & entangledLanes && (root2[index] |= entangledLanes);
             rootEntangledLanes &= ~lane;
           }
         }
@@ -4119,21 +4119,21 @@ body{background:#f8fbfe!important;color:#405064!important}
         function addFiberToLanesMap(root2, fiber, lanes) {
           if (isDevToolsPresent)
             for (root2 = root2.pendingUpdatersLaneMap; 0 < lanes; ) {
-              var index2 = 31 - clz32(lanes), lane = 1 << index2;
-              root2[index2].add(fiber);
+              var index = 31 - clz32(lanes), lane = 1 << index;
+              root2[index].add(fiber);
               lanes &= ~lane;
             }
         }
         function movePendingFibersToMemoized(root2, lanes) {
           if (isDevToolsPresent)
             for (var pendingUpdatersLaneMap = root2.pendingUpdatersLaneMap, memoizedUpdaters = root2.memoizedUpdaters; 0 < lanes; ) {
-              var index2 = 31 - clz32(lanes);
-              root2 = 1 << index2;
-              index2 = pendingUpdatersLaneMap[index2];
-              0 < index2.size && (index2.forEach(function(fiber) {
+              var index = 31 - clz32(lanes);
+              root2 = 1 << index;
+              index = pendingUpdatersLaneMap[index];
+              0 < index.size && (index.forEach(function(fiber) {
                 var alternate = fiber.alternate;
                 null !== alternate && memoizedUpdaters.has(alternate) || memoizedUpdaters.add(fiber);
-              }), index2.clear());
+              }), index.clear());
               lanes &= ~root2;
             }
         }
@@ -6648,7 +6648,7 @@ body{background:#f8fbfe!important;color:#405064!important}
           treeForkProvider = workInProgress2;
           treeForkCount = totalChildren;
         }
-        function pushTreeId(workInProgress2, totalChildren, index2) {
+        function pushTreeId(workInProgress2, totalChildren, index) {
           warnIfNotHydrating();
           idStack[idStackIndex++] = treeContextId;
           idStack[idStackIndex++] = treeContextOverflow;
@@ -6658,17 +6658,17 @@ body{background:#f8fbfe!important;color:#405064!important}
           workInProgress2 = treeContextOverflow;
           var baseLength = 32 - clz32(baseIdWithLeadingBit) - 1;
           baseIdWithLeadingBit &= ~(1 << baseLength);
-          index2 += 1;
+          index += 1;
           var length = 32 - clz32(totalChildren) + baseLength;
           if (30 < length) {
             var numberOfOverflowBits = baseLength - baseLength % 5;
             length = (baseIdWithLeadingBit & (1 << numberOfOverflowBits) - 1).toString(32);
             baseIdWithLeadingBit >>= numberOfOverflowBits;
             baseLength -= numberOfOverflowBits;
-            treeContextId = 1 << 32 - clz32(totalChildren) + baseLength | index2 << baseLength | baseIdWithLeadingBit;
+            treeContextId = 1 << 32 - clz32(totalChildren) + baseLength | index << baseLength | baseIdWithLeadingBit;
             treeContextOverflow = length + workInProgress2;
           } else
-            treeContextId = 1 << length | index2 << baseLength | baseIdWithLeadingBit, treeContextOverflow = workInProgress2;
+            treeContextId = 1 << length | index << baseLength | baseIdWithLeadingBit, treeContextOverflow = workInProgress2;
         }
         function pushMaterializedTreeId(workInProgress2) {
           warnIfNotHydrating();
@@ -7283,13 +7283,13 @@ body{background:#f8fbfe!important;color:#405064!important}
           thenable = thenable.status;
           return "fulfilled" === thenable || "rejected" === thenable;
         }
-        function trackUsedThenable(thenableState2, thenable, index2) {
+        function trackUsedThenable(thenableState2, thenable, index) {
           null !== ReactSharedInternals.actQueue && (ReactSharedInternals.didUsePromise = true);
           var trackedThenables = thenableState2.thenables;
-          index2 = trackedThenables[index2];
-          void 0 === index2 ? trackedThenables.push(thenable) : index2 !== thenable && (thenableState2.didWarnAboutUncachedPromise || (thenableState2.didWarnAboutUncachedPromise = true, console.error(
+          index = trackedThenables[index];
+          void 0 === index ? trackedThenables.push(thenable) : index !== thenable && (thenableState2.didWarnAboutUncachedPromise || (thenableState2.didWarnAboutUncachedPromise = true, console.error(
             "A component was suspended by an uncached promise. Creating promises inside a Client Component or hook is not yet supported, except via a Suspense-compatible library or framework."
-          )), thenable.then(noop$1, noop$1), thenable = index2);
+          )), thenable.then(noop$1, noop$1), thenable = index);
           if (void 0 === thenable._debugInfo) {
             thenableState2 = performance.now();
             trackedThenables = thenable.displayName;
@@ -7409,10 +7409,10 @@ body{background:#f8fbfe!important;color:#405064!important}
           }
         }
         function unwrapThenable(thenable) {
-          var index2 = thenableIndexCounter$1;
+          var index = thenableIndexCounter$1;
           thenableIndexCounter$1 += 1;
           null === thenableState$1 && (thenableState$1 = createThenableState());
-          return trackUsedThenable(thenableState$1, thenable, index2);
+          return trackUsedThenable(thenableState$1, thenable, index);
         }
         function coerceRef(workInProgress2, element) {
           element = element.props.ref;
@@ -8093,13 +8093,13 @@ body{background:#f8fbfe!important;color:#405064!important}
             }
           };
         }
-        function validateSuspenseListNestedChild(childSlot, index2) {
+        function validateSuspenseListNestedChild(childSlot, index) {
           var isAnArray = isArrayImpl(childSlot);
           childSlot = !isAnArray && "function" === typeof getIteratorFn(childSlot);
           return isAnArray || childSlot ? (isAnArray = isAnArray ? "array" : "iterable", console.error(
             "A nested %s was passed to row #%s in <SuspenseList />. Wrap it in an additional SuspenseList to configure its revealOrder: <SuspenseList revealOrder=...> ... <SuspenseList revealOrder=...>{%s}</SuspenseList> ... </SuspenseList>",
             isAnArray,
-            index2,
+            index,
             isAnArray
           ), false) : true;
         }
@@ -8636,12 +8636,12 @@ body{background:#f8fbfe!important;color:#405064!important}
           return { lastEffect: null, events: null, stores: null, memoCache: null };
         }
         function useThenable(thenable) {
-          var index2 = thenableIndexCounter;
+          var index = thenableIndexCounter;
           thenableIndexCounter += 1;
           null === thenableState && (thenableState = createThenableState());
-          thenable = trackUsedThenable(thenableState, thenable, index2);
-          index2 = currentlyRenderingFiber;
-          null === (null === workInProgressHook ? index2.memoizedState : workInProgressHook.next) && (index2 = index2.alternate, ReactSharedInternals.H = null !== index2 && null !== index2.memoizedState ? HooksDispatcherOnUpdateInDEV : HooksDispatcherOnMountInDEV);
+          thenable = trackUsedThenable(thenableState, thenable, index);
+          index = currentlyRenderingFiber;
+          null === (null === workInProgressHook ? index.memoizedState : workInProgressHook.next) && (index = index.alternate, ReactSharedInternals.H = null !== index && null !== index.memoizedState ? HooksDispatcherOnUpdateInDEV : HooksDispatcherOnMountInDEV);
           return thenable;
         }
         function use(usable) {
@@ -14895,8 +14895,8 @@ body{background:#f8fbfe!important;color:#405064!important}
           didAttemptEntireTree && (root2.warmLanes |= suspendedLanes);
           didAttemptEntireTree = root2.expirationTimes;
           for (var lanes = suspendedLanes; 0 < lanes; ) {
-            var index2 = 31 - clz32(lanes), lane = 1 << index2;
-            didAttemptEntireTree[index2] = -1;
+            var index = 31 - clz32(lanes), lane = 1 << index;
+            didAttemptEntireTree[index] = -1;
             lanes &= ~lane;
           }
           0 !== spawnedLane && markSpawnedDeferredLane(root2, spawnedLane, suspendedLanes);
@@ -16268,10 +16268,10 @@ body{background:#f8fbfe!important;color:#405064!important}
         }
         function scheduleTaskForRootDuringMicrotask(root2, currentTime) {
           for (var suspendedLanes = root2.suspendedLanes, pingedLanes = root2.pingedLanes, expirationTimes = root2.expirationTimes, lanes = root2.pendingLanes & -62914561; 0 < lanes; ) {
-            var index2 = 31 - clz32(lanes), lane = 1 << index2, expirationTime = expirationTimes[index2];
+            var index = 31 - clz32(lanes), lane = 1 << index, expirationTime = expirationTimes[index];
             if (-1 === expirationTime) {
               if (0 === (lane & suspendedLanes) || 0 !== (lane & pingedLanes))
-                expirationTimes[index2] = computeExpirationTime(lane, currentTime);
+                expirationTimes[index] = computeExpirationTime(lane, currentTime);
             } else expirationTime <= currentTime && (root2.expiredLanes |= lane);
             lanes &= ~lane;
           }
@@ -38339,10 +38339,10 @@ body{background:#f8fbfe!important;color:#405064!important}
             strXml += "</c:marker>";
           }
           if ((chartType === CHART_TYPE.BAR || chartType === CHART_TYPE.BAR3D) && data.length === 1 && (opts.chartColors && opts.chartColors !== BARCHART_COLORS && opts.chartColors.length > 1 || ((_a = opts.invertedColors) === null || _a === void 0 ? void 0 : _a.length))) {
-            obj.values.forEach((value, index2) => {
+            obj.values.forEach((value, index) => {
               const arrColors = value < 0 ? opts.invertedColors || opts.chartColors || BARCHART_COLORS : opts.chartColors || [];
               strXml += "  <c:dPt>";
-              strXml += `    <c:idx val="${index2}"/>`;
+              strXml += `    <c:idx val="${index}"/>`;
               strXml += '      <c:invertIfNegative val="0"/>';
               strXml += '    <c:bubble3D val="0"/>';
               strXml += "    <c:spPr>";
@@ -38350,12 +38350,12 @@ body{background:#f8fbfe!important;color:#405064!important}
                 strXml += "<a:ln><a:noFill/></a:ln>";
               } else if (chartType === CHART_TYPE.BAR) {
                 strXml += "<a:solidFill>";
-                strXml += '  <a:srgbClr val="' + arrColors[index2 % arrColors.length] + '"/>';
+                strXml += '  <a:srgbClr val="' + arrColors[index % arrColors.length] + '"/>';
                 strXml += "</a:solidFill>";
               } else {
                 strXml += "<a:ln>";
                 strXml += "  <a:solidFill>";
-                strXml += '   <a:srgbClr val="' + arrColors[index2 % arrColors.length] + '"/>';
+                strXml += '   <a:srgbClr val="' + arrColors[index % arrColors.length] + '"/>';
                 strXml += "  </a:solidFill>";
                 strXml += "</a:ln>";
               }
@@ -38610,10 +38610,10 @@ body{background:#f8fbfe!important;color:#405064!important}
             }
           }
           if (data.length === 1 && opts.chartColors !== BARCHART_COLORS) {
-            obj.values.forEach((value, index2) => {
+            obj.values.forEach((value, index) => {
               const arrColors = value < 0 ? opts.invertedColors || opts.chartColors || BARCHART_COLORS : opts.chartColors || [];
               strXml += "  <c:dPt>";
-              strXml += `    <c:idx val="${index2}"/>`;
+              strXml += `    <c:idx val="${index}"/>`;
               strXml += '      <c:invertIfNegative val="0"/>';
               strXml += '    <c:bubble3D val="0"/>';
               strXml += "    <c:spPr>";
@@ -38621,7 +38621,7 @@ body{background:#f8fbfe!important;color:#405064!important}
                 strXml += "<a:ln><a:noFill/></a:ln>";
               } else {
                 strXml += "<a:solidFill>";
-                strXml += ' <a:srgbClr val="' + arrColors[index2 % arrColors.length] + '"/>';
+                strXml += ' <a:srgbClr val="' + arrColors[index % arrColors.length] + '"/>';
                 strXml += "</a:solidFill>";
               }
               strXml += createShadowElement(opts.shadow, DEF_SHAPE_SHADOW);
@@ -41544,13 +41544,13 @@ ${String(ex)}`);
     "\u5289\u52DD\u4EC1",
     "\u674E\u9E97\u5349"
   ];
-  var contactDirectorySequence = new Map(contactDirectoryOrder.map((name, index2) => [name, String(index2 + 1)]));
+  var contactDirectorySequence = new Map(contactDirectoryOrder.map((name, index) => [name, String(index + 1)]));
   var contactDirectoryPhoneOverrides = { \u90ED\u5EFA\u4F51: "0938-839-308" };
   var mergeSuppliedPersonnel = (people) => {
     const remaining = people.slice();
     const supplied = suppliedPersonnel.map((entry) => {
-      const index2 = remaining.findIndex((person) => person.nationalId.toUpperCase() === entry.nationalId || person.name.trim() === entry.name);
-      const existing = index2 >= 0 ? remaining.splice(index2, 1)[0] : void 0;
+      const index = remaining.findIndex((person) => person.nationalId.toUpperCase() === entry.nationalId || person.name.trim() === entry.name);
+      const existing = index >= 0 ? remaining.splice(index, 1)[0] : void 0;
       return { ...existing || {}, id: existing?.id || `staff-${entry.nationalId}`, ...entry, role: ["\u674E\u9E97\u5349", "\u65BD\u7D39\u8587"].includes(entry.name) ? "\u79D8\u66F8" : existing?.role || "\u696D\u52D9", status: "\u5728\u8077" };
     });
     return [...supplied, ...remaining].map((person) => ({
@@ -41833,7 +41833,7 @@ ${String(ex)}`);
     const legalTop = totalRange ? Number(totalRange[2]) : legalBottom;
     if (currentRange && currentRange[1] === String(legalBottom) && Number(currentRange[2]) > legalTop) {
       const currentTop = Number(currentRange[2]);
-      const additions = Array.from({ length: currentTop - legalTop }, (_, index2) => legalTop + index2 + 1).join(".");
+      const additions = Array.from({ length: currentTop - legalTop }, (_, index) => legalTop + index + 1).join(".");
       return `${legalTop}T/${additions}\u6A13\u589E\u5EFA`;
     }
     const totalTop = total.split("~").pop() || total;
@@ -41985,7 +41985,7 @@ ${String(ex)}`);
     return `${areaOrder[area] || "99"}|${typeOrder[kind] || "9"}${kind}`;
   };
   var isRentalRecord = (record) => /^(EB|EC)/i.test(String(record.propertyNo || "").trim()) || String(record.contractType || "").includes("\u79DF\u8CC3");
-  var sortActiveRecords = (items) => items.map((record, index2) => ({ record, index: index2 })).sort((a, b) => {
+  var sortActiveRecords = (items) => items.map((record, index) => ({ record, index })).sort((a, b) => {
     const rentalOrderA = isRentalRecord(a.record) ? "0" : "1";
     const rentalOrderB = isRentalRecord(b.record) ? "0" : "1";
     const group = `${rentalOrderA}|${activeGroupKeyFixed(a.record)}`.localeCompare(`${rentalOrderB}|${activeGroupKeyFixed(b.record)}`, "zh-TW", { numeric: true });
@@ -41993,7 +41993,7 @@ ${String(ex)}`);
     const date = String(a.record.reportDate || "9999-12-31").localeCompare(String(b.record.reportDate || "9999-12-31"), "zh-TW", { numeric: true });
     return date || a.index - b.index;
   }).map((item) => item.record);
-  var sortArchivedRecords = (items) => items.map((record, index2) => ({ record, index: index2 })).sort((a, b) => {
+  var sortArchivedRecords = (items) => items.map((record, index) => ({ record, index })).sort((a, b) => {
     const dateOf = (item) => String(item.archived || item._archiveActionDate || item.entrustEnd || "");
     const date = dateOf(b.record).localeCompare(dateOf(a.record), "zh-TW", { numeric: true });
     return date || b.index - a.index;
@@ -42001,7 +42001,7 @@ ${String(ex)}`);
   var chunkText = (value = "", size = 16) => {
     const actualSize = size === 20 ? 25 : size === 15 || size === 10 ? 12 : size;
     const chars = Array.from(value);
-    return Array.from({ length: Math.ceil(chars.length / actualSize) }, (_, index2) => chars.slice(index2 * actualSize, index2 * actualSize + actualSize).join(""));
+    return Array.from({ length: Math.ceil(chars.length / actualSize) }, (_, index) => chars.slice(index * actualSize, index * actualSize + actualSize).join(""));
   };
   var developerPersonnelForDisplay = [];
   var knownDeveloperFullNames = ["\u738B\u555F\u5C71", "\u738B\u82E5\u82B8", "\u738B\u4FDE\u4E91", "\u738B\u59A4\u5BB8", "\u6797\u7389\u74B0", "\u6797\u986F\u660C", "\u6797\u59FF\u5C91", "\u6797\u4FCA\u5609", "\u9673\u5E1D\u5143", "\u9673\u73EE\u83C1", "\u9673\u4FE1\u826F", "\u90ED\u5EFA\u4F51", "\u8B1D\u99A8\u5100", "\u8521\u5B87\u80B2", "\u7530\u5EAD\u5B87", "\u5433\u4F69\u73B2", "\u9EC3\u6587\u6210", "\u8CB7\u6DD1\u73B2", "\u5289\u52DD\u4EC1", "\u5F35\u5C0F\u66FC", "\u674E\u4EAB\u5DA7", "\u962E\u6C0F\u91D1\u6C34", "\u5B8B\u559C\u8F1D", "\u67EF\u80B2\u5A77", "\u674E\u9E97\u5349", "\u65BD\u7D39\u8587", "\u4F59\u6C9B\u81FB", "\u8449\u7FCA\u7DC1", "\u694A\u5DE7\u7504"];
@@ -42013,7 +42013,7 @@ ${String(ex)}`);
       return Array.from(name).length >= 3 || !knownAliases.has(name);
     });
     const configuredNames = new Set(configuredPeople.map((person) => String(person.name || "").trim()).filter(Boolean));
-    const fallbackPeople = knownDeveloperFullNames.filter((name) => !configuredNames.has(name)).map((name, index2) => ({ id: `known-developer-${index2}`, name, status: "\u5728\u8077" }));
+    const fallbackPeople = knownDeveloperFullNames.filter((name) => !configuredNames.has(name)).map((name, index) => ({ id: `known-developer-${index}`, name, status: "\u5728\u8077" }));
     const people = [...configuredPeople, ...fallbackPeople];
     const aliases = people.flatMap((person) => {
       const full = String(person.name || "").trim();
@@ -42024,19 +42024,19 @@ ${String(ex)}`);
       if (segment === "\u738B\u7E3D") return ["\u738B\u555F\u5C71"];
       const chars = Array.from(segment);
       const names = [];
-      let index2 = 0;
-      while (index2 < chars.length) {
-        const remaining = chars.slice(index2).join("");
+      let index = 0;
+      while (index < chars.length) {
+        const remaining = chars.slice(index).join("");
         const candidates = aliases.filter((item) => remaining.startsWith(item.token)).sort((a, b) => Array.from(b.token).length - Array.from(a.token).length);
         if (candidates.length) {
           const longest = Array.from(candidates[0].token).length;
           const sameToken = candidates.filter((item) => Array.from(item.token).length === longest && item.token === candidates[0].token);
           const fullNames = [...new Set(sameToken.map((item) => item.full))];
           names.push(fullNames.length === 1 ? fullNames[0] : candidates[0].token);
-          index2 += longest;
+          index += longest;
         } else {
-          names.push(chars.slice(index2, index2 + 2).join(""));
-          index2 += Math.min(2, chars.length - index2);
+          names.push(chars.slice(index, index + 2).join(""));
+          index += Math.min(2, chars.length - index);
         }
       }
       return names;
@@ -42047,7 +42047,7 @@ ${String(ex)}`);
   var stripRestoredDisplay = (value = "") => String(value || "").replace(/(?:\d{2,4}[.\/-]\d{1,2}[.\/-]\d{1,2}\s*)?重新上架/g, "").replace(/[　\s｜|·・—-]+$/g, "").trim();
   var archiveDisplayRecord = (record) => ({ ...record, caseName: stripRestoredDisplay(record.caseName), caseNameNote: stripRestoredDisplay(record.caseNameNote) });
   var showingFollowUpDisplayRecord = (record) => record;
-  var sortPptRecords = (items) => items.map((record, index2) => ({ record, index: index2 })).sort((a, b) => {
+  var sortPptRecords = (items) => items.map((record, index) => ({ record, index })).sort((a, b) => {
     const priority = (record) => /王啟山|蔡宇育/.test(record.developer || "") ? 0 : 1;
     const priorityDiff = priority(a.record) - priority(b.record);
     if (priorityDiff) return priorityDiff;
@@ -42913,7 +42913,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       setPptCustomMeeting("");
     };
     const pptCurrentStart = currentPptWeek().start;
-    const standardPptWeeks = Array.from({ length: 24 }, (_, index2) => addDaysIso(pptCurrentStart, index2 * -7));
+    const standardPptWeeks = Array.from({ length: 24 }, (_, index) => addDaysIso(pptCurrentStart, index * -7));
     const pptWeekOptions = [.../* @__PURE__ */ new Set([...standardPptWeeks, ...records.flatMap((record) => [normalizeDateInput(record.reportDate || ""), ...pptStoredList(record._pptExtraWeeks)]).filter((date) => /^\d{4}-\d{2}-\d{2}$/.test(date)).map((date) => pptWeekOf(date).start).filter((start) => start <= pptCurrentStart)])].sort((a, b) => b.localeCompare(a));
     const weeklyPptRecords = sortPptRecords(records.filter((record) => belongsToPptWeek(record, selectedPptWeek) && !excludedFromPptWeek(record, selectedPptWeek.start)));
     const deferredPptRecords = sortPptRecords(records.filter((record) => belongsToPptWeek(record, selectedPptWeek) && excludedFromPptWeek(record, selectedPptWeek.start)));
@@ -42921,7 +42921,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
     const pptExtraCandidates = [...records.filter((record) => !belongsToPptWeek(record, selectedPptWeek)), ...pptDraftRecords].filter((record) => [record.caseName, record.address].join(" ").toLowerCase().includes(pptExtraSearch.trim().toLowerCase()));
     const selectedPptBaseRecords = (() => {
       const standard = sortPptRecords([...records.filter((record) => weeklyPptRecords.some((item) => item.id === record.id) || pptExtraIds.includes(record.id)), ...pptDraftRecords.filter((record) => pptExtraIds.includes(record.id)), ...pptAdHocRecords]);
-      const position = new Map(pptOrderIds.map((id, index2) => [id, index2]));
+      const position = new Map(pptOrderIds.map((id, index) => [id, index]));
       return standard.slice().sort((a, b) => (position.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (position.get(b.id) ?? Number.MAX_SAFE_INTEGER));
     })();
     const selectedPptRecords = selectedPptBaseRecords.map((record) => pptConfirmedSnapshots[record.id] || record);
@@ -42932,9 +42932,9 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
     };
     const movePptOrder = (id, direction) => {
       const ids = selectedPptBaseRecords.map((record) => record.id);
-      const index2 = ids.indexOf(id), target = index2 + direction;
-      if (index2 < 0 || target < 0 || target >= ids.length) return;
-      [ids[index2], ids[target]] = [ids[target], ids[index2]];
+      const index = ids.indexOf(id), target = index + direction;
+      if (index < 0 || target < 0 || target >= ids.length) return;
+      [ids[index], ids[target]] = [ids[target], ids[index]];
       setPptOrderIds(ids);
     };
     const setPptSequence = (id, value) => {
@@ -42953,8 +42953,8 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       if (!body || !list) return;
       const rows = Array.from(list.querySelectorAll(".ppt-case-row.auto"));
       const rowById = /* @__PURE__ */ new Map();
-      rows.forEach((row, index2) => {
-        const record = weeklyPptRecords.find((item) => item.id === row.dataset.pptRecordId) || weeklyPptRecords[index2];
+      rows.forEach((row, index) => {
+        const record = weeklyPptRecords.find((item) => item.id === row.dataset.pptRecordId) || weeklyPptRecords[index];
         if (!record) return;
         row.dataset.pptRecordId = record.id;
         rowById.set(record.id, row);
@@ -43059,11 +43059,11 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
           size -= 0.5;
           setFont();
         }
-        rows.slice(0, 3).forEach((item, index2) => context.fillText(item, anchorX, px(y + h / 2) + (index2 - (rows.length - 1) / 2) * fontPx(size) * 1.08, maxWidth));
+        rows.slice(0, 3).forEach((item, index) => context.fillText(item, anchorX, px(y + h / 2) + (index - (rows.length - 1) / 2) * fontPx(size) * 1.08, maxWidth));
       };
       const alignedLabel = (label, x, y, pt = 15) => {
         const chars = Array.from(label);
-        chars.forEach((char, index2) => draw(char, x + (chars.length === 1 ? 0.34 : index2 * (0.68 / (chars.length - 1))), y, 0.22, 0.4, pt));
+        chars.forEach((char, index) => draw(char, x + (chars.length === 1 ? 0.34 : index * (0.68 / (chars.length - 1))), y, 0.22, 0.4, pt));
       };
       const field = (label, value, x, y, w, valuePt = 19, labelPt = 15, lineOffset = 0.39) => {
         alignedLabel(label, x, y, labelPt);
@@ -43406,7 +43406,7 @@ ${changedLabels}
       if (!selectedPptRecords.length) return flash("\u76EE\u524D\u6C92\u6709\u9078\u64C7\u8981\u7522\u751F\u5716\u7247\u7684\u7269\u4EF6");
       const chunkText2 = (value = "", size = 20) => {
         const chars = Array.from(value);
-        return Array.from({ length: Math.ceil(chars.length / size) }, (_, index2) => chars.slice(index2 * size, index2 * size + size).join(""));
+        return Array.from({ length: Math.ceil(chars.length / size) }, (_, index) => chars.slice(index * size, index * size + size).join(""));
       };
       const width = 1600;
       const margin = 0;
@@ -43458,11 +43458,11 @@ ${changedLabels}
       context.strokeRect(margin, tableTop, tableWidth, headerHeight);
       context.font = 'bold 30px "Microsoft JhengHei", sans-serif';
       context.fillStyle = "#173f35";
-      ["\u5E8F", "\u6848\u540D", "\u5730\u5740", "\u958B\u767C"].forEach((label, index2) => context.fillText(label, (columns[index2] + columns[index2 + 1]) / 2, tableTop + headerHeight / 2));
+      ["\u5E8F", "\u6848\u540D", "\u5730\u5740", "\u958B\u767C"].forEach((label, index) => context.fillText(label, (columns[index] + columns[index + 1]) / 2, tableTop + headerHeight / 2));
       let y = tableTop + headerHeight;
-      selectedPptRecords.forEach((record, index2) => {
-        const rowHeight = rowHeights[index2];
-        context.fillStyle = index2 % 2 ? "#f7faf8" : "#ffffff";
+      selectedPptRecords.forEach((record, index) => {
+        const rowHeight = rowHeights[index];
+        context.fillStyle = index % 2 ? "#f7faf8" : "#ffffff";
         context.fillRect(margin, y, tableWidth, rowHeight);
         context.strokeStyle = "#a7bbb4";
         context.strokeRect(margin, y, tableWidth, rowHeight);
@@ -43473,8 +43473,8 @@ ${changedLabels}
           context.stroke();
         });
         context.fillStyle = "#1f2926";
-        setFittedFont(String(index2 + 1), columns[1] - columns[0] - 8, 30);
-        context.fillText(String(index2 + 1), (columns[0] + columns[1]) / 2, y + rowHeight / 2);
+        setFittedFont(String(index + 1), columns[1] - columns[0] - 8, 30);
+        context.fillText(String(index + 1), (columns[0] + columns[1]) / 2, y + rowHeight / 2);
         const caseName = record.caseName || "\u672A\u547D\u540D\u6848\u4EF6";
         setFittedFont(caseName, columns[2] - columns[1] - 8, 32, true);
         context.fillText(caseName, (columns[1] + columns[2]) / 2, y + rowHeight / 2);
@@ -43634,7 +43634,7 @@ ${changedLabels}
       };
       const addAlignedLabel = (slide, label, x, y, labelSize = 17) => {
         const chars = Array.from(label);
-        if (chars.length >= 2 && chars.length <= 4) chars.forEach((char, index2) => slide.addText(char, { x: x + index2 * (0.68 / (chars.length - 1)), y, w: 0.22, h: 0.4, fontFace: font, fontSize: labelSize, color: "000000", align: "center", margin: 0, breakLine: false }));
+        if (chars.length >= 2 && chars.length <= 4) chars.forEach((char, index) => slide.addText(char, { x: x + index * (0.68 / (chars.length - 1)), y, w: 0.22, h: 0.4, fontFace: font, fontSize: labelSize, color: "000000", align: "center", margin: 0, breakLine: false }));
         else slide.addText(label, { x, y, w: 0.9, h: 0.4, fontFace: font, fontSize: labelSize > 17 ? 16 : 14, color: "000000", align: "center", margin: 0, breakLine: false, fit: "shrink" });
       };
       const addLabel = (slide, label, value, x, y, w, valueColor = "000000", valueSize = 21, labelSize = 17, lineOffset = 0.39) => {
@@ -44208,7 +44208,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V178" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V179" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -44279,15 +44279,15 @@ ${changedLabels}
       pptPickerOpen && selectedPptBaseRecords.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("aside", { className: "ppt-order-float", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u8ABF\u6574\u672C\u6B21\u6392\u5E8F" }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "\u6B64\u9806\u5E8F\u6703\u4FDD\u7559\u5728\u672C\u9031" }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("ol", { children: selectedPptBaseRecords.map((record, index2) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("li", { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("ol", { children: selectedPptBaseRecords.map((record, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("li", { children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
-            index2 + 1,
+            index + 1,
             ". ",
             record.caseName || "\u672A\u547D\u540D\u6848\u4EF6"
           ] }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", disabled: index2 === 0, onClick: () => movePptOrder(record.id, -1), children: "\u2191" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", disabled: index2 === selectedPptBaseRecords.length - 1, onClick: () => movePptOrder(record.id, 1), children: "\u2193" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", disabled: index === 0, onClick: () => movePptOrder(record.id, -1), children: "\u2191" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", disabled: index === selectedPptBaseRecords.length - 1, onClick: () => movePptOrder(record.id, 1), children: "\u2193" })
           ] })
         ] }, record.id)) })
       ] }),
@@ -44418,7 +44418,7 @@ ${changedLabels}
             " \u5230\u671F"
           ] }, `${record.id}-${site}`))
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PropertyTable, { records: tab === "archive" ? shown.map(archiveDisplayRecord) : shown.map(showingFollowUpDisplayRecord).map((record, index2) => ({ ...record, displaySequence: String(index2 + 1) })), columns: tab === "archive" ? archiveColumns : activeColumns, archiveMode: tab === "archive", activeLead: tab === "active", showAreaGroups: tab === "active", onEdit: setEditing, onArchive: archiveRecord, onRestore: setRestoreChoiceRecord, onRemove: removeRecord }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PropertyTable, { records: tab === "archive" ? shown.map(archiveDisplayRecord) : shown.map(showingFollowUpDisplayRecord).map((record, index) => ({ ...record, displaySequence: String(index + 1) })), columns: tab === "archive" ? archiveColumns : activeColumns, archiveMode: tab === "archive", activeLead: tab === "active", showAreaGroups: tab === "active", onEdit: setEditing, onArchive: archiveRecord, onRestore: setRestoreChoiceRecord, onRemove: removeRecord }),
         advancedFilterOpen && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(AdvancedFilterModal, { value: advancedFilter, setValue: setAdvancedFilter, onClose: () => setAdvancedFilterOpen(false), onReset: () => setAdvancedFilter(blankAdvancedFilter()) }),
         !shown.length && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Empty, { text: query || tab === "active" && Object.values(advancedFilter).some(Boolean) ? "\u627E\u4E0D\u5230\u7B26\u5408\u7684\u7269\u4EF6" : tab === "archive" ? "\u76EE\u524D\u6C92\u6709\u5C01\u5B58\u7269\u4EF6" : "\u76EE\u524D\u6C92\u6709\u59D4\u8A17\u4E2D\u7269\u4EF6" })
       ] }),
@@ -44760,9 +44760,9 @@ ${changedLabels}
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "form-grid record-edit-grid", children: recordEditOrder.filter((key) => key !== "area").map((key) => {
           if (["feature2", "feature3", "feature4"].includes(key)) return null;
-          if (key === "feature1") return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "edit-cell edit-features", children: ["feature1", "feature2", "feature3", "feature4"].map((featureKey, index2) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "editing-feature-row", children: [
+          if (key === "feature1") return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "edit-cell edit-features", children: ["feature1", "feature2", "feature3", "feature4"].map((featureKey, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "editing-feature-row", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Field, { fieldKey: featureKey, label: labels[featureKey], record: editing, records, setRecord: updateEditingRecord }),
-            index2 === 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: "copy-features-button", onClick: copyEditingFeatures, children: "\u8907\u88FD\u7279\u82721\uFF5E4" })
+            index === 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: "copy-features-button", onClick: copyEditingFeatures, children: "\u8907\u88FD\u7279\u82721\uFF5E4" })
           ] }, featureKey)) }, "features");
           const label = recordEditLabels[key] || labels[key] || key;
           return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: recordEditClass(key), children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Field, { fieldKey: key, label, record: editing, records, setRecord: updateEditingRecord }) }, key);
@@ -44892,8 +44892,8 @@ ${changedLabels}
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u9032\u6848\u65E5\u671F" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u78BA\u8A8D\uFF0F\u64CD\u4F5C" })
             ] }),
-            weeklyPptRecords.map((record, index2) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "ppt-case-row auto", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: index2 + 1 }),
+            weeklyPptRecords.map((record, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "ppt-case-row auto", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: index + 1 }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: "ppt-case-name-edit", onClick: () => {
                 setPptConfirmedSnapshots((previous) => {
                   const next = { ...previous };
@@ -45297,9 +45297,9 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
         const margin = 32, headerHeight = 112, titleHeight = 132, fontSize = 30, lineHeight = 38;
         const wrapLines = (text, width) => {
           const perLine = Math.max(1, Math.floor((width - 12) / fontSize));
-          return String(text || "\u2014").split("\n").flatMap((part) => Array.from({ length: Math.max(1, Math.ceil(Array.from(part || "\u2014").length / perLine)) }, (_, index2) => Array.from(part || "\u2014").slice(index2 * perLine, (index2 + 1) * perLine).join("")));
+          return String(text || "\u2014").split("\n").flatMap((part) => Array.from({ length: Math.max(1, Math.ceil(Array.from(part || "\u2014").length / perLine)) }, (_, index) => Array.from(part || "\u2014").slice(index * perLine, (index + 1) * perLine).join("")));
         };
-        const rowHeights = rows.map((row) => Math.max(58, ...row.map((text, index2) => (index2 === 22 ? 1 : wrapLines(text, widths[index2]).length) * lineHeight + 18)));
+        const rowHeights = rows.map((row) => Math.max(58, ...row.map((text, index) => wrapLines(text, widths[index]).length * lineHeight + 18)));
         const tableWidth = widths.reduce((sum, width) => sum + width, 0);
         const canvas = document.createElement("canvas");
         canvas.width = tableWidth + margin * 2;
@@ -45321,7 +45321,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
           context.font = `${bold ? "bold " : ""}${fontSize}px Microsoft JhengHei`;
           context.textAlign = "center";
           const lines = wrapLines(text, width);
-          lines.forEach((line, index2) => context.fillText(line, x2 + width / 2, y2 + height / 2 + (index2 - (lines.length - 1) / 2) * lineHeight));
+          lines.forEach((line, index) => context.fillText(line, x2 + width / 2, y2 + height / 2 + (index - (lines.length - 1) / 2) * lineHeight));
         };
         const drawSizedCell = (text, x2, y2, width, height, size, bold = false, singleLine = false) => {
           context.strokeRect(x2, y2, width, height);
@@ -45330,7 +45330,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
           context.textAlign = "center";
           const lines = singleLine ? [String(text || "\u2014").replace(/\s*\n\s*/g, "")] : String(text || "\u2014").split("\n").filter(Boolean);
           const sizedLineHeight = Math.max(lineHeight, size + 4);
-          lines.forEach((line, index2) => context.fillText(line, x2 + width / 2, y2 + height / 2 + (index2 - (lines.length - 1) / 2) * sizedLineHeight));
+          lines.forEach((line, index) => context.fillText(line, x2 + width / 2, y2 + height / 2 + (index - (lines.length - 1) / 2) * sizedLineHeight));
         };
         const drawSingleLineCell = (text, x2, y2, width, height, bold = false, size = 14) => {
           context.strokeRect(x2, y2, width, height);
@@ -45356,14 +45356,14 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
           const lines = String(text).split("\n").filter(Boolean);
           context.fillStyle = "#000000";
           context.textAlign = "left";
-          lines.forEach((line, index2) => {
+          lines.forEach((line, index) => {
             const prefix = line.slice(0, 1), value = line.slice(1) || "\u2014";
             context.font = "14px Microsoft JhengHei";
             const prefixWidth = context.measureText(prefix).width;
             context.font = "34px Microsoft JhengHei";
             const valueWidth = context.measureText(value).width;
             const startX = x2 + (width - prefixWidth - valueWidth) / 2;
-            const lineY = y2 + height / 2 + (index2 - (lines.length - 1) / 2) * lineHeight;
+            const lineY = y2 + height / 2 + (index - (lines.length - 1) / 2) * lineHeight;
             context.font = "14px Microsoft JhengHei";
             context.fillText(prefix, startX, lineY + 1);
             context.font = "34px Microsoft JhengHei";
@@ -45376,25 +45376,28 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
           context.font = `${fontSize}px Microsoft JhengHei`;
           context.textAlign = "left";
           const lines = wrapLines(text, width);
-          lines.forEach((line, index2) => context.fillText(line, x2 + 8, y2 + 12 + fontSize / 2 + index2 * lineHeight));
+          lines.forEach((line, index) => context.fillText(line, x2 + 8, y2 + 12 + fontSize / 2 + index * lineHeight));
         };
         let y = margin + titleHeight, x = margin;
         context.fillStyle = "#dcebe5";
         context.fillRect(margin, y, tableWidth, headerHeight);
-        headers.forEach((text, index2) => drawCell(text, x, y, widths[index2], headerHeight, true), x += widths[index]);
+        headers.forEach((text, index) => {
+          drawCell(text, x, y, widths[index], headerHeight, true);
+          x += widths[index];
+        });
         y += headerHeight;
         rows.forEach((row, rowIndex) => {
           x = margin;
-          row.forEach((text, index2) => {
-            if (index2 === 4) drawSizedCell(text || "\u2014", x, y, widths[index2], rowHeights[rowIndex], 25, true);
-            else if (index2 === 6) drawAgeCell(text || "\u2014", x, y, widths[index2], rowHeights[rowIndex]);
-            else if (index2 === 8) drawSizedCell(text || "\u2014", x, y, widths[index2], rowHeights[rowIndex], 22, false);
-            else if ([9, 10, 11].includes(index2)) drawSizedCell(text || "\u2014", x, y, widths[index2], rowHeights[rowIndex], 24, false, true);
-            else if (index2 === 17) drawFrontageDepthCell(text, x, y, widths[index2], rowHeights[rowIndex]);
-            else if (index2 === 20) drawSizedCell(text || "\u2014", x, y, widths[index2], rowHeights[rowIndex], 24, true);
-            else if (index2 === 21) drawNotesCell(text || "\u2014", x, y, widths[index2], rowHeights[rowIndex]);
-            else drawCell(text || "\u2014", x, y, widths[index2], rowHeights[rowIndex], index2 === 2);
-            x += widths[index2];
+          row.forEach((text, index) => {
+            if (index === 4) drawSizedCell(text || "\u2014", x, y, widths[index], rowHeights[rowIndex], 25, true);
+            else if (index === 6) drawAgeCell(text || "\u2014", x, y, widths[index], rowHeights[rowIndex]);
+            else if (index === 8) drawSizedCell(text || "\u2014", x, y, widths[index], rowHeights[rowIndex], 22, false);
+            else if ([9, 10, 11].includes(index)) drawSizedCell(text || "\u2014", x, y, widths[index], rowHeights[rowIndex], 24, false, true);
+            else if (index === 17) drawFrontageDepthCell(text, x, y, widths[index], rowHeights[rowIndex]);
+            else if (index === 20) drawSizedCell(text || "\u2014", x, y, widths[index], rowHeights[rowIndex], 24, true);
+            else if (index === 21) drawNotesCell(text || "\u2014", x, y, widths[index], rowHeights[rowIndex]);
+            else drawCell(text || "\u2014", x, y, widths[index], rowHeights[rowIndex], index === 2);
+            x += widths[index];
           });
           y += rowHeights[rowIndex];
         });
@@ -45443,8 +45446,8 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("thead", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { className: "tour-remove" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { className: "tour-sequence", children: "\u5E8F" }),
-              tourDisplayColumns.map((column) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { className: `tour-${column}`, children: tourColumnLabel[column].split("\n").map((line, index2) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_react.Fragment, { children: [
-                index2 > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("br", {}),
+              tourDisplayColumns.map((column) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { className: `tour-${column}`, children: tourColumnLabel[column].split("\n").map((line, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_react.Fragment, { children: [
+                index > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("br", {}),
                 line
               ] }, line)) }, column))
             ] }) }),
@@ -45569,9 +45572,9 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
   }
   function ContactDirectory({ people }) {
     const bySequence = /* @__PURE__ */ new Map();
-    contactDirectoryOrder.forEach((name, index2) => {
+    contactDirectoryOrder.forEach((name, index) => {
       const person = people.find((item) => item.name.trim() === name);
-      if (person) bySequence.set(index2 + 1, { ...person, sequence: String(index2 + 1), phone: contactDirectoryPhoneOverrides[name] || person.phone });
+      if (person) bySequence.set(index + 1, { ...person, sequence: String(index + 1), phone: contactDirectoryPhoneOverrides[name] || person.phone });
     });
     const groupStarts = [1, 12, 23];
     return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", { className: "contact-directory", children: [
@@ -46802,10 +46805,10 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     });
     const twoLineText = (value = "") => {
       const chars = Array.from(value);
-      const lines = Array.from({ length: Math.ceil(chars.length / 15) }, (_, index2) => chars.slice(index2 * 15, index2 * 15 + 15).join(""));
-      return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "key-two-lines", children: lines.slice(0, 2).map((line, index2) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: line }, `${line}-${index2}`)) });
+      const lines = Array.from({ length: Math.ceil(chars.length / 15) }, (_, index) => chars.slice(index * 15, index * 15 + 15).join(""));
+      return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "key-two-lines", children: lines.slice(0, 2).map((line, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: line }, `${line}-${index}`)) });
     };
-    const keyCaseText = (value = "") => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "key-two-lines key-case-lines", children: chunkText(value, 12).map((line, index2) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: line }, `${line}-${index2}`)) });
+    const keyCaseText = (value = "") => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "key-two-lines key-case-lines", children: chunkText(value, 12).map((line, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: line }, `${line}-${index}`)) });
     const actualDistrict = (record) => {
       if (!record) return "";
       const address = String(record.address || "").replace(/臺/g, "\u53F0").trim();
@@ -46831,7 +46834,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
           archivedLabel && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { style: { color: "#d71920", fontSize: "calc(.68em + 1.5pt)", fontWeight: 400, display: "block", whiteSpace: "nowrap" }, children: archivedLabel })
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { className: "key-address", children: twoLineText(record?.address || "") }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "key-two-lines", children: developers.map((name, index2) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: name }, `${name}-${index2}`)) }) })
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "key-two-lines", children: developers.map((name, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: name }, `${name}-${index}`)) }) })
       ] });
     };
     const printSummary = () => {
@@ -46860,9 +46863,9 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "\u5730\u5740" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "\u958B\u767C" })
         ] }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("tbody", { children: keySummaryLeft.map((leftNumber, index2) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("tbody", { children: keySummaryLeft.map((leftNumber, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { children: [
           cells(leftNumber),
-          cells(keySummaryRight[index2])
+          cells(keySummaryRight[index])
         ] }, leftNumber)) })
       ] }) })
     ] });
@@ -47385,11 +47388,11 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
                     /* @__PURE__ */ (0, import_jsx_runtime.jsx)("i", { children: "\u5411" }),
                     /* @__PURE__ */ (0, import_jsx_runtime.jsx)("i", { children: "\uFF1A" })
                   ] }),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "direction-values", children: direction.map(([label, value], index2) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "direction-item", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "direction-values", children: direction.map(([label, value], index) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "direction-item", children: [
                     label,
                     "\uFF1A",
                     /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: value }),
-                    index2 < direction.length - 1 ? "\u3000" : ""
+                    index < direction.length - 1 ? "\u3000" : ""
                   ] }, label)) })
                 ] })
               ] }) }),
@@ -47812,9 +47815,9 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     (0, import_react.useEffect)(() => {
       if (!publicMode) return;
       const rows = Array.from(document.querySelectorAll(".public-table tbody tr:not(.area-group-row)"));
-      const cleanups = rows.map((row, index2) => {
+      const cleanups = rows.map((row, index) => {
         const activate = () => {
-          const record = records[index2];
+          const record = records[index];
           if (!record) return;
           setHoveredPublicCase(record.caseName || record.propertyNo || "\u672A\u547D\u540D\u6848\u4EF6");
           setHoveredPublicCaseTop(row.offsetTop + 6);
@@ -47985,7 +47988,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     if (k === "area") {
       const district = districtFromAddress(r.address) || String(r.area || "").trim();
       const lineSize = Array.from(district).length === 4 ? 2 : 4;
-      return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "area-lines", children: chunkText(district, lineSize).map((line, index2) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: line }, `${line}-${index2}`)) });
+      return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "area-lines", children: chunkText(district, lineSize).map((line, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: line }, `${line}-${index}`)) });
     }
     if (k === "housingRemoval") return r.housingDownDate ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { className: "archive-down-note", children: [
       displayRocDate(r.housingDownDate),
@@ -48000,7 +48003,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       const website = websiteCellDisplay(r, k);
       return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "two-line-value website-list-value", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: website.value }),
-        website.notes.map((note, index2) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: note.includes("\u4E0B\u67B6") ? "website-inline-note archive-down-note" : "website-inline-note", children: note }, `${note}-${index2}`))
+        website.notes.map((note, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: note.includes("\u4E0B\u67B6") ? "website-inline-note archive-down-note" : "website-inline-note", children: note }, `${note}-${index}`))
       ] });
     }
     if (k === "salesBook") return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "two-line-value archive-field-value", children: [
@@ -48022,7 +48025,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       const lines = chunkText(value, 5);
       const keyLength = Array.from(value).length;
       const sizeClass = keyLength > 10 ? " key-text-long" : keyLength > 5 ? " key-text-medium" : "";
-      return lines.length ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: `floor-lines key-cell-value${sizeClass}`, children: lines.map((line, index2) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: line }, `${line}-${index2}`)) }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: "\u2014" });
+      return lines.length ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: `floor-lines key-cell-value${sizeClass}`, children: lines.map((line, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: line }, `${line}-${index}`)) }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: "\u2014" });
     }
     if (k === "entrustEnd") {
       const remaining = daysUntil(r.entrustEnd);
@@ -48033,7 +48036,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     }
     if (k === "developer") {
       const names = developerNameLines(r.developer, developerPersonnelForDisplay);
-      return names.length ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "floor-lines developer-cell-value", children: names.map((name, index2) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: name }, `${name}-${index2}`)) }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: "\u2014" });
+      return names.length ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "floor-lines developer-cell-value", children: names.map((name, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: name }, `${name}-${index}`)) }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: "\u2014" });
     }
     if (k === "price") {
       const price = String(r.price || "").replace(/\s*萬(?:元)?\s*/g, "").trim();
@@ -48087,12 +48090,12 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     if (["buildingPing", "landPing"].includes(k)) return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: String(r[k] || "").replace(/\s*坪\s*$/, "").trim() || "\u2014" });
     if (k === "zoning") {
       const chars = Array.from(r.zoning || "");
-      const lines = Array.from({ length: Math.ceil(chars.length / 5) }, (_, index2) => chars.slice(index2 * 5, index2 * 5 + 5).join(""));
-      return lines.length ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "floor-lines", children: lines.map((line, index2) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: line }, `${line}-${index2}`)) }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: "\u2014" });
+      const lines = Array.from({ length: Math.ceil(chars.length / 5) }, (_, index) => chars.slice(index * 5, index * 5 + 5).join(""));
+      return lines.length ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "floor-lines", children: lines.map((line, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: line }, `${line}-${index}`)) }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: "\u2014" });
     }
     if (k === "coverageFar") {
       const pairs = String(r.coverageCombined || "").split(/[、,，\n]+/).map((value) => value.trim()).filter((value) => /^\d+(?:\.\d+)?[\/／]\d+(?:\.\d+)?$/.test(value));
-      return pairs.length > 1 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "coverage-far-value coverage-pair-value", children: pairs.map((pair, index2) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: pair.replace("\uFF0F", "/") }, `${pair}-${index2}`)) }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "coverage-far-value", children: [
+      return pairs.length > 1 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "coverage-far-value coverage-pair-value", children: pairs.map((pair, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: pair.replace("\uFF0F", "/") }, `${pair}-${index}`)) }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "coverage-far-value", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: r.coverage ? `${r.coverage.replace(/\s*%\s*$/, "")}%` : "\u2014" }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: r.far ? `${r.far.replace(/\s*%\s*$/, "")}%` : "\u2014" })
       ] });
@@ -48125,7 +48128,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     if (k === "road") {
       const values = String(r.road || "").match(/\d+(?:\.\d+)?/g) || [];
       return values.length ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "floor-lines road-lines", children: [
-        values.map((value, index2) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "measure-number", children: value }, `${value}-${index2}`)),
+        values.map((value, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "measure-number", children: value }, `${value}-${index}`)),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "\u7C73" })
       ] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: "\u2014" });
     }
@@ -48134,7 +48137,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       const isHouseZero = typeShort(r.type) !== "\u571F\u5730" && /^(?:0|0\.0+)$/.test(measure);
       const values = measure.match(/\d+(?:\.\d+)?/g) || [];
       return isHouseZero ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: "-" }) : values.length ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "two-line-value measure-value", children: [
-        values.map((value, index2) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "measure-number", children: value }, `${value}-${index2}`)),
+        values.map((value, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "measure-number", children: value }, `${value}-${index}`)),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "\u7C73" })
       ] }) : measure ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: measure }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: "\u2014" });
     }
@@ -48830,30 +48833,30 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       context.fillText(title, margin + tableWidth / 2, margin + titleHeight / 2);
       let x = margin, y = margin + titleHeight;
       context.font = "bold 34px Microsoft JhengHei";
-      headers.forEach((header, index2) => {
+      headers.forEach((header, index) => {
         context.fillStyle = "#e7ece9";
-        context.fillRect(x, y, widths[index2], headerHeight);
+        context.fillRect(x, y, widths[index], headerHeight);
         context.strokeStyle = "#9fb0a8";
         context.lineWidth = 1.8;
-        context.strokeRect(x, y, widths[index2], headerHeight);
+        context.strokeRect(x, y, widths[index], headerHeight);
         context.fillStyle = "#354b43";
-        context.fillText(header, x + widths[index2] / 2, y + headerHeight / 2);
-        x += widths[index2];
+        context.fillText(header, x + widths[index] / 2, y + headerHeight / 2);
+        x += widths[index];
       });
       const shownRows = rows.length ? rows : [["\u76EE\u524D\u6C92\u6709\u8CC7\u6599", ...headers.slice(1).map(() => "-")]];
       shownRows.forEach((row, rowIndex) => {
         x = margin;
         y = margin + titleHeight + headerHeight + rowIndex * rowHeight;
-        row.forEach((value, index2) => {
-          context.fillStyle = index2 === row.length - 1 ? "#fff1ed" : "#ffffff";
-          context.fillRect(x, y, widths[index2], rowHeight);
+        row.forEach((value, index) => {
+          context.fillStyle = index === row.length - 1 ? "#fff1ed" : "#ffffff";
+          context.fillRect(x, y, widths[index], rowHeight);
           context.strokeStyle = "#bdc9c3";
           context.lineWidth = 1.8;
-          context.strokeRect(x, y, widths[index2], rowHeight);
-          context.fillStyle = index2 === row.length - 1 ? "#a83f3b" : "#17242a";
-          context.font = `${index2 === 0 || index2 === row.length - 1 ? "bold " : ""}${monthly ? 30 : 32}px Microsoft JhengHei`;
-          context.fillText(String(value), x + widths[index2] / 2, y + rowHeight / 2);
-          x += widths[index2];
+          context.strokeRect(x, y, widths[index], rowHeight);
+          context.fillStyle = index === row.length - 1 ? "#a83f3b" : "#17242a";
+          context.font = `${index === 0 || index === row.length - 1 ? "bold " : ""}${monthly ? 30 : 32}px Microsoft JhengHei`;
+          context.fillText(String(value), x + widths[index] / 2, y + rowHeight / 2);
+          x += widths[index];
         });
       });
       canvas.toBlob((blob) => {
@@ -48981,14 +48984,14 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
                   /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: categorySummary(row.archived) }),
                   /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { className: "inventory-total", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "inventory-count-button", onClick: () => setMonthlyDetailName(row.name), children: categorySummary(row.total, true) }) })
                 ] }),
-                monthlyExpanded && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("tr", { className: "inventory-month-detail-row", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { colSpan: 4, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "inventory-case-list inventory-inline-detail", children: monthlyItemsFor(row.name).map(({ record, action, weight }, index2) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+                monthlyExpanded && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("tr", { className: "inventory-month-detail-row", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { colSpan: 4, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "inventory-case-list inventory-inline-detail", children: monthlyItemsFor(row.name).map(({ record, action, weight }, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
                   /* @__PURE__ */ (0, import_jsx_runtime.jsx)("em", { children: action }),
                   inventoryCaseLine(record),
                   /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("strong", { children: [
                     numberText(weight),
                     "\u4EF6"
                   ] })
-                ] }, `${record.id}-${action}-${index2}`)) }) }) })
+                ] }, `${record.id}-${action}-${index}`)) }) }) })
               ] }, row.name)),
               !monthlyRows.length && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("tr", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { colSpan: 4, className: "inventory-empty", children: "\u672C\u6708\u76EE\u524D\u6C92\u6709\u9032\u6848\u6216\u4E0B\u67B6\u7D00\u9304" }) })
             ] })
@@ -49045,14 +49048,14 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
           ] }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "close", onClick: () => setMonthlyDetailName(""), children: "\xD7" })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "inventory-case-list monthly-detail-list", children: monthlyDetailItems.map(({ record, action, weight }, index2) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "inventory-case-list monthly-detail-list", children: monthlyDetailItems.map(({ record, action, weight }, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("em", { children: action }),
           inventoryCaseLine(record),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("strong", { children: [
             numberText(weight),
             "\u4EF6"
           ] })
-        ] }, `${record.id}-${action}-${index2}`)) }),
+        ] }, `${record.id}-${action}-${index}`)) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal-foot", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("b", { children: [
             "\u7E3D\u8A08\uFF1A",
@@ -49388,7 +49391,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     const removePerson = (id) => {
       if (!confirm("\u78BA\u5B9A\u522A\u9664\u9019\u4F4D\u4EBA\u54E1\uFF1F\u522A\u9664\u5F8C\u5E8F\u865F\u6703\u81EA\u52D5\u91CD\u65B0\u7DE8\u6392\u3002")) return;
       const currentScrollTop = window.scrollY;
-      const personnel = sortPeopleBySequence(settings.personnel.filter((person) => person.id !== id)).map((person, index2) => ({ ...person, sequence: String(index2 + 1) }));
+      const personnel = sortPeopleBySequence(settings.personnel.filter((person) => person.id !== id)).map((person, index) => ({ ...person, sequence: String(index + 1) }));
       setSettings({ ...settings, personnel });
       requestAnimationFrame(() => requestAnimationFrame(() => window.scrollTo({ top: Math.min(currentScrollTop, Math.max(0, document.documentElement.scrollHeight - window.innerHeight)), behavior: "auto" })));
     };
