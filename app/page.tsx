@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { ChangeEvent, Dispatch, Fragment, SetStateAction, useEffect, useMemo, useRef, useState } from "react";
 import PptxGenJS from "pptxgenjs";
 import JSZip from "jszip";
 import jsQR from "./jsQR.cjs";
@@ -14,6 +14,7 @@ type Settings = { personnel: Person[]; staffName?: string; staffId?: string; sup
 type CloudSession = { accessToken: string; refreshToken?: string; email?: string };
 type IntakeData = { id: string; values: Record<string, string>; propertyKind: "房屋" | "純土地"; createdAt: string; modifiedAt?: string; raw?: string; linkedRecordId?: string; enteredAt?: string; groupViewDate?: string; printedForSalesAt?: string };
 type TourItem = { id: string; recordId?: string; sequence: string; temporary?: boolean; data: RecordItem };
+type TourHistory = { id: string; date: string; title: string; items: TourItem[]; completedAt: string };
 
 const STORAGE_KEY = "property-desk-v1";
 const SETTINGS_KEY = "property-desk-settings-v1";
@@ -802,6 +803,7 @@ export default function Home() {
   const [tourDate, setTourDate] = useState(today());
   const [tourTitle, setTourTitle] = useState(`${displayRocDate(today()).replace(/\//g, ".")}團看`);
   const [tourModifiedAt, setTourModifiedAt] = useState("");
+  const [tourHistory, setTourHistory] = useState<TourHistory[]>([]);
   const selectedIntakeRef = useRef("");
   const cloudSyncBaselineRef = useRef("");
   const cloudSyncTimerRef = useRef<number | null>(null);
@@ -947,7 +949,7 @@ export default function Home() {
       const savedSettings = localStorage.getItem(SETTINGS_KEY); setSettings(s => { const old = savedSettings ? JSON.parse(savedSettings) : {}; const personnel = old.personnel || (old.staffName || old.staffId ? [{ id: newId(), name: old.staffName || "", nationalId: old.staffId || "", status: "在職" }] : []); return { ...s, ...old, supabaseUrl: old.supabaseUrl || CASE_FILE_SUPABASE_URL, supabaseKey: old.supabaseKey || CASE_FILE_SUPABASE_PUBLISHABLE_KEY, supabaseTable: old.supabaseTable === "property_app_state" || !old.supabaseTable ? CASE_FILE_SUPABASE_TABLE : old.supabaseTable, supabaseRecord: old.supabaseRecord || "main", personnel: mergeSuppliedPersonnel(personnel) }; });
       const savedCloudSession = localStorage.getItem(CLOUD_SESSION_KEY); if (savedCloudSession) setCloudSession(JSON.parse(savedCloudSession));
       const savedIntake = localStorage.getItem(INTAKE_KEY); if (savedIntake) { const saved = JSON.parse(savedIntake); const drafts: IntakeData[] = saved.drafts || (saved.parsed ? [{ ...saved.parsed, raw: saved.raw || "" }] : []); if (!localStorage.getItem(PHOTO_INTAKE_CLEANUP_KEY)) { const legacyPhotoValues = new Map(drafts.filter(draft => draft.linkedRecordId).map(draft => [draft.linkedRecordId!, new Set(Object.entries(draft.values).filter(([key, value]) => value && (key.includes("進案文件") || key.includes("當下進案文件"))).map(([, value]) => value.trim()))])); loadedRecords = loadedRecords.map(record => { const values = legacyPhotoValues.get(record.id); const current = String(record.photoInfo || "").split(/[／/]/).map(value => value.trim()).filter(Boolean); return values && current.length && current.every(value => values.has(value)) ? { ...record, photoInfo: "" } : record; }); localStorage.setItem(PHOTO_INTAKE_CLEANUP_KEY, "1"); } const linkedDrafts = new Map(drafts.filter(draft => draft.linkedRecordId).map(draft => [draft.linkedRecordId!, draft])); loadedRecords = loadedRecords.map(record => { const draft = linkedDrafts.get(record.id); return draft ? intakeToRecord(draft, record) : record; }); setIntakeDrafts(drafts); setSelectedIntakeId(saved.selectedId || drafts[0]?.id || ""); setIntakeRaw(saved.raw || ""); }
-      const savedTour = localStorage.getItem(TOUR_KEY); if (savedTour) { const tour = JSON.parse(savedTour); setTourItems(Array.isArray(tour.items) ? tour.items : []); setTourDate(tour.date || today()); setTourTitle(tour.title || `${displayRocDate(tour.date || today()).replace(/\//g, ".")}團看`); setTourModifiedAt(tour.modifiedAt || new Date().toISOString()); }
+      const savedTour = localStorage.getItem(TOUR_KEY); if (savedTour) { const tour = JSON.parse(savedTour); setTourItems(Array.isArray(tour.items) ? tour.items : []); setTourDate(tour.date || today()); setTourTitle(tour.title || `${displayRocDate(tour.date || today()).replace(/\//g, ".")}團看`); setTourModifiedAt(tour.modifiedAt || new Date().toISOString()); setTourHistory(Array.isArray(tour.history) ? tour.history : []); }
       setRecords(loadedRecords);
       setStorageReady(true);
     } catch { setRecords([sample]); }
@@ -1023,7 +1025,22 @@ export default function Home() {
   useEffect(() => { if (storageReady) localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); }, [settings, storageReady]);
   // 等草稿讀取完成後才寫回，避免剛開新版本時用初始空白內容覆寫舊草稿。
   useEffect(() => { if (storageReady) localStorage.setItem(INTAKE_KEY, JSON.stringify({ raw: intakeRaw, drafts: intakeDrafts, selectedId: selectedIntakeId })); }, [intakeRaw, intakeDrafts, selectedIntakeId, storageReady]);
-  useEffect(() => { localStorage.setItem(TOUR_KEY, JSON.stringify({ date: tourDate, title: tourTitle, items: tourItems, modifiedAt: tourModifiedAt })); }, [tourDate, tourTitle, tourItems, tourModifiedAt]);
+  useEffect(() => { localStorage.setItem(TOUR_KEY, JSON.stringify({ date: tourDate, title: tourTitle, items: tourItems, modifiedAt: tourModifiedAt, history: tourHistory })); }, [tourDate, tourTitle, tourItems, tourModifiedAt, tourHistory]);
+  // V180 起保留完成團看歷史；先把舊資料中已有團看日期、但當時尚未建立歷史的案件補成可查看列表。
+  useEffect(() => {
+    if (!storageReady) return;
+    const byDate = new Map<string, TourItem[]>();
+    records.filter(record => String(record.groupViewDate || "").trim()).forEach(record => {
+      const date = normalizeDateInput(record.groupViewDate || ""); if (!date) return;
+      const list = byDate.get(date) || []; list.push({ id: `history-${date}-${record.id}`, recordId: record.id, sequence: String(list.length + 1), data: { ...record } }); byDate.set(date, list);
+    });
+    if (!byDate.size) return;
+    setTourHistory(previous => {
+      const known = new Set(previous.map(item => item.date));
+      const recovered = [...byDate.entries()].filter(([date]) => !known.has(date)).map(([date, items]) => ({ id: `recovered-${date}`, date, title: `${displayRocDate(date).replace(/\//g, ".")}團看`, items, completedAt: date }));
+      return recovered.length ? [...recovered, ...previous].sort((a, b) => String(b.date).localeCompare(String(a.date))) : previous;
+    });
+  }, [storageReady, records]);
 
   const archived = useMemo(() => sortArchivedRecords(records.filter(r => r.archived || isExpired(r) || r.status !== "委託中")), [records]);
   const active = useMemo(() => records.filter(r => !r.archived && !isExpired(r) && (r.status || "委託中") === "委託中"), [records]);
@@ -1627,7 +1644,7 @@ export default function Home() {
     records: records.map(({ photos, ...record }) => record),
     settings: { personnel: settings.personnel, bookReviewCurrentDate: settings.bookReviewCurrentDate, bookReviewNextDate: settings.bookReviewNextDate, expiry591: settings.expiry591, expiry5168: settings.expiry5168, brokerExpiry: settings.brokerExpiry },
     intake: { raw: intakeRaw, drafts: intakeDrafts, selectedId: selectedIntakeId },
-    tour: { date: tourDate, title: tourTitle, items: tourItems, modifiedAt: tourModifiedAt },
+    tour: { date: tourDate, title: tourTitle, items: tourItems, modifiedAt: tourModifiedAt, history: tourHistory },
     pptWeeks: (() => {
       try {
         const weeks = JSON.parse(localStorage.getItem(PPT_WEEK_SELECTIONS_KEY) || "{}");
@@ -1715,6 +1732,7 @@ export default function Home() {
             setTourDate(data.tour.date || today());
             setTourTitle(data.tour.title || "");
             setTourItems(data.tour.items || []);
+            setTourHistory(Array.isArray(data.tour.history) ? data.tour.history : []);
             setTourModifiedAt(remoteModifiedAt || new Date().toISOString());
           }
         }
@@ -1774,7 +1792,7 @@ export default function Home() {
       if (response.ok && Array.isArray(rows)) setFrontLastLogins(Object.fromEntries(rows.map((row: { person_id: string; last_entered_at: string }) => [row.person_id, row.last_entered_at])));
     } catch {}
   };
-  const cloudSnapshot = JSON.stringify({ records, personnel: settings.personnel, expiry591: settings.expiry591, expiry5168: settings.expiry5168, brokerExpiry: settings.brokerExpiry, intakeRaw, intakeDrafts, selectedIntakeId, tourDate, tourTitle, tourItems, tourModifiedAt, pptWeekStart, pptExtraIds, pptOrderIds, pptAdHocRecords, pptConfirmedSnapshots });
+  const cloudSnapshot = JSON.stringify({ records, personnel: settings.personnel, expiry591: settings.expiry591, expiry5168: settings.expiry5168, brokerExpiry: settings.brokerExpiry, intakeRaw, intakeDrafts, selectedIntakeId, tourDate, tourTitle, tourItems, tourModifiedAt, tourHistory, pptWeekStart, pptExtraIds, pptOrderIds, pptAdHocRecords, pptConfirmedSnapshots });
   useEffect(() => {
     if (!cloudSyncBaselineRef.current) { cloudSyncBaselineRef.current = cloudSnapshot; return; }
     if (cloudSyncBaselineRef.current === cloudSnapshot) return;
@@ -1955,7 +1973,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V179</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V180</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -1979,7 +1997,7 @@ export default function Home() {
 
     {tab === "settings" ? <SettingsPanel settings={settings} setSettings={setSettings} supabasePush={supabasePush} supabasePull={supabasePull} cloudSession={cloudSession} supabaseSignIn={supabaseSignIn} supabaseSignOut={supabaseSignOut} /> :
     tab === "intake" ? <IntakePanel raw={intakeRaw} setRaw={setIntakeRaw} drafts={intakeDrafts} draft={intakeDraft} selectDraft={selectIntakeDraft} deleteDraft={removeIntakeDraft} analyze={analyzeIntake} addManualDraft={addManualIntakeDraft} updateValue={updateIntakeValue} clear={() => setIntakeRaw("")} confirmIntake={confirmIntake} markPrintedForSales={markIntakeDraftPrintedForSales} /> :
-    tab === "tour" ? <TourPlanner records={records} drafts={intakeDrafts} items={tourItems} setItems={updateTourItems} editRecord={setEditing} updateDraftCaseName={updateIntakeDraftCaseName} tourDate={tourDate} setTourDate={updateTourDate} tourTitle={tourTitle} setTourTitle={updateTourTitle} notify={flash} complete={(date, recordIds, draftIds) => { setRecords(previous => previous.map(record => recordIds.includes(record.id) ? withTrackedUpdate(record, { ...record, groupViewDate: date, updateDate: today() }) : record)); setIntakeDrafts(previous => previous.map(draft => draftIds.includes(draft.id) ? { ...draft, groupViewDate: date } : draft)); updateTourItems([]); flash("團看日期已同步到物件與草稿"); }} /> :
+    tab === "tour" ? <TourPlanner records={records} drafts={intakeDrafts} items={tourItems} setItems={updateTourItems} history={tourHistory} setHistory={setTourHistory} editRecord={setEditing} updateDraftCaseName={updateIntakeDraftCaseName} tourDate={tourDate} setTourDate={updateTourDate} tourTitle={tourTitle} setTourTitle={updateTourTitle} notify={flash} complete={(date, recordIds, draftIds) => { setRecords(previous => previous.map(record => recordIds.includes(record.id) ? withTrackedUpdate(record, { ...record, groupViewDate: date, updateDate: today() }) : record)); setIntakeDrafts(previous => previous.map(draft => draftIds.includes(draft.id) ? { ...draft, groupViewDate: date } : draft)); updateTourItems([]); flash("團看日期已同步到物件與草稿"); }} /> :
     tab === "activity" ? <DailyActivity records={records} onEdit={setEditing} /> :
     tab === "inventory" ? <BusinessInventory records={records} people={settings.personnel} /> :
     tab === "keys" ? <KeySummary records={records}/> :
@@ -2032,7 +2050,7 @@ const temporaryTourFields = [
   ["area", "地區"], ["type", "種類"], ["caseName", "案名"], ["developer", "開發"], ["address", "地址"], ["price", "總價（萬）"], ["direction", "朝向"], ["_tourAge", "屋齡"], ["floor", "樓層"], ["layout", "格局"], ["indoorPing", "室內坪"], ["buildingPing", "建坪"], ["landPing", "地坪"], ["parking", "車位"], ["managementFee", "管理費"], ["key", "鑰匙"], ["currentState", "現況"], ["road", "臨路"], ["frontage", "面寬"], ["depth", "深度"], ["zoning", "使用分區"], ["coverage", "建蔽"], ["far", "容積"], ["notes", "備註欄"],
 ] as const;
 
-function TourPlanner({ records, drafts, items, setItems, editRecord, updateDraftCaseName, tourDate, setTourDate, tourTitle, setTourTitle, notify, complete }: { records: RecordItem[]; drafts: IntakeData[]; items: TourItem[]; setItems: (items: TourItem[]) => void; editRecord: (record: RecordItem) => void; updateDraftCaseName: (id: string, caseName: string) => void; tourDate: string; setTourDate: (date: string) => void; tourTitle: string; setTourTitle: (title: string) => void; notify: (text: string) => void; complete: (date: string, recordIds: string[], draftIds: string[]) => void }) {
+function TourPlanner({ records, drafts, items, setItems, history, setHistory, editRecord, updateDraftCaseName, tourDate, setTourDate, tourTitle, setTourTitle, notify, complete }: { records: RecordItem[]; drafts: IntakeData[]; items: TourItem[]; setItems: (items: TourItem[]) => void; history: TourHistory[]; setHistory: Dispatch<SetStateAction<TourHistory[]>>; editRecord: (record: RecordItem) => void; updateDraftCaseName: (id: string, caseName: string) => void; tourDate: string; setTourDate: (date: string) => void; tourTitle: string; setTourTitle: (title: string) => void; notify: (text: string) => void; complete: (date: string, recordIds: string[], draftIds: string[]) => void }) {
   const [search, setSearch] = useState("");
   const [pickerOpen, setPickerOpen] = useState(false);
   const [developerFilter, setDeveloperFilter] = useState("");
@@ -2105,6 +2123,11 @@ function TourPlanner({ records, drafts, items, setItems, editRecord, updateDraft
   const copySupervisor = () => copyText([tourTitle, "序\t地區\t案名\t地址\t開價\t開發", ...supervisorRows.map(row => row.join("\t"))].join("\n"), "已複製主管用團看清單");
   const copyAvailable = () => copyText(["目前尚未安排團看", "案名\t地址\t開發\t開價\t現況\t進案日期", ...available.map(record => [record.caseName, record.address, developerFullNameText(record.developer) || "未填開發", record.price ? `${String(record.price).replace(/\s*萬(?:元)?\s*/g, "")}萬` : "", record.currentState || "", record._intakeDraftId ? "尚未進案" : displayRocDate(record.reportDate) || ""].join("\t"))].join("\n"), "已複製目前尚未安排團看列表");
   const copyRoute = () => copyText([tourTitle, ["案名", "地址", "開發", "開價", "現況", "進案日期"].join("\t"), ...ordered.map(item => { const record = sourceOf(item); const price = String(record.price || "").replace(/\s*萬(?:元)?\s*/g, ""); return [record.caseName || "", record.address || "", developerFullNameText(record.developer) || "", price ? `${price}萬` : "", record.currentState || "", isNotEnteredTourRecord(record) ? "尚未進案" : displayRocDate(record.reportDate) || ""].join("\t"); })].join("\n"), "已複製本次團看路線");
+  const saveTourHistory = () => {
+    if (!items.length) return;
+    const entry: TourHistory = { id: newId(), date: tourDate, title: tourTitle || `${displayRocDate(tourDate).replace(/\//g, ".")}團看`, items: items.map(item => ({ ...item, data: { ...item.data } })), completedAt: new Date().toISOString() };
+    setHistory(previous => [entry, ...previous.filter(item => !(item.date === entry.date && item.title === entry.title))].slice(0, 100));
+  };
   const exportTourImage = () => {
     if (!ordered.length) return notify("請先加入團看物件");
     try {
@@ -2144,7 +2167,8 @@ function TourPlanner({ records, drafts, items, setItems, editRecord, updateDraft
       <div className="list-head"><SectionTitle title="團看安排" subtitle="挑選尚未團看的委託中物件，再依本次路線自行編排序號"/><div className="tour-head-actions"><label className="tour-title-field">圖片標題<input type="text" value={tourTitle} onChange={event => setTourTitle(event.target.value)} placeholder="例如：115.07.28團看"/></label><button onClick={() => setPickerOpen(true)}>＋ 尚未團看物件</button><button onClick={openTemporary}>＋ 臨時案件</button></div></div>
       <div className="tour-list-head"><h3>本次團看路線</h3><div className="tour-copy-actions"><span>{items.length} 筆</span><button onClick={copyRoute}>複製文字</button><button className="primary" onClick={exportTourImage}>產生圖片（本次團看路線）</button></div></div>
       <div className="table-wrap tour-table"><table><thead><tr><th className="tour-remove"></th><th className="tour-sequence">序</th>{tourDisplayColumns.map(column => <th key={column} className={`tour-${column}`}>{tourColumnLabel[column].split("\n").map((line, index) => <Fragment key={line}>{index > 0 && <br/>}{line}</Fragment>)}</th>)}</tr></thead><tbody>{ordered.map(item => { const record = sourceOf(item); return <tr key={item.id}><td className="tour-remove"><button className="danger" title="移除" onClick={() => setItems(items.filter(current => current.id !== item.id))}>刪</button></td><td className="tour-sequence"><input type="number" min="1" value={item.sequence} onChange={event => updateItem(item.id, { sequence: event.target.value })}/></td>{tourDisplayColumns.map(column => <td key={column} className={`tour-${column}`}>{column === "caseName" ? <button className="case-link" onClick={() => record._intakeDraftId ? editRecord({ ...record, _editSource: "draft" }) : item.temporary ? editTemporary(item) : editRecord(record)}>{record.caseName || "未命名案件"}</button> : renderValue(record, column)}</td>)}</tr>;})}</tbody></table>{!items.length && <div className="contact-empty">目前尚未安排團看</div>}</div>
-      <div className="tour-page-bottom"><div className="tour-complete-actions"><label>團看日期<input type="date" value={tourDate} onChange={event => setTourDate(event.target.value)}/></label><button className="primary" disabled={!items.length || !tourDate} onClick={() => { if (confirm(`確定完成 ${items.length} 筆團看，並將 ${displayRocDate(tourDate)} 寫入物件與草稿的團看日期？`)) complete(tourDate, items.map(item => item.recordId).filter(Boolean) as string[], items.map(item => item.data._intakeDraftId).filter(Boolean)); }}>完成團看</button></div></div>
+      <div className="tour-page-bottom"><div className="tour-complete-actions"><label>團看日期<input type="date" value={tourDate} onChange={event => setTourDate(event.target.value)}/></label><button className="primary" disabled={!items.length || !tourDate} onClick={() => { if (confirm(`確定完成 ${items.length} 筆團看，並將 ${displayRocDate(tourDate)} 寫入物件與草稿的團看日期？`)) { saveTourHistory(); complete(tourDate, items.map(item => item.recordId).filter(Boolean) as string[], items.map(item => item.data._intakeDraftId).filter(Boolean)); } }}>完成團看</button></div></div>
+      {history.length > 0 && <section className="tour-history"><h3>歷史團看路線</h3>{history.map(entry => <details key={entry.id}><summary>{displayRocDate(entry.date)}　{entry.title}　{entry.items.length} 筆</summary><ol>{entry.items.slice().sort((a, b) => Number(a.sequence || 9999) - Number(b.sequence || 9999)).map(item => <li key={item.id}><b>{item.data.caseName || "未命名案件"}</b><span>{item.data.address || ""}</span><em>{developerFullNameText(item.data.developer) || ""}</em></li>)}</ol></details>)}</section>}
     </section>
     {pickerOpen && <div className="modal-backdrop" onMouseDown={event => event.target === event.currentTarget && setPickerOpen(false)}><div className="modal tour-picker-modal"><div className="modal-head"><div><span>目前尚未安排團看</span><h2>選擇本次團看物件</h2></div><button className="close" onClick={() => setPickerOpen(false)}>×</button></div><div className="tour-picker-filters"><input value={search} onChange={event => setSearch(event.target.value)} placeholder="搜尋案名、地址、開發"/><label><span>進案日期起</span><input type="date" value={reportDateFrom} onChange={event => setReportDateFrom(event.target.value)}/></label><label><span>進案日期迄</span><input type="date" value={reportDateTo} onChange={event => setReportDateTo(event.target.value)}/></label><select value={developerFilter} onChange={event => setDeveloperFilter(event.target.value)}><option value="">全部開發人員</option>{developers.map(name => <option key={name}>{name}</option>)}</select><select value={propertyKindFilter} onChange={event => setPropertyKindFilter(event.target.value)}><option value="">土地＋房屋</option><option value="土地">土地</option><option value="房屋">房屋</option></select><button type="button" onClick={() => { setSearch(""); setReportDateFrom(""); setReportDateTo(""); setDeveloperFilter(""); setPropertyKindFilter(""); }}>清除篩選</button></div><div className="tour-candidate-list"><div className="tour-candidate-head"><b>案名</b><b>地址</b><b>開發</b><b>開價</b><b>現況</b><b>進案日期</b><b></b></div>{available.map(record => <div className="tour-candidate-row" key={record.id}><button className="case-link candidate-case-link" onClick={() => editRecord(record._intakeDraftId ? { ...record, _editSource: "draft" } : record)}>{record.caseName || "未命名案件"}</button><span>{record.address}</span><em>{developerFullNameText(record.developer) || "未填開發"}</em><span>{record.price ? `${String(record.price).replace(/\s*萬(?:元)?\s*/g, "")}萬` : "—"}</span><span>{record.currentState || "—"}</span><span className={record._intakeDraftId ? "not-entered" : ""}>{record._intakeDraftId ? "尚未進案" : displayRocDate(record.reportDate) || "—"}</span><button className="candidate-add" onClick={() => addRecord(record)}>＋ 加入</button></div>)}{!available.length && <div className="contact-empty">沒有符合篩選條件的尚未團看物件</div>}</div>
 <div className="modal-foot"><span>共 {available.length} 筆</span><button onClick={copyAvailable}>複製目前列表</button><button className="primary" onClick={() => setPickerOpen(false)}>完成挑選</button></div></div></div>}

@@ -542,6 +542,7 @@ button:hover,.file-button:hover{border-color:#9fbad0;box-shadow:0 2px 8px #7895a
 .tour-head-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap}.tour-head-actions label{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:800;color:#52645f}.tour-head-actions input,.tour-picker-head input{border:1px solid var(--line);border-radius:8px;background:#fff;padding:9px 10px}.tour-picker{padding:16px;margin-bottom:18px}.tour-picker-head,.tour-list-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.tour-picker-head h3,.tour-list-head h3{margin:0}.tour-picker-head input{width:340px}.tour-list-head{margin:12px 2px 9px}.tour-list-head span{color:var(--muted);font-size:12px}.tour-table{max-height:calc(100vh - 300px)}.tour-table th,.tour-table td{min-width:88px}.tour-table th.tour-remove,.tour-table td.tour-remove{position:sticky;left:0;z-index:21;width:34px!important;min-width:34px!important;max-width:34px!important;padding:3px!important;background:#fff!important;text-align:center}.tour-table th.tour-remove{background:#e5ebe6!important}.tour-table td.tour-remove button{min-width:0;padding:3px 5px;border-radius:5px;font-size:11px}.tour-table th.tour-sequence,.tour-table td.tour-sequence{position:sticky;left:34px;z-index:20;width:42px!important;min-width:42px!important;max-width:42px!important;padding-left:5px!important;padding-right:5px!important;background:#fff!important}.tour-table th.tour-sequence{background:#e5ebe6!important}.tour-table input{width:100%;min-width:64px;border:1px solid #ccd2ce;border-radius:7px;padding:7px;background:#fff}.tour-table td.tour-sequence input{min-width:0;padding:5px 2px;text-align:center}.tour-table .tour-caseName{min-width:170px}.tour-table .tour-address{min-width:240px}.tour-table .tour-notes{min-width:220px;white-space:normal}.tour-pair{display:flex;flex-direction:column;align-items:center;gap:3px}.tour-pair.inputs{gap:5px}.tour-table .danger{color:var(--red)}
 .tour-copy-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.tour-picker-modal{width:min(1180px,96vw)}.tour-picker-filters{display:grid;grid-template-columns:minmax(220px,1.5fr) repeat(2,minmax(155px,.8fr)) minmax(160px,.8fr) minmax(130px,.6fr) auto;gap:10px;align-items:end;padding:16px;background:#f4f8f6;border-bottom:1px solid var(--line)}.tour-picker-filters label{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:800;color:#52645f}.tour-picker-filters input,.tour-picker-filters select{width:100%;min-width:0;border:1px solid var(--line);border-radius:8px;background:#fff;padding:9px 10px}.tour-picker-modal .modal-candidates{max-height:50vh;margin:0;padding:16px}.tour-table td.tour-sequence input::placeholder{font-size:10px;color:#8a9994}
 .tour-page-bottom{display:flex;justify-content:flex-start;padding:14px 2px 0}.tour-complete-actions{display:flex;align-items:flex-end;gap:8px}.tour-complete-actions label{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:800;color:#52645f}.tour-complete-actions input{border:1px solid var(--line);border-radius:8px;background:#fff;padding:8px 10px}
+.tour-history{margin-top:20px;border:1px solid #cbded7;border-radius:12px;background:#f8fcfa;padding:14px}.tour-history h3{margin:0 0 8px;color:#245a4a}.tour-history details{border-top:1px solid #d8e6df;padding:9px 2px}.tour-history details:first-of-type{border-top:0}.tour-history summary{cursor:pointer;font-weight:800;color:#274c40}.tour-history ol{margin:8px 0 2px 24px;padding:0}.tour-history li{display:grid;grid-template-columns:minmax(180px,1fr) minmax(260px,2fr) minmax(100px,.7fr);gap:12px;padding:5px 0}.tour-history li span{color:#53635e}.tour-history li em{font-style:normal;color:#245a4a}
 .tour-table th,.tour-table td{text-align:center}.tour-table th.tour-notes,.tour-table td.tour-notes{text-align:left}
 .tour-table tbody td,.tour-table tbody td *{font-weight:400!important}.tour-table tbody td.tour-price,.tour-table tbody td.tour-price *{font-weight:800!important}
 .tour-table td.tour-parking,.tour-table td.tour-parking *{color:#17242a!important}
@@ -42498,6 +42499,7 @@ ${String(ex)}`);
     const [tourDate, setTourDate] = (0, import_react.useState)(today());
     const [tourTitle, setTourTitle] = (0, import_react.useState)(`${displayRocDate(today()).replace(/\//g, ".")}\u5718\u770B`);
     const [tourModifiedAt, setTourModifiedAt] = (0, import_react.useState)("");
+    const [tourHistory, setTourHistory] = (0, import_react.useState)([]);
     const selectedIntakeRef = (0, import_react.useRef)("");
     const cloudSyncBaselineRef = (0, import_react.useRef)("");
     const cloudSyncTimerRef = (0, import_react.useRef)(null);
@@ -42713,6 +42715,7 @@ ${String(ex)}`);
           setTourDate(tour.date || today());
           setTourTitle(tour.title || `${displayRocDate(tour.date || today()).replace(/\//g, ".")}\u5718\u770B`);
           setTourModifiedAt(tour.modifiedAt || (/* @__PURE__ */ new Date()).toISOString());
+          setTourHistory(Array.isArray(tour.history) ? tour.history : []);
         }
         setRecords(loadedRecords);
         setStorageReady(true);
@@ -42805,8 +42808,25 @@ ${String(ex)}`);
       if (storageReady) localStorage.setItem(INTAKE_KEY, JSON.stringify({ raw: intakeRaw, drafts: intakeDrafts, selectedId: selectedIntakeId }));
     }, [intakeRaw, intakeDrafts, selectedIntakeId, storageReady]);
     (0, import_react.useEffect)(() => {
-      localStorage.setItem(TOUR_KEY, JSON.stringify({ date: tourDate, title: tourTitle, items: tourItems, modifiedAt: tourModifiedAt }));
-    }, [tourDate, tourTitle, tourItems, tourModifiedAt]);
+      localStorage.setItem(TOUR_KEY, JSON.stringify({ date: tourDate, title: tourTitle, items: tourItems, modifiedAt: tourModifiedAt, history: tourHistory }));
+    }, [tourDate, tourTitle, tourItems, tourModifiedAt, tourHistory]);
+    (0, import_react.useEffect)(() => {
+      if (!storageReady) return;
+      const byDate = /* @__PURE__ */ new Map();
+      records.filter((record) => String(record.groupViewDate || "").trim()).forEach((record) => {
+        const date = normalizeDateInput(record.groupViewDate || "");
+        if (!date) return;
+        const list = byDate.get(date) || [];
+        list.push({ id: `history-${date}-${record.id}`, recordId: record.id, sequence: String(list.length + 1), data: { ...record } });
+        byDate.set(date, list);
+      });
+      if (!byDate.size) return;
+      setTourHistory((previous) => {
+        const known = new Set(previous.map((item) => item.date));
+        const recovered = [...byDate.entries()].filter(([date]) => !known.has(date)).map(([date, items]) => ({ id: `recovered-${date}`, date, title: `${displayRocDate(date).replace(/\//g, ".")}\u5718\u770B`, items, completedAt: date }));
+        return recovered.length ? [...recovered, ...previous].sort((a, b) => String(b.date).localeCompare(String(a.date))) : previous;
+      });
+    }, [storageReady, records]);
     const archived = (0, import_react.useMemo)(() => sortArchivedRecords(records.filter((r) => r.archived || isExpired(r) || r.status !== "\u59D4\u8A17\u4E2D")), [records]);
     const active = (0, import_react.useMemo)(() => records.filter((r) => !r.archived && !isExpired(r) && (r.status || "\u59D4\u8A17\u4E2D") === "\u59D4\u8A17\u4E2D"), [records]);
     const bookReviewCycleStart = normalizeDateInput(settings.bookReviewCurrentDate || "") || "2026-07-30";
@@ -43737,7 +43757,7 @@ ${changedLabels}
       records: records.map(({ photos, ...record }) => record),
       settings: { personnel: settings.personnel, bookReviewCurrentDate: settings.bookReviewCurrentDate, bookReviewNextDate: settings.bookReviewNextDate, expiry591: settings.expiry591, expiry5168: settings.expiry5168, brokerExpiry: settings.brokerExpiry },
       intake: { raw: intakeRaw, drafts: intakeDrafts, selectedId: selectedIntakeId },
-      tour: { date: tourDate, title: tourTitle, items: tourItems, modifiedAt: tourModifiedAt },
+      tour: { date: tourDate, title: tourTitle, items: tourItems, modifiedAt: tourModifiedAt, history: tourHistory },
       pptWeeks: (() => {
         try {
           const weeks = JSON.parse(localStorage.getItem(PPT_WEEK_SELECTIONS_KEY) || "{}");
@@ -43842,6 +43862,7 @@ ${changedLabels}
               setTourDate(data.tour.date || today());
               setTourTitle(data.tour.title || "");
               setTourItems(data.tour.items || []);
+              setTourHistory(Array.isArray(data.tour.history) ? data.tour.history : []);
               setTourModifiedAt(remoteModifiedAt || (/* @__PURE__ */ new Date()).toISOString());
             }
           }
@@ -43919,7 +43940,7 @@ ${changedLabels}
       } catch {
       }
     };
-    const cloudSnapshot = JSON.stringify({ records, personnel: settings.personnel, expiry591: settings.expiry591, expiry5168: settings.expiry5168, brokerExpiry: settings.brokerExpiry, intakeRaw, intakeDrafts, selectedIntakeId, tourDate, tourTitle, tourItems, tourModifiedAt, pptWeekStart, pptExtraIds, pptOrderIds, pptAdHocRecords, pptConfirmedSnapshots });
+    const cloudSnapshot = JSON.stringify({ records, personnel: settings.personnel, expiry591: settings.expiry591, expiry5168: settings.expiry5168, brokerExpiry: settings.brokerExpiry, intakeRaw, intakeDrafts, selectedIntakeId, tourDate, tourTitle, tourItems, tourModifiedAt, tourHistory, pptWeekStart, pptExtraIds, pptOrderIds, pptAdHocRecords, pptConfirmedSnapshots });
     (0, import_react.useEffect)(() => {
       if (!cloudSyncBaselineRef.current) {
         cloudSyncBaselineRef.current = cloudSnapshot;
@@ -44208,7 +44229,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V179" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V180" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -44291,7 +44312,7 @@ ${changedLabels}
           ] })
         ] }, record.id)) })
       ] }),
-      tab === "settings" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SettingsPanel, { settings, setSettings, supabasePush, supabasePull, cloudSession, supabaseSignIn, supabaseSignOut }) : tab === "intake" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(IntakePanel, { raw: intakeRaw, setRaw: setIntakeRaw, drafts: intakeDrafts, draft: intakeDraft, selectDraft: selectIntakeDraft, deleteDraft: removeIntakeDraft, analyze: analyzeIntake, addManualDraft: addManualIntakeDraft, updateValue: updateIntakeValue, clear: () => setIntakeRaw(""), confirmIntake, markPrintedForSales: markIntakeDraftPrintedForSales }) : tab === "tour" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TourPlanner, { records, drafts: intakeDrafts, items: tourItems, setItems: updateTourItems, editRecord: setEditing, updateDraftCaseName: updateIntakeDraftCaseName, tourDate, setTourDate: updateTourDate, tourTitle, setTourTitle: updateTourTitle, notify: flash, complete: (date, recordIds, draftIds) => {
+      tab === "settings" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SettingsPanel, { settings, setSettings, supabasePush, supabasePull, cloudSession, supabaseSignIn, supabaseSignOut }) : tab === "intake" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(IntakePanel, { raw: intakeRaw, setRaw: setIntakeRaw, drafts: intakeDrafts, draft: intakeDraft, selectDraft: selectIntakeDraft, deleteDraft: removeIntakeDraft, analyze: analyzeIntake, addManualDraft: addManualIntakeDraft, updateValue: updateIntakeValue, clear: () => setIntakeRaw(""), confirmIntake, markPrintedForSales: markIntakeDraftPrintedForSales }) : tab === "tour" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TourPlanner, { records, drafts: intakeDrafts, items: tourItems, setItems: updateTourItems, history: tourHistory, setHistory: setTourHistory, editRecord: setEditing, updateDraftCaseName: updateIntakeDraftCaseName, tourDate, setTourDate: updateTourDate, tourTitle, setTourTitle: updateTourTitle, notify: flash, complete: (date, recordIds, draftIds) => {
         setRecords((previous) => previous.map((record) => recordIds.includes(record.id) ? withTrackedUpdate(record, { ...record, groupViewDate: date, updateDate: today() }) : record));
         setIntakeDrafts((previous) => previous.map((draft) => draftIds.includes(draft.id) ? { ...draft, groupViewDate: date } : draft));
         updateTourItems([]);
@@ -45147,7 +45168,7 @@ ${changedLabels}
     ["far", "\u5BB9\u7A4D"],
     ["notes", "\u5099\u8A3B\u6B04"]
   ];
-  function TourPlanner({ records, drafts, items, setItems, editRecord, updateDraftCaseName, tourDate, setTourDate, tourTitle, setTourTitle, notify, complete }) {
+  function TourPlanner({ records, drafts, items, setItems, history, setHistory, editRecord, updateDraftCaseName, tourDate, setTourDate, tourTitle, setTourTitle, notify, complete }) {
     const [search, setSearch] = (0, import_react.useState)("");
     const [pickerOpen, setPickerOpen] = (0, import_react.useState)(false);
     const [developerFilter, setDeveloperFilter] = (0, import_react.useState)("");
@@ -45268,6 +45289,11 @@ ${changedLabels}
       const price = String(record.price || "").replace(/\s*萬(?:元)?\s*/g, "");
       return [record.caseName || "", record.address || "", developerFullNameText(record.developer) || "", price ? `${price}\u842C` : "", record.currentState || "", isNotEnteredTourRecord(record) ? "\u5C1A\u672A\u9032\u6848" : displayRocDate(record.reportDate) || ""].join("	");
     })].join("\n"), "\u5DF2\u8907\u88FD\u672C\u6B21\u5718\u770B\u8DEF\u7DDA");
+    const saveTourHistory = () => {
+      if (!items.length) return;
+      const entry = { id: newId(), date: tourDate, title: tourTitle || `${displayRocDate(tourDate).replace(/\//g, ".")}\u5718\u770B`, items: items.map((item) => ({ ...item, data: { ...item.data } })), completedAt: (/* @__PURE__ */ new Date()).toISOString() };
+      setHistory((previous) => [entry, ...previous.filter((item) => !(item.date === entry.date && item.title === entry.title))].slice(0, 100));
+    };
     const exportTourImage = () => {
       if (!ordered.length) return notify("\u8ACB\u5148\u52A0\u5165\u5718\u770B\u7269\u4EF6");
       try {
@@ -45468,9 +45494,30 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "date", value: tourDate, onChange: (event) => setTourDate(event.target.value) })
           ] }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "primary", disabled: !items.length || !tourDate, onClick: () => {
-            if (confirm(`\u78BA\u5B9A\u5B8C\u6210 ${items.length} \u7B46\u5718\u770B\uFF0C\u4E26\u5C07 ${displayRocDate(tourDate)} \u5BEB\u5165\u7269\u4EF6\u8207\u8349\u7A3F\u7684\u5718\u770B\u65E5\u671F\uFF1F`)) complete(tourDate, items.map((item) => item.recordId).filter(Boolean), items.map((item) => item.data._intakeDraftId).filter(Boolean));
+            if (confirm(`\u78BA\u5B9A\u5B8C\u6210 ${items.length} \u7B46\u5718\u770B\uFF0C\u4E26\u5C07 ${displayRocDate(tourDate)} \u5BEB\u5165\u7269\u4EF6\u8207\u8349\u7A3F\u7684\u5718\u770B\u65E5\u671F\uFF1F`)) {
+              saveTourHistory();
+              complete(tourDate, items.map((item) => item.recordId).filter(Boolean), items.map((item) => item.data._intakeDraftId).filter(Boolean));
+            }
           }, children: "\u5B8C\u6210\u5718\u770B" })
-        ] }) })
+        ] }) }),
+        history.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", { className: "tour-history", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { children: "\u6B77\u53F2\u5718\u770B\u8DEF\u7DDA" }),
+          history.map((entry) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("details", { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("summary", { children: [
+              displayRocDate(entry.date),
+              "\u3000",
+              entry.title,
+              "\u3000",
+              entry.items.length,
+              " \u7B46"
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("ol", { children: entry.items.slice().sort((a, b) => Number(a.sequence || 9999) - Number(b.sequence || 9999)).map((item) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("li", { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: item.data.caseName || "\u672A\u547D\u540D\u6848\u4EF6" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: item.data.address || "" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("em", { children: developerFullNameText(item.data.developer) || "" })
+            ] }, item.id)) })
+          ] }, entry.id))
+        ] })
       ] }),
       pickerOpen && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "modal-backdrop", onMouseDown: (event) => event.target === event.currentTarget && setPickerOpen(false), children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal tour-picker-modal", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal-head", children: [
