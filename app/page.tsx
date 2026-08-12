@@ -1953,7 +1953,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V172</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V173</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -2097,7 +2097,7 @@ function TourPlanner({ records, drafts, items, setItems, editRecord, updateDraft
     if (!ordered.length) return notify("請先加入團看物件");
     try {
     const headers = ["序", "地區\n種類", "案名", "地址", "總價", "朝向", "屋齡", "樓層", "格局", "室內坪", "建坪", "地坪", "車位", "管理費", "鑰匙", "現況", "臨路", "面寬\n深度", "使用分區", "建蔽\n容積", "開發", "備註欄", "進案報件日期"];
-      const widths = [52, 78, 170, 220, 90, 68, 82, 84, 82, 108, 105, 105, 100, 100, 90, 100, 68, 88, 105, 82, 105, 220, 143];
+      const widths = [52, 78, 170, 220, 90, 68, 98, 84, 82, 108, 105, 105, 120, 122, 112, 100, 88, 112, 105, 112, 105, 270, 143];
     const textOf = (record: RecordItem, column: string) => String(cellValue(record, column) || record[column] || "");
     const imageLayout = (record: RecordItem) => { if (typeShort(record.type) === "土地" || /^(?:土地\s*)+$/.test(record.layout || "")) return "土地"; const room = (record.layout || "").match(/(\d+)\s*房/)?.[1], hall = (record.layout || "").match(/(\d+)\s*廳/)?.[1], bath = (record.layout || "").match(/(\d+)\s*衛(?:浴)?/)?.[1]; return [room, hall, bath].filter(value => value !== undefined).join(".") || record.layout || ""; };
     const imageAge = (record: RecordItem) => record._tourAge || ageOf(record);
