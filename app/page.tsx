@@ -267,6 +267,13 @@ const displayRocDate = (v = "") => {
   const roc = text.match(/^(\d{2,3})[.\/-](\d{1,2})[.\/-](\d{1,2})$/);
   return roc ? `${Number(roc[1])}/${Number(roc[2])}/${Number(roc[3])}` : text;
 };
+const displayRocDotDate = (v = "") => {
+  const text = String(v || "").trim();
+  const iso = text.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if (iso) return `${String(Number(iso[1]) - 1911).padStart(3, "0")}.${String(Number(iso[2])).padStart(2, "0")}.${String(Number(iso[3])).padStart(2, "0")}`;
+  const roc = text.match(/^(\d{2,3})[.\/-](\d{1,2})[.\/-](\d{1,2})$/);
+  return roc ? `${roc[1].padStart(3, "0")}.${roc[2].padStart(2, "0")}.${roc[3].padStart(2, "0")}` : text;
+};
 const shortRocMonthDay = (v = "") => {
   const parts = displayRocDate(v).split("/");
   return parts.length === 3 ? `${parts[1]}/${parts[2]}` : displayRocDate(v);
@@ -2008,7 +2015,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V186</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V187</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -3233,6 +3240,7 @@ function IntakePanel({ raw, setRaw, drafts, draft, selectDraft, deleteDraft, ana
     setFeaturesCopied(true); window.setTimeout(() => setFeaturesCopied(false), 1800);
   };
   const isEntrustDate = (key: string) => key === "委託開始" || key === "委託結束";
+  const isCompletionDate = (key: string) => key === "建築完成日期";
   const draftCard = (item: IntakeData) => <article className={`draft-card ${draft?.id === item.id ? "selected" : ""}`} key={item.id}>
     <div className="draft-summary"><span className={`kind-badge ${item.propertyKind === "純土地" ? "land" : ""}`}>{item.propertyKind === "純土地" ? "土地" : item.propertyKind}</span><button className="draft-case-link" onClick={() => selectDraft(item.id)}>{intakeValue(item.values, "案名") || "未命名案件"}</button><span>{intakeValue(item.values, "委託主約編號") || "—"}</span><span className="draft-address">{intakeValue(item.values, "物件(完整)地址") || "—"}</span><span>{developerFullNameText(intakeValue(item.values, "開發１/開發２")) || "—"}</span><small>{intakeValue(item.values, "時間戳記") || "—"}</small></div>
     <div className="draft-actions"><button onClick={() => printDraft(item.id)}>列印</button><button className={item.printedForSalesAt ? "draft-printed-recorded" : ""} title={item.printedForSalesAt ? "再點一次可取消列印紀錄" : "記錄已列印草稿"} onClick={() => markPrintedForSales(item.id)}>{item.printedForSalesAt ? `已列印草稿${displayRocDate(String(item.printedForSalesAt).slice(0, 10))}` : "已列印草稿"}</button><button className="primary" disabled={!!item.linkedRecordId} onClick={() => confirmIntake(item.id)}>{item.linkedRecordId ? "已進案" : "進案"}</button><button className="danger" onClick={() => deleteDraft(item.id)}>刪除</button></div>
@@ -3248,7 +3256,7 @@ function IntakePanel({ raw, setRaw, drafts, draft, selectDraft, deleteDraft, ana
       <div className="modal-backdrop intake-modal-backdrop" onMouseDown={event => event.target === event.currentTarget && selectDraft("")}><div className="modal intake-draft-modal">
         <div className="draft-editor-head"><div><b>　檔名: {intakeDraftEditorTitle(draft)}</b><span>{draft.linkedRecordId ? "已進案；修改會同步更新總表" : "修改會自動保留"}</span></div><div><button className="pill-button" onClick={() => window.print()}>列印{draft.propertyKind}進案表</button><button className="pill-button primary" disabled={!!draft.linkedRecordId} onClick={() => confirmIntake(draft.id)}>{draft.linkedRecordId ? "已進案" : "文件已收，正式進案"}</button><button className="pill-button" onClick={() => selectDraft("")}>存檔（關閉）</button></div></div>
         <div className="intake-kind"><b>列印格式：</b><button className={draft.propertyKind === "房屋" ? "selected" : ""} onClick={() => updateValue("物件型態", intakeValue(draft.values, "物件型態").replace("土地", "房屋") || "房屋")}>房屋</button><button className={draft.propertyKind === "純土地" ? "selected" : ""} onClick={() => updateValue("物件型態", "土地")}>土地</button><span>所有欄位都可修改後再列印</span></div>
-        <div className="intake-edit-grid">{intakeEditFields.filter(([key]) => !isLandIntakeDraft(draft) || !landHiddenIntakeFields.has(key)).map(([key, label]) => { const rawValue = intakeValue(draft.values, key); const dateField = isEntrustDate(key); return <label className={intakeFieldClass(key)} key={key}><span className={key === "特色說明1" ? "intake-feature-title" : ""}>{label}{key === "特色說明1" && <button type="button" className="copy-features-button" onClick={copyFeatures}>{featuresCopied ? "已複製" : "複製特色1～4"}</button>}</span><input inputMode={dateField ? "numeric" : undefined} placeholder={dateField ? "例如 115/8/6" : undefined} value={dateField ? displayRocDate(normalizeDateInput(rawValue)) : rawValue} onChange={e => updateValue(key, e.target.value)} onBlur={dateField ? e => updateValue(key, normalizeDateInput(e.target.value)) : undefined}/></label>; })}</div>
+        <div className="intake-edit-grid">{intakeEditFields.filter(([key]) => !isLandIntakeDraft(draft) || !landHiddenIntakeFields.has(key)).map(([key, label]) => { const rawValue = intakeValue(draft.values, key); const dateField = isEntrustDate(key); const completionDateField = isCompletionDate(key); const normalizedDate = normalizeDateInput(rawValue); return <label className={intakeFieldClass(key)} key={key}><span className={key === "特色說明1" ? "intake-feature-title" : ""}>{label}{key === "特色說明1" && <button type="button" className="copy-features-button" onClick={copyFeatures}>{featuresCopied ? "已複製" : "複製特色1～4"}</button>}</span><input inputMode={dateField || completionDateField ? "numeric" : undefined} placeholder={dateField ? "例如 115/8/6" : completionDateField ? "例如 079.11.17" : undefined} value={dateField ? displayRocDate(normalizedDate) : completionDateField ? displayRocDotDate(normalizedDate) : rawValue} onChange={e => updateValue(key, e.target.value)} onBlur={dateField || completionDateField ? e => updateValue(key, normalizeDateInput(e.target.value)) : undefined}/></label>; })}</div>
         <div className="intake-modal-preview"><PrintableIntake draft={draft}/></div>
       </div></div>
       <div className="print-output-only"><PrintableIntake draft={draft}/></div>

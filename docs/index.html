@@ -41757,6 +41757,13 @@ ${String(ex)}`);
     const roc = text.match(/^(\d{2,3})[.\/-](\d{1,2})[.\/-](\d{1,2})$/);
     return roc ? `${Number(roc[1])}/${Number(roc[2])}/${Number(roc[3])}` : text;
   };
+  var displayRocDotDate = (v = "") => {
+    const text = String(v || "").trim();
+    const iso = text.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+    if (iso) return `${String(Number(iso[1]) - 1911).padStart(3, "0")}.${String(Number(iso[2])).padStart(2, "0")}.${String(Number(iso[3])).padStart(2, "0")}`;
+    const roc = text.match(/^(\d{2,3})[.\/-](\d{1,2})[.\/-](\d{1,2})$/);
+    return roc ? `${roc[1].padStart(3, "0")}.${roc[2].padStart(2, "0")}.${roc[3].padStart(2, "0")}` : text;
+  };
   var shortRocMonthDay = (v = "") => {
     const parts = displayRocDate(v).split("/");
     return parts.length === 3 ? `${parts[1]}/${parts[2]}` : displayRocDate(v);
@@ -44262,7 +44269,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V186" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V187" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -47155,6 +47162,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       window.setTimeout(() => setFeaturesCopied(false), 1800);
     };
     const isEntrustDate = (key) => key === "\u59D4\u8A17\u958B\u59CB" || key === "\u59D4\u8A17\u7D50\u675F";
+    const isCompletionDate = (key) => key === "\u5EFA\u7BC9\u5B8C\u6210\u65E5\u671F";
     const draftCard = (item) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("article", { className: `draft-card ${draft?.id === item.id ? "selected" : ""}`, children: [
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "draft-summary", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: `kind-badge ${item.propertyKind === "\u7D14\u571F\u5730" ? "land" : ""}`, children: item.propertyKind === "\u7D14\u571F\u5730" ? "\u571F\u5730" : item.propertyKind }),
@@ -47259,12 +47267,14 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "intake-edit-grid", children: intakeEditFields.filter(([key]) => !isLandIntakeDraft(draft) || !landHiddenIntakeFields.has(key)).map(([key, label]) => {
             const rawValue = intakeValue(draft.values, key);
             const dateField = isEntrustDate(key);
+            const completionDateField = isCompletionDate(key);
+            const normalizedDate = normalizeDateInput(rawValue);
             return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: intakeFieldClass(key), children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: key === "\u7279\u8272\u8AAA\u660E1" ? "intake-feature-title" : "", children: [
                 label,
                 key === "\u7279\u8272\u8AAA\u660E1" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: "copy-features-button", onClick: copyFeatures, children: featuresCopied ? "\u5DF2\u8907\u88FD" : "\u8907\u88FD\u7279\u82721\uFF5E4" })
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { inputMode: dateField ? "numeric" : void 0, placeholder: dateField ? "\u4F8B\u5982 115/8/6" : void 0, value: dateField ? displayRocDate(normalizeDateInput(rawValue)) : rawValue, onChange: (e) => updateValue(key, e.target.value), onBlur: dateField ? (e) => updateValue(key, normalizeDateInput(e.target.value)) : void 0 })
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { inputMode: dateField || completionDateField ? "numeric" : void 0, placeholder: dateField ? "\u4F8B\u5982 115/8/6" : completionDateField ? "\u4F8B\u5982 079.11.17" : void 0, value: dateField ? displayRocDate(normalizedDate) : completionDateField ? displayRocDotDate(normalizedDate) : rawValue, onChange: (e) => updateValue(key, e.target.value), onBlur: dateField || completionDateField ? (e) => updateValue(key, normalizeDateInput(e.target.value)) : void 0 })
             ] }, key);
           }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "intake-modal-preview", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PrintableIntake, { draft }) })
