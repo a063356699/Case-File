@@ -42843,14 +42843,16 @@ ${String(ex)}`);
           const current = records.find((record) => seed.propertyNo && String(record.propertyNo || "") === seed.propertyNo || String(record.address || "") === seed.address || String(record.caseName || "") === seed.caseName);
           const prior = existing?.items.find((item) => String(item.data.address || "") === seed.address || String(item.data.caseName || "") === seed.caseName);
           const activeSaved = tourItems.find((item) => String(item.data.address || "") === seed.address || String(item.data.caseName || "") === seed.caseName);
-          const data = current || prior?.data || activeSaved?.data || { id: `history-1150812-${index + 1}`, status: "\u59D4\u8A17\u4E2D", ...seed };
-          return { id: `history-${date}-${index + 1}`, recordId: current?.id || prior?.recordId || activeSaved?.recordId, sequence: String(index + 1), data: { ...seed, ...data, _tourHistorySnapshot: "1" } };
+          const intakeDraft2 = intakeDrafts.find((draft) => String(intakeValue(draft.values, "\u7269\u4EF6(\u5B8C\u6574)\u5730\u5740") || "") === seed.address || String(intakeValue(draft.values, "\u6848\u540D") || "") === seed.caseName);
+          const draftData = intakeDraft2 ? intakeToRecord(intakeDraft2) : void 0;
+          const data = prior?.data || activeSaved?.data || draftData || current || { id: `history-1150812-${index + 1}`, status: "\u59D4\u8A17\u4E2D", ...seed };
+          return { id: `history-${date}-${index + 1}`, recordId: current?.id || prior?.recordId || activeSaved?.recordId || intakeDraft2?.linkedRecordId, sequence: String(index + 1), data: { ...seed, ...data, _tourHistorySnapshot: "1" } };
         });
         const entry = { id: existing?.id || "recovered-2026-08-12", date, title: "115.08.12\u5718\u770B", items, completedAt: existing?.completedAt || date };
         const unchanged = existing && existing.items.length === 5 && existing.items.every((item, index) => item.data.caseName === seeds[index]?.caseName && Object.keys(item.data || {}).length > 45);
         return unchanged ? previous : [entry, ...previous.filter((item) => normalizeDateInput(item.date) !== date)].sort((a, b) => String(b.date).localeCompare(String(a.date)));
       });
-    }, [storageReady, records, tourItems]);
+    }, [storageReady, records, intakeDrafts, tourItems]);
     const archived = (0, import_react.useMemo)(() => sortArchivedRecords(records.filter((r) => r.archived || isExpired(r) || r.status !== "\u59D4\u8A17\u4E2D")), [records]);
     const active = (0, import_react.useMemo)(() => records.filter((r) => !r.archived && !isExpired(r) && (r.status || "\u59D4\u8A17\u4E2D") === "\u59D4\u8A17\u4E2D"), [records]);
     const bookReviewCycleStart = normalizeDateInput(settings.bookReviewCurrentDate || "") || "2026-07-30";
@@ -44253,7 +44255,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V183" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V184" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -45458,7 +45460,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
           row.forEach((text, index) => {
             if (index === 4) drawSizedCell(text || "\u2014", x, y, widths[index], rowHeights[rowIndex], 25, true);
             else if (index === 6) drawAgeCell(text || "\u2014", x, y, widths[index], rowHeights[rowIndex]);
-            else if (index === 8) drawSizedCell(text || "\u2014", x, y, widths[index], rowHeights[rowIndex], 22, false);
+            else if (index === 8) drawSizedCell(text || "\u2014", x, y, widths[index], rowHeights[rowIndex], 28, false);
             else if ([9, 10, 11].includes(index)) drawSizedCell(text || "\u2014", x, y, widths[index], rowHeights[rowIndex], 24, false, true);
             else if (index === 17) drawFrontageDepthCell(text, x, y, widths[index], rowHeights[rowIndex]);
             else if (index === 20) drawSizedCell(text || "\u2014", x, y, widths[index], rowHeights[rowIndex], 24, true);
