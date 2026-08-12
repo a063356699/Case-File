@@ -41783,7 +41783,8 @@ ${String(ex)}`);
   var isExpired = (r) => validDate(r.entrustEnd) && !!r.entrustEnd && r.entrustEnd < today();
   var displayStatus = (r) => isExpired(r) && r.status === "\u59D4\u8A17\u4E2D" ? "\u5230\u671F\u4E0B\u67B6" : r.status || "\u59D4\u8A17\u4E2D";
   var ageOf = (r) => {
-    const raw = Number(r.builtYear);
+    const completionYear = String(r.completionDate || "").match(/\d{2,4}/)?.[0] || "";
+    const raw = Number(completionYear || r.builtYear);
     if (!raw) return "";
     const year = raw < 1911 ? raw + 1911 : raw;
     const age = (/* @__PURE__ */ new Date()).getFullYear() - year;
@@ -44207,7 +44208,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V175" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V176" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
