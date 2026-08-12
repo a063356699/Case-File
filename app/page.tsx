@@ -1060,8 +1060,8 @@ export default function Home() {
         const activeSaved = tourItems.find(item => String(item.data.address || "") === seed.address || String(item.data.caseName || "") === seed.caseName);
         const intakeDraft = intakeDrafts.find(draft => String(intakeValue(draft.values, "物件(完整)地址") || "") === seed.address || String(intakeValue(draft.values, "案名") || "") === seed.caseName);
         const draftData = intakeDraft ? intakeToRecord(intakeDraft) : undefined;
-        // 進案草稿是歷史團看的完整資料來源，優先於後續被修改過的委託中案件。
-        const data = prior?.data || activeSaved?.data || draftData || current || ({ id: `history-1150812-${index + 1}`, status: "委託中", ...seed } as RecordItem);
+        // 進案草稿是歷史團看的完整資料來源，必須覆蓋先前已存下來的空白歷史版本。
+        const data = draftData || activeSaved?.data || current || prior?.data || ({ id: `history-1150812-${index + 1}`, status: "委託中", ...seed } as RecordItem);
         return { id: `history-${date}-${index + 1}`, recordId: current?.id || prior?.recordId || activeSaved?.recordId || intakeDraft?.linkedRecordId, sequence: String(index + 1), data: { ...seed, ...data, _tourHistorySnapshot: "1" } } as TourItem;
       });
       const entry: TourHistory = { id: existing?.id || "recovered-2026-08-12", date, title: "115.08.12團看", items, completedAt: existing?.completedAt || date };
@@ -2001,7 +2001,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V184</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V185</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
