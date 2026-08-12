@@ -1233,6 +1233,13 @@ export default function Home() {
     const unitPrice = price && landPing ? `$${Math.round(Number(price) * 10000 / Number(landPing)).toLocaleString("en-US")}` : "";
     const linkedDraft = intakeDrafts.find(draft => draft.id === record._intakeDraftId || draft.linkedRecordId === record.id);
     const draftValue = (...keys: string[]) => linkedDraft ? intakeValue(linkedDraft.values, ...keys) : "";
+    const previewCompletionDate = (value = "") => {
+      const text = String(value || "").trim();
+      const iso = text.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+      if (iso) return `${String(Number(iso[1]) - 1911).padStart(3, "0")}.${String(Number(iso[2])).padStart(2, "0")}.${String(Number(iso[3])).padStart(2, "0")}`;
+      const roc = text.match(/^(\d{2,3})[.\/-](\d{1,2})[.\/-](\d{1,2})$/);
+      return roc ? `${roc[1].padStart(3, "0")}.${roc[2].padStart(2, "0")}.${roc[3].padStart(2, "0")}` : text;
+    };
     const overlay = document.createElement("div"); overlay.className = "ppt-slide-preview-backdrop";
     const close = document.createElement("button"); close.type = "button"; close.className = "ppt-slide-preview-close"; close.textContent = "×"; close.title = "關閉預覽"; close.addEventListener("click", () => setPptPreviewRecord(null));
     const slide = document.createElement("canvas"); slide.className = "ppt-slide-preview ppt-slide-preview-canvas"; slide.width = 1000; slide.height = 750;
@@ -1267,8 +1274,8 @@ export default function Home() {
       field("面寬", num(record.frontage) ? `${num(record.frontage)}米` : clean(record.frontage), .08, 4.26, 2.85, 23, 18, .58); field("深度", num(record.depth) ? `${num(record.depth)}米` : clean(record.depth), 3.02, 4.26, 2.82, 23, 18, .58);
       field("建蔽容積", [record.coverage, record.far].filter(Boolean).join("／"), .08, 5.33, 2.85, 18, 12, .58); field("使用分區", record.zoning, 3.02, 5.33, 2.82, 20, 18, .58);
     } else {
-      const entries: [string,string,string,string,number][] = [["總地坪",landPing ? `${landPing}坪` : "","總建坪",num(record.buildingPing) ? `${num(record.buildingPing)}坪` : "",1.8],["室內坪",num(record.indoorPing) ? `${num(record.indoorPing)}坪` : "","格局",record.layout || "",2.36],["面寬",num(record.frontage) ? `${num(record.frontage)}米` : clean(record.frontage),"深度",num(record.depth) ? `${num(record.depth)}米` : clean(record.depth),2.92],["臨路",num(record.road) ? `${num(record.road)}米` : clean(record.road),"樓層",floorPptDisplay(record.floor),3.48],["朝向",record.direction || "","車位",parkingShort(record.parking),4.04],["管理費",/^\$?0(?:\.0+)?(?:元)?$/.test(record.managementFee || "") ? "無0" : record.managementFee || "","社區名稱",draftValue("大樓名稱") || record.communityName || "",4.6],["完工日期",draftValue("建築完成日期") || record.completionDate || record.builtYear || "","屋齡",ageOf(record),5.16],["現況",record.currentState || "","鑰匙",record.key || "",5.72]];
-      entries.forEach(([leftLabel,leftValue,rightLabel,rightValue,y]) => { field(leftLabel,leftValue,.08,y,2.85); field(rightLabel,rightValue,3.02,y,2.82,rightLabel === "車位" ? 15.5 : rightLabel === "社區名稱" || rightLabel === "完工日期" ? 16 : 19); });
+      const entries: [string,string,string,string,number][] = [["總地坪",landPing ? `${landPing}坪` : "","總建坪",num(record.buildingPing) ? `${num(record.buildingPing)}坪` : "",1.8],["室內坪",num(record.indoorPing) ? `${num(record.indoorPing)}坪` : "","格局",record.layout || "",2.36],["面寬",num(record.frontage) ? `${num(record.frontage)}米` : clean(record.frontage),"深度",num(record.depth) ? `${num(record.depth)}米` : clean(record.depth),2.92],["臨路",num(record.road) ? `${num(record.road)}米` : clean(record.road),"樓層",floorPptDisplay(record.floor),3.48],["朝向",record.direction || "","車位",parkingShort(record.parking),4.04],["管理費",/^\$?0(?:\.0+)?(?:元)?$/.test(record.managementFee || "") ? "無0" : record.managementFee || "","社區名稱",draftValue("大樓名稱") || record.communityName || "",4.6],["建築完成日期",previewCompletionDate(draftValue("建築完成日期") || record.completionDate || record.builtYear || ""),"屋齡",ageOf(record),5.16],["現況",record.currentState || "","鑰匙",record.key || "",5.72]];
+      entries.forEach(([leftLabel,leftValue,rightLabel,rightValue,y]) => { field(leftLabel,leftValue,.08,y,2.85); field(rightLabel,rightValue,3.02,y,2.82,rightLabel === "車位" ? 15.5 : rightLabel === "社區名稱" || rightLabel === "建築完成日期" ? 16 : 19); });
     }
     const notesY = land ? 6.4 : 6.28; alignedLabel("備註", .08, notesY); draw("：", .96, notesY, .2, .36, 15); draw(displayNoteSegments(record.notes).join("；"), 1.16, notesY, 4.61, .72, 14, { align: "left", wrap: true });
     line(0, 7.18, 6.05); draw(`進案報件日期：${displayRocDate(record.reportDate) || ""}`, .05, 7.22, 2.8, .24, 9, { align: "left" }); draw(`物件編號：${record.propertyNo || ""}`, 3.1, 7.22, 2.9, .24, 9);
@@ -1650,7 +1657,7 @@ export default function Home() {
         addLabel(slide, "朝向", record.direction, .08, 4.04, 2.85); addLabel(slide, "車位", parkingShort(record.parking), 3.02, 4.04, 2.82, "000000", 17.5);
         addRichLabel(slide, "管理費", pptManagementFeeRuns(record.managementFee), .08, 4.6, 2.85); addLabel(slide, "社區名稱", draftValue("大樓名稱") || record.communityName, 3.02, 4.6, 2.82, "000000", 18);
         const completionForPpt = draftValue("建築完成日期") || record.completionDate || record.builtYear;
-        addLabel(slide, "完工日期", pptCompletionDate(completionForPpt), .08, 5.16, 2.85, "000000", 18); addRichLabel(slide, "屋齡", [{ text: pptBuildingAge(completionForPpt), options: { fontFace: font, fontSize: 21 } }, { text: pptBuildingAge(completionForPpt) ? "年屋" : "", options: { fontFace: font, fontSize: 12 } }], 3.02, 5.16, 2.82);
+        addLabel(slide, "建築完成日期", pptCompletionDate(completionForPpt), .08, 5.16, 2.85, "000000", 18); addRichLabel(slide, "屋齡", [{ text: pptBuildingAge(completionForPpt), options: { fontFace: font, fontSize: 21 } }, { text: pptBuildingAge(completionForPpt) ? "年屋" : "", options: { fontFace: font, fontSize: 12 } }], 3.02, 5.16, 2.82);
         addLabel(slide, "現況", record.currentState, .08, 5.72, 2.85); addLabel(slide, "鑰匙", record.key, 3.02, 5.72, 2.82);
       }
       const notesY = land ? 6.40 : 6.28;
@@ -2001,7 +2008,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V185</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V186</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>

@@ -43046,6 +43046,13 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       const unitPrice = price && landPing ? `$${Math.round(Number(price) * 1e4 / Number(landPing)).toLocaleString("en-US")}` : "";
       const linkedDraft = intakeDrafts.find((draft) => draft.id === record._intakeDraftId || draft.linkedRecordId === record.id);
       const draftValue = (...keys) => linkedDraft ? intakeValue(linkedDraft.values, ...keys) : "";
+      const previewCompletionDate = (value = "") => {
+        const text = String(value || "").trim();
+        const iso = text.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+        if (iso) return `${String(Number(iso[1]) - 1911).padStart(3, "0")}.${String(Number(iso[2])).padStart(2, "0")}.${String(Number(iso[3])).padStart(2, "0")}`;
+        const roc = text.match(/^(\d{2,3})[.\/-](\d{1,2})[.\/-](\d{1,2})$/);
+        return roc ? `${roc[1].padStart(3, "0")}.${roc[2].padStart(2, "0")}.${roc[3].padStart(2, "0")}` : text;
+      };
       const overlay = document.createElement("div");
       overlay.className = "ppt-slide-preview-backdrop";
       const close = document.createElement("button");
@@ -43143,10 +43150,10 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
         field("\u5EFA\u853D\u5BB9\u7A4D", [record.coverage, record.far].filter(Boolean).join("\uFF0F"), 0.08, 5.33, 2.85, 18, 12, 0.58);
         field("\u4F7F\u7528\u5206\u5340", record.zoning, 3.02, 5.33, 2.82, 20, 18, 0.58);
       } else {
-        const entries = [["\u7E3D\u5730\u576A", landPing ? `${landPing}\u576A` : "", "\u7E3D\u5EFA\u576A", num(record.buildingPing) ? `${num(record.buildingPing)}\u576A` : "", 1.8], ["\u5BA4\u5167\u576A", num(record.indoorPing) ? `${num(record.indoorPing)}\u576A` : "", "\u683C\u5C40", record.layout || "", 2.36], ["\u9762\u5BEC", num(record.frontage) ? `${num(record.frontage)}\u7C73` : clean(record.frontage), "\u6DF1\u5EA6", num(record.depth) ? `${num(record.depth)}\u7C73` : clean(record.depth), 2.92], ["\u81E8\u8DEF", num(record.road) ? `${num(record.road)}\u7C73` : clean(record.road), "\u6A13\u5C64", floorPptDisplay(record.floor), 3.48], ["\u671D\u5411", record.direction || "", "\u8ECA\u4F4D", parkingShort(record.parking), 4.04], ["\u7BA1\u7406\u8CBB", /^\$?0(?:\.0+)?(?:元)?$/.test(record.managementFee || "") ? "\u71210" : record.managementFee || "", "\u793E\u5340\u540D\u7A31", draftValue("\u5927\u6A13\u540D\u7A31") || record.communityName || "", 4.6], ["\u5B8C\u5DE5\u65E5\u671F", draftValue("\u5EFA\u7BC9\u5B8C\u6210\u65E5\u671F") || record.completionDate || record.builtYear || "", "\u5C4B\u9F61", ageOf(record), 5.16], ["\u73FE\u6CC1", record.currentState || "", "\u9470\u5319", record.key || "", 5.72]];
+        const entries = [["\u7E3D\u5730\u576A", landPing ? `${landPing}\u576A` : "", "\u7E3D\u5EFA\u576A", num(record.buildingPing) ? `${num(record.buildingPing)}\u576A` : "", 1.8], ["\u5BA4\u5167\u576A", num(record.indoorPing) ? `${num(record.indoorPing)}\u576A` : "", "\u683C\u5C40", record.layout || "", 2.36], ["\u9762\u5BEC", num(record.frontage) ? `${num(record.frontage)}\u7C73` : clean(record.frontage), "\u6DF1\u5EA6", num(record.depth) ? `${num(record.depth)}\u7C73` : clean(record.depth), 2.92], ["\u81E8\u8DEF", num(record.road) ? `${num(record.road)}\u7C73` : clean(record.road), "\u6A13\u5C64", floorPptDisplay(record.floor), 3.48], ["\u671D\u5411", record.direction || "", "\u8ECA\u4F4D", parkingShort(record.parking), 4.04], ["\u7BA1\u7406\u8CBB", /^\$?0(?:\.0+)?(?:元)?$/.test(record.managementFee || "") ? "\u71210" : record.managementFee || "", "\u793E\u5340\u540D\u7A31", draftValue("\u5927\u6A13\u540D\u7A31") || record.communityName || "", 4.6], ["\u5EFA\u7BC9\u5B8C\u6210\u65E5\u671F", previewCompletionDate(draftValue("\u5EFA\u7BC9\u5B8C\u6210\u65E5\u671F") || record.completionDate || record.builtYear || ""), "\u5C4B\u9F61", ageOf(record), 5.16], ["\u73FE\u6CC1", record.currentState || "", "\u9470\u5319", record.key || "", 5.72]];
         entries.forEach(([leftLabel, leftValue, rightLabel, rightValue, y]) => {
           field(leftLabel, leftValue, 0.08, y, 2.85);
-          field(rightLabel, rightValue, 3.02, y, 2.82, rightLabel === "\u8ECA\u4F4D" ? 15.5 : rightLabel === "\u793E\u5340\u540D\u7A31" || rightLabel === "\u5B8C\u5DE5\u65E5\u671F" ? 16 : 19);
+          field(rightLabel, rightValue, 3.02, y, 2.82, rightLabel === "\u8ECA\u4F4D" ? 15.5 : rightLabel === "\u793E\u5340\u540D\u7A31" || rightLabel === "\u5EFA\u7BC9\u5B8C\u6210\u65E5\u671F" ? 16 : 19);
         });
       }
       const notesY = land ? 6.4 : 6.28;
@@ -43748,7 +43755,7 @@ ${changedLabels}
           addRichLabel(slide, "\u7BA1\u7406\u8CBB", pptManagementFeeRuns(record.managementFee), 0.08, 4.6, 2.85);
           addLabel(slide, "\u793E\u5340\u540D\u7A31", draftValue("\u5927\u6A13\u540D\u7A31") || record.communityName, 3.02, 4.6, 2.82, "000000", 18);
           const completionForPpt = draftValue("\u5EFA\u7BC9\u5B8C\u6210\u65E5\u671F") || record.completionDate || record.builtYear;
-          addLabel(slide, "\u5B8C\u5DE5\u65E5\u671F", pptCompletionDate(completionForPpt), 0.08, 5.16, 2.85, "000000", 18);
+          addLabel(slide, "\u5EFA\u7BC9\u5B8C\u6210\u65E5\u671F", pptCompletionDate(completionForPpt), 0.08, 5.16, 2.85, "000000", 18);
           addRichLabel(slide, "\u5C4B\u9F61", [{ text: pptBuildingAge(completionForPpt), options: { fontFace: font, fontSize: 21 } }, { text: pptBuildingAge(completionForPpt) ? "\u5E74\u5C4B" : "", options: { fontFace: font, fontSize: 12 } }], 3.02, 5.16, 2.82);
           addLabel(slide, "\u73FE\u6CC1", record.currentState, 0.08, 5.72, 2.85);
           addLabel(slide, "\u9470\u5319", record.key, 3.02, 5.72, 2.82);
@@ -44255,7 +44262,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V185" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V186" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
