@@ -44207,7 +44207,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V174" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V175" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -45195,14 +45195,20 @@ ${changedLabels}
     };
     const updateItem = (id, patch) => setItems(items.map((item) => item.id === id ? { ...item, ...patch } : item));
     const updateTemp = (item, key, value) => updateItem(item.id, { data: { ...item.data, [key]: value } });
-    const sourceOf = (item) => item.recordId ? records.find((record) => record.id === item.recordId) || item.data : item.data;
+    const sourceOf = (item) => {
+      if (!item.recordId) return item.data;
+      const no = String(item.data?.propertyNo || "").trim();
+      const name = String(item.data?.caseName || "").trim();
+      const address = String(item.data?.address || "").trim();
+      return records.find((record) => record.id === item.recordId) || (no ? records.find((record) => String(record.propertyNo || "").trim() === no) : void 0) || (name && address ? records.find((record) => String(record.caseName || "").trim() === name && String(record.address || "").trim() === address) : void 0) || item.data;
+    };
     const isNotEnteredTourRecord = (record) => record._notEntered === "1" || record.status === "\u81E8\u6642\u5718\u770B" || !!record._intakeDraftId;
     const renderValue = (record, column) => {
       if (column === "areaType") return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "tour-pair", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: areaCategory(record) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: typeShort(record.type) })
       ] });
-      if (column === "age" && record._tourAge) return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: record._tourAge });
+      if (column === "age" && isNotEnteredTourRecord(record) && record._tourAge) return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: record._tourAge });
       if (column === "reportDate" && isNotEnteredTourRecord(record)) return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "not-entered", children: "\u5C1A\u672A\u9032\u6848" });
       if (column === "frontageDepth") return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "tour-pair", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: record.frontage || "\u2014" }),
@@ -45272,7 +45278,7 @@ ${changedLabels}
           const room = (record.layout || "").match(/(\d+)\s*房/)?.[1], hall = (record.layout || "").match(/(\d+)\s*廳/)?.[1], bath = (record.layout || "").match(/(\d+)\s*衛(?:浴)?/)?.[1];
           return [room, hall, bath].filter((value) => value !== void 0).join(".") || record.layout || "";
         };
-        const imageAge = (record) => record._tourAge || ageOf(record);
+        const imageAge = (record) => isNotEnteredTourRecord(record) && record._tourAge ? record._tourAge : ageOf(record);
         const dimensionValue = (value, kind) => {
           const prefix = kind === "frontage" ? /^(?:面寬|面)\s*/ : /^(?:深度|深)\s*/;
           const text = String(value || "").trim().replace(prefix, "").trim();

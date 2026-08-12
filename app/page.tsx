@@ -1953,7 +1953,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V174</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V175</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -2065,11 +2065,21 @@ function TourPlanner({ records, drafts, items, setItems, editRecord, updateDraft
   const addTemporary = () => { const normalizedDraft = normalizeRecordPings({ ...temporaryDraft, developer: developerFullNameText(temporaryDraft.developer || "") || temporaryDraft.developer }); if (temporaryEditId) setItems(items.map(item => item.id === temporaryEditId ? { ...item, data: { ...normalizedDraft } } : item)); else setItems([...items, { id: newId(), sequence: nextTourSequence(), temporary: true, data: { ...normalizedDraft } }]); setTemporaryOpen(false); setTemporaryEditId(""); };
   const updateItem = (id: string, patch: Partial<TourItem>) => setItems(items.map(item => item.id === id ? { ...item, ...patch } : item));
   const updateTemp = (item: TourItem, key: string, value: string) => updateItem(item.id, { data: { ...item.data, [key]: value } });
-  const sourceOf = (item: TourItem) => item.recordId ? (records.find(record => record.id === item.recordId) || item.data) : item.data;
+  // 團看項目可能在 JSON 匯入或雲端合併後換了內部 ID；正常委託中案件優先重新對應目前總表，避免顯示加入當時的舊快照。
+  const sourceOf = (item: TourItem) => {
+    if (!item.recordId) return item.data;
+    const no = String(item.data?.propertyNo || "").trim();
+    const name = String(item.data?.caseName || "").trim();
+    const address = String(item.data?.address || "").trim();
+    return records.find(record => record.id === item.recordId)
+      || (no ? records.find(record => String(record.propertyNo || "").trim() === no) : undefined)
+      || (name && address ? records.find(record => String(record.caseName || "").trim() === name && String(record.address || "").trim() === address) : undefined)
+      || item.data;
+  };
   const isNotEnteredTourRecord = (record: RecordItem) => record._notEntered === "1" || record.status === "臨時團看" || !!record._intakeDraftId;
   const renderValue = (record: RecordItem, column: string) => {
     if (column === "areaType") return <span className="tour-pair"><span>{areaCategory(record)}</span><span>{typeShort(record.type)}</span></span>;
-    if (column === "age" && record._tourAge) return <>{record._tourAge}</>;
+    if (column === "age" && isNotEnteredTourRecord(record) && record._tourAge) return <>{record._tourAge}</>;
     if (column === "reportDate" && isNotEnteredTourRecord(record)) return <span className="not-entered">尚未進案</span>;
     if (column === "frontageDepth") return <span className="tour-pair"><span>{record.frontage || "—"}</span><span>{record.depth || "—"}</span></span>;
     if (column === "coverageFar") return <span className="tour-pair"><span>{record.coverage || "—"}</span><span>{record.far || "—"}</span></span>;
@@ -2100,7 +2110,7 @@ function TourPlanner({ records, drafts, items, setItems, editRecord, updateDraft
       const widths = [52, 78, 170, 220, 90, 68, 120, 84, 82, 108, 105, 105, 120, 145, 112, 100, 88, 138, 105, 138, 105, 340, 143];
     const textOf = (record: RecordItem, column: string) => String(cellValue(record, column) || record[column] || "");
     const imageLayout = (record: RecordItem) => { if (typeShort(record.type) === "土地" || /^(?:土地\s*)+$/.test(record.layout || "")) return "土地"; const room = (record.layout || "").match(/(\d+)\s*房/)?.[1], hall = (record.layout || "").match(/(\d+)\s*廳/)?.[1], bath = (record.layout || "").match(/(\d+)\s*衛(?:浴)?/)?.[1]; return [room, hall, bath].filter(value => value !== undefined).join(".") || record.layout || ""; };
-    const imageAge = (record: RecordItem) => record._tourAge || ageOf(record);
+    const imageAge = (record: RecordItem) => isNotEnteredTourRecord(record) && record._tourAge ? record._tourAge : ageOf(record);
     const dimensionValue = (value: unknown, kind: "frontage" | "depth") => { const prefix = kind === "frontage" ? /^(?:面寬|面)\s*/ : /^(?:深度|深)\s*/; const text = String(value || "").trim().replace(prefix, "").trim(); return /^(?:[-—–－_／/、.．]|無|未填|沒有|0)?$/.test(text) ? "" : text; };
       const rows = ordered.map(item => { const record = sourceOf(item); const price = String(record.price || "").replace(/\s*萬(?:元)?\s*/g, ""), frontage = dimensionValue(record.frontage, "frontage"), depth = dimensionValue(record.depth, "depth"), vertical = (value: unknown) => Array.from(String(value || "").trim()).join("\n"); return [item.sequence, `${areaCategory(record) || record.area || ""}\n${typeShort(record.type) || ""}`, record.caseName || "", chunkText(record.address || "", 12).join("\n"), price ? `${price}萬` : "", vertical(record.direction), imageAge(record), floorShortFixed(record.floor || ""), imageLayout(record), record.indoorPing || "", record.buildingPing || "", record.landPing || "", parkingShort(record.parking || ""), record.managementFee || "", record.key || "", vertical(record.currentState), record.road || "", [frontage ? `面${frontage}` : "", depth ? `深${depth}` : ""].filter(Boolean).join("\n"), record.zoning || "", `${record.coverage || ""}\n${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegments(record.notes || "").join("； "), isNotEnteredTourRecord(record) ? "尚未進案" : displayRocDate(record.reportDate) || ""]; });
     const margin = 32, headerHeight = 112, titleHeight = 132, fontSize = 30, lineHeight = 38;
