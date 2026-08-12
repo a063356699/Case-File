@@ -42843,7 +42843,7 @@ ${String(ex)}`);
           const current = records.find((record) => seed.propertyNo && String(record.propertyNo || "") === seed.propertyNo || String(record.address || "") === seed.address || String(record.caseName || "") === seed.caseName);
           const prior = existing?.items.find((item) => String(item.data.address || "") === seed.address || String(item.data.caseName || "") === seed.caseName);
           const data = current || prior?.data || { id: `history-1150812-${index + 1}`, status: "\u59D4\u8A17\u4E2D", ...seed };
-          return { id: `history-${date}-${index + 1}`, recordId: current?.id || prior?.recordId, sequence: String(index + 1), data: { ...data, ...!current ? seed : {} } };
+          return { id: `history-${date}-${index + 1}`, recordId: current?.id || prior?.recordId, sequence: String(index + 1), data: { ...data, ...!current ? seed : {}, _tourHistorySnapshot: "1" } };
         });
         const entry = { id: existing?.id || "recovered-2026-08-12", date, title: "115.08.12\u5718\u770B", items, completedAt: existing?.completedAt || date };
         const unchanged = existing && existing.items.length === 5 && existing.items.every((item, index) => item.data.caseName === seeds[index]?.caseName);
@@ -44252,7 +44252,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V181" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V182" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -45241,6 +45241,7 @@ ${changedLabels}
     const updateItem = (id, patch) => setItems(items.map((item) => item.id === id ? { ...item, ...patch } : item));
     const updateTemp = (item, key, value) => updateItem(item.id, { data: { ...item.data, [key]: value } });
     const sourceOf = (item) => {
+      if (item.data?._tourHistorySnapshot === "1") return item.data;
       if (!item.recordId) return item.data;
       const no = String(item.data?.propertyNo || "").trim();
       const name = String(item.data?.caseName || "").trim();
@@ -45314,13 +45315,13 @@ ${changedLabels}
     })].join("\n"), "\u5DF2\u8907\u88FD\u672C\u6B21\u5718\u770B\u8DEF\u7DDA");
     const saveTourHistory = () => {
       if (!items.length) return;
-      const entry = { id: newId(), date: tourDate, title: tourTitle || `${displayRocDate(tourDate).replace(/\//g, ".")}\u5718\u770B`, items: items.map((item) => ({ ...item, data: { ...item.data } })), completedAt: (/* @__PURE__ */ new Date()).toISOString() };
+      const entry = { id: newId(), date: tourDate, title: tourTitle || `${displayRocDate(tourDate).replace(/\//g, ".")}\u5718\u770B`, items: items.map((item) => ({ ...item, data: { ...sourceOf(item), _tourHistorySnapshot: "1" } })), completedAt: (/* @__PURE__ */ new Date()).toISOString() };
       setHistory((previous) => [entry, ...previous.filter((item) => !(item.date === entry.date && item.title === entry.title))].slice(0, 100));
     };
     const restoreTourHistory = (entry) => {
       if (!entry.items.length) return;
       if (!confirm(`\u53EB\u56DE\u300C${entry.title}\u300D\u7684 ${entry.items.length} \u7B46\u5718\u770B\u8DEF\u7DDA\uFF1F\u76EE\u524D\u6B63\u5728\u7DE8\u6392\u7684\u8DEF\u7DDA\u4E0D\u6703\u522A\u9664\uFF0C\u8ACB\u60A8\u78BA\u8A8D\u5F8C\u518D\u81EA\u884C\u8ABF\u6574\u3002`)) return;
-      setItems(entry.items.map((item) => ({ ...item, id: newId(), data: { ...item.data } })));
+      setItems(entry.items.map((item) => ({ ...item, id: newId(), data: { ...item.data, _tourHistorySnapshot: "1" } })));
       setTourDate(entry.date);
       setTourTitle(entry.title);
       notify(`\u5DF2\u53EB\u56DE ${entry.title}\uFF0C\u53EF\u518D\u6B21\u7522\u751F\u5716\u7247\u6216\u5217\u5370`);

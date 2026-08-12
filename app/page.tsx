@@ -1058,7 +1058,7 @@ export default function Home() {
         const current = records.find(record => (seed.propertyNo && String(record.propertyNo || "") === seed.propertyNo) || String(record.address || "") === seed.address || String(record.caseName || "") === seed.caseName);
         const prior = existing?.items.find(item => String(item.data.address || "") === seed.address || String(item.data.caseName || "") === seed.caseName);
         const data = current || prior?.data || ({ id: `history-1150812-${index + 1}`, status: "委託中", ...seed } as RecordItem);
-        return { id: `history-${date}-${index + 1}`, recordId: current?.id || prior?.recordId, sequence: String(index + 1), data: { ...data, ...(!current ? seed : {}) } } as TourItem;
+        return { id: `history-${date}-${index + 1}`, recordId: current?.id || prior?.recordId, sequence: String(index + 1), data: { ...data, ...(!current ? seed : {}), _tourHistorySnapshot: "1" } } as TourItem;
       });
       const entry: TourHistory = { id: existing?.id || "recovered-2026-08-12", date, title: "115.08.12團看", items, completedAt: existing?.completedAt || date };
       const unchanged = existing && existing.items.length === 5 && existing.items.every((item, index) => item.data.caseName === seeds[index]?.caseName);
@@ -1997,7 +1997,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V181</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V182</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -2111,6 +2111,8 @@ function TourPlanner({ records, drafts, items, setItems, history, setHistory, ed
   const updateTemp = (item: TourItem, key: string, value: string) => updateItem(item.id, { data: { ...item.data, [key]: value } });
   // 團看項目可能在 JSON 匯入或雲端合併後換了內部 ID；正常委託中案件優先重新對應目前總表，避免顯示加入當時的舊快照。
   const sourceOf = (item: TourItem) => {
+    // 歷史路線叫回後，必須以完成當下的整筆快照呈現，不能被目前委託中資料覆蓋。
+    if (item.data?._tourHistorySnapshot === "1") return item.data;
     if (!item.recordId) return item.data;
     const no = String(item.data?.propertyNo || "").trim();
     const name = String(item.data?.caseName || "").trim();
@@ -2149,13 +2151,13 @@ function TourPlanner({ records, drafts, items, setItems, history, setHistory, ed
   const copyRoute = () => copyText([tourTitle, ["案名", "地址", "開發", "開價", "現況", "進案日期"].join("\t"), ...ordered.map(item => { const record = sourceOf(item); const price = String(record.price || "").replace(/\s*萬(?:元)?\s*/g, ""); return [record.caseName || "", record.address || "", developerFullNameText(record.developer) || "", price ? `${price}萬` : "", record.currentState || "", isNotEnteredTourRecord(record) ? "尚未進案" : displayRocDate(record.reportDate) || ""].join("\t"); })].join("\n"), "已複製本次團看路線");
   const saveTourHistory = () => {
     if (!items.length) return;
-    const entry: TourHistory = { id: newId(), date: tourDate, title: tourTitle || `${displayRocDate(tourDate).replace(/\//g, ".")}團看`, items: items.map(item => ({ ...item, data: { ...item.data } })), completedAt: new Date().toISOString() };
+    const entry: TourHistory = { id: newId(), date: tourDate, title: tourTitle || `${displayRocDate(tourDate).replace(/\//g, ".")}團看`, items: items.map(item => ({ ...item, data: { ...sourceOf(item), _tourHistorySnapshot: "1" } })), completedAt: new Date().toISOString() };
     setHistory(previous => [entry, ...previous.filter(item => !(item.date === entry.date && item.title === entry.title))].slice(0, 100));
   };
   const restoreTourHistory = (entry: TourHistory) => {
     if (!entry.items.length) return;
     if (!confirm(`叫回「${entry.title}」的 ${entry.items.length} 筆團看路線？目前正在編排的路線不會刪除，請您確認後再自行調整。`)) return;
-    setItems(entry.items.map(item => ({ ...item, id: newId(), data: { ...item.data } })));
+    setItems(entry.items.map(item => ({ ...item, id: newId(), data: { ...item.data, _tourHistorySnapshot: "1" } })));
     setTourDate(entry.date);
     setTourTitle(entry.title);
     notify(`已叫回 ${entry.title}，可再次產生圖片或列印`);
