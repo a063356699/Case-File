@@ -42827,6 +42827,29 @@ ${String(ex)}`);
         return recovered.length ? [...recovered, ...previous].sort((a, b) => String(b.date).localeCompare(String(a.date))) : previous;
       });
     }, [storageReady, records]);
+    (0, import_react.useEffect)(() => {
+      if (!storageReady) return;
+      const date = "2026-08-12";
+      const seeds = [
+        { propertyNo: "", caseName: "\u3010\u6C38\u5EB7\u5340\u3011\u4E2D\u6B63\u4E8C\u8857 \u5730\u576A\u8FD1\u767E\u576A\u7532\u5DE5\u5EE0\u623F", address: "\u53F0\u5357\u5E02\u6C38\u5EB7\u5340\u4E2D\u6B63\u4E8C\u8857172\u865F", developer: "\u9673\u5E1D\u5143", price: "3188" },
+        { propertyNo: "", caseName: "\u6C38\u5EB7\u56DB\u7DAD\u5546\u5708\uFF5C\u4F4E\u7E3D\u50F9\u6A13\u4E2D\u6A13\u56DB\u623F", address: "\u53F0\u5357\u5E02\u6C38\u5EB7\u5340\u56DB\u7DAD\u885737\u865F\u4E94\u6A13\u4E4B2", developer: "\u8B1D\u99A8\u5100\u3001\u5F35\u5C0F\u66FC", price: "588" },
+        { propertyNo: "EG0507746", caseName: "\u6771\u5340\u5FA9\u8208\u5B78\u5340\u6574\u65B0\u56DB\u5957\u623F\u8ECA\u5885", address: "\u53F0\u5357\u5E02\u6771\u5340\u5BCC\u8FB2\u8857\u4E00\u6BB5188\u5DF740\u865F", developer: "\u9673\u73EE\u83C1", price: "1788" },
+        { propertyNo: "EG0540823", caseName: "\u6771\u5340\u4EC1\u548C\u65B0\u4E16\u754C\u6574\u65B0\u660E\u4EAE\u901A\u98A8\u4E09\u623F", address: "\u53F0\u5357\u5E02\u6771\u5340\u4EC1\u548C\u8DEF79\u865F6\u6A13\u4E4B3", developer: "\u67EF\u80B2\u5A77\u3001\u8521\u5B87\u80B2", price: "786" },
+        { propertyNo: "EG0522899", caseName: "\u6771\u9580\u5713\u74B0\u4E00\u6A13\u5957\u623F\uFF0B\u5E73\u8ECA", address: "\u53F0\u5357\u5E02\u6771\u5340\u6771\u9580\u8DEF\u4E00\u6BB584\u865F\u4E4B13", developer: "\u5F35\u5C0F\u66FC", price: "298" }
+      ];
+      setTourHistory((previous) => {
+        const existing = previous.find((item) => normalizeDateInput(item.date) === date);
+        const items = seeds.map((seed, index) => {
+          const current = records.find((record) => seed.propertyNo && String(record.propertyNo || "") === seed.propertyNo || String(record.address || "") === seed.address || String(record.caseName || "") === seed.caseName);
+          const prior = existing?.items.find((item) => String(item.data.address || "") === seed.address || String(item.data.caseName || "") === seed.caseName);
+          const data = current || prior?.data || { id: `history-1150812-${index + 1}`, status: "\u59D4\u8A17\u4E2D", ...seed };
+          return { id: `history-${date}-${index + 1}`, recordId: current?.id || prior?.recordId, sequence: String(index + 1), data: { ...data, ...!current ? seed : {} } };
+        });
+        const entry = { id: existing?.id || "recovered-2026-08-12", date, title: "115.08.12\u5718\u770B", items, completedAt: existing?.completedAt || date };
+        const unchanged = existing && existing.items.length === 5 && existing.items.every((item, index) => item.data.caseName === seeds[index]?.caseName);
+        return unchanged ? previous : [entry, ...previous.filter((item) => normalizeDateInput(item.date) !== date)].sort((a, b) => String(b.date).localeCompare(String(a.date)));
+      });
+    }, [storageReady, records]);
     const archived = (0, import_react.useMemo)(() => sortArchivedRecords(records.filter((r) => r.archived || isExpired(r) || r.status !== "\u59D4\u8A17\u4E2D")), [records]);
     const active = (0, import_react.useMemo)(() => records.filter((r) => !r.archived && !isExpired(r) && (r.status || "\u59D4\u8A17\u4E2D") === "\u59D4\u8A17\u4E2D"), [records]);
     const bookReviewCycleStart = normalizeDateInput(settings.bookReviewCurrentDate || "") || "2026-07-30";
@@ -44229,7 +44252,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V180" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V181" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -45294,6 +45317,14 @@ ${changedLabels}
       const entry = { id: newId(), date: tourDate, title: tourTitle || `${displayRocDate(tourDate).replace(/\//g, ".")}\u5718\u770B`, items: items.map((item) => ({ ...item, data: { ...item.data } })), completedAt: (/* @__PURE__ */ new Date()).toISOString() };
       setHistory((previous) => [entry, ...previous.filter((item) => !(item.date === entry.date && item.title === entry.title))].slice(0, 100));
     };
+    const restoreTourHistory = (entry) => {
+      if (!entry.items.length) return;
+      if (!confirm(`\u53EB\u56DE\u300C${entry.title}\u300D\u7684 ${entry.items.length} \u7B46\u5718\u770B\u8DEF\u7DDA\uFF1F\u76EE\u524D\u6B63\u5728\u7DE8\u6392\u7684\u8DEF\u7DDA\u4E0D\u6703\u522A\u9664\uFF0C\u8ACB\u60A8\u78BA\u8A8D\u5F8C\u518D\u81EA\u884C\u8ABF\u6574\u3002`)) return;
+      setItems(entry.items.map((item) => ({ ...item, id: newId(), data: { ...item.data } })));
+      setTourDate(entry.date);
+      setTourTitle(entry.title);
+      notify(`\u5DF2\u53EB\u56DE ${entry.title}\uFF0C\u53EF\u518D\u6B21\u7522\u751F\u5716\u7247\u6216\u5217\u5370`);
+    };
     const exportTourImage = () => {
       if (!ordered.length) return notify("\u8ACB\u5148\u52A0\u5165\u5718\u770B\u7269\u4EF6");
       try {
@@ -45510,6 +45541,10 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
               "\u3000",
               entry.items.length,
               " \u7B46"
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "tour-history-actions", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "primary", onClick: () => restoreTourHistory(entry), children: "\u53EB\u56DE\u6B64\u8DEF\u7DDA" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u53EB\u56DE\u5F8C\u53EF\u76F4\u63A5\u518D\u6B21\u7522\u751F\u5716\u7247\u6216\u5217\u5370" })
             ] }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("ol", { children: entry.items.slice().sort((a, b) => Number(a.sequence || 9999) - Number(b.sequence || 9999)).map((item) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("li", { children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: item.data.caseName || "\u672A\u547D\u540D\u6848\u4EF6" }),
