@@ -1,11 +1,4 @@
-<!doctype html>
-<html lang="zh-Hant">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="color-scheme" content="light">
-  <title>&#32317;&#34920; &#21934;&#27231;html</title>
-  <style>
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><title>總表 單機html</title><style>
 
 :root{--ink:#17242a;--muted:#728087;--paper:#f6f4ee;--card:#fff;--line:#dedfd9;--green:#1f5a4a;--green2:#e2eee8;--gold:#d89d3d;--red:#b44b46}*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:"Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif}button,input,select,textarea{font:inherit}button,.file-button{cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:9px;padding:9px 13px;font-weight:650;transition:.18s}button:hover,.file-button:hover{border-color:#9ea9a5;transform:translateY(-1px)}button.primary,.primary{background:var(--green);border-color:var(--green);color:#fff}.topbar{height:82px;display:flex;align-items:center;justify-content:space-between;padding:0 34px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:30}.brand{display:flex;align-items:center;gap:12px}.brandmark,.login-icon{display:grid;place-items:center;background:var(--green);color:#fff;border-radius:12px;font-family:serif;font-weight:800}.brandmark{width:43px;height:43px;font-size:23px}.brand h1{font-size:20px;margin:0;letter-spacing:.05em}.brand p{font-size:11px;margin:3px 0 0;color:var(--muted);letter-spacing:.18em}.header-actions{display:flex;gap:10px}.key-tag{background:#fbf3df;border-color:#e8d5a5}.key-tag b{background:var(--gold);color:white;border-radius:999px;padding:1px 7px;margin-left:4px}.nav{height:54px;background:#fff;display:flex;padding:0 34px;border-bottom:1px solid var(--line);gap:24px}.nav button{border:0;border-radius:0;padding:0 2px;color:var(--muted);position:relative;background:none}.nav button.active{color:var(--green)}.nav button.active:after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:var(--green);border-radius:3px 3px 0 0}.nav span{font-size:11px;background:#edf0ed;padding:2px 6px;border-radius:8px}.content{padding:28px 34px 40px}.list-head{display:flex;align-items:end;justify-content:space-between;gap:20px;margin-bottom:13px}.section-title h2{font-family:serif;margin:0 0 5px;font-size:27px}.section-title p{color:var(--muted);margin:0;font-size:13px}.tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}.search{display:flex;align-items:center;background:#fff;border:1px solid var(--line);border-radius:9px;padding:0 10px;color:var(--muted)}.search input{border:0;outline:0;padding:9px;width:250px;background:transparent}.file-button{display:inline-block}.file-button input,.photo-add input{display:none}.scroll-hint{text-align:right;color:var(--muted);font-size:11px;margin:0 2px 7px}.table-wrap{border:1px solid var(--line);border-radius:12px;overflow:auto;max-height:calc(100vh - 260px);background:#fff;box-shadow:0 8px 28px #38463e0a}.table-wrap table{border-collapse:separate;border-spacing:0;min-width:max-content;width:100%;font-size:13px}.table-wrap th{position:sticky;top:0;z-index:12;text-align:left;padding:12px 11px;background:#edf1ed;color:#52615c;border-bottom:1px solid #ccd4cf;white-space:nowrap;font-size:12px}.table-wrap td{height:53px;padding:9px 11px;border-bottom:1px solid #ecece7;white-space:nowrap;background:#fff;max-width:260px;overflow:hidden;text-overflow:ellipsis}.table-wrap tr:hover td{background:#fbfcfa}.table-wrap .sticky{position:sticky;z-index:8;border-right:1px solid #ecece7}.table-wrap th.sticky{z-index:18;background:#e5ebe6}.table-wrap td.sticky{background:#fff}.sticky-0{left:0;min-width:106px}.sticky-1{left:106px;min-width:86px}.sticky-2{left:192px;min-width:150px}.sticky-3{left:342px;min-width:220px;box-shadow:7px 0 10px #1e35240b}.actions-col{position:sticky!important;right:0;z-index:15!important;background:#f8f8f4!important;border-left:1px solid var(--line)}.row-actions{display:flex;gap:5px}.row-actions button,.row-actions select{font-size:12px;padding:6px 8px;border:1px solid var(--line);background:#fff;border-radius:7px}.row-actions .danger{color:var(--red)}.status{display:inline-block;padding:3px 8px;border-radius:99px;font-size:11px;font-weight:800}.status.live{background:#def0e7;color:#126345}.status.off{background:#eee8e5;color:#8a4e46}.date-error{background:#fff0ed!important;color:#b4312b}.mini-photos{display:flex;position:relative}.mini-photos img{width:34px;height:30px;object-fit:cover;border-radius:5px;margin-right:3px}.mini-photos span{position:absolute;right:-4px;bottom:-3px;background:#17242a;color:#fff;border-radius:99px;font-size:9px;padding:1px 5px}.empty{text-align:center;padding:70px 20px;color:var(--muted)}.empty span{font-size:38px}.empty h3{color:var(--ink);margin:10px 0 5px}.empty p{margin:0;font-size:13px}.key-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px;margin-top:20px}.key-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:19px;box-shadow:0 6px 20px #33473d0a}.key-card>span{color:var(--green);font-weight:800;font-size:12px}.key-card h3{font-size:19px;margin:7px 0}.key-card p{color:var(--muted);font-size:13px;min-height:40px}.key-card dl{border-top:1px solid var(--line);padding-top:12px;margin:0;display:grid;gap:8px}.key-card dl div{display:flex;justify-content:space-between;gap:20px}.key-card dt{color:var(--muted);font-size:12px}.key-card dd{margin:0;font-weight:700;text-align:right}.modal-backdrop{position:fixed;inset:0;background:#0d1d1a99;z-index:80;display:grid;place-items:center;padding:24px}.modal{background:var(--paper);width:min(1060px,96vw);max-height:94vh;border-radius:17px;overflow:auto;box-shadow:0 30px 90px #0005}.modal-head{position:sticky;top:0;background:#fff;z-index:4;padding:20px 24px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}.modal-head span{font-size:11px;color:var(--green);font-weight:800;letter-spacing:.15em}.modal-head h2{margin:3px 0 0;font-family:serif}.close{font-size:26px;border:0;background:none}.form-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;padding:22px 24px}.field{display:flex;flex-direction:column;gap:6px}.field>span,.photo-editor>label{font-size:12px;font-weight:750;color:#56645f}.field input,.field select,.field textarea,.login-card input{width:100%;border:1px solid #ccd2ce;background:#fff;border-radius:8px;padding:10px 11px;outline:0}.field input:focus,.field select:focus,.field textarea:focus,.login-card input:focus{border-color:var(--green);box-shadow:0 0 0 3px #1f5a4a17}.field small{color:var(--green)}.field.invalid input{border-color:var(--red)}.span-2{grid-column:span 2}.photo-editor{padding:0 24px 20px}.photo-row{display:flex;flex-wrap:wrap;gap:9px;margin-top:8px}.photo-thumb,.photo-add{width:96px;height:76px;border-radius:9px;overflow:hidden;position:relative}.photo-thumb img{width:100%;height:100%;object-fit:cover}.photo-thumb button{position:absolute;right:3px;top:3px;background:#111a;color:#fff;border:0;padding:1px 6px}.photo-add{display:grid;place-items:center;border:1px dashed #9ea9a5;color:var(--green);font-size:24px;cursor:pointer;background:#fff}.photo-add span{font-size:10px;position:absolute;bottom:8px}.modal-foot{position:sticky;bottom:0;display:flex;justify-content:flex-end;gap:8px;background:#fff;padding:14px 24px;border-top:1px solid var(--line)}.toast{position:fixed;z-index:120;left:50%;bottom:24px;transform:translateX(-50%);background:#17242a;color:white;padding:11px 18px;border-radius:9px;box-shadow:0 8px 35px #0004}.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:22px}.panel,.supabase{background:#fff;border:1px solid var(--line);border-radius:13px;padding:22px}.panel h3{margin:0 0 6px}.panel p{color:var(--muted);font-size:13px;margin:0 0 18px}.panel .field{margin-top:13px}.backup-actions{display:flex;gap:8px;flex-wrap:wrap}.supabase{margin-top:16px;padding:0}.supabase summary{padding:18px 22px;display:flex;justify-content:space-between;cursor:pointer;font-weight:800}.supabase summary small{color:var(--muted);font-weight:400}.supabase-body{border-top:1px solid var(--line);padding:18px 22px}.supabase-body .form-grid{padding:16px 0;grid-template-columns:1fr 1fr}.warning{background:#fff5d9;color:#79561b;padding:10px 12px;border-radius:8px;font-size:12px}.public-shell{min-height:calc(100vh - 136px);padding:34px}.login-card{width:min(420px,94vw);background:#fff;margin:45px auto;padding:36px;border:1px solid var(--line);border-radius:18px;box-shadow:0 20px 60px #23342d14;text-align:center}.login-icon{width:58px;height:58px;margin:0 auto 17px;font-size:27px}.login-card h2{font-family:serif;font-size:27px;margin:0}.login-card p{color:var(--muted);font-size:13px;margin:8px 0 22px}.login-card input{text-align:center;letter-spacing:.12em}.login-card .wide{width:100%;margin:10px 0}.login-card small{color:var(--muted)}.public-head{display:flex;justify-content:space-between;align-items:end;margin-bottom:15px}.public-head span{color:var(--gold);font-weight:800;font-size:12px}.public-head h2{font-family:serif;margin:4px 0 0}.public-table{max-height:calc(100vh - 245px)}
 @media(max-width:800px){.topbar{padding:0 16px;height:72px}.brand p{display:none}.header-actions .key-tag{display:none}.nav{padding:0 16px;gap:15px;overflow:auto}.content,.public-shell{padding:20px 16px}.list-head{align-items:stretch;flex-direction:column}.tools{justify-content:flex-start}.search{flex:1}.search input{width:100%}.form-grid{grid-template-columns:1fr 1fr}.settings-grid{grid-template-columns:1fr}.sticky-0{min-width:90px}.sticky-1{left:90px;min-width:75px}.sticky-2{left:165px;min-width:130px}.sticky-3{left:295px;min-width:180px}.span-2{grid-column:span 2}}@media(max-width:520px){.brand h1{font-size:17px}.header-actions .primary{padding:8px}.form-grid{grid-template-columns:1fr}.span-2{grid-column:span 1}.modal-backdrop{padding:0}.modal{width:100vw;max-height:100vh;height:100vh;border-radius:0}.settings .section-title{margin-bottom:12px}}
@@ -1556,11 +1549,56 @@ body{background:#f8fbfe!important;color:#405064!important}
 .ppt-case-row.auto>strong{display:flex;justify-content:center;align-items:center}.ppt-sequence-input{width:42px;min-width:42px;padding:4px;text-align:center;font:inherit}.ppt-preview-button{padding:5px 8px!important;background:#eef5ff!important;border-color:#94b8d9!important;color:#235d8b!important;font-weight:800!important}
 .new-case-reminder-list-modal{width:min(1580px,99vw)!important}
 .ppt-slide-preview-backdrop{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.62);display:grid;place-items:center;padding:22px;overflow:auto}.ppt-slide-preview-close{position:fixed;z-index:10000;right:18px;top:16px;width:42px;height:42px;border-radius:50%;border:2px solid #fff;background:#222;color:#fff;font-size:30px;line-height:30px}.ppt-slide-preview{width:min(1000px,94vw);aspect-ratio:4/3;background:#fff;color:#000;box-shadow:0 16px 45px rgba(0,0,0,.4);font-family:"DFKai-SB","標楷體",serif;overflow:hidden;display:flex;flex-direction:column}.ppt-slide-preview-top{height:11.4%;display:grid;grid-template-columns:60.5% 39.5%;border-bottom:2px solid #222}.ppt-slide-preview-top>div{display:grid;grid-template-columns:12% 88%;align-items:center;border-right:1px solid #222;min-width:0}.ppt-slide-preview-top>div:last-child{border-right:0}.ppt-slide-preview-top b{font-size:clamp(12px,1.6vw,16px);font-weight:400;text-align:center}.ppt-slide-preview-top span{padding:0 4px;font-size:clamp(18px,2.6vw,28px);font-weight:400;text-align:center;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ppt-slide-preview-body{display:grid;grid-template-columns:60.5% 39.5%;height:88.6%}.ppt-slide-preview-left{border-right:1.5px solid #222;display:flex;flex-direction:column;min-width:0}.ppt-slide-preview-salehead{height:14%;display:grid;grid-template-columns:45.5% 54.5%;border-bottom:1.5px solid #222}.ppt-slide-preview-developer{display:grid;grid-template-columns:24% 76%;align-items:center;background:#fce9d9;border-right:1px solid #222}.ppt-slide-preview-developer>b{font-size:clamp(12px,1.7vw,17px);text-align:center}.ppt-slide-preview-developer strong{font-size:clamp(16px,2vw,22px);color:#0000ff;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ppt-slide-preview-pricebox{display:grid;grid-template-columns:42% 42% 16%;align-items:center;padding:0 3px}.ppt-slide-preview-pricebox>b{font-size:clamp(12px,1.6vw,18px);font-weight:400;text-align:right}.ppt-slide-preview-pricebox strong{font-family:"DFKai-SB","標楷體",serif;font-size:clamp(28px,4vw,40px);color:#e00000;text-align:center;line-height:1}.ppt-slide-preview-pricebox em{font-size:clamp(12px,1.6vw,16px);font-style:normal;align-self:end;padding-bottom:10%}.ppt-slide-preview-fields{display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:minmax(0,1fr);padding:3.5% 2% 1%;gap:0 4%;flex:1;overflow:hidden}.ppt-slide-preview-fields>div{display:grid;grid-template-columns:40% 60%;align-items:center;min-width:0;border-bottom:1px solid #555}.ppt-slide-preview-fields b{font-size:clamp(12px,1.65vw,18px);font-weight:400;text-align:right;white-space:nowrap}.ppt-slide-preview-fields b:after{content:"："}.ppt-slide-preview-fields span{font-size:clamp(14px,2vw,24px);text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ppt-slide-preview.land .ppt-slide-preview-fields{padding-top:6%;padding-bottom:7%;flex:none;height:54%}.ppt-slide-preview-land .ppt-slide-preview-fields{height:50%}.ppt-slide-preview-note{height:12%;display:grid;grid-template-columns:18% 82%;align-items:start;padding:1.5% 2%;border-bottom:1.5px solid #222;overflow:hidden}.ppt-slide-preview-note b{font-size:clamp(12px,1.65vw,18px);font-weight:400;text-align:right}.ppt-slide-preview-note b:after{content:"："}.ppt-slide-preview-note span{font-size:clamp(12px,1.55vw,16px);white-space:pre-wrap;overflow:hidden;padding-left:4px}.ppt-slide-preview-footer{height:7%;display:flex;align-items:center;justify-content:space-between;padding:0 1%;font-family:"Microsoft JhengHei",sans-serif;font-size:clamp(8px,1.15vw,12px);white-space:nowrap}.ppt-slide-preview-footer span{width:48%;text-align:center}.ppt-slide-preview-right{display:grid;grid-template-rows:1fr 1fr;padding-top:2%;height:100%;box-sizing:border-box}.ppt-slide-preview-frame{margin:0;border:0;background:#fff}.ppt-slide-preview-frame:first-child{border-bottom:0}@media(max-width:700px){.ppt-slide-preview{width:98vw}.ppt-slide-preview-top span{white-space:normal}.ppt-slide-preview-fields{padding-left:1%;padding-right:1%;gap:0 1%}.ppt-slide-preview-fields b{font-size:10px}.ppt-slide-preview-fields span{font-size:12px}.ppt-slide-preview-note span{font-size:10px}}
-</style>
-</head>
-<body>
-  <div id="root"></div>
-  <script>"use strict";
+/* 新案件完成提醒以文字按鈕呈現，不使用原生勾選框。 */
+.new-case-reminder-table input[type="checkbox"]{appearance:none!important;-webkit-appearance:none!important;display:inline-grid!important;place-content:center!important;width:auto!important;min-width:52px!important;height:31px!important;margin:0!important;padding:0 10px!important;border:1px solid #ef9b96!important;border-radius:11px!important;background:#fff!important;color:#d9473f!important;cursor:pointer!important}
+.new-case-reminder-table input[type="checkbox"]::after{content:"完成";font-size:14px;font-weight:800;line-height:1}
+.new-case-reminder-table input[type="checkbox"]:hover{background:#fff5f4!important}
+.new-case-reminder-table input[type="checkbox"]:checked{border-color:#72ad98!important;background:#e8f5ef!important;color:#17644f!important}
+.new-case-reminder-table input[type="checkbox"]:checked::after{content:"已完成"}
+.new-case-reminder-table td:nth-child(5) input[type="checkbox"]::after{content:"房管上架完成"}
+.new-case-reminder-table td:nth-child(6) input[type="checkbox"]::after{content:"NEW 本製作完成"}
+.new-case-reminder-table td:nth-child(7) input[type="checkbox"]::after{content:"王總審核完成"}
+.new-case-reminder-table td:nth-child(n+5) input[type="checkbox"]{min-width:130px!important;border-radius:999px!important}
+.topbar>.nav .home-sync-times{display:flex!important;flex-direction:column!important;align-items:flex-start!important;justify-content:center!important;gap:1px!important;line-height:1.05!important;color:#1769aa!important}
+.topbar>.nav .home-sync-times>span{display:block!important;white-space:nowrap!important}
+.new-case-reminder-table td:nth-child(n+5) input[type="checkbox"]{border:2px solid #dc4c43!important;background:#fff7f6!important;color:#bd2f28!important;box-shadow:0 0 0 2px rgba(220,76,67,.08)!important}
+.new-case-reminder-table td:nth-child(5) input[type="checkbox"]::after{content:"待完成｜房管上架完成"}
+.new-case-reminder-table td:nth-child(6) input[type="checkbox"]::after{content:"待完成｜NEW 本製作完成"}
+.new-case-reminder-table td:nth-child(7) input[type="checkbox"]::after{content:"待完成｜王總審核完成"}
+.new-case-reminder-table td:nth-child(n+5) input[type="checkbox"]:checked{border-color:#17644f!important;background:#17644f!important;color:#fff!important;box-shadow:0 0 0 2px rgba(23,100,79,.14)!important}
+.new-case-reminder-table td:nth-child(5) input[type="checkbox"]:checked::after{content:"✓ 房管上架完成"}
+.new-case-reminder-table td:nth-child(6) input[type="checkbox"]:checked::after{content:"✓ NEW 本製作完成"}
+.new-case-reminder-table td:nth-child(7) input[type="checkbox"]:checked::after{content:"✓ 王總審核完成"}
+.topbar>.nav .home-sync-times>span{display:grid!important;grid-template-columns:112px auto!important;align-items:center!important;column-gap:6px!important;color:#1769aa!important}
+.topbar>.nav .home-sync-times>span>b{font:inherit!important;font-weight:700!important;text-align:right!important;color:#1769aa!important}
+.topbar>.nav .home-sync-times>span>em{font:inherit!important;font-style:normal!important;color:#1769aa!important;text-align:left!important}
+/* 新案件提醒沿用封存下架提醒：未完成顯示動作，完成後改為綠色「已完成」。 */
+.new-case-reminder-table td:nth-child(n+5) input[type="checkbox"]{min-width:130px!important;padding:6px 9px!important;border:1px solid #e0aaa4!important;border-radius:999px!important;background:#fff8f7!important;color:#b52d26!important;font-size:12px!important;font-weight:700!important;box-shadow:none!important}
+.new-case-reminder-table td:nth-child(5) input[type="checkbox"]::after{content:"房管上架完成"}
+.new-case-reminder-table td:nth-child(6) input[type="checkbox"]::after{content:"NEW 本製作完成"}
+.new-case-reminder-table td:nth-child(7) input[type="checkbox"]::after{content:"王總審核完成"}
+.new-case-reminder-table td:nth-child(n+5) input[type="checkbox"]:checked{border-color:#73aa96!important;background:#e4f3ec!important;color:#276a54!important;box-shadow:none!important}
+.new-case-reminder-table td:nth-child(n+5) input[type="checkbox"]:checked::after{content:"已完成"}
+.topbar>.nav .home-sync-times .local-modified-line,.topbar>.nav .home-sync-times .local-modified-line>*{color:#1687d9!important}
+.topbar>.nav .home-sync-times .cloud-upload-line,.topbar>.nav .home-sync-times .cloud-upload-line>b,.topbar>.nav .home-sync-times .cloud-upload-line>em{color:#1769aa!important}
+.cloud-upload-state{display:inline-block;margin-left:8px;padding:1px 6px;border-radius:999px;font:inherit!important;font-size:11px!important;font-style:normal!important;font-weight:800!important}.cloud-upload-state.complete{background:#dff2e9;color:#17644f!important}.cloud-upload-state.uploading{background:#fff0cc;color:#966100!important}.cloud-upload-state.signed-out{background:#edf1f4;color:#687681!important}
+.new-case-reminder-table td:nth-child(n+5) input[type="checkbox"]:checked{min-width:auto!important;padding:3px 0!important;border:0!important;border-radius:0!important;background:transparent!important;color:#477564!important;box-shadow:none!important}
+.new-case-reminder-table td:nth-child(n+5) input[type="checkbox"]:checked::after{content:"已完成";font-size:12px!important;font-weight:700!important}
+.topbar>.nav .home-sync-times{display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:flex-start!important;gap:20px!important;line-height:1.2!important}
+.topbar>.nav .home-sync-times>span{display:grid!important;grid-template-columns:auto auto!important;column-gap:5px!important}
+.cloud-upload-state{margin-left:3px!important;padding:0!important;border-radius:0!important;background:transparent!important;font-size:inherit!important;font-weight:700!important}
+.topbar>.nav .home-sync-times{gap:24px!important;font-size:15px!important;line-height:1.15!important}
+.topbar>.nav .home-sync-times>span{display:flex!important;flex-direction:column!important;align-items:flex-start!important;gap:2px!important}
+.topbar>.nav .home-sync-times>span>b{font-size:14px!important;text-align:left!important}
+.topbar>.nav .home-sync-times>span>em{font-size:15px!important;font-weight:700!important;text-align:left!important}
+.archive-list-page>.table-wrap{max-height:none!important;overflow-x:auto!important;overflow-y:visible!important}
+.archive-list-page th.col-propertyNo,.archive-list-page td.col-propertyNo,.archive-list-page .sticky-0{width:76px!important;min-width:76px!important;max-width:76px!important;padding-left:3px!important;padding-right:3px!important;white-space:nowrap!important}
+.archive-list-page .sticky-1{left:76px!important}
+.archive-list-page .sticky-2{left:166px!important}
+.archive-list-page .sticky-3{left:346px!important}
+.archive-list-page th.col-developer,.archive-list-page td.col-developer{width:1%!important;min-width:0!important;max-width:none!important;padding-left:6px!important;padding-right:6px!important;white-space:nowrap!important}
+.new-case-reminder-list-modal{width:min(1320px,96vw)!important}
+</style></head><body><div id="root"></div><script>"use strict";
 (() => {
   var __create = Object.create;
   var __defProp = Object.defineProperty;
@@ -1598,9 +1636,9 @@ body{background:#f8fbfe!important;color:#405064!important}
     mod
   ));
 
-  // ../node_modules/.pnpm/scheduler@0.27.0/node_modules/scheduler/cjs/scheduler.development.js
+  // node_modules/.pnpm/scheduler@0.27.0/node_modules/scheduler/cjs/scheduler.development.js
   var require_scheduler_development = __commonJS({
-    "../node_modules/.pnpm/scheduler@0.27.0/node_modules/scheduler/cjs/scheduler.development.js"(exports) {
+    "node_modules/.pnpm/scheduler@0.27.0/node_modules/scheduler/cjs/scheduler.development.js"(exports) {
       "use strict";
       (function() {
         function performWorkUntilDeadline() {
@@ -1857,9 +1895,9 @@ body{background:#f8fbfe!important;color:#405064!important}
     }
   });
 
-  // ../node_modules/.pnpm/scheduler@0.27.0/node_modules/scheduler/index.js
+  // node_modules/.pnpm/scheduler@0.27.0/node_modules/scheduler/index.js
   var require_scheduler = __commonJS({
-    "../node_modules/.pnpm/scheduler@0.27.0/node_modules/scheduler/index.js"(exports, module) {
+    "node_modules/.pnpm/scheduler@0.27.0/node_modules/scheduler/index.js"(exports, module) {
       "use strict";
       if (false) {
         module.exports = null;
@@ -1869,9 +1907,9 @@ body{background:#f8fbfe!important;color:#405064!important}
     }
   });
 
-  // ../node_modules/.pnpm/react@19.2.6/node_modules/react/cjs/react.development.js
+  // node_modules/.pnpm/react@19.2.6/node_modules/react/cjs/react.development.js
   var require_react_development = __commonJS({
-    "../node_modules/.pnpm/react@19.2.6/node_modules/react/cjs/react.development.js"(exports, module) {
+    "node_modules/.pnpm/react@19.2.6/node_modules/react/cjs/react.development.js"(exports, module) {
       "use strict";
       (function() {
         function defineDeprecationWarning(methodName, info) {
@@ -2841,9 +2879,9 @@ body{background:#f8fbfe!important;color:#405064!important}
     }
   });
 
-  // ../node_modules/.pnpm/react@19.2.6/node_modules/react/index.js
+  // node_modules/.pnpm/react@19.2.6/node_modules/react/index.js
   var require_react = __commonJS({
-    "../node_modules/.pnpm/react@19.2.6/node_modules/react/index.js"(exports, module) {
+    "node_modules/.pnpm/react@19.2.6/node_modules/react/index.js"(exports, module) {
       "use strict";
       if (false) {
         module.exports = null;
@@ -2853,9 +2891,9 @@ body{background:#f8fbfe!important;color:#405064!important}
     }
   });
 
-  // ../node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/cjs/react-dom.development.js
+  // node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/cjs/react-dom.development.js
   var require_react_dom_development = __commonJS({
-    "../node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/cjs/react-dom.development.js"(exports) {
+    "node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/cjs/react-dom.development.js"(exports) {
       "use strict";
       (function() {
         function noop() {
@@ -3097,9 +3135,9 @@ body{background:#f8fbfe!important;color:#405064!important}
     }
   });
 
-  // ../node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/index.js
+  // node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/index.js
   var require_react_dom = __commonJS({
-    "../node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/index.js"(exports, module) {
+    "node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/index.js"(exports, module) {
       "use strict";
       if (false) {
         checkDCE();
@@ -3110,9 +3148,9 @@ body{background:#f8fbfe!important;color:#405064!important}
     }
   });
 
-  // ../node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/cjs/react-dom-client.development.js
+  // node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/cjs/react-dom-client.development.js
   var require_react_dom_client_development = __commonJS({
-    "../node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/cjs/react-dom-client.development.js"(exports) {
+    "node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/cjs/react-dom-client.development.js"(exports) {
       "use strict";
       (function() {
         function findHook(fiber, id) {
@@ -23009,9 +23047,9 @@ body{background:#f8fbfe!important;color:#405064!important}
     }
   });
 
-  // ../node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/client.js
+  // node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/client.js
   var require_client = __commonJS({
-    "../node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/client.js"(exports, module) {
+    "node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/client.js"(exports, module) {
       "use strict";
       if (false) {
         checkDCE();
@@ -23022,9 +23060,9 @@ body{background:#f8fbfe!important;color:#405064!important}
     }
   });
 
-  // ../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/dist/jszip.min.js
+  // node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/dist/jszip.min.js
   var require_jszip_min = __commonJS({
-    "../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/dist/jszip.min.js"(exports, module) {
+    "node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/dist/jszip.min.js"(exports, module) {
       !(function(e) {
         if ("object" == typeof exports && "undefined" != typeof module) module.exports = e();
         else if ("function" == typeof define && define.amd) define([], e);
@@ -35420,9 +35458,9 @@ body{background:#f8fbfe!important;color:#405064!important}
     }
   });
 
-  // ../node_modules/.pnpm/react@19.2.6/node_modules/react/cjs/react-jsx-runtime.development.js
+  // node_modules/.pnpm/react@19.2.6/node_modules/react/cjs/react-jsx-runtime.development.js
   var require_react_jsx_runtime_development = __commonJS({
-    "../node_modules/.pnpm/react@19.2.6/node_modules/react/cjs/react-jsx-runtime.development.js"(exports) {
+    "node_modules/.pnpm/react@19.2.6/node_modules/react/cjs/react-jsx-runtime.development.js"(exports) {
       "use strict";
       (function() {
         function getComponentNameFromType(type) {
@@ -35677,9 +35715,9 @@ body{background:#f8fbfe!important;color:#405064!important}
     }
   });
 
-  // ../node_modules/.pnpm/react@19.2.6/node_modules/react/jsx-runtime.js
+  // node_modules/.pnpm/react@19.2.6/node_modules/react/jsx-runtime.js
   var require_jsx_runtime = __commonJS({
-    "../node_modules/.pnpm/react@19.2.6/node_modules/react/jsx-runtime.js"(exports, module) {
+    "node_modules/.pnpm/react@19.2.6/node_modules/react/jsx-runtime.js"(exports, module) {
       "use strict";
       if (false) {
         module.exports = null;
@@ -35695,7 +35733,7 @@ body{background:#f8fbfe!important;color:#405064!important}
   // app/page.tsx
   var import_react = __toESM(require_react(), 1);
 
-  // ../node_modules/.pnpm/pptxgenjs@4.0.1/node_modules/pptxgenjs/dist/pptxgen.es.js
+  // node_modules/.pnpm/pptxgenjs@4.0.1/node_modules/pptxgenjs/dist/pptxgen.es.js
   var import_jszip = __toESM(require_jszip_min());
   function __awaiter(thisArg, _arguments, P, generator) {
     function adopt(value) {
@@ -41191,6 +41229,7 @@ ${String(ex)}`);
   var DAILY_HIDDEN_KEY = "property-desk-daily-hidden-v1";
   var MISSING_REMINDER_DATE_KEY = "property-desk-missing-reminder-date-v1";
   var CLOUD_SESSION_KEY = "property-desk-supabase-session-v1";
+  var CLOUD_LAST_UPLOAD_KEY = "property-desk-supabase-last-upload-v1";
   var CASE_FILE_SUPABASE_URL = "https://oiywtmjbasoonfuxemtr.supabase.co";
   var CASE_FILE_SUPABASE_TABLE = "case_file_state";
   var newCaseReminderPending = (record) => !["housingListingCompleted", "newBookCompleted", "wangReviewCompleted"].every((key) => record[key] === "1");
@@ -42392,6 +42431,7 @@ ${String(ex)}`);
     const [storageReady, setStorageReady] = (0, import_react.useState)(false);
     developerPersonnelForDisplay = settings.personnel;
     const [cloudSession, setCloudSession] = (0, import_react.useState)(null);
+    const [cloudLastUploadAt, setCloudLastUploadAt] = (0, import_react.useState)(() => typeof window !== "undefined" ? localStorage.getItem(CLOUD_LAST_UPLOAD_KEY) || "" : "");
     const [tab, setTab] = (0, import_react.useState)("active");
     const [query, setQuery] = (0, import_react.useState)("");
     const [archiveQuery, setArchiveQuery] = (0, import_react.useState)("");
@@ -42589,6 +42629,10 @@ ${String(ex)}`);
       flash("\u5DF2\u8907\u88FD\u7279\u8272\u8AAA\u660E1\uFF5E4");
     };
     (0, import_react.useEffect)(() => {
+      if (tab !== "active") {
+        document.body.classList.remove("active-list-stuck");
+        return;
+      }
       let toolbarAnchor = 0;
       const updateStickyListOffsets = () => {
         const topbar = document.querySelector(".topbar");
@@ -42697,7 +42741,8 @@ ${String(ex)}`);
         const savedIntake = localStorage.getItem(INTAKE_KEY);
         if (savedIntake) {
           const saved2 = JSON.parse(savedIntake);
-          const drafts = saved2.drafts || (saved2.parsed ? [{ ...saved2.parsed, raw: saved2.raw || "" }] : []);
+          const savedDrafts = saved2.drafts || (saved2.parsed ? [{ ...saved2.parsed, raw: saved2.raw || "" }] : []);
+          const drafts = reconcileIntakeDraftLinks(savedDrafts, loadedRecords);
           if (!localStorage.getItem(PHOTO_INTAKE_CLEANUP_KEY)) {
             const legacyPhotoValues = new Map(drafts.filter((draft) => draft.linkedRecordId).map((draft) => [draft.linkedRecordId, new Set(Object.entries(draft.values).filter(([key, value]) => value && (key.includes("\u9032\u6848\u6587\u4EF6") || key.includes("\u7576\u4E0B\u9032\u6848\u6587\u4EF6"))).map(([, value]) => value.trim()))]));
             loadedRecords = loadedRecords.map((record) => {
@@ -42713,7 +42758,7 @@ ${String(ex)}`);
             return draft ? intakeToRecord(draft, record) : record;
           });
           setIntakeDrafts(drafts);
-          setSelectedIntakeId(saved2.selectedId || drafts[0]?.id || "");
+          setSelectedIntakeId(saved2.selectedId || drafts.find((draft) => !draft.linkedRecordId)?.id || "");
           setIntakeRaw(saved2.raw || "");
         }
         const savedTour = localStorage.getItem(TOUR_KEY);
@@ -42786,6 +42831,21 @@ ${String(ex)}`);
     (0, import_react.useEffect)(() => {
       if (records.length) localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
     }, [records]);
+    (0, import_react.useEffect)(() => {
+      if (!storageReady || !intakeDrafts.length) return;
+      const enteredAtByRecord = new Map(intakeDrafts.filter((draft) => draft.linkedRecordId && draft.enteredAt).map((draft) => [draft.linkedRecordId, draft.enteredAt]));
+      setRecords((previous) => {
+        let changed = false;
+        const next = previous.map((record) => {
+          if (record._dailyAddedAt) return record;
+          const enteredAt = enteredAtByRecord.get(record.id);
+          if (!enteredAt) return record;
+          changed = true;
+          return { ...record, _dailyAddedAt: enteredAt };
+        });
+        return changed ? next : previous;
+      });
+    }, [storageReady, intakeDrafts]);
     (0, import_react.useEffect)(() => {
       if (!storageReady) return;
       setRecords((previous) => previous.map((record) => String(record.address || "").includes("\u5BCC\u8FB2\u8857\u4E00\u6BB5188\u5DF740\u865F") ? { ...record, _newCaseReminderEnabled: "1", _newCaseReminderSource: "intake", housingListingCompleted: "1", newBookCompleted: "1", wangReviewCompleted: "1" } : record));
@@ -42879,6 +42939,7 @@ ${String(ex)}`);
       return !latest || new Date(candidate).getTime() > new Date(latest).getTime() ? candidate : latest;
     }, "");
     const latestModifiedAt = [latestRecordModifiedAt, latestDraftModifiedAt, tourModifiedAt].filter(Boolean).reduce((latest, candidate) => !latest || new Date(candidate).getTime() > new Date(latest).getTime() ? candidate : latest, "");
+    const cloudUploadStatus = !cloudSession?.accessToken ? "\u672A\u767B\u5165" : cloudLastUploadAt && (!latestModifiedAt || Date.parse(cloudLastUploadAt) >= Date.parse(latestModifiedAt)) ? "\u4E0A\u50B3\u5B8C\u6210" : "ING";
     const showingFollowUpRecords = active.filter((record) => record.showingFollowUp === "\u66AB\u505C\u5E36\u770B\uFF0F\u7B49\u5F85\u696D\u52D9\u56DE\u8986");
     (0, import_react.useEffect)(() => {
       const dueToday = showingFollowUpRecords.filter((record) => normalizeDateInput(record.showingFollowUpDueDate || "") === today());
@@ -43860,8 +43921,11 @@ ${changedLabels}
         const session = await refreshCloudSession();
         if (!session) throw new Error("cloud session expired");
         const url = `${settings.supabaseUrl.replace(/\/$/, "")}/rest/v1/${settings.supabaseTable}`;
-        const res = await fetch(url, { method: "POST", headers: { ...cloudHeaders(session), Prefer: "resolution=merge-duplicates,return=minimal" }, body: JSON.stringify({ id: settings.supabaseRecord, data: cloudData(), updated_at: (/* @__PURE__ */ new Date()).toISOString() }) });
+        const uploadedAt = (/* @__PURE__ */ new Date()).toISOString();
+        const res = await fetch(url, { method: "POST", headers: { ...cloudHeaders(session), Prefer: "resolution=merge-duplicates,return=minimal" }, body: JSON.stringify({ id: settings.supabaseRecord, data: cloudData(), updated_at: uploadedAt }) });
         if (!res.ok) throw new Error(await res.text());
+        setCloudLastUploadAt(uploadedAt);
+        localStorage.setItem(CLOUD_LAST_UPLOAD_KEY, uploadedAt);
         if (!quiet) flash("\u96F2\u7AEF\u540C\u6B65\u5B8C\u6210");
         return true;
       } catch {
@@ -43874,11 +43938,15 @@ ${changedLabels}
       try {
         const session = await refreshCloudSession();
         if (!session) throw new Error("cloud session expired");
-        const url = `${settings.supabaseUrl.replace(/\/$/, "")}/rest/v1/${settings.supabaseTable}?id=eq.${encodeURIComponent(settings.supabaseRecord)}&select=data`;
+        const url = `${settings.supabaseUrl.replace(/\/$/, "")}/rest/v1/${settings.supabaseTable}?id=eq.${encodeURIComponent(settings.supabaseRecord)}&select=data,updated_at`;
         const res = await fetch(url, { headers: cloudHeaders(session) });
         const rows = await res.json();
         const data = rows[0]?.data;
         if (!res.ok || !data?.records) throw new Error();
+        if (rows[0]?.updated_at) {
+          setCloudLastUploadAt(rows[0].updated_at);
+          localStorage.setItem(CLOUD_LAST_UPLOAD_KEY, rows[0].updated_at);
+        }
         if (automatic || confirm("\u96F2\u7AEF\u8CC7\u6599\u5C07\u8207\u672C\u6A5F\u8CC7\u6599\u5408\u4F75\uFF0C\u672C\u6A5F\u5DF2\u4FEE\u6539\u4F46\u5C1A\u672A\u540C\u6B65\u7684\u540C\u4E00\u7B46\u8CC7\u6599\u5C07\u4EE5\u96F2\u7AEF\u7248\u672C\u70BA\u6E96\u3002\u78BA\u5B9A\u55CE\uFF1F")) {
           setRecords((prev) => {
             const map = new Map(prev.map((r) => [r.id, r]));
@@ -43892,7 +43960,7 @@ ${changedLabels}
           if (data.settings) setSettings((previous) => ({ ...previous, ...data.settings.bookReviewCurrentDate ? { bookReviewCurrentDate: data.settings.bookReviewCurrentDate } : {}, ...data.settings.bookReviewNextDate ? { bookReviewNextDate: data.settings.bookReviewNextDate } : {}, ...data.settings.expiry591 ? { expiry591: data.settings.expiry591 } : {}, ...data.settings.expiry5168 ? { expiry5168: data.settings.expiry5168 } : {}, ...data.settings.brokerExpiry ? { brokerExpiry: data.settings.brokerExpiry } : {}, ...Array.isArray(data.settings.personnel) && data.settings.personnel.length > 0 ? { personnel: mergeSuppliedPersonnel(data.settings.personnel) } : {} }));
           if (data.intake) {
             setIntakeRaw((previous) => previous || data.intake.raw || "");
-            setIntakeDrafts((previous) => mergeIntakeDrafts(previous, Array.isArray(data.intake.drafts) ? data.intake.drafts : []));
+            setIntakeDrafts((previous) => reconcileIntakeDraftLinks(mergeIntakeDrafts(previous, Array.isArray(data.intake.drafts) ? data.intake.drafts : []), [...records, ...data.records]));
             setSelectedIntakeId((previous) => previous || data.intake.selectedId || "");
           }
           if (data.tour) {
@@ -44171,8 +44239,9 @@ ${changedLabels}
       if (existing) {
         const firstFormalEntry = !target.enteredAt;
         const tracked = { ...withTrackedUpdate(existing, record), ...firstFormalEntry ? { _newCaseReminderEnabled: "1", _newCaseReminderSource: "intake" } : {} };
+        const enteredAt2 = target.enteredAt || (/* @__PURE__ */ new Date()).toISOString();
         setRecords((prev) => prev.map((item) => item.id === existing.id ? tracked : item));
-        setIntakeDrafts((prev) => prev.map((draft) => draft.id === target.id ? { ...draft, linkedRecordId: existing.id, enteredAt: draft.enteredAt || (/* @__PURE__ */ new Date()).toISOString() } : draft));
+        setIntakeDrafts((prev) => prev.map((draft) => draft.id === target.id ? { ...draft, linkedRecordId: existing.id, enteredAt: enteredAt2, modifiedAt: enteredAt2 } : draft));
         if (firstFormalEntry) {
           setNewCaseReminder({ ...tracked });
           setNewCaseReminderBatchIds((previous) => [.../* @__PURE__ */ new Set([...previous, ...pendingIntakeReminderRecords.map((item) => item.id), tracked.id])]);
@@ -44181,9 +44250,10 @@ ${changedLabels}
         return;
       }
       if (!confirm(`\u78BA\u5B9A\u6587\u4EF6\u5DF2\u6536\u5230\uFF0C\u5C07\u300C${record.caseName}\u300D\u6B63\u5F0F\u52A0\u5165\u7E3D\u8868\uFF1F`)) return;
+      const enteredAt = (/* @__PURE__ */ new Date()).toISOString();
       const entered = { ...record, _newCaseReminderEnabled: "1", _newCaseReminderSource: "intake" };
       setRecords((prev) => [entered, ...prev]);
-      setIntakeDrafts((prev) => prev.map((draft) => draft.id === target.id ? { ...draft, linkedRecordId: entered.id, enteredAt: (/* @__PURE__ */ new Date()).toISOString() } : draft));
+      setIntakeDrafts((prev) => prev.map((draft) => draft.id === target.id ? { ...draft, linkedRecordId: entered.id, enteredAt, modifiedAt: enteredAt } : draft));
       setNewCaseReminder({ ...entered });
       setNewCaseReminderBatchIds((previous) => [.../* @__PURE__ */ new Set([...previous, ...pendingIntakeReminderRecords.map((item) => item.id), entered.id])]);
       flash("\u5DF2\u6B63\u5F0F\u9032\u6848\uFF1B\u8ACB\u5B8C\u6210\u65B0\u6848\u4EF6\u63D0\u9192");
@@ -44270,7 +44340,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V192" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V193" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -44318,9 +44388,18 @@ ${changedLabels}
           }, children: "\u9032\u6848\u8349\u7A3F" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: tab === "public" ? "active" : "", onClick: openPublic, children: "\u524D\u53F0\u7E3D\u8868" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: tab === "settings" ? "active" : "", onClick: () => setTab("settings"), children: "\u8A2D\u5B9A" }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "home-last-modified", children: [
-            "\u6700\u5F8C\u4FEE\u6539: ",
-            latestModifiedAt ? displayHomeModifiedAt(latestModifiedAt) : "\u5C1A\u7121\u7D00\u9304"
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "home-last-modified home-sync-times", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "local-modified-line", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u6700\u5F8C\u4FEE\u6539:" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("em", { children: latestModifiedAt ? displayHomeModifiedAt(latestModifiedAt) : "\u5C1A\u7121\u7D00\u9304" })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "cloud-upload-line", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "Supabase\u4E0A\u50B3:" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("em", { children: [
+                cloudLastUploadAt ? displayHomeModifiedAt(cloudLastUploadAt) : "\u5C1A\u7121\u7D00\u9304",
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("i", { className: `cloud-upload-state ${cloudUploadStatus === "\u4E0A\u50B3\u5B8C\u6210" ? "complete" : cloudUploadStatus === "ING" ? "uploading" : "signed-out"}`, children: cloudUploadStatus })
+              ] })
+            ] })
           ] })
         ] })
       ] }),
@@ -45708,7 +45787,21 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     ] });
   }
   var intakeDraftStamp = (draft) => Date.parse(draft.modifiedAt || draft.createdAt || "") || 0;
-  var intakeDraftIdentity = (draft) => draft.linkedRecordId || intakeValue(draft.values, "\u59D4\u8A17\u4E3B\u7D04\u7DE8\u865F").trim() || `${intakeValue(draft.values, "\u6848\u540D").trim()}|${intakeValue(draft.values, "\u7269\u4EF6(\u5B8C\u6574)\u5730\u5740").trim()}` || draft.id;
+  var intakeDraftIdentity = (draft) => intakeValue(draft.values, "\u59D4\u8A17\u4E3B\u7D04\u7DE8\u865F").trim() || draft.linkedRecordId || `${intakeValue(draft.values, "\u6848\u540D").trim()}|${intakeValue(draft.values, "\u7269\u4EF6(\u5B8C\u6574)\u5730\u5740").trim()}` || draft.id;
+  var reconcileIntakeDraftLinks = (drafts, records) => {
+    const byId = new Map(records.map((record) => [String(record.id || ""), record]));
+    const byNo = new Map(records.filter((record) => String(record.propertyNo || "").trim()).map((record) => [String(record.propertyNo).trim(), record]));
+    const byCaseAddress = new Map(records.filter((record) => String(record.caseName || "").trim() && String(record.address || "").trim()).map((record) => [`${String(record.caseName).trim()}|${String(record.address).trim()}`, record]));
+    return drafts.map((draft) => {
+      if (draft.linkedRecordId && byId.has(draft.linkedRecordId)) return draft;
+      const propertyNo = intakeValue(draft.values, "\u59D4\u8A17\u4E3B\u7D04\u7DE8\u865F").trim();
+      const caseAddress = `${intakeValue(draft.values, "\u6848\u540D").trim()}|${intakeValue(draft.values, "\u7269\u4EF6(\u5B8C\u6574)\u5730\u5740").trim()}`;
+      const record = (propertyNo ? byNo.get(propertyNo) : void 0) || (caseAddress !== "|" ? byCaseAddress.get(caseAddress) : void 0);
+      if (!record) return draft;
+      const enteredAt = draft.enteredAt || record.reportDate || record.lastModifiedAt || (/* @__PURE__ */ new Date()).toISOString();
+      return { ...draft, linkedRecordId: record.id, enteredAt, modifiedAt: draft.modifiedAt || enteredAt };
+    });
+  };
   var mergeIntakeDrafts = (localDrafts, cloudDrafts) => {
     const merged = /* @__PURE__ */ new Map();
     [...cloudDrafts, ...localDrafts].forEach((draft) => {
@@ -47012,7 +47105,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     });
     const removedRecords = records.filter((record) => !!record.archived && dateOnly(record._archiveActionDate || record.archived) === selectedDate).map((record) => ({ ...record, _dailyAnnotation: `${displayRocDate(record.archived)}${record.status || "\u4E0B\u67B6"}` }));
     const groups = [
-      { key: "added", title: "\u65B0\u589E\u7269\u4EF6", records: records.filter((record) => dateOnly(record.reportDate) === selectedDate) },
+      { key: "added", title: "\u65B0\u589E\u7269\u4EF6", records: records.filter((record) => dateOnly(record._dailyAddedAt || record.reportDate) === selectedDate) },
       { key: "updated", title: "\u66F4\u65B0\u7269\u4EF6", records: updateRecords },
       { key: "removed", title: "\u4E0B\u67B6\u7269\u4EF6", records: removedRecords }
     ].map((group) => ({ ...group, records: group.records.filter((record) => !hiddenItems.includes(`${selectedDate}|${group.key}|${record.id}`)).map((record) => compact ? record : { ...record, _dailyHideKey: `${selectedDate}|${group.key}|${record.id}` }) }));
@@ -48432,25 +48525,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       window.addEventListener("keydown", close, true);
       return () => window.removeEventListener("keydown", close, true);
     }, [reviewVisible, scannerOpen]);
-    if (!reviewVisible) return null;
-    if (!dueRecords.length) return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "modal-backdrop book-review-reminder-backdrop", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", { className: "book-review-panel book-review-complete", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "book-review-head", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "book-review-title", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u7269\u4EF6\u672C\u78BA\u8A8D" }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
-            "\u672C\u6B21\u78BA\u8A8D\uFF1A",
-            displayRocDate(cycleStart),
-            "\u3000\u4E0B\u6B21\u78BA\u8A8D\uFF1A",
-            displayRocDate(nextCheckDate)
-          ] })
-        ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "book-review-actions", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "\u5DF2\u5168\u6578\u78BA\u8A8D" }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "close book-review-close", title: "\u95DC\u9589", onClick: () => setReviewVisible(false), children: "\xD7" })
-        ] })
-      ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "book-review-complete-message", children: "\u672C\u8F2A\u7269\u4EF6\u672C\u5DF2\u5168\u6578\u78BA\u8A8D\u5B8C\u6210\u3002" })
-    ] }) });
+    if (!reviewVisible || !dueRecords.length) return null;
     const statusOf = (record) => record.bookLocationType || "\u67B6\u4E0A";
     const bookAreaOrder = ["\u5317\u5340", "\u6771\u5340", "\u4E2D\u897F\u5340", "\u5357\u5340", "\u6C38\u5EB7\u5340", "\u5B89\u5E73\u5340", "\u4EC1\u5FB7\u5340", "\u5B89\u5357\u5340", "\u5176\u4ED6\u5340", "\u5916\u7E23\u5E02"];
     const groupedDueRecords = bookAreaOrder.map((area) => ({ area, items: dueRecords.filter((record) => areaCategory(record) === area) })).filter((group) => group.items.length);
@@ -49700,6 +49775,4 @@ react/cjs/react-jsx-runtime.development.js:
    * LICENSE file in the root directory of this source tree.
    *)
 */
-</script>
-</body>
-</html>
+</script></body></html>

@@ -25,6 +25,7 @@ const PPT_WEEK_SELECTIONS_KEY = "property-desk-ppt-week-selections-v1";
 const DAILY_HIDDEN_KEY = "property-desk-daily-hidden-v1";
 const MISSING_REMINDER_DATE_KEY = "property-desk-missing-reminder-date-v1";
 const CLOUD_SESSION_KEY = "property-desk-supabase-session-v1";
+const CLOUD_LAST_UPLOAD_KEY = "property-desk-supabase-last-upload-v1";
 const CASE_FILE_SUPABASE_URL = "https://oiywtmjbasoonfuxemtr.supabase.co";
 const CASE_FILE_SUPABASE_TABLE = "case_file_state";
 const newCaseReminderPending = (record: RecordItem) => !["housingListingCompleted", "newBookCompleted", "wangReviewCompleted"].every(key => record[key] === "1");
@@ -710,6 +711,7 @@ export default function Home() {
   const [storageReady, setStorageReady] = useState(false);
   developerPersonnelForDisplay = settings.personnel;
   const [cloudSession, setCloudSession] = useState<CloudSession | null>(null);
+  const [cloudLastUploadAt, setCloudLastUploadAt] = useState(() => typeof window !== "undefined" ? localStorage.getItem(CLOUD_LAST_UPLOAD_KEY) || "" : "");
   const [tab, setTab] = useState<"active" | "archive" | "activity" | "inventory" | "tour" | "keys" | "public" | "settings" | "intake">("active");
   const [query, setQuery] = useState("");
   const [archiveQuery, setArchiveQuery] = useState("");
@@ -876,6 +878,10 @@ export default function Home() {
   };
 
   useEffect(() => {
+    if (tab !== "active") {
+      document.body.classList.remove("active-list-stuck");
+      return;
+    }
     let toolbarAnchor = 0;
     const updateStickyListOffsets = () => {
       const topbar = document.querySelector<HTMLElement>(".topbar");
@@ -955,7 +961,7 @@ export default function Home() {
       loadedRecords = applySourceLayoutFixes(loadedRecords).map(record => normalizeRecordPings({ ...record, salesBook: record.salesBook || "製作" }));
       const savedSettings = localStorage.getItem(SETTINGS_KEY); setSettings(s => { const old = savedSettings ? JSON.parse(savedSettings) : {}; const personnel = old.personnel || (old.staffName || old.staffId ? [{ id: newId(), name: old.staffName || "", nationalId: old.staffId || "", status: "在職" }] : []); return { ...s, ...old, supabaseUrl: old.supabaseUrl || CASE_FILE_SUPABASE_URL, supabaseKey: old.supabaseKey || CASE_FILE_SUPABASE_PUBLISHABLE_KEY, supabaseTable: old.supabaseTable === "property_app_state" || !old.supabaseTable ? CASE_FILE_SUPABASE_TABLE : old.supabaseTable, supabaseRecord: old.supabaseRecord || "main", personnel: mergeSuppliedPersonnel(personnel) }; });
       const savedCloudSession = localStorage.getItem(CLOUD_SESSION_KEY); if (savedCloudSession) setCloudSession(JSON.parse(savedCloudSession));
-      const savedIntake = localStorage.getItem(INTAKE_KEY); if (savedIntake) { const saved = JSON.parse(savedIntake); const drafts: IntakeData[] = saved.drafts || (saved.parsed ? [{ ...saved.parsed, raw: saved.raw || "" }] : []); if (!localStorage.getItem(PHOTO_INTAKE_CLEANUP_KEY)) { const legacyPhotoValues = new Map(drafts.filter(draft => draft.linkedRecordId).map(draft => [draft.linkedRecordId!, new Set(Object.entries(draft.values).filter(([key, value]) => value && (key.includes("進案文件") || key.includes("當下進案文件"))).map(([, value]) => value.trim()))])); loadedRecords = loadedRecords.map(record => { const values = legacyPhotoValues.get(record.id); const current = String(record.photoInfo || "").split(/[／/]/).map(value => value.trim()).filter(Boolean); return values && current.length && current.every(value => values.has(value)) ? { ...record, photoInfo: "" } : record; }); localStorage.setItem(PHOTO_INTAKE_CLEANUP_KEY, "1"); } const linkedDrafts = new Map(drafts.filter(draft => draft.linkedRecordId).map(draft => [draft.linkedRecordId!, draft])); loadedRecords = loadedRecords.map(record => { const draft = linkedDrafts.get(record.id); return draft ? intakeToRecord(draft, record) : record; }); setIntakeDrafts(drafts); setSelectedIntakeId(saved.selectedId || drafts[0]?.id || ""); setIntakeRaw(saved.raw || ""); }
+      const savedIntake = localStorage.getItem(INTAKE_KEY); if (savedIntake) { const saved = JSON.parse(savedIntake); const savedDrafts: IntakeData[] = saved.drafts || (saved.parsed ? [{ ...saved.parsed, raw: saved.raw || "" }] : []); const drafts = reconcileIntakeDraftLinks(savedDrafts, loadedRecords); if (!localStorage.getItem(PHOTO_INTAKE_CLEANUP_KEY)) { const legacyPhotoValues = new Map(drafts.filter(draft => draft.linkedRecordId).map(draft => [draft.linkedRecordId!, new Set(Object.entries(draft.values).filter(([key, value]) => value && (key.includes("進案文件") || key.includes("當下進案文件"))).map(([, value]) => value.trim()))])); loadedRecords = loadedRecords.map(record => { const values = legacyPhotoValues.get(record.id); const current = String(record.photoInfo || "").split(/[／/]/).map(value => value.trim()).filter(Boolean); return values && current.length && current.every(value => values.has(value)) ? { ...record, photoInfo: "" } : record; }); localStorage.setItem(PHOTO_INTAKE_CLEANUP_KEY, "1"); } const linkedDrafts = new Map(drafts.filter(draft => draft.linkedRecordId).map(draft => [draft.linkedRecordId!, draft])); loadedRecords = loadedRecords.map(record => { const draft = linkedDrafts.get(record.id); return draft ? intakeToRecord(draft, record) : record; }); setIntakeDrafts(drafts); setSelectedIntakeId(saved.selectedId || drafts.find(draft => !draft.linkedRecordId)?.id || ""); setIntakeRaw(saved.raw || ""); }
       const savedTour = localStorage.getItem(TOUR_KEY); if (savedTour) { const tour = JSON.parse(savedTour); setTourItems(Array.isArray(tour.items) ? tour.items : []); setTourDate(tour.date || today()); setTourTitle(tour.title || `${displayRocDate(tour.date || today()).replace(/\//g, ".")}團看`); setTourModifiedAt(tour.modifiedAt || new Date().toISOString()); setTourHistory(Array.isArray(tour.history) ? tour.history : []); }
       setRecords(loadedRecords);
       setStorageReady(true);
@@ -1010,6 +1016,23 @@ export default function Home() {
     localStorage.setItem(cleanupKey, "1");
   }, [records.length]);
   useEffect(() => { if (records.length) localStorage.setItem(STORAGE_KEY, JSON.stringify(records)); }, [records]);
+  // 正式進案日與業務交件日分開：進案統計沿用 reportDate，
+  // 每日動態則顯示在助理實際按下正式進案的日期。
+  useEffect(() => {
+    if (!storageReady || !intakeDrafts.length) return;
+    const enteredAtByRecord = new Map(intakeDrafts.filter(draft => draft.linkedRecordId && draft.enteredAt).map(draft => [draft.linkedRecordId!, draft.enteredAt!]));
+    setRecords(previous => {
+      let changed = false;
+      const next = previous.map(record => {
+        if (record._dailyAddedAt) return record;
+        const enteredAt = enteredAtByRecord.get(record.id);
+        if (!enteredAt) return record;
+        changed = true;
+        return { ...record, _dailyAddedAt: enteredAt };
+      });
+      return changed ? next : previous;
+    });
+  }, [storageReady, intakeDrafts]);
   useEffect(() => {
     if (!storageReady) return;
     setRecords(previous => previous.map(record => String(record.address || "").includes("富農街一段188巷40號")
@@ -1095,6 +1118,7 @@ export default function Home() {
     return !latest || new Date(candidate).getTime() > new Date(latest).getTime() ? candidate : latest;
   }, "");
   const latestModifiedAt = [latestRecordModifiedAt, latestDraftModifiedAt, tourModifiedAt].filter(Boolean).reduce((latest, candidate) => !latest || new Date(candidate).getTime() > new Date(latest).getTime() ? candidate : latest, "");
+  const cloudUploadStatus = !cloudSession?.accessToken ? "未登入" : cloudLastUploadAt && (!latestModifiedAt || Date.parse(cloudLastUploadAt) >= Date.parse(latestModifiedAt)) ? "上傳完成" : "ING";
   const showingFollowUpRecords = active.filter(record => record.showingFollowUp === "暫停帶看／等待業務回覆");
   useEffect(() => {
     const dueToday = showingFollowUpRecords.filter(record => normalizeDateInput(record.showingFollowUpDueDate || "") === today());
@@ -1736,8 +1760,11 @@ export default function Home() {
       const session = await refreshCloudSession();
       if (!session) throw new Error("cloud session expired");
       const url = `${settings.supabaseUrl.replace(/\/$/, "")}/rest/v1/${settings.supabaseTable}`;
-      const res = await fetch(url, { method: "POST", headers: { ...cloudHeaders(session), Prefer: "resolution=merge-duplicates,return=minimal" }, body: JSON.stringify({ id: settings.supabaseRecord, data: cloudData(), updated_at: new Date().toISOString() }) });
+      const uploadedAt = new Date().toISOString();
+      const res = await fetch(url, { method: "POST", headers: { ...cloudHeaders(session), Prefer: "resolution=merge-duplicates,return=minimal" }, body: JSON.stringify({ id: settings.supabaseRecord, data: cloudData(), updated_at: uploadedAt }) });
       if (!res.ok) throw new Error(await res.text());
+      setCloudLastUploadAt(uploadedAt);
+      localStorage.setItem(CLOUD_LAST_UPLOAD_KEY, uploadedAt);
       if (!quiet) flash("雲端同步完成");
       return true;
     } catch { if (!quiet) flash("雲端同步失敗，請檢查登入與設定"); return false; }
@@ -1747,9 +1774,10 @@ export default function Home() {
     try {
       const session = await refreshCloudSession();
       if (!session) throw new Error("cloud session expired");
-      const url = `${settings.supabaseUrl.replace(/\/$/, "")}/rest/v1/${settings.supabaseTable}?id=eq.${encodeURIComponent(settings.supabaseRecord)}&select=data`;
+      const url = `${settings.supabaseUrl.replace(/\/$/, "")}/rest/v1/${settings.supabaseTable}?id=eq.${encodeURIComponent(settings.supabaseRecord)}&select=data,updated_at`;
       const res = await fetch(url, { headers: cloudHeaders(session) }); const rows = await res.json(); const data = rows[0]?.data;
       if (!res.ok || !data?.records) throw new Error();
+      if (rows[0]?.updated_at) { setCloudLastUploadAt(rows[0].updated_at); localStorage.setItem(CLOUD_LAST_UPLOAD_KEY, rows[0].updated_at); }
       if (automatic || confirm("雲端資料將與本機資料合併，本機已修改但尚未同步的同一筆資料將以雲端版本為準。確定嗎？")) {
         setRecords(prev => {
           const map = new Map(prev.map(r => [r.id, r]));
@@ -1763,7 +1791,7 @@ export default function Home() {
         if (data.settings) setSettings(previous => ({ ...previous, ...(data.settings.bookReviewCurrentDate ? { bookReviewCurrentDate: data.settings.bookReviewCurrentDate } : {}), ...(data.settings.bookReviewNextDate ? { bookReviewNextDate: data.settings.bookReviewNextDate } : {}), ...(data.settings.expiry591 ? { expiry591: data.settings.expiry591 } : {}), ...(data.settings.expiry5168 ? { expiry5168: data.settings.expiry5168 } : {}), ...(data.settings.brokerExpiry ? { brokerExpiry: data.settings.brokerExpiry } : {}), ...(Array.isArray(data.settings.personnel) && data.settings.personnel.length > 0 ? { personnel: mergeSuppliedPersonnel(data.settings.personnel) } : {}) }));
         if (data.intake) {
           setIntakeRaw(previous => previous || data.intake.raw || "");
-          setIntakeDrafts(previous => mergeIntakeDrafts(previous, Array.isArray(data.intake.drafts) ? data.intake.drafts : []));
+          setIntakeDrafts(previous => reconcileIntakeDraftLinks(mergeIntakeDrafts(previous, Array.isArray(data.intake.drafts) ? data.intake.drafts : []), [...records, ...data.records]));
           setSelectedIntakeId(previous => previous || data.intake.selectedId || "");
         }
         if (data.tour) {
@@ -1963,7 +1991,7 @@ export default function Home() {
     setIntakeDrafts(previous => previous.map(draft => draft.id === id ? { ...draft, printedForSalesAt, modifiedAt: new Date().toISOString() } : draft));
     flash(printedForSalesAt ? `已記錄「${intakeValue(target.values, "案名") || "未命名案件"}」列印草稿` : "已取消列印草稿紀錄");
   };
-  const confirmIntake = (draftId?: string) => { const targetId = draftId || selectedIntakeRef.current; const target = targetId ? intakeDrafts.find(d => d.id === targetId) : intakeDraft; if (!target) return; const targetNo = intakeValue(target.values, "委託主約編號"); const existing = target.linkedRecordId ? records.find(record => record.id === target.linkedRecordId) : records.find(record => !!targetNo && record.propertyNo === targetNo); const record = intakeToRecord(target, existing); if (!record.propertyNo || !record.caseName) return flash("缺少物件編號或案名，請先確認表單內容"); if (existing) { const firstFormalEntry = !target.enteredAt; const tracked = { ...withTrackedUpdate(existing, record), ...(firstFormalEntry ? { _newCaseReminderEnabled: "1", _newCaseReminderSource: "intake" } : {}) }; setRecords(prev => prev.map(item => item.id === existing.id ? tracked : item)); setIntakeDrafts(prev => prev.map(draft => draft.id === target.id ? { ...draft, linkedRecordId: existing.id, enteredAt: draft.enteredAt || new Date().toISOString() } : draft)); if (firstFormalEntry) { setNewCaseReminder({ ...tracked }); setNewCaseReminderBatchIds(previous => [...new Set([...previous, ...pendingIntakeReminderRecords.map(item => item.id), tracked.id])]); } flash(firstFormalEntry ? "已正式進案；請完成新案件提醒" : "已連結並同步更新原總表資料"); return; } if (!confirm(`確定文件已收到，將「${record.caseName}」正式加入總表？`)) return; const entered = { ...record, _newCaseReminderEnabled: "1", _newCaseReminderSource: "intake" }; setRecords(prev => [entered, ...prev]); setIntakeDrafts(prev => prev.map(draft => draft.id === target.id ? { ...draft, linkedRecordId: entered.id, enteredAt: new Date().toISOString() } : draft)); setNewCaseReminder({ ...entered }); setNewCaseReminderBatchIds(previous => [...new Set([...previous, ...pendingIntakeReminderRecords.map(item => item.id), entered.id])]); flash("已正式進案；請完成新案件提醒"); };
+  const confirmIntake = (draftId?: string) => { const targetId = draftId || selectedIntakeRef.current; const target = targetId ? intakeDrafts.find(d => d.id === targetId) : intakeDraft; if (!target) return; const targetNo = intakeValue(target.values, "委託主約編號"); const existing = target.linkedRecordId ? records.find(record => record.id === target.linkedRecordId) : records.find(record => !!targetNo && record.propertyNo === targetNo); const record = intakeToRecord(target, existing); if (!record.propertyNo || !record.caseName) return flash("缺少物件編號或案名，請先確認表單內容"); if (existing) { const firstFormalEntry = !target.enteredAt; const tracked = { ...withTrackedUpdate(existing, record), ...(firstFormalEntry ? { _newCaseReminderEnabled: "1", _newCaseReminderSource: "intake" } : {}) }; const enteredAt = target.enteredAt || new Date().toISOString(); setRecords(prev => prev.map(item => item.id === existing.id ? tracked : item)); setIntakeDrafts(prev => prev.map(draft => draft.id === target.id ? { ...draft, linkedRecordId: existing.id, enteredAt, modifiedAt: enteredAt } : draft)); if (firstFormalEntry) { setNewCaseReminder({ ...tracked }); setNewCaseReminderBatchIds(previous => [...new Set([...previous, ...pendingIntakeReminderRecords.map(item => item.id), tracked.id])]); } flash(firstFormalEntry ? "已正式進案；請完成新案件提醒" : "已連結並同步更新原總表資料"); return; } if (!confirm(`確定文件已收到，將「${record.caseName}」正式加入總表？`)) return; const enteredAt = new Date().toISOString(); const entered = { ...record, _newCaseReminderEnabled: "1", _newCaseReminderSource: "intake" }; setRecords(prev => [entered, ...prev]); setIntakeDrafts(prev => prev.map(draft => draft.id === target.id ? { ...draft, linkedRecordId: entered.id, enteredAt, modifiedAt: enteredAt } : draft)); setNewCaseReminder({ ...entered }); setNewCaseReminderBatchIds(previous => [...new Set([...previous, ...pendingIntakeReminderRecords.map(item => item.id), entered.id])]); flash("已正式進案；請完成新案件提醒"); };
   const removeIntakeDraft = (id: string) => { const target = intakeDrafts.find(d => d.id === id); if (!target || !confirm(`確定刪除「${intakeValue(target.values, "案名") || "未命名草稿"}」？`)) return; setIntakeDrafts(prev => prev.filter(d => d.id !== id)); if (selectedIntakeId === id) setSelectedIntakeId(""); };
   const updateIntakeDraftCaseName = (id: string, caseName: string) => setIntakeDrafts(previous => previous.map(draft => { if (draft.id !== id) return draft; const key = Object.keys(draft.values).find(name => name.includes("案名")) || "案名"; return { ...draft, values: { ...draft.values, [key]: caseName } }; }));
   const submitMonthlyPropertyReport = (record: RecordItem, status: string, reason: string) => {
@@ -2015,7 +2043,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V192</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V193</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -2026,7 +2054,7 @@ export default function Home() {
       <button className={tab === "intake" ? "active" : ""} onClick={() => { setTab("intake"); selectIntakeDraft(""); }}>進案草稿</button>
       <button className={tab === "public" ? "active" : ""} onClick={openPublic}>前台總表</button>
       <button className={tab === "settings" ? "active" : ""} onClick={() => setTab("settings")}>設定</button>
-      <span className="home-last-modified">最後修改: {latestModifiedAt ? displayHomeModifiedAt(latestModifiedAt) : "尚無紀錄"}</span>
+      <span className="home-last-modified home-sync-times"><span className="local-modified-line"><b>最後修改:</b><em>{latestModifiedAt ? displayHomeModifiedAt(latestModifiedAt) : "尚無紀錄"}</em></span><span className="cloud-upload-line"><b>Supabase上傳:</b><em>{cloudLastUploadAt ? displayHomeModifiedAt(cloudLastUploadAt) : "尚無紀錄"}<i className={`cloud-upload-state ${cloudUploadStatus === "上傳完成" ? "complete" : cloudUploadStatus === "ING" ? "uploading" : "signed-out"}`}>{cloudUploadStatus}</i></em></span></span>
       </nav>
     </header>}
 
@@ -2247,7 +2275,21 @@ function ContactDirectory({ people }: { people: Person[] }) {
 }
 
 const intakeDraftStamp = (draft: IntakeData) => Date.parse(draft.modifiedAt || draft.createdAt || "") || 0;
-const intakeDraftIdentity = (draft: IntakeData) => draft.linkedRecordId || intakeValue(draft.values, "委託主約編號").trim() || `${intakeValue(draft.values, "案名").trim()}|${intakeValue(draft.values, "物件(完整)地址").trim()}` || draft.id;
+const intakeDraftIdentity = (draft: IntakeData) => intakeValue(draft.values, "委託主約編號").trim() || draft.linkedRecordId || `${intakeValue(draft.values, "案名").trim()}|${intakeValue(draft.values, "物件(完整)地址").trim()}` || draft.id;
+const reconcileIntakeDraftLinks = (drafts: IntakeData[], records: RecordItem[]) => {
+  const byId = new Map(records.map(record => [String(record.id || ""), record]));
+  const byNo = new Map(records.filter(record => String(record.propertyNo || "").trim()).map(record => [String(record.propertyNo).trim(), record]));
+  const byCaseAddress = new Map(records.filter(record => String(record.caseName || "").trim() && String(record.address || "").trim()).map(record => [`${String(record.caseName).trim()}|${String(record.address).trim()}`, record]));
+  return drafts.map(draft => {
+    if (draft.linkedRecordId && byId.has(draft.linkedRecordId)) return draft;
+    const propertyNo = intakeValue(draft.values, "委託主約編號").trim();
+    const caseAddress = `${intakeValue(draft.values, "案名").trim()}|${intakeValue(draft.values, "物件(完整)地址").trim()}`;
+    const record = (propertyNo ? byNo.get(propertyNo) : undefined) || (caseAddress !== "|" ? byCaseAddress.get(caseAddress) : undefined);
+    if (!record) return draft;
+    const enteredAt = draft.enteredAt || record.reportDate || record.lastModifiedAt || new Date().toISOString();
+    return { ...draft, linkedRecordId: record.id, enteredAt, modifiedAt: draft.modifiedAt || enteredAt };
+  });
+};
 const mergeIntakeDrafts = (localDrafts: IntakeData[], cloudDrafts: IntakeData[]) => {
   const merged = new Map<string, IntakeData>();
   [...cloudDrafts, ...localDrafts].forEach(draft => {
@@ -3160,7 +3202,7 @@ function DailyActivity({ records, compact = false, onEdit }: { records: RecordIt
   const updateRecords = records.filter(record => !record.archived && !isExpired(record) && record.status === "委託中" && (dailyUpdateFields(record, selectedDate).length > 0 || dateOnly(record._restoredAt) === selectedDate)).map(record => { const changed = dailyUpdateFields(record, selectedDate); const restored = dateOnly(record._restoredAt) === selectedDate; return { ...record, caseNameNote: changed.length ? `更新：${dailyChangedLabels(changed).join("、")}` : "", _dailyHighlight: JSON.stringify(changed), ...(restored ? { _dailyAnnotation: `${shortRocMonthDay(selectedDate)}重新上架`, _dailyAnnotationType: "restored" } : {}) }; });
   const removedRecords = records.filter(record => !!record.archived && dateOnly(record._archiveActionDate || record.archived) === selectedDate).map(record => ({ ...record, _dailyAnnotation: `${displayRocDate(record.archived)}${record.status || "下架"}` }));
   const groups = [
-    { key: "added", title: "新增物件", records: records.filter(record => dateOnly(record.reportDate) === selectedDate) },
+    { key: "added", title: "新增物件", records: records.filter(record => dateOnly(record._dailyAddedAt || record.reportDate) === selectedDate) },
     { key: "updated", title: "更新物件", records: updateRecords },
     { key: "removed", title: "下架物件", records: removedRecords },
   ].map(group => ({ ...group, records: group.records.filter(record => !hiddenItems.includes(`${selectedDate}|${group.key}|${record.id}`)).map(record => compact ? record : { ...record, _dailyHideKey: `${selectedDate}|${group.key}|${record.id}` }) }));
@@ -3524,8 +3566,8 @@ function PropertyBookReview({ records, settings, openRequest, submit, openRecord
   useEffect(() => { let stopped = false; const endpoint = "http://localhost:8765/api/mobile-qr"; const poll = async () => { try { const response = await fetch(endpoint, { cache: "no-store" }); if (!response.ok) return; const data = await response.json(); if (!stopped) (data.events || []).forEach((event: { id?: number; code?: string }) => event.code && locateCode(event.code, event.id)); } catch {} }; poll(); const timer = window.setInterval(poll, 900); return () => { stopped = true; clearInterval(timer); }; }, [records.map(record => `${record.id}:${record._bookReviewAt || ""}`).join("|")]);
   useEffect(() => { if (!scannerOpen) { streamRef.current?.getTracks().forEach(track => track.stop()); streamRef.current = null; return; } let stopped = false, timer = 0; const start = async () => { const Detector = (window as any).BarcodeDetector; try { const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } }); streamRef.current = stream; if (!videoRef.current) return; videoRef.current.srcObject = stream; await videoRef.current.play(); const detector = Detector ? new Detector({ formats: ["qr_code"] }) : null; timer = window.setInterval(async () => { if (stopped || !videoRef.current || videoRef.current.readyState < 2) return; let raw = ""; if (detector) { const codes = await detector.detect(videoRef.current); raw = codes[0]?.rawValue || ""; } if (!raw) raw = decodeWithJsQR(videoRef.current, videoRef.current.videoWidth, videoRef.current.videoHeight); if (raw) locateCode(raw); }, 500); } catch { alert("無法開啟相機，請允許相機權限或改用上傳QR圖片"); setScannerOpen(false); } }; start(); return () => { stopped = true; if (timer) clearInterval(timer); streamRef.current?.getTracks().forEach(track => track.stop()); streamRef.current = null; }; }, [scannerOpen]);
   useEffect(() => { const close = (event: KeyboardEvent) => { if (event.key !== "Escape" || !reviewVisible) return; event.stopImmediatePropagation(); if (scannerOpen) setScannerOpen(false); else setReviewVisible(false); }; window.addEventListener("keydown", close, true); return () => window.removeEventListener("keydown", close, true); }, [reviewVisible, scannerOpen]);
-  if (!reviewVisible) return null;
-  if (!dueRecords.length) return <div className="modal-backdrop book-review-reminder-backdrop"><section className="book-review-panel book-review-complete"><div className="book-review-head"><div className="book-review-title"><b>物件本確認</b><span>本次確認：{displayRocDate(cycleStart)}　下次確認：{displayRocDate(nextCheckDate)}</span></div><div className="book-review-actions"><strong>已全數確認</strong><button className="close book-review-close" title="關閉" onClick={() => setReviewVisible(false)}>×</button></div></div><div className="book-review-complete-message">本輪物件本已全數確認完成。</div></section></div>;
+  // 全數完成時按鈕與視窗都隱藏；下一輪日期到或有新待確認物件時才再次顯示。
+  if (!reviewVisible || !dueRecords.length) return null;
   const statusOf = (record: RecordItem) => record.bookLocationType || "架上";
   const bookAreaOrder = ["北區", "東區", "中西區", "南區", "永康區", "安平區", "仁德區", "安南區", "其他區", "外縣市"];
   const groupedDueRecords = bookAreaOrder.map(area => ({ area, items: dueRecords.filter(record => areaCategory(record) === area) })).filter(group => group.items.length);
