@@ -799,6 +799,7 @@ export default function Home() {
   const [tourItems, setTourItems] = useState<TourItem[]>([]);
   const [tourDate, setTourDate] = useState(today());
   const [tourTitle, setTourTitle] = useState(`${displayRocDate(today()).replace(/\//g, ".")}團看`);
+  const [tourModifiedAt, setTourModifiedAt] = useState("");
   const selectedIntakeRef = useRef("");
   const cloudSyncBaselineRef = useRef("");
   const cloudSyncTimerRef = useRef<number | null>(null);
@@ -944,7 +945,7 @@ export default function Home() {
       const savedSettings = localStorage.getItem(SETTINGS_KEY); setSettings(s => { const old = savedSettings ? JSON.parse(savedSettings) : {}; const personnel = old.personnel || (old.staffName || old.staffId ? [{ id: newId(), name: old.staffName || "", nationalId: old.staffId || "", status: "在職" }] : []); return { ...s, ...old, supabaseUrl: old.supabaseUrl || CASE_FILE_SUPABASE_URL, supabaseKey: old.supabaseKey || CASE_FILE_SUPABASE_PUBLISHABLE_KEY, supabaseTable: old.supabaseTable === "property_app_state" || !old.supabaseTable ? CASE_FILE_SUPABASE_TABLE : old.supabaseTable, supabaseRecord: old.supabaseRecord || "main", personnel: mergeSuppliedPersonnel(personnel) }; });
       const savedCloudSession = localStorage.getItem(CLOUD_SESSION_KEY); if (savedCloudSession) setCloudSession(JSON.parse(savedCloudSession));
       const savedIntake = localStorage.getItem(INTAKE_KEY); if (savedIntake) { const saved = JSON.parse(savedIntake); const drafts: IntakeData[] = saved.drafts || (saved.parsed ? [{ ...saved.parsed, raw: saved.raw || "" }] : []); if (!localStorage.getItem(PHOTO_INTAKE_CLEANUP_KEY)) { const legacyPhotoValues = new Map(drafts.filter(draft => draft.linkedRecordId).map(draft => [draft.linkedRecordId!, new Set(Object.entries(draft.values).filter(([key, value]) => value && (key.includes("進案文件") || key.includes("當下進案文件"))).map(([, value]) => value.trim()))])); loadedRecords = loadedRecords.map(record => { const values = legacyPhotoValues.get(record.id); const current = String(record.photoInfo || "").split(/[／/]/).map(value => value.trim()).filter(Boolean); return values && current.length && current.every(value => values.has(value)) ? { ...record, photoInfo: "" } : record; }); localStorage.setItem(PHOTO_INTAKE_CLEANUP_KEY, "1"); } const linkedDrafts = new Map(drafts.filter(draft => draft.linkedRecordId).map(draft => [draft.linkedRecordId!, draft])); loadedRecords = loadedRecords.map(record => { const draft = linkedDrafts.get(record.id); return draft ? intakeToRecord(draft, record) : record; }); setIntakeDrafts(drafts); setSelectedIntakeId(saved.selectedId || drafts[0]?.id || ""); setIntakeRaw(saved.raw || ""); }
-      const savedTour = localStorage.getItem(TOUR_KEY); if (savedTour) { const tour = JSON.parse(savedTour); setTourItems(Array.isArray(tour.items) ? tour.items : []); setTourDate(tour.date || today()); setTourTitle(tour.title || `${displayRocDate(tour.date || today()).replace(/\//g, ".")}團看`); }
+      const savedTour = localStorage.getItem(TOUR_KEY); if (savedTour) { const tour = JSON.parse(savedTour); setTourItems(Array.isArray(tour.items) ? tour.items : []); setTourDate(tour.date || today()); setTourTitle(tour.title || `${displayRocDate(tour.date || today()).replace(/\//g, ".")}團看`); setTourModifiedAt(tour.modifiedAt || new Date().toISOString()); }
       setRecords(loadedRecords);
       setStorageReady(true);
     } catch { setRecords([sample]); }
@@ -1020,7 +1021,7 @@ export default function Home() {
   useEffect(() => { if (storageReady) localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); }, [settings, storageReady]);
   // 等草稿讀取完成後才寫回，避免剛開新版本時用初始空白內容覆寫舊草稿。
   useEffect(() => { if (storageReady) localStorage.setItem(INTAKE_KEY, JSON.stringify({ raw: intakeRaw, drafts: intakeDrafts, selectedId: selectedIntakeId })); }, [intakeRaw, intakeDrafts, selectedIntakeId, storageReady]);
-  useEffect(() => { localStorage.setItem(TOUR_KEY, JSON.stringify({ date: tourDate, title: tourTitle, items: tourItems })); }, [tourDate, tourTitle, tourItems]);
+  useEffect(() => { localStorage.setItem(TOUR_KEY, JSON.stringify({ date: tourDate, title: tourTitle, items: tourItems, modifiedAt: tourModifiedAt })); }, [tourDate, tourTitle, tourItems, tourModifiedAt]);
 
   const archived = useMemo(() => sortArchivedRecords(records.filter(r => r.archived || isExpired(r) || r.status !== "委託中")), [records]);
   const active = useMemo(() => records.filter(r => !r.archived && !isExpired(r) && (r.status || "委託中") === "委託中"), [records]);
@@ -1039,7 +1040,7 @@ export default function Home() {
     if (!candidate || Number.isNaN(new Date(candidate).getTime())) return latest;
     return !latest || new Date(candidate).getTime() > new Date(latest).getTime() ? candidate : latest;
   }, "");
-  const latestModifiedAt = !latestRecordModifiedAt || (latestDraftModifiedAt && new Date(latestDraftModifiedAt).getTime() > new Date(latestRecordModifiedAt).getTime()) ? latestDraftModifiedAt : latestRecordModifiedAt;
+  const latestModifiedAt = [latestRecordModifiedAt, latestDraftModifiedAt, tourModifiedAt].filter(Boolean).reduce((latest, candidate) => !latest || new Date(candidate).getTime() > new Date(latest).getTime() ? candidate : latest, "");
   const showingFollowUpRecords = active.filter(record => record.showingFollowUp === "暫停帶看／等待業務回覆");
   useEffect(() => {
     const dueToday = showingFollowUpRecords.filter(record => normalizeDateInput(record.showingFollowUpDueDate || "") === today());
@@ -1624,7 +1625,7 @@ export default function Home() {
     records: records.map(({ photos, ...record }) => record),
     settings: { personnel: settings.personnel, bookReviewCurrentDate: settings.bookReviewCurrentDate, bookReviewNextDate: settings.bookReviewNextDate, expiry591: settings.expiry591, expiry5168: settings.expiry5168, brokerExpiry: settings.brokerExpiry },
     intake: { raw: intakeRaw, drafts: intakeDrafts, selectedId: selectedIntakeId },
-    tour: { date: tourDate, title: tourTitle, items: tourItems },
+    tour: { date: tourDate, title: tourTitle, items: tourItems, modifiedAt: tourModifiedAt },
     pptWeeks: (() => {
       try {
         const weeks = JSON.parse(localStorage.getItem(PPT_WEEK_SELECTIONS_KEY) || "{}");
@@ -1704,7 +1705,17 @@ export default function Home() {
           setIntakeDrafts(previous => mergeIntakeDrafts(previous, Array.isArray(data.intake.drafts) ? data.intake.drafts : []));
           setSelectedIntakeId(previous => previous || data.intake.selectedId || "");
         }
-        if (data.tour) { setTourDate(data.tour.date || today()); setTourTitle(data.tour.title || ""); setTourItems(data.tour.items || []); }
+        if (data.tour) {
+          const remoteModifiedAt = String(data.tour.modifiedAt || "");
+          const remoteStamp = Date.parse(remoteModifiedAt);
+          const localStamp = Date.parse(tourModifiedAt || "");
+          if (!tourModifiedAt || (Number.isFinite(remoteStamp) && remoteStamp > localStamp)) {
+            setTourDate(data.tour.date || today());
+            setTourTitle(data.tour.title || "");
+            setTourItems(data.tour.items || []);
+            setTourModifiedAt(remoteModifiedAt || new Date().toISOString());
+          }
+        }
         if (data.pptWeeks && typeof data.pptWeeks === "object") {
           try {
             const localWeeks = JSON.parse(localStorage.getItem(PPT_WEEK_SELECTIONS_KEY) || "{}");
@@ -1761,7 +1772,7 @@ export default function Home() {
       if (response.ok && Array.isArray(rows)) setFrontLastLogins(Object.fromEntries(rows.map((row: { person_id: string; last_entered_at: string }) => [row.person_id, row.last_entered_at])));
     } catch {}
   };
-  const cloudSnapshot = JSON.stringify({ records, personnel: settings.personnel, expiry591: settings.expiry591, expiry5168: settings.expiry5168, brokerExpiry: settings.brokerExpiry, intakeRaw, intakeDrafts, selectedIntakeId, tourDate, tourTitle, tourItems, pptWeekStart, pptExtraIds, pptOrderIds, pptAdHocRecords, pptConfirmedSnapshots });
+  const cloudSnapshot = JSON.stringify({ records, personnel: settings.personnel, expiry591: settings.expiry591, expiry5168: settings.expiry5168, brokerExpiry: settings.brokerExpiry, intakeRaw, intakeDrafts, selectedIntakeId, tourDate, tourTitle, tourItems, tourModifiedAt, pptWeekStart, pptExtraIds, pptOrderIds, pptAdHocRecords, pptConfirmedSnapshots });
   useEffect(() => {
     if (!cloudSyncBaselineRef.current) { cloudSyncBaselineRef.current = cloudSnapshot; return; }
     if (cloudSyncBaselineRef.current === cloudSnapshot) return;
@@ -1934,12 +1945,15 @@ export default function Home() {
     flash(keepActive ? "已確認維持委託中，更新日期已更新" : "已標示處理完成");
   };
   const submitBookReviews = (reviews: Array<{ record: RecordItem; status: string }>) => { const stamp = new Date().toISOString(), cycle = bookReviewCycleKey(); setRecords(previous => previous.map(item => reviews.some(value => value.record.id === item.id) ? { ...item, bookLocationDate: today(), _bookReviewAt: stamp, _bookReviewCycle: cycle, lastModifiedAt: stamp } : item)); flash(`已確認 ${reviews.length} 筆物件本，日期更新為今天`); };
+  const updateTourDate = (date: string) => { setTourDate(date); setTourModifiedAt(new Date().toISOString()); };
+  const updateTourTitle = (title: string) => { setTourTitle(title); setTourModifiedAt(new Date().toISOString()); };
+  const updateTourItems = (items: TourItem[]) => { setTourItems(items); setTourModifiedAt(new Date().toISOString()); };
 
   const showingPublic = internalView || tab === "public";
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V169</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V170</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -1963,7 +1977,7 @@ export default function Home() {
 
     {tab === "settings" ? <SettingsPanel settings={settings} setSettings={setSettings} supabasePush={supabasePush} supabasePull={supabasePull} cloudSession={cloudSession} supabaseSignIn={supabaseSignIn} supabaseSignOut={supabaseSignOut} /> :
     tab === "intake" ? <IntakePanel raw={intakeRaw} setRaw={setIntakeRaw} drafts={intakeDrafts} draft={intakeDraft} selectDraft={selectIntakeDraft} deleteDraft={removeIntakeDraft} analyze={analyzeIntake} addManualDraft={addManualIntakeDraft} updateValue={updateIntakeValue} clear={() => setIntakeRaw("")} confirmIntake={confirmIntake} markPrintedForSales={markIntakeDraftPrintedForSales} /> :
-    tab === "tour" ? <TourPlanner records={records} drafts={intakeDrafts} items={tourItems} setItems={setTourItems} editRecord={setEditing} updateDraftCaseName={updateIntakeDraftCaseName} tourDate={tourDate} setTourDate={setTourDate} tourTitle={tourTitle} setTourTitle={setTourTitle} notify={flash} complete={(date, recordIds, draftIds) => { setRecords(previous => previous.map(record => recordIds.includes(record.id) ? withTrackedUpdate(record, { ...record, groupViewDate: date, updateDate: today() }) : record)); setIntakeDrafts(previous => previous.map(draft => draftIds.includes(draft.id) ? { ...draft, groupViewDate: date } : draft)); setTourItems([]); flash("團看日期已同步到物件與草稿"); }} /> :
+    tab === "tour" ? <TourPlanner records={records} drafts={intakeDrafts} items={tourItems} setItems={updateTourItems} editRecord={setEditing} updateDraftCaseName={updateIntakeDraftCaseName} tourDate={tourDate} setTourDate={updateTourDate} tourTitle={tourTitle} setTourTitle={updateTourTitle} notify={flash} complete={(date, recordIds, draftIds) => { setRecords(previous => previous.map(record => recordIds.includes(record.id) ? withTrackedUpdate(record, { ...record, groupViewDate: date, updateDate: today() }) : record)); setIntakeDrafts(previous => previous.map(draft => draftIds.includes(draft.id) ? { ...draft, groupViewDate: date } : draft)); updateTourItems([]); flash("團看日期已同步到物件與草稿"); }} /> :
     tab === "activity" ? <DailyActivity records={records} onEdit={setEditing} /> :
     tab === "inventory" ? <BusinessInventory records={records} people={settings.personnel} /> :
     tab === "keys" ? <KeySummary records={records}/> :
@@ -2040,10 +2054,15 @@ function TourPlanner({ records, drafts, items, setItems, editRecord, updateDraft
       && [record.propertyNo, record.caseName, record.address, developerFullNameText(record.developer)].join(" ").includes(search);
   });
   const ordered = items.slice().sort((a, b) => Number(a.sequence || 9999) - Number(b.sequence || 9999));
-  const addRecord = (record: RecordItem) => setItems([...items, { id: newId(), recordId: record._intakeDraftId ? undefined : record.id, sequence: "", temporary: !!record._intakeDraftId, data: { ...record } }]);
+  // 新增時只補新案件的下一個序號，保留原本路線已手動填寫的順序。
+  const nextTourSequence = () => {
+    const used = items.map(item => Number(String(item.sequence || "").trim())).filter(value => Number.isFinite(value) && value > 0);
+    return String(used.length ? Math.max(...used) + 1 : 1);
+  };
+  const addRecord = (record: RecordItem) => setItems([...items, { id: newId(), recordId: record._intakeDraftId ? undefined : record.id, sequence: nextTourSequence(), temporary: !!record._intakeDraftId, data: { ...record } }]);
   const openTemporary = () => { const data = blankRecord(); data.propertyNo = "臨時"; data.status = "臨時團看"; data.reportDate = ""; data._notEntered = "1"; setTemporaryEditId(""); setTemporaryDraft(data); setTemporaryOpen(true); };
   const editTemporary = (item: TourItem) => { setTemporaryEditId(item.id); setTemporaryDraft({ ...item.data }); setTemporaryOpen(true); };
-  const addTemporary = () => { const normalizedDraft = normalizeRecordPings({ ...temporaryDraft, developer: developerFullNameText(temporaryDraft.developer || "") || temporaryDraft.developer }); if (temporaryEditId) setItems(items.map(item => item.id === temporaryEditId ? { ...item, data: { ...normalizedDraft } } : item)); else setItems([...items, { id: newId(), sequence: "", temporary: true, data: { ...normalizedDraft } }]); setTemporaryOpen(false); setTemporaryEditId(""); };
+  const addTemporary = () => { const normalizedDraft = normalizeRecordPings({ ...temporaryDraft, developer: developerFullNameText(temporaryDraft.developer || "") || temporaryDraft.developer }); if (temporaryEditId) setItems(items.map(item => item.id === temporaryEditId ? { ...item, data: { ...normalizedDraft } } : item)); else setItems([...items, { id: newId(), sequence: nextTourSequence(), temporary: true, data: { ...normalizedDraft } }]); setTemporaryOpen(false); setTemporaryEditId(""); };
   const updateItem = (id: string, patch: Partial<TourItem>) => setItems(items.map(item => item.id === id ? { ...item, ...patch } : item));
   const updateTemp = (item: TourItem, key: string, value: string) => updateItem(item.id, { data: { ...item.data, [key]: value } });
   const sourceOf = (item: TourItem) => item.recordId ? (records.find(record => record.id === item.recordId) || item.data) : item.data;
@@ -2084,7 +2103,7 @@ function TourPlanner({ records, drafts, items, setItems, editRecord, updateDraft
     const imageAge = (record: RecordItem) => record._tourAge || ageOf(record);
     const dimensionValue = (value: unknown, kind: "frontage" | "depth") => { const prefix = kind === "frontage" ? /^(?:面寬|面)\s*/ : /^(?:深度|深)\s*/; const text = String(value || "").trim().replace(prefix, "").trim(); return /^(?:[-—–－_／/、.．]|無|未填|沒有|0)?$/.test(text) ? "" : text; };
     const rows = ordered.map(item => { const record = sourceOf(item); const price = String(record.price || "").replace(/\s*萬(?:元)?\s*/g, ""), frontage = dimensionValue(record.frontage, "frontage"), depth = dimensionValue(record.depth, "depth"); return [item.sequence, `${areaCategory(record) || record.area || ""}\n${typeShort(record.type) || ""}`, record.caseName || "", chunkText(record.address || "", 12).join("\n"), price ? `${price}萬` : "", record.direction || "", imageAge(record), floorShortFixed(record.floor || ""), imageLayout(record), record.indoorPing || "", record.buildingPing || "", record.landPing || "", parkingShort(record.parking || ""), record.managementFee || "", record.key || "", record.currentState || "", record.road || "", [frontage ? `面${frontage}` : "", depth ? `深${depth}` : ""].filter(Boolean).join("\n"), record.zoning || "", `${record.coverage || ""}\n${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegments(record.notes || "").join("； "), isNotEnteredTourRecord(record) ? "尚未進案" : displayRocDate(record.reportDate) || ""]; });
-    const margin = 20, headerHeight = 72, titleHeight = 86, fontSize = 17, lineHeight = 22;
+    const margin = 24, headerHeight = 82, titleHeight = 98, fontSize = 21, lineHeight = 27;
     const wrapLines = (text: string, width: number) => { const perLine = Math.max(1, Math.floor((width - 12) / fontSize)); return String(text || "—").split("\n").flatMap(part => Array.from({ length: Math.max(1, Math.ceil(Array.from(part || "—").length / perLine)) }, (_, index) => Array.from(part || "—").slice(index * perLine, (index + 1) * perLine).join(""))); };
     const rowHeights = rows.map(row => Math.max(58, ...row.map((text, index) => (index === 22 ? 1 : wrapLines(text, widths[index]).length) * lineHeight + 18)));
     const tableWidth = widths.reduce((sum, width) => sum + width, 0);
