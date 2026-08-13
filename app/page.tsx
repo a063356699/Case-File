@@ -2113,8 +2113,7 @@ export default function Home() {
   };
   const resolveMonthlyPropertyReport = (record: RecordItem, reportKey: string, keepActive = false) => {
     const handledAt = new Date().toISOString();
-    setRecords(previous => previous.map(item => {
-      if (item.id !== record.id) return item;
+    const markHandled = (item: RecordItem) => {
       const reports = monthlyReportsOf(item._monthlyReports);
       if (!reports[reportKey]) return item;
       const reportedAtValue = String(reports[reportKey].reportedAt || "");
@@ -2122,7 +2121,14 @@ export default function Home() {
       const reportedDate = Number.isNaN(reportedAtDate.getTime()) ? today() : isoLocalDate(reportedAtDate);
       reports[reportKey] = { ...reports[reportKey], adminHandledAt: handledAt };
       return { ...item, _monthlyReports: JSON.stringify(reports), ...(keepActive ? { updateDate: reportedDate, lastModifiedAt: handledAt } : {}) };
+    };
+    setRecords(previous => previous.map(item => {
+      if (item.id !== record.id) return item;
+      return markHandled(item);
     }));
+    // The inbox renders the just-read cloud snapshot. Mirror the handling flag
+    // there immediately so the resolved report disappears without a refresh.
+    setCloudConfirmationRecords(previous => previous ? previous.map(item => item.id === record.id ? markHandled(item) : item) : previous);
     flash(keepActive ? "已確認維持委託中，更新日期已更新" : "已標示處理完成");
   };
   const submitBookReviews = (reviews: Array<{ record: RecordItem; status: string }>) => { const stamp = new Date().toISOString(), cycle = bookReviewCycleKey(); setRecords(previous => previous.map(item => reviews.some(value => value.record.id === item.id) ? { ...item, bookLocationDate: today(), _bookReviewAt: stamp, _bookReviewCycle: cycle, lastModifiedAt: stamp } : item)); flash(`已確認 ${reviews.length} 筆物件本，日期更新為今天`); };
