@@ -43400,15 +43400,15 @@ ${changedLabels}
       setEditing((previous) => previous?.id === next.id ? { ...previous, colorSheetIssue: next.colorSheetIssue } : previous);
       flash(colorSheetIssue ? "\u5DF2\u5132\u5B58\u5F69\u8272\u8868\u7F3A\u4EF6\u7D00\u9304" : "\u5DF2\u6E05\u9664\u5F69\u8272\u8868\u7F3A\u4EF6\u7D00\u9304");
     };
-    const archiveRecord = (r, status = "\u4E0B\u67B6\u6D3D\u958B\u767C", archiveDate = today(), salesPerson = r.salesPerson || "") => {
+    const archiveRecord = (r, status = "\u4E0B\u67B6\u6D3D\u958B\u767C", archiveDate = today(), salesPerson = r.salesPerson || "", reason = r.archiveReason || "") => {
       const cleanupKeys = ["housingDownDate", "bookDownDate", "salesBookDownDate", ...archiveWebsiteTasks.map(([field]) => `${field}DownDate`), ...dealCompletionTasks.map(([key]) => key)];
-      setRecords((prev) => prev.map((x) => x.id === r.id ? { ...x, status, archived: normalizeDateInput(archiveDate) || today(), salesPerson: salesPerson.trim(), _archiveActionDate: today(), ...Object.fromEntries(cleanupKeys.map((key) => [key, ""])) } : x));
+      setRecords((prev) => prev.map((x) => x.id === r.id ? { ...x, status, archived: normalizeDateInput(archiveDate) || today(), salesPerson: salesPerson.trim(), archiveReason: status === "\u4E0B\u67B6\u6D3D\u958B\u767C" ? reason.trim() : "", _archiveActionDate: today(), ...Object.fromEntries(cleanupKeys.map((key) => [key, ""])) } : x));
       setArchiveChoice(null);
       flash("\u5DF2\u79FB\u81F3\u5C01\u5B58\uFF0C\u4E26\u5EFA\u7ACB\u4E0B\u67B6\u5F85\u8FA6");
     };
     const completeArchiveCleanup = (record, key) => setRecords((previous) => previous.map((item) => item.id === record.id ? { ...item, [key]: today() } : item));
     const completeDealTask = (record, key) => setRecords((previous) => previous.map((item) => item.id === record.id ? { ...item, [key]: today() } : item));
-    const requestArchive = (record, status) => setArchiveChoice({ record, status, date: status === "\u5230\u671F\u4E0B\u67B6" ? nextDate(record.entrustEnd) : today(), salesPerson: record.salesPerson || "" });
+    const requestArchive = (record, status) => setArchiveChoice({ record, status, date: status === "\u5230\u671F\u4E0B\u67B6" ? nextDate(record.entrustEnd) : today(), salesPerson: record.salesPerson || "", reason: record.archiveReason || "" });
     const restoreRecord = (r, reopened = true) => {
       const cleanupKeys = ["housingDownDate", "bookDownDate", "salesBookDownDate", ...archiveWebsiteTasks.map(([field]) => `${field}DownDate`)];
       setRecords((prev) => prev.map((x) => x.id === r.id ? { ...x, status: "\u59D4\u8A17\u4E2D", archived: "", entrustEnd: x.entrustEnd < today() ? "" : x.entrustEnd, ...reopened ? { _restoredAt: today() } : Object.fromEntries(cleanupKeys.map((key) => [key, ""])) } : x));
@@ -44352,7 +44352,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V195" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V196" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -44427,7 +44427,7 @@ ${changedLabels}
       ] }),
       !internalView && tab === "active" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PropertyBookReview, { records, settings, openRequest: bookReviewOpenRequest, submit: submitBookReviews, openRecord: setEditing }),
       monthlyProgressOpen && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(MonthlyConfirmationProgress, { records: active, people: settings.personnel, lastLogins: frontLastLogins, close: () => setMonthlyProgressOpen(false) }),
-      !internalView && tab === "active" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(BusinessReportInbox, { records: active, resolve: resolveMonthlyPropertyReport, archive: (record, status) => setArchiveChoice({ record, status, date: today() }) }),
+      !internalView && tab === "active" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(BusinessReportInbox, { records: active, resolve: resolveMonthlyPropertyReport, archive: (record, status) => setArchiveChoice({ record, status, date: today(), salesPerson: record.salesPerson || "", reason: record.archiveReason || "" }) }),
       showingPublic && publicUnlocked && publicScope === "mine" && publicPerson && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(MonthlyPropertyReport, { records: myProperties, person: publicPerson, submit: submitMonthlyPropertyReport }),
       pptPickerOpen && selectedPptBaseRecords.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("aside", { className: "ppt-order-float", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u8ABF\u6574\u672C\u6B21\u6392\u5E8F" }),
@@ -44876,11 +44876,15 @@ ${changedLabels}
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: archiveChoice.salesPerson, placeholder: "\u586B\u5BEB\u92B7\u552E\u4EBA\u54E1", onChange: (event) => setArchiveChoice({ ...archiveChoice, salesPerson: event.target.value }) })
             ] })
           ] }),
+          archiveChoice.status === "\u4E0B\u67B6\u6D3D\u958B\u767C" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "field archive-reason-field", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u4E0B\u67B6\u539F\u56E0\uFF08\u975E\u5FC5\u586B\uFF09" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: archiveChoice.reason, placeholder: "\u4F8B\u5982\uFF1A\u5C4B\u4E3B\u5DF2\u51FA\u79DF", onChange: (event) => setArchiveChoice({ ...archiveChoice, reason: event.target.value }) })
+          ] }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "\u4E00\u822C\u539F\u56E0\u9810\u8A2D\u4ECA\u5929\uFF1B\u5230\u671F\u4E0B\u67B6\u9810\u8A2D\u59D4\u8A17\u7D50\u675F\u9694\u5929\uFF0C\u53EF\u81EA\u884C\u4FEE\u6539\u3002\u6BCF\u65E5\u7269\u4EF6\u52D5\u614B\u4ECD\u4F9D\u4ECA\u5929\u7684\u5BE6\u969B\u64CD\u4F5C\u65E5\u986F\u793A\u3002" })
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal-foot", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => setArchiveChoice(null), children: "\u53D6\u6D88" }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "primary", onClick: () => archiveRecord(archiveChoice.record, archiveChoice.status, archiveChoice.date, archiveChoice.salesPerson), children: "\u78BA\u8A8D\u5C01\u5B58" })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "primary", onClick: () => archiveRecord(archiveChoice.record, archiveChoice.status, archiveChoice.date, archiveChoice.salesPerson, archiveChoice.reason), children: "\u78BA\u8A8D\u5C01\u5B58" })
         ] })
       ] }) }),
       restoreChoiceRecord && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "modal-backdrop", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal restore-choice-modal", children: [
@@ -48103,7 +48107,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
           const isHighlighted = (key) => highlighted.includes(key) || key === "caseName" && highlighted.includes("caseNameNote") || key === "coverageFar" && (highlighted.includes("coverage") || highlighted.includes("far"));
           const archiveDate = r.archived || (isExpired(r) ? r.entrustEnd : "");
           const archiveDateLabel = displayRocDate(archiveDate);
-          const archiveLabel = `${archiveDateLabel}${r.archived ? r.status || "\u4E0B\u67B6" : "\u5230\u671F\u4E0B\u67B6"}`;
+          const archiveLabel = `${archiveDateLabel}${r.archived ? r.status || "\u4E0B\u67B6" : "\u5230\u671F\u4E0B\u67B6"}${r.status === "\u4E0B\u67B6\u6D3D\u958B\u767C" && r.archiveReason ? `:${r.archiveReason}` : ""}`;
           const restoredLabel = r._restoredAt ? shortRocMonthDay(r._restoredAt) : "";
           const expiryDays = daysUntil(r.entrustEnd);
           return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_react.Fragment, { children: [
