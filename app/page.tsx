@@ -1797,7 +1797,7 @@ export default function Home() {
       return true;
     } catch { if (!quiet) flash("雲端同步失敗，請檢查登入與設定"); return false; }
   };
-  const supabasePull = async (automatic = false) => {
+  const supabasePull = async (automatic = false, quiet = false) => {
     if (!cloudSession?.accessToken) return flash("請先登入雲端帳號");
     try {
       const session = await refreshCloudSession();
@@ -1863,9 +1863,9 @@ export default function Home() {
         } else {
           window.setTimeout(() => { void supabasePush(true); }, 0);
         }
-        flash(automatic ? "已自動同步最新雲端資料" : "雲端資料已合併到本機");
+        if (!quiet) flash(automatic ? "已自動同步最新雲端資料" : "雲端資料已合併到本機");
       }
-    } catch { flash(automatic ? "自動同步失敗，請檢查雲端登入" : "雲端讀取失敗，請檢查登入與設定"); }
+    } catch { if (!quiet) flash(automatic ? "自動同步失敗，請檢查雲端登入" : "雲端讀取失敗，請檢查登入與設定"); }
   };
   const supabaseSignIn = async (email: string, password: string, signUp = false) => {
     if (!settings.supabaseKey) return flash("請先貼上 Supabase Publishable key");
@@ -1908,6 +1908,12 @@ export default function Home() {
     if (localStorage.getItem("property-desk-import-prefer-local-once") === "1") { localStorage.removeItem("property-desk-import-prefer-local-once"); return; }
     void supabasePull(true);
   }, [cloudSession?.accessToken, cloudSession?.email, settings.supabaseUrl, settings.supabaseKey, settings.supabaseTable, settings.supabaseRecord]);
+  // 管理模式開啟期間定期取得業務前台的新回報；靜默更新，不干擾正在操作的畫面。
+  useEffect(() => {
+    if (!cloudSession?.accessToken || !settings.supabaseUrl || !settings.supabaseKey) return;
+    const timer = window.setInterval(() => { void supabasePull(true, true); }, 45000);
+    return () => window.clearInterval(timer);
+  }, [cloudSession?.accessToken, settings.supabaseUrl, settings.supabaseKey, settings.supabaseTable, settings.supabaseRecord]);
 
   const openPublic = () => { setTab("public"); setPublicUnlocked(false); setPublicPersonId(""); setPublicScope("mine"); setPassword(""); };
   const logoutPublic = () => { localStorage.removeItem("case-file-public-daily-login"); setPublicUnlocked(false); setPublicPersonId(""); setPublicScope("mine"); setPublicExpiryFilter("all"); setPublicQuery(""); setPassword(""); flash("已登出業務帳號"); };
@@ -2071,7 +2077,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V209</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V210</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
