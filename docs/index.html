@@ -44370,7 +44370,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V201" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V202" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -44900,7 +44900,7 @@ ${changedLabels}
               "\u958B\u767C\uFF1A",
               developerFullNameText(archiveChoice.record.developer, settings.personnel) || "\u2014"
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "field", children: [
+            archiveChoice.status === "\u6210\u4EA4\u4E0B\u67B6" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "field", children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u92B7\u552E" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: archiveChoice.salesPerson, placeholder: "\u586B\u5BEB\u92B7\u552E\u4EBA\u54E1", onChange: (event) => setArchiveChoice({ ...archiveChoice, salesPerson: event.target.value }) })
             ] })
