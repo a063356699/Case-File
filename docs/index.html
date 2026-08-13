@@ -42493,6 +42493,7 @@ ${String(ex)}`);
     const [publicQuery, setPublicQuery] = (0, import_react.useState)("");
     const [publicZoom, setPublicZoom] = (0, import_react.useState)(() => typeof window !== "undefined" && window.innerWidth <= 1100 ? 50 : 100);
     const [password, setPassword] = (0, import_react.useState)("");
+    const [pendingPublicRestoreId, setPendingPublicRestoreId] = (0, import_react.useState)("");
     const [publicReportHoldUntil, setPublicReportHoldUntil] = (0, import_react.useState)(0);
     const [notice, setNotice] = (0, import_react.useState)("");
     const [intakeRaw, setIntakeRaw] = (0, import_react.useState)("");
@@ -42812,16 +42813,17 @@ ${String(ex)}`);
       try {
         const saved = JSON.parse(localStorage.getItem("case-file-public-daily-login") || "{}");
         if (saved.date === today() && saved.personId) {
-          setPublicPersonId(saved.personId);
-          setPublicScope("mine");
-          setPublicUnlocked(true);
+          const localPerson = settings.personnel.find((person) => person.id === saved.personId);
+          const nationalId = String(saved.nationalId || localPerson?.nationalId || "").trim();
+          if (nationalId) setPendingPublicRestoreId(nationalId);
+          else localStorage.removeItem("case-file-public-daily-login");
         } else {
           localStorage.removeItem("case-file-public-daily-login");
         }
       } catch {
         localStorage.removeItem("case-file-public-daily-login");
       }
-    }, [internalView]);
+    }, [internalView, settings.personnel]);
     (0, import_react.useEffect)(() => {
       if (!internalView || !publicUnlocked) return;
       const timer = window.setInterval(() => {
@@ -44158,7 +44160,7 @@ ${changedLabels}
       setPassword("");
       flash("\u5DF2\u767B\u51FA\u696D\u52D9\u5E33\u865F");
     };
-    const rememberPublicLogin = (personId) => localStorage.setItem("case-file-public-daily-login", JSON.stringify({ date: today(), personId }));
+    const rememberPublicLogin = (personId, nationalId = "") => localStorage.setItem("case-file-public-daily-login", JSON.stringify({ date: today(), personId, nationalId }));
     const recordPublicEntry = async (nationalId) => {
       try {
         await fetch(`${CASE_FILE_SUPABASE_URL}/rest/v1/rpc/case_file_front_touch`, { method: "POST", headers: { apikey: CASE_FILE_SUPABASE_PUBLISHABLE_KEY, "Content-Type": "application/json" }, body: JSON.stringify({ p_national_id: nationalId }) });
@@ -44180,20 +44182,10 @@ ${changedLabels}
         button.remove();
       };
     }, [internalView, tab, publicUnlocked]);
-    const unlock = async () => {
+    const unlock = async (requestedId = password) => {
       const normalizeLoginId = (value = "") => value.trim().replace(/\s+/g, "").toUpperCase();
       const activePeople = settings.personnel.filter((p) => (p.status || "\u5728\u8077") === "\u5728\u8077" && normalizeLoginId(p.nationalId));
-      const loginId = normalizeLoginId(password);
-      const person = activePeople.find((p) => loginId === normalizeLoginId(p.nationalId));
-      if (person) {
-        setPublicPersonId(person.id);
-        setPublicScope("mine");
-        setPublicUnlocked(true);
-        rememberPublicLogin(person.id);
-        setPassword("");
-        void recordPublicEntry(loginId);
-        return;
-      }
+      const loginId = normalizeLoginId(requestedId);
       if (!loginId) return flash("\u8ACB\u8F38\u5165\u8EAB\u5206\u8B49\u5B57\u865F");
       try {
         const response = await fetch(`${CASE_FILE_SUPABASE_URL}/rest/v1/rpc/case_file_front_login`, { method: "POST", headers: { apikey: CASE_FILE_SUPABASE_PUBLISHABLE_KEY, "Content-Type": "application/json" }, body: JSON.stringify({ p_national_id: loginId }) });
@@ -44206,7 +44198,7 @@ ${changedLabels}
         setPublicPersonId(data.personId);
         setPublicScope("mine");
         setPublicUnlocked(true);
-        rememberPublicLogin(data.personId);
+        rememberPublicLogin(data.personId, loginId);
         setPassword("");
       } catch {
         flash("\u76EE\u524D\u7121\u6CD5\u9023\u63A5\u96F2\u7AEF\uFF0C\u8ACB\u78BA\u8A8D\u7DB2\u8DEF\u5F8C\u518D\u8A66\u4E00\u6B21");
@@ -44383,6 +44375,12 @@ ${changedLabels}
       flash(status === "\u5F85\u78BA\u8A8D" ? `\u5DF2\u8A2D\u5B9A ${displayRocDate(dueDate)} \u518D\u6B21\u78BA\u8A8D` : "\u7269\u4EF6\u56DE\u5831\u5B8C\u6210");
       return true;
     };
+    (0, import_react.useEffect)(() => {
+      if (!internalView || !pendingPublicRestoreId || publicUnlocked) return;
+      const restoreId = pendingPublicRestoreId;
+      setPendingPublicRestoreId("");
+      void unlock(restoreId);
+    }, [internalView, pendingPublicRestoreId, publicUnlocked]);
     const submitMonthlyPropertyReports = async (entries) => {
       if (!publicPerson || !entries.length) return false;
       if (entries.some((entry) => entry.status === "\u4E0B\u67B6\u6D3D\u958B\u767C" && !entry.reason.trim())) {
@@ -44465,7 +44463,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V215" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V216" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
