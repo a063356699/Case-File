@@ -1946,7 +1946,7 @@ export default function Home() {
     return () => { button.removeEventListener("click", logoutPublic); button.remove(); };
   }, [internalView, tab, publicUnlocked]);
   const unlock = async (requestedId?: unknown) => {
-    const normalizeLoginId = (value = "") => value.trim().replace(/\s+/g, "").toUpperCase();
+    const normalizeLoginId = (value: unknown = "") => String(value ?? "").trim().replace(/\s+/g, "").toUpperCase();
     const activePeople = settings.personnel.filter(p => (p.status || "在職") === "在職" && normalizeLoginId(p.nationalId));
     const loginId = normalizeLoginId(typeof requestedId === "string" ? requestedId : password);
     if (!loginId) return flash("請輸入身分證字號");

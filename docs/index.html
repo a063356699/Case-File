@@ -44183,7 +44183,7 @@ ${changedLabels}
       };
     }, [internalView, tab, publicUnlocked]);
     const unlock = async (requestedId) => {
-      const normalizeLoginId = (value = "") => value.trim().replace(/\s+/g, "").toUpperCase();
+      const normalizeLoginId = (value = "") => String(value ?? "").trim().replace(/\s+/g, "").toUpperCase();
       const activePeople = settings.personnel.filter((p) => (p.status || "\u5728\u8077") === "\u5728\u8077" && normalizeLoginId(p.nationalId));
       const loginId = normalizeLoginId(typeof requestedId === "string" ? requestedId : password);
       if (!loginId) return flash("\u8ACB\u8F38\u5165\u8EAB\u5206\u8B49\u5B57\u865F");
