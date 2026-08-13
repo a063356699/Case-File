@@ -2052,7 +2052,7 @@ export default function Home() {
     if (!publicPerson) return false;
     if (status === "下架洽開發" && !reason.trim()) { flash("下架洽開發必須填寫原因"); return false; }
     setPublicReportHoldUntil(Date.now() + 15000);
-    const reportKey = `${today().slice(0, 7)}:${publicPerson.id}`; let reports: Record<string, any> = {}; try { reports = JSON.parse(record._monthlyReports || "{}"); } catch {}
+    const reportKey = `${today().slice(0, 7)}:${publicPerson.id}`; const reports = monthlyReportsOf(record._monthlyReports);
     const due = new Date(`${today()}T00:00:00`); due.setDate(due.getDate() + 7); const dueDate = `${due.getFullYear()}-${String(due.getMonth() + 1).padStart(2, "0")}-${String(due.getDate()).padStart(2, "0")}`;
     const reportedAt = new Date().toISOString();
     reports[reportKey] = { personId: publicPerson.id, personName: publicPerson.name, status, reason: reason.trim(), reportedAt, dueDate: status === "待確認" ? dueDate : "" };
@@ -2101,7 +2101,7 @@ export default function Home() {
     const sentAt = new Date().toISOString(); const byId = new Map(entries.map(entry => [entry.record.id, entry]));
     setRecords(previous => previous.map(item => {
       const entry = byId.get(item.id); if (!entry) return item;
-      let reports: Record<string, any> = {}; try { reports = JSON.parse(item._monthlyReports || "{}"); } catch {}
+      const reports = monthlyReportsOf(item._monthlyReports);
       reports[reportKey] = { personId: publicPerson.id, personName: publicPerson.name, status: entry.status, reason: entry.reason.trim(), reportedAt: sentAt, dueDate: entry.status === "待確認" ? dueDate : "" };
       if (entry.status === "委託中") Object.entries(reports).forEach(([key, report]: [string, any]) => {
         if (key !== reportKey && report?.status === "請跟開發業務2確認" && !report.adminHandledAt && report.personId !== publicPerson.id) reports[key] = { ...report, adminHandledAt: sentAt, autoResolvedAt: sentAt, autoResolvedBy: publicPerson.name };
@@ -2115,7 +2115,7 @@ export default function Home() {
     const handledAt = new Date().toISOString();
     setRecords(previous => previous.map(item => {
       if (item.id !== record.id) return item;
-      let reports: Record<string, any> = {}; try { reports = JSON.parse(item._monthlyReports || "{}"); } catch {}
+      const reports = monthlyReportsOf(item._monthlyReports);
       if (!reports[reportKey]) return item;
       const reportedAtValue = String(reports[reportKey].reportedAt || "");
       const reportedAtDate = reportedAtValue ? new Date(reportedAtValue) : new Date();

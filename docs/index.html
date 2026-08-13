@@ -44353,11 +44353,7 @@ ${changedLabels}
       }
       setPublicReportHoldUntil(Date.now() + 15e3);
       const reportKey = `${today().slice(0, 7)}:${publicPerson.id}`;
-      let reports = {};
-      try {
-        reports = JSON.parse(record._monthlyReports || "{}");
-      } catch {
-      }
+      const reports = monthlyReportsOf(record._monthlyReports);
       const due = /* @__PURE__ */ new Date(`${today()}T00:00:00`);
       due.setDate(due.getDate() + 7);
       const dueDate = `${due.getFullYear()}-${String(due.getMonth() + 1).padStart(2, "0")}-${String(due.getDate()).padStart(2, "0")}`;
@@ -44417,11 +44413,7 @@ ${changedLabels}
       setRecords((previous) => previous.map((item) => {
         const entry = byId.get(item.id);
         if (!entry) return item;
-        let reports = {};
-        try {
-          reports = JSON.parse(item._monthlyReports || "{}");
-        } catch {
-        }
+        const reports = monthlyReportsOf(item._monthlyReports);
         reports[reportKey] = { personId: publicPerson.id, personName: publicPerson.name, status: entry.status, reason: entry.reason.trim(), reportedAt: sentAt, dueDate: entry.status === "\u5F85\u78BA\u8A8D" ? dueDate : "" };
         if (entry.status === "\u59D4\u8A17\u4E2D") Object.entries(reports).forEach(([key, report]) => {
           if (key !== reportKey && report?.status === "\u8ACB\u8DDF\u958B\u767C\u696D\u52D92\u78BA\u8A8D" && !report.adminHandledAt && report.personId !== publicPerson.id) reports[key] = { ...report, adminHandledAt: sentAt, autoResolvedAt: sentAt, autoResolvedBy: publicPerson.name };
@@ -44435,11 +44427,7 @@ ${changedLabels}
       const handledAt = (/* @__PURE__ */ new Date()).toISOString();
       setRecords((previous) => previous.map((item) => {
         if (item.id !== record.id) return item;
-        let reports = {};
-        try {
-          reports = JSON.parse(item._monthlyReports || "{}");
-        } catch {
-        }
+        const reports = monthlyReportsOf(item._monthlyReports);
         if (!reports[reportKey]) return item;
         const reportedAtValue = String(reports[reportKey].reportedAt || "");
         const reportedAtDate = reportedAtValue ? new Date(reportedAtValue) : /* @__PURE__ */ new Date();
