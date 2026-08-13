@@ -1600,4 +1600,5 @@ body{background:#f8fbfe!important;color:#405064!important}
 .archive-list-page .sticky-3{left:346px!important}
 .archive-list-page th.col-developer,.archive-list-page td.col-developer{width:1%!important;min-width:0!important;max-width:none!important;padding-left:6px!important;padding-right:6px!important;white-space:nowrap!important}
 .new-case-reminder-list-modal{width:min(1320px,96vw)!important}
+.archive-cleanup-sort-header{cursor:pointer!important;user-select:none}.archive-cleanup-sort-header:hover{background:#dcebe5!important}.archive-cleanup-sort-header b{font-size:11px;color:#28725b}
 .topbar>.nav .intake-draft-nav-count{margin-left:5px;padding:0!important;border:0!important;background:transparent!important;color:#e00000!important;font-size:13px!important;font-weight:900!important}
