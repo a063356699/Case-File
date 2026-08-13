@@ -44463,7 +44463,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V213" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V214" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -48986,7 +48986,6 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     (0, import_react.useEffect)(() => {
       if (overdue.length) setTimeout(() => alert(`\u6709 ${overdue.length} \u7B46\u5F85\u78BA\u8A8D\u7269\u4EF6\u5DF2\u5230\u671F\uFF0C\u8ACB\u91CD\u65B0\u78BA\u8A8D`), 100);
     }, [overdue.map((record) => record.id).join("|")]);
-    if (today() < firstConfirmationDate || !eligibleRecords.length) return null;
     const reportOptions = ["\u59D4\u8A17\u4E2D", "\u8ACB\u8DDF\u958B\u767C\u696D\u52D92\u78BA\u8A8D", "\u552E\u51FA\u4E0B\u67B6", "\u4E0B\u67B6\u6D3D\u958B\u767C", "\u5F85\u78BA\u8A8D"];
     (0, import_react.useEffect)(() => {
       if (!holdUntil || holdUntil <= now) return;
@@ -48994,6 +48993,17 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       return () => window.clearInterval(timer);
     }, [holdUntil, now]);
     const holdSeconds = Math.max(0, Math.ceil((holdUntil - now) / 1e3));
+    if (today() < firstConfirmationDate) return null;
+    if (!eligibleRecords.length) return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("section", { className: "monthly-report-panel monthly-report-complete", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "monthly-report-head", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u6BCF45\u5929\u7269\u4EF6\u78BA\u8A8D" }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+          person.name,
+          "\uFF0C\u672C\u6B21\u5F85\u78BA\u8A8D\u7269\u4EF6\u5DF2\u5168\u90E8\u9001\u51FA\u3002"
+        ] })
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "\u5DF2\u5B8C\u6210" })
+    ] }) });
     const submitAll = async () => {
       const selected = eligibleRecords.filter((record) => !!choices[record.id]);
       if (!selected.length) return alert("\u8ACB\u81F3\u5C11\u9078\u64C7\u4E00\u7B46\u7269\u4EF6\u56DE\u5831");
