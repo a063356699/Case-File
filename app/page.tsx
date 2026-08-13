@@ -757,6 +757,7 @@ export default function Home() {
   const [publicQuery, setPublicQuery] = useState("");
   const [publicZoom, setPublicZoom] = useState(() => typeof window !== "undefined" && window.innerWidth <= 1100 ? 50 : 100);
   const [password, setPassword] = useState("");
+  const [publicReportHoldUntil, setPublicReportHoldUntil] = useState(0);
   const [notice, setNotice] = useState("");
   const [intakeRaw, setIntakeRaw] = useState("");
   const [intakeDrafts, setIntakeDrafts] = useState<IntakeData[]>([]);
@@ -1918,7 +1919,7 @@ export default function Home() {
   }, [cloudSession?.accessToken, settings.supabaseUrl, settings.supabaseKey, settings.supabaseTable, settings.supabaseRecord]);
 
   const openPublic = () => { setTab("public"); setPublicUnlocked(false); setPublicPersonId(""); setPublicScope("mine"); setPassword(""); };
-  const logoutPublic = () => { localStorage.removeItem("case-file-public-daily-login"); setPublicUnlocked(false); setPublicPersonId(""); setPublicScope("mine"); setPublicExpiryFilter("all"); setPublicQuery(""); setPassword(""); flash("已登出業務帳號"); };
+  const logoutPublic = () => { if (Date.now() < publicReportHoldUntil) return flash(`回報正在保護送出，請等待 ${Math.max(1, Math.ceil((publicReportHoldUntil - Date.now()) / 1000))} 秒`); localStorage.removeItem("case-file-public-daily-login"); setPublicUnlocked(false); setPublicPersonId(""); setPublicScope("mine"); setPublicExpiryFilter("all"); setPublicQuery(""); setPassword(""); flash("已登出業務帳號"); };
   const rememberPublicLogin = (personId: string) => localStorage.setItem("case-file-public-daily-login", JSON.stringify({ date: today(), personId }));
   const recordPublicEntry = async (nationalId: string) => {
     try { await fetch(`${CASE_FILE_SUPABASE_URL}/rest/v1/rpc/case_file_front_touch`, { method: "POST", headers: { apikey: CASE_FILE_SUPABASE_PUBLISHABLE_KEY, "Content-Type": "application/json" }, body: JSON.stringify({ p_national_id: nationalId }) }); } catch {}
@@ -2030,9 +2031,16 @@ export default function Home() {
   const confirmIntake = (draftId?: string) => { const targetId = draftId || selectedIntakeRef.current; const target = targetId ? intakeDrafts.find(d => d.id === targetId) : intakeDraft; if (!target) return; const targetNo = intakeValue(target.values, "委託主約編號"); const existing = target.linkedRecordId ? records.find(record => record.id === target.linkedRecordId) : records.find(record => !!targetNo && record.propertyNo === targetNo); const record = intakeToRecord(target, existing); if (!record.propertyNo || !record.caseName) return flash("缺少物件編號或案名，請先確認表單內容"); if (existing) { const firstFormalEntry = !target.enteredAt; const tracked = { ...withTrackedUpdate(existing, record), ...(firstFormalEntry ? { _newCaseReminderEnabled: "1", _newCaseReminderSource: "intake" } : {}) }; const enteredAt = target.enteredAt || new Date().toISOString(); setRecords(prev => prev.map(item => item.id === existing.id ? tracked : item)); setIntakeDrafts(prev => prev.map(draft => draft.id === target.id ? { ...draft, linkedRecordId: existing.id, enteredAt, modifiedAt: enteredAt } : draft)); if (firstFormalEntry) { setNewCaseReminder({ ...tracked }); setNewCaseReminderBatchIds(previous => [...new Set([...previous, ...pendingIntakeReminderRecords.map(item => item.id), tracked.id])]); } flash(firstFormalEntry ? "已正式進案；請完成新案件提醒" : "已連結並同步更新原總表資料"); return; } if (!confirm(`確定文件已收到，將「${record.caseName}」正式加入總表？`)) return; const enteredAt = new Date().toISOString(); const entered = { ...record, _newCaseReminderEnabled: "1", _newCaseReminderSource: "intake" }; setRecords(prev => [entered, ...prev]); setIntakeDrafts(prev => prev.map(draft => draft.id === target.id ? { ...draft, linkedRecordId: entered.id, enteredAt, modifiedAt: enteredAt } : draft)); setNewCaseReminder({ ...entered }); setNewCaseReminderBatchIds(previous => [...new Set([...previous, ...pendingIntakeReminderRecords.map(item => item.id), entered.id])]); flash("已正式進案；請完成新案件提醒"); };
   const removeIntakeDraft = (id: string) => { const target = intakeDrafts.find(d => d.id === id); if (!target || !confirm(`確定刪除「${intakeValue(target.values, "案名") || "未命名草稿"}」？`)) return; setIntakeDrafts(prev => prev.filter(d => d.id !== id)); if (selectedIntakeId === id) setSelectedIntakeId(""); };
   const updateIntakeDraftCaseName = (id: string, caseName: string) => setIntakeDrafts(previous => previous.map(draft => { if (draft.id !== id) return draft; const key = Object.keys(draft.values).find(name => name.includes("案名")) || "案名"; return { ...draft, values: { ...draft.values, [key]: caseName } }; }));
-  const submitMonthlyPropertyReport = (record: RecordItem, status: string, reason: string) => {
-    if (!publicPerson) return;
-    if (status === "下架洽開發" && !reason.trim()) return flash("下架洽開發必須填寫原因");
+  useEffect(() => {
+    if (!publicReportHoldUntil) return;
+    const beforeUnload = (event: BeforeUnloadEvent) => { if (Date.now() < publicReportHoldUntil) { event.preventDefault(); event.returnValue = ""; } };
+    window.addEventListener("beforeunload", beforeUnload);
+    return () => window.removeEventListener("beforeunload", beforeUnload);
+  }, [publicReportHoldUntil]);
+  const submitMonthlyPropertyReport = async (record: RecordItem, status: string, reason: string): Promise<boolean> => {
+    if (!publicPerson) return false;
+    if (status === "下架洽開發" && !reason.trim()) { flash("下架洽開發必須填寫原因"); return false; }
+    setPublicReportHoldUntil(Date.now() + 15000);
     const reportKey = `${today().slice(0, 7)}:${publicPerson.id}`; let reports: Record<string, any> = {}; try { reports = JSON.parse(record._monthlyReports || "{}"); } catch {}
     const due = new Date(`${today()}T00:00:00`); due.setDate(due.getDate() + 7); const dueDate = `${due.getFullYear()}-${String(due.getMonth() + 1).padStart(2, "0")}-${String(due.getDate()).padStart(2, "0")}`;
     const reportedAt = new Date().toISOString();
@@ -2046,15 +2054,45 @@ export default function Home() {
     });
     const updatesDate = status === "委託中";
     // 業務前台不使用管理者帳號；回報時只寫入這一筆確認紀錄，讓手機與電腦讀到同一份資料。
-    void fetch(`${CASE_FILE_SUPABASE_URL}/rest/v1/rpc/case_file_front_report`, {
+    try {
+      const response = await fetch(`${CASE_FILE_SUPABASE_URL}/rest/v1/rpc/case_file_front_report`, {
       method: "POST",
       headers: { apikey: CASE_FILE_SUPABASE_PUBLISHABLE_KEY, "Content-Type": "application/json" },
       body: JSON.stringify({ p_person_id: publicPerson.id, p_record_id: record.id, p_status: status, p_reason: reason.trim() })
-    }).then(response => {
+      });
       if (!response.ok) throw new Error("front report sync failed");
-    }).catch(() => flash("回報暫存於這台裝置；雲端同步失敗，請確認網路後再送出"));
+    } catch { flash("回報未送出雲端，請確認網路後再送出"); return false; }
     setRecords(previous => previous.map(item => item.id === record.id ? { ...item, _monthlyReports: JSON.stringify(reports), ...(updatesDate ? { updateDate: today(), lastModifiedAt: new Date().toISOString() } : {}) } : item));
     flash(status === "待確認" ? `已設定 ${displayRocDate(dueDate)} 再次確認` : "物件回報完成");
+    return true;
+  };
+  const submitMonthlyPropertyReports = async (entries: Array<{ record: RecordItem; status: string; reason: string }>): Promise<boolean> => {
+    if (!publicPerson || !entries.length) return false;
+    if (entries.some(entry => entry.status === "下架洽開發" && !entry.reason.trim())) { flash("下架洽開發必須填寫原因"); return false; }
+    setPublicReportHoldUntil(Date.now() + 15000);
+    try {
+      const response = await fetch(`${CASE_FILE_SUPABASE_URL}/rest/v1/rpc/case_file_front_report_batch`, {
+        method: "POST",
+        headers: { apikey: CASE_FILE_SUPABASE_PUBLISHABLE_KEY, "Content-Type": "application/json" },
+        body: JSON.stringify({ p_person_id: publicPerson.id, p_reports: entries.map(entry => ({ recordId: entry.record.id, status: entry.status, reason: entry.reason.trim() })) })
+      });
+      if (!response.ok) throw new Error("front report batch sync failed");
+    } catch { flash("回報未送出雲端，請確認網路後再送出"); return false; }
+    const reportKey = `${today().slice(0, 7)}:${publicPerson.id}`;
+    const due = new Date(`${today()}T00:00:00`); due.setDate(due.getDate() + 7);
+    const dueDate = `${due.getFullYear()}-${String(due.getMonth() + 1).padStart(2, "0")}-${String(due.getDate()).padStart(2, "0")}`;
+    const sentAt = new Date().toISOString(); const byId = new Map(entries.map(entry => [entry.record.id, entry]));
+    setRecords(previous => previous.map(item => {
+      const entry = byId.get(item.id); if (!entry) return item;
+      let reports: Record<string, any> = {}; try { reports = JSON.parse(item._monthlyReports || "{}"); } catch {}
+      reports[reportKey] = { personId: publicPerson.id, personName: publicPerson.name, status: entry.status, reason: entry.reason.trim(), reportedAt: sentAt, dueDate: entry.status === "待確認" ? dueDate : "" };
+      if (entry.status === "委託中") Object.entries(reports).forEach(([key, report]: [string, any]) => {
+        if (key !== reportKey && report?.status === "請跟開發業務2確認" && !report.adminHandledAt && report.personId !== publicPerson.id) reports[key] = { ...report, adminHandledAt: sentAt, autoResolvedAt: sentAt, autoResolvedBy: publicPerson.name };
+      });
+      return { ...item, _monthlyReports: JSON.stringify(reports), ...(entry.status === "委託中" ? { updateDate: today(), lastModifiedAt: sentAt } : {}) };
+    }));
+    flash(`已完成 ${entries.length} 筆物件回報`);
+    return true;
   };
   const resolveMonthlyPropertyReport = (record: RecordItem, reportKey: string, keepActive = false) => {
     const handledAt = new Date().toISOString();
@@ -2079,7 +2117,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V211</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V212</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -2098,7 +2136,7 @@ export default function Home() {
     {!internalView && tab === "active" && <PropertyBookReview records={records} settings={settings} openRequest={bookReviewOpenRequest} submit={submitBookReviews} openRecord={setEditing}/>}
     {monthlyProgressOpen && <MonthlyConfirmationProgress records={active} people={settings.personnel} lastLogins={frontLastLogins} close={() => setMonthlyProgressOpen(false)}/>}
     {!internalView && tab === "active" && <BusinessReportInbox records={active} resolve={resolveMonthlyPropertyReport} archive={(record, status) => setArchiveChoice({ record, status, date: today(), salesPerson: record.salesPerson || "", reason: record.archiveReason || "" })}/>}
-    {showingPublic && publicUnlocked && publicScope === "mine" && publicPerson && <MonthlyPropertyReport records={myProperties} person={publicPerson} submit={submitMonthlyPropertyReport}/>}
+    {showingPublic && publicUnlocked && publicScope === "mine" && publicPerson && <MonthlyPropertyReport records={myProperties} person={publicPerson} submit={submitMonthlyPropertyReports} holdUntil={publicReportHoldUntil}/>}
     {pptPickerOpen && selectedPptBaseRecords.length > 0 && <aside className="ppt-order-float"><b>調整本次排序</b><small>此順序會保留在本週</small><ol>{selectedPptBaseRecords.map((record, index) => <li key={record.id}><span>{index + 1}. {record.caseName || "未命名案件"}</span><div><button type="button" disabled={index === 0} onClick={() => movePptOrder(record.id, -1)}>↑</button><button type="button" disabled={index === selectedPptBaseRecords.length - 1} onClick={() => movePptOrder(record.id, 1)}>↓</button></div></li>)}</ol></aside>}
 
     {tab === "settings" ? <SettingsPanel settings={settings} setSettings={setSettings} supabasePush={supabasePush} supabasePull={supabasePull} cloudSession={cloudSession} supabaseSignIn={supabaseSignIn} supabaseSignOut={supabaseSignOut} /> :
@@ -3649,8 +3687,8 @@ function BusinessReportInbox({ records, resolve, archive }: { records: RecordIte
   return <section className="business-report-inbox"><header><div><div className="business-report-title-row"><b>業務回報待處理</b><div className="business-report-developer-filter">{developers.map(name => <button key={name} className={developerFilter === name ? "selected" : ""} onClick={() => setDeveloperFilter(current => current === name ? "" : name)}>#{name}</button>)}</div></div><span>業務回傳後，請在此完成下架或確認作業</span></div><strong>{shownItems.length}{developerFilter ? `／${items.length}` : ""} 筆</strong></header><div className="business-report-list">{shownItems.map(item => <article key={`${item.record.id}-${item.key}`}><div className="business-report-case"><div className="business-report-case-title"><b>{item.record.propertyNo || "—"}　{item.record.caseName || "未命名案件"}</b><small>開發：{developerFullNameText(item.record.developer) || "未填"}</small></div><small className="business-report-address">地址：{item.record.address || "未填地址"}</small><div className="business-report-action-row"><span>回報：<em>{item.report.status}</em>{item.report.reason ? `　原因：${item.report.reason}` : ""}</span><div className="business-report-action-meta"><small className="business-report-person">{item.report.personName || "業務人員"}　{new Date(item.report.reportedAt || Date.now()).toLocaleString("zh-TW")}</small>{action(item)}</div></div>{item.report.status === "待確認" && item.report.dueDate && <i>下次確認：{displayRocDate(item.report.dueDate)}</i>}</div></article>)}</div></section>;
 }
 
-function MonthlyPropertyReport({ records, person, submit }: { records: RecordItem[]; person: Person; submit: (record: RecordItem, status: string, reason: string) => void }) {
-  const [choices, setChoices] = useState<Record<string, string>>({}); const [reasons, setReasons] = useState<Record<string, string>>({}); const [missingChoices, setMissingChoices] = useState<string[]>([]); const firstConfirmationDate = "2026-07-30";
+function MonthlyPropertyReport({ records, person, submit, holdUntil }: { records: RecordItem[]; person: Person; submit: (entries: Array<{ record: RecordItem; status: string; reason: string }>) => Promise<boolean>; holdUntil: number }) {
+  const [choices, setChoices] = useState<Record<string, string>>({}); const [reasons, setReasons] = useState<Record<string, string>>({}); const [missingChoices, setMissingChoices] = useState<string[]>([]); const [now, setNow] = useState(Date.now()); const firstConfirmationDate = "2026-07-30";
   const reportOf = (record: RecordItem) => { try { const reports = Object.values(JSON.parse(record._monthlyReports || "{}")) as any[]; return reports.filter(report => report.personId === person.id).sort((a, b) => String(b.reportedAt || "").localeCompare(String(a.reportedAt || "")))[0]; } catch { return undefined; } };
   const oldEnoughRecords = records.filter(record => { const date = normalizeDateInput(record.reportDate || ""); return !!date && Math.floor((Date.parse(`${today()}T00:00:00`) - Date.parse(`${date}T00:00:00`)) / 86400000) >= 30; });
   const eligibleRecords = oldEnoughRecords.filter(record => { const report = reportOf(record); if (!report) return true; if (report.status === "待確認") return report.dueDate <= today(); const lastDate = String(report.reportedAt || "").slice(0, 10); return !lastDate || Math.floor((Date.parse(`${today()}T00:00:00`) - Date.parse(`${lastDate}T00:00:00`)) / 86400000) >= 45; });
@@ -3658,8 +3696,10 @@ function MonthlyPropertyReport({ records, person, submit }: { records: RecordIte
   useEffect(() => { if (overdue.length) setTimeout(() => alert(`有 ${overdue.length} 筆待確認物件已到期，請重新確認`), 100); }, [overdue.map(record => record.id).join("|")]);
   if (today() < firstConfirmationDate || !eligibleRecords.length) return null;
   const reportOptions = ["委託中", "請跟開發業務2確認", "售出下架", "下架洽開發", "待確認"];
-  const submitAll = () => { const selected = eligibleRecords.filter(record => !!choices[record.id]); if (!selected.length) return alert("請至少選擇一筆物件回報"); const missingReason = selected.find(record => choices[record.id] === "下架洽開發" && !String(reasons[record.id] || "").trim()); if (missingReason) { setMissingChoices([missingReason.id]); setTimeout(() => document.getElementById(`report-${missingReason.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" }), 50); return alert(`${missingReason.caseName || missingReason.propertyNo} 必須填寫下架原因`); } selected.forEach(record => submit(record, choices[record.id], reasons[record.id] || "")); setChoices({}); setReasons({}); setMissingChoices([]); };
-  return <section className="monthly-report-panel"><div className="monthly-report-head"><div><b>每45天物件確認</b><span>{person.name}，最近45天已確認過的物件不會重複列出</span></div><strong>{eligibleRecords.length} 筆待處理</strong></div><div className="monthly-report-list">{eligibleRecords.map(record => { const report = reportOf(record), choice = choices[record.id] || ""; const options = developerNameLines(record.developer).length > 1 ? reportOptions : reportOptions.filter(option => option !== "請跟開發業務2確認"); return <div id={`report-${record.id}`} className={`monthly-report-row pill-report-row ${report?.status === "待確認" && report.dueDate <= today() ? "overdue" : ""} ${missingChoices.includes(record.id) ? "missing-choice" : ""}`} key={record.id}><div className="monthly-report-case"><b>{record.caseName || record.propertyNo}</b><small>{record.propertyNo}　{record.address}</small>{report?.status === "待確認" && <em>待確認已到期：{displayRocDate(report.dueDate)}</em>}</div><div className="monthly-report-pills">{options.map(option => <Fragment key={option}><button type="button" className={choice === option ? "selected" : ""} disabled={!!choice && choice !== option} onClick={() => { setChoices(previous => ({ ...previous, [record.id]: choice === option ? "" : option })); setMissingChoices(previous => previous.filter(id => id !== record.id)); }}>{option}</button>{option === "下架洽開發" && choice === option && <input className="inline-report-reason" value={reasons[record.id] || ""} onChange={event => { setReasons(previous => ({ ...previous, [record.id]: event.target.value })); if (event.target.value.trim()) setMissingChoices(previous => previous.filter(id => id !== record.id)); }} placeholder="請填寫下架原因"/>}</Fragment>)}</div></div>; })}</div><div className="monthly-report-submit"><button className="primary" onClick={submitAll}>送出回報</button></div></section>;
+  useEffect(() => { if (!holdUntil || holdUntil <= now) return; const timer = window.setInterval(() => setNow(Date.now()), 250); return () => window.clearInterval(timer); }, [holdUntil, now]);
+  const holdSeconds = Math.max(0, Math.ceil((holdUntil - now) / 1000));
+  const submitAll = async () => { const selected = eligibleRecords.filter(record => !!choices[record.id]); if (!selected.length) return alert("請至少選擇一筆物件回報"); const missingReason = selected.find(record => choices[record.id] === "下架洽開發" && !String(reasons[record.id] || "").trim()); if (missingReason) { setMissingChoices([missingReason.id]); setTimeout(() => document.getElementById(`report-${missingReason.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" }), 50); return alert(`${missingReason.caseName || missingReason.propertyNo} 必須填寫下架原因`); } const ok = await submit(selected.map(record => ({ record, status: choices[record.id], reason: reasons[record.id] || "" }))); if (ok) { setChoices({}); setReasons({}); setMissingChoices([]); } };
+  return <section className="monthly-report-panel"><div className="monthly-report-head"><div><b>每45天物件確認</b><span>{person.name}，最近45天已確認過的物件不會重複列出</span></div><strong>{eligibleRecords.length} 筆待處理</strong></div><div className="monthly-report-list">{eligibleRecords.map(record => { const report = reportOf(record), choice = choices[record.id] || ""; const options = developerNameLines(record.developer).length > 1 ? reportOptions : reportOptions.filter(option => option !== "請跟開發業務2確認"); return <div id={`report-${record.id}`} className={`monthly-report-row pill-report-row ${report?.status === "待確認" && report.dueDate <= today() ? "overdue" : ""} ${missingChoices.includes(record.id) ? "missing-choice" : ""}`} key={record.id}><div className="monthly-report-case"><b>{record.caseName || record.propertyNo}</b><small>{record.propertyNo}　{record.address}</small>{report?.status === "待確認" && <em>待確認已到期：{displayRocDate(report.dueDate)}</em>}</div><div className="monthly-report-pills">{options.map(option => <Fragment key={option}><button type="button" className={choice === option ? "selected" : ""} disabled={!!choice && choice !== option || holdSeconds > 0} onClick={() => { setChoices(previous => ({ ...previous, [record.id]: choice === option ? "" : option })); setMissingChoices(previous => previous.filter(id => id !== record.id)); }}>{option}</button>{option === "下架洽開發" && choice === option && <input className="inline-report-reason" value={reasons[record.id] || ""} onChange={event => { setReasons(previous => ({ ...previous, [record.id]: event.target.value })); if (event.target.value.trim()) setMissingChoices(previous => previous.filter(id => id !== record.id)); }} placeholder="請填寫下架原因"/>}</Fragment>)}</div></div>; })}</div><div className="monthly-report-submit"><button className="primary" disabled={holdSeconds > 0} onClick={submitAll}>{holdSeconds > 0 ? `雲端已收到，請保留畫面 ${holdSeconds} 秒` : "送出回報"}</button>{holdSeconds > 0 && <small>回報已送達雲端，請勿關閉或重新整理此頁。</small>}</div></section>;
   return <section className="monthly-report-panel"><div className="monthly-report-head"><div><b>每45天物件確認</b><span>{person.name}，最近45天已確認過的物件不會重複列出</span></div><strong>{eligibleRecords.length} 筆待處理</strong></div><div className="monthly-report-list">{eligibleRecords.map(record => { const report = reportOf(record), choice = choices[record.id] || ""; return <div className={`monthly-report-row ${report?.status === "待確認" && report.dueDate <= today() ? "overdue" : ""}`} key={record.id}><div><b>{record.caseName || record.propertyNo}</b><small>{record.propertyNo}　{record.address}</small>{report?.status === "待確認" && <em>待確認已到期：{displayRocDate(report.dueDate)}</em>}</div><select value={choice} onChange={event => setChoices(previous => ({ ...previous, [record.id]: event.target.value }))}><option value="">選擇回報</option><option>委託中</option><option>請跟 B 業務確認</option><option>請跟開發業務確認</option><option>售出下架</option><option>下架洽開發</option><option>待確認</option></select>{choice === "下架洽開發" && <input value={reasons[record.id] || ""} onChange={event => setReasons(previous => ({ ...previous, [record.id]: event.target.value }))} placeholder="請填寫下架原因"/>}<button disabled={!choice || (choice === "下架洽開發" && !String(reasons[record.id] || "").trim())} onClick={() => submit(record, choice, reasons[record.id] || "")}>送出</button></div>; })}</div></section>;
 }
 

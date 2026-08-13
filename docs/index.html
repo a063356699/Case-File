@@ -42492,6 +42492,7 @@ ${String(ex)}`);
     const [publicQuery, setPublicQuery] = (0, import_react.useState)("");
     const [publicZoom, setPublicZoom] = (0, import_react.useState)(() => typeof window !== "undefined" && window.innerWidth <= 1100 ? 50 : 100);
     const [password, setPassword] = (0, import_react.useState)("");
+    const [publicReportHoldUntil, setPublicReportHoldUntil] = (0, import_react.useState)(0);
     const [notice, setNotice] = (0, import_react.useState)("");
     const [intakeRaw, setIntakeRaw] = (0, import_react.useState)("");
     const [intakeDrafts, setIntakeDrafts] = (0, import_react.useState)([]);
@@ -44144,6 +44145,7 @@ ${changedLabels}
       setPassword("");
     };
     const logoutPublic = () => {
+      if (Date.now() < publicReportHoldUntil) return flash(`\u56DE\u5831\u6B63\u5728\u4FDD\u8B77\u9001\u51FA\uFF0C\u8ACB\u7B49\u5F85 ${Math.max(1, Math.ceil((publicReportHoldUntil - Date.now()) / 1e3))} \u79D2`);
       localStorage.removeItem("case-file-public-daily-login");
       setPublicUnlocked(false);
       setPublicPersonId("");
@@ -44328,9 +44330,24 @@ ${changedLabels}
       const key = Object.keys(draft.values).find((name) => name.includes("\u6848\u540D")) || "\u6848\u540D";
       return { ...draft, values: { ...draft.values, [key]: caseName } };
     }));
-    const submitMonthlyPropertyReport = (record, status, reason) => {
-      if (!publicPerson) return;
-      if (status === "\u4E0B\u67B6\u6D3D\u958B\u767C" && !reason.trim()) return flash("\u4E0B\u67B6\u6D3D\u958B\u767C\u5FC5\u9808\u586B\u5BEB\u539F\u56E0");
+    (0, import_react.useEffect)(() => {
+      if (!publicReportHoldUntil) return;
+      const beforeUnload = (event) => {
+        if (Date.now() < publicReportHoldUntil) {
+          event.preventDefault();
+          event.returnValue = "";
+        }
+      };
+      window.addEventListener("beforeunload", beforeUnload);
+      return () => window.removeEventListener("beforeunload", beforeUnload);
+    }, [publicReportHoldUntil]);
+    const submitMonthlyPropertyReport = async (record, status, reason) => {
+      if (!publicPerson) return false;
+      if (status === "\u4E0B\u67B6\u6D3D\u958B\u767C" && !reason.trim()) {
+        flash("\u4E0B\u67B6\u6D3D\u958B\u767C\u5FC5\u9808\u586B\u5BEB\u539F\u56E0");
+        return false;
+      }
+      setPublicReportHoldUntil(Date.now() + 15e3);
       const reportKey = `${today().slice(0, 7)}:${publicPerson.id}`;
       let reports = {};
       try {
@@ -44348,15 +44365,61 @@ ${changedLabels}
         }
       });
       const updatesDate = status === "\u59D4\u8A17\u4E2D";
-      void fetch(`${CASE_FILE_SUPABASE_URL}/rest/v1/rpc/case_file_front_report`, {
-        method: "POST",
-        headers: { apikey: CASE_FILE_SUPABASE_PUBLISHABLE_KEY, "Content-Type": "application/json" },
-        body: JSON.stringify({ p_person_id: publicPerson.id, p_record_id: record.id, p_status: status, p_reason: reason.trim() })
-      }).then((response) => {
+      try {
+        const response = await fetch(`${CASE_FILE_SUPABASE_URL}/rest/v1/rpc/case_file_front_report`, {
+          method: "POST",
+          headers: { apikey: CASE_FILE_SUPABASE_PUBLISHABLE_KEY, "Content-Type": "application/json" },
+          body: JSON.stringify({ p_person_id: publicPerson.id, p_record_id: record.id, p_status: status, p_reason: reason.trim() })
+        });
         if (!response.ok) throw new Error("front report sync failed");
-      }).catch(() => flash("\u56DE\u5831\u66AB\u5B58\u65BC\u9019\u53F0\u88DD\u7F6E\uFF1B\u96F2\u7AEF\u540C\u6B65\u5931\u6557\uFF0C\u8ACB\u78BA\u8A8D\u7DB2\u8DEF\u5F8C\u518D\u9001\u51FA"));
+      } catch {
+        flash("\u56DE\u5831\u672A\u9001\u51FA\u96F2\u7AEF\uFF0C\u8ACB\u78BA\u8A8D\u7DB2\u8DEF\u5F8C\u518D\u9001\u51FA");
+        return false;
+      }
       setRecords((previous) => previous.map((item) => item.id === record.id ? { ...item, _monthlyReports: JSON.stringify(reports), ...updatesDate ? { updateDate: today(), lastModifiedAt: (/* @__PURE__ */ new Date()).toISOString() } : {} } : item));
       flash(status === "\u5F85\u78BA\u8A8D" ? `\u5DF2\u8A2D\u5B9A ${displayRocDate(dueDate)} \u518D\u6B21\u78BA\u8A8D` : "\u7269\u4EF6\u56DE\u5831\u5B8C\u6210");
+      return true;
+    };
+    const submitMonthlyPropertyReports = async (entries) => {
+      if (!publicPerson || !entries.length) return false;
+      if (entries.some((entry) => entry.status === "\u4E0B\u67B6\u6D3D\u958B\u767C" && !entry.reason.trim())) {
+        flash("\u4E0B\u67B6\u6D3D\u958B\u767C\u5FC5\u9808\u586B\u5BEB\u539F\u56E0");
+        return false;
+      }
+      setPublicReportHoldUntil(Date.now() + 15e3);
+      try {
+        const response = await fetch(`${CASE_FILE_SUPABASE_URL}/rest/v1/rpc/case_file_front_report_batch`, {
+          method: "POST",
+          headers: { apikey: CASE_FILE_SUPABASE_PUBLISHABLE_KEY, "Content-Type": "application/json" },
+          body: JSON.stringify({ p_person_id: publicPerson.id, p_reports: entries.map((entry) => ({ recordId: entry.record.id, status: entry.status, reason: entry.reason.trim() })) })
+        });
+        if (!response.ok) throw new Error("front report batch sync failed");
+      } catch {
+        flash("\u56DE\u5831\u672A\u9001\u51FA\u96F2\u7AEF\uFF0C\u8ACB\u78BA\u8A8D\u7DB2\u8DEF\u5F8C\u518D\u9001\u51FA");
+        return false;
+      }
+      const reportKey = `${today().slice(0, 7)}:${publicPerson.id}`;
+      const due = /* @__PURE__ */ new Date(`${today()}T00:00:00`);
+      due.setDate(due.getDate() + 7);
+      const dueDate = `${due.getFullYear()}-${String(due.getMonth() + 1).padStart(2, "0")}-${String(due.getDate()).padStart(2, "0")}`;
+      const sentAt = (/* @__PURE__ */ new Date()).toISOString();
+      const byId = new Map(entries.map((entry) => [entry.record.id, entry]));
+      setRecords((previous) => previous.map((item) => {
+        const entry = byId.get(item.id);
+        if (!entry) return item;
+        let reports = {};
+        try {
+          reports = JSON.parse(item._monthlyReports || "{}");
+        } catch {
+        }
+        reports[reportKey] = { personId: publicPerson.id, personName: publicPerson.name, status: entry.status, reason: entry.reason.trim(), reportedAt: sentAt, dueDate: entry.status === "\u5F85\u78BA\u8A8D" ? dueDate : "" };
+        if (entry.status === "\u59D4\u8A17\u4E2D") Object.entries(reports).forEach(([key, report]) => {
+          if (key !== reportKey && report?.status === "\u8ACB\u8DDF\u958B\u767C\u696D\u52D92\u78BA\u8A8D" && !report.adminHandledAt && report.personId !== publicPerson.id) reports[key] = { ...report, adminHandledAt: sentAt, autoResolvedAt: sentAt, autoResolvedBy: publicPerson.name };
+        });
+        return { ...item, _monthlyReports: JSON.stringify(reports), ...entry.status === "\u59D4\u8A17\u4E2D" ? { updateDate: today(), lastModifiedAt: sentAt } : {} };
+      }));
+      flash(`\u5DF2\u5B8C\u6210 ${entries.length} \u7B46\u7269\u4EF6\u56DE\u5831`);
+      return true;
     };
     const resolveMonthlyPropertyReport = (record, reportKey, keepActive = false) => {
       const handledAt = (/* @__PURE__ */ new Date()).toISOString();
@@ -44399,7 +44462,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V211" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V212" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -44486,7 +44549,7 @@ ${changedLabels}
       !internalView && tab === "active" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PropertyBookReview, { records, settings, openRequest: bookReviewOpenRequest, submit: submitBookReviews, openRecord: setEditing }),
       monthlyProgressOpen && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(MonthlyConfirmationProgress, { records: active, people: settings.personnel, lastLogins: frontLastLogins, close: () => setMonthlyProgressOpen(false) }),
       !internalView && tab === "active" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(BusinessReportInbox, { records: active, resolve: resolveMonthlyPropertyReport, archive: (record, status) => setArchiveChoice({ record, status, date: today(), salesPerson: record.salesPerson || "", reason: record.archiveReason || "" }) }),
-      showingPublic && publicUnlocked && publicScope === "mine" && publicPerson && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(MonthlyPropertyReport, { records: myProperties, person: publicPerson, submit: submitMonthlyPropertyReport }),
+      showingPublic && publicUnlocked && publicScope === "mine" && publicPerson && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(MonthlyPropertyReport, { records: myProperties, person: publicPerson, submit: submitMonthlyPropertyReports, holdUntil: publicReportHoldUntil }),
       pptPickerOpen && selectedPptBaseRecords.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("aside", { className: "ppt-order-float", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u8ABF\u6574\u672C\u6B21\u6392\u5E8F" }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "\u6B64\u9806\u5E8F\u6703\u4FDD\u7559\u5728\u672C\u9031" }),
@@ -48890,10 +48953,11 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       ] }) }, `${item.record.id}-${item.key}`)) })
     ] });
   }
-  function MonthlyPropertyReport({ records, person, submit }) {
+  function MonthlyPropertyReport({ records, person, submit, holdUntil }) {
     const [choices, setChoices] = (0, import_react.useState)({});
     const [reasons, setReasons] = (0, import_react.useState)({});
     const [missingChoices, setMissingChoices] = (0, import_react.useState)([]);
+    const [now, setNow] = (0, import_react.useState)(Date.now());
     const firstConfirmationDate = "2026-07-30";
     const reportOf = (record) => {
       try {
@@ -48923,7 +48987,13 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     }, [overdue.map((record) => record.id).join("|")]);
     if (today() < firstConfirmationDate || !eligibleRecords.length) return null;
     const reportOptions = ["\u59D4\u8A17\u4E2D", "\u8ACB\u8DDF\u958B\u767C\u696D\u52D92\u78BA\u8A8D", "\u552E\u51FA\u4E0B\u67B6", "\u4E0B\u67B6\u6D3D\u958B\u767C", "\u5F85\u78BA\u8A8D"];
-    const submitAll = () => {
+    (0, import_react.useEffect)(() => {
+      if (!holdUntil || holdUntil <= now) return;
+      const timer = window.setInterval(() => setNow(Date.now()), 250);
+      return () => window.clearInterval(timer);
+    }, [holdUntil, now]);
+    const holdSeconds = Math.max(0, Math.ceil((holdUntil - now) / 1e3));
+    const submitAll = async () => {
       const selected = eligibleRecords.filter((record) => !!choices[record.id]);
       if (!selected.length) return alert("\u8ACB\u81F3\u5C11\u9078\u64C7\u4E00\u7B46\u7269\u4EF6\u56DE\u5831");
       const missingReason = selected.find((record) => choices[record.id] === "\u4E0B\u67B6\u6D3D\u958B\u767C" && !String(reasons[record.id] || "").trim());
@@ -48932,10 +49002,12 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
         setTimeout(() => document.getElementById(`report-${missingReason.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" }), 50);
         return alert(`${missingReason.caseName || missingReason.propertyNo} \u5FC5\u9808\u586B\u5BEB\u4E0B\u67B6\u539F\u56E0`);
       }
-      selected.forEach((record) => submit(record, choices[record.id], reasons[record.id] || ""));
-      setChoices({});
-      setReasons({});
-      setMissingChoices([]);
+      const ok = await submit(selected.map((record) => ({ record, status: choices[record.id], reason: reasons[record.id] || "" })));
+      if (ok) {
+        setChoices({});
+        setReasons({});
+        setMissingChoices([]);
+      }
     };
     return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", { className: "monthly-report-panel", children: [
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "monthly-report-head", children: [
@@ -48968,7 +49040,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
             ] })
           ] }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "monthly-report-pills", children: options.map((option) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_react.Fragment, { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: choice === option ? "selected" : "", disabled: !!choice && choice !== option, onClick: () => {
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: choice === option ? "selected" : "", disabled: !!choice && choice !== option || holdSeconds > 0, onClick: () => {
               setChoices((previous) => ({ ...previous, [record.id]: choice === option ? "" : option }));
               setMissingChoices((previous) => previous.filter((id) => id !== record.id));
             }, children: option }),
@@ -48979,7 +49051,10 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
           ] }, option)) })
         ] }, record.id);
       }) }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "monthly-report-submit", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "primary", onClick: submitAll, children: "\u9001\u51FA\u56DE\u5831" }) })
+      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "monthly-report-submit", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "primary", disabled: holdSeconds > 0, onClick: submitAll, children: holdSeconds > 0 ? `\u96F2\u7AEF\u5DF2\u6536\u5230\uFF0C\u8ACB\u4FDD\u7559\u756B\u9762 ${holdSeconds} \u79D2` : "\u9001\u51FA\u56DE\u5831" }),
+        holdSeconds > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "\u56DE\u5831\u5DF2\u9001\u9054\u96F2\u7AEF\uFF0C\u8ACB\u52FF\u95DC\u9589\u6216\u91CD\u65B0\u6574\u7406\u6B64\u9801\u3002" })
+      ] })
     ] });
     return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", { className: "monthly-report-panel", children: [
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "monthly-report-head", children: [
