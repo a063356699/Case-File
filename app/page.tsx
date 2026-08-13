@@ -729,6 +729,9 @@ export default function Home() {
   const [monthlyProgressOpen, setMonthlyProgressOpen] = useState(false);
   const [frontLastLogins, setFrontLastLogins] = useState<Record<string, string>>({});
   const [editing, setEditing] = useState<RecordItem | null>(null);
+  useEffect(() => {
+    setEditing(current => current ? records.find(record => record.id === current.id) || current : current);
+  }, [records]);
   const [newCaseReminder, setNewCaseReminder] = useState<RecordItem | null>(null);
   const [newCaseReminderBatchIds, setNewCaseReminderBatchIds] = useState<string[]>([]);
   const deferredNewCaseReminderIds = useRef<Set<string>>(new Set());
@@ -1463,6 +1466,11 @@ export default function Home() {
     setRecords(prev => prev.map(x => x.id === r.id ? { ...x, status, archived: normalizeDateInput(archiveDate) || today(), salesPerson: salesPerson.trim(), archiveReason: status === "下架洽開發" ? reason.trim() : "", _archiveActionDate: today(), ...Object.fromEntries(cleanupKeys.map(key => [key, ""])) } : x)); setArchiveChoice(null); flash("已移至封存，並建立下架待辦");
   };
   const completeArchiveCleanup = (record: RecordItem, key: string) => setRecords(previous => previous.map(item => item.id === record.id ? { ...item, [key]: item[key] ? "" : today() } : item));
+  const completeArchiveCleanupAndRefresh = (record: RecordItem, key: string) => {
+    const value = record[key] ? "" : today();
+    completeArchiveCleanup(record, key);
+    setEditing(current => current?.id === record.id ? { ...current, [key]: value } : current);
+  };
   const completeDealTask = (record: RecordItem, key: string) => setRecords(previous => previous.map(item => item.id === record.id ? { ...item, [key]: today() } : item));
   const requestArchive = (record: RecordItem, status: string) => setArchiveChoice({ record, status, date: status === "到期下架" ? nextDate(record.entrustEnd) : today(), salesPerson: record.salesPerson || "", reason: record.archiveReason || "" });
   const restoreRecord = (r: RecordItem, reopened = true) => {
@@ -2044,7 +2052,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V199</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V200</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
