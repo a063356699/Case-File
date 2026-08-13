@@ -2111,7 +2111,7 @@ export default function Home() {
     flash(`已完成 ${entries.length} 筆物件回報`);
     return true;
   };
-  const resolveMonthlyPropertyReport = (record: RecordItem, reportKey: string, keepActive = false) => {
+  const resolveMonthlyPropertyReport = async (record: RecordItem, reportKey: string, keepActive = false) => {
     const handledAt = new Date().toISOString();
     const markHandled = (item: RecordItem) => {
       const reports = monthlyReportsOf(item._monthlyReports);
@@ -2122,6 +2122,14 @@ export default function Home() {
       reports[reportKey] = { ...reports[reportKey], adminHandledAt: handledAt };
       return { ...item, _monthlyReports: JSON.stringify(reports), ...(keepActive ? { updateDate: reportedDate, lastModifiedAt: handledAt } : {}) };
     };
+    try {
+      const response = await fetch(`${CASE_FILE_SUPABASE_URL}/rest/v1/rpc/case_file_front_report_resolve`, {
+        method: "POST",
+        headers: { apikey: CASE_FILE_SUPABASE_PUBLISHABLE_KEY, "Content-Type": "application/json" },
+        body: JSON.stringify({ p_record_id: record.id, p_report_key: reportKey })
+      });
+      if (!response.ok) throw new Error("report resolve sync failed");
+    } catch { flash("確認未能寫入雲端，請檢查網路後再按一次"); return; }
     setRecords(previous => previous.map(item => {
       if (item.id !== record.id) return item;
       return markHandled(item);
@@ -2129,7 +2137,7 @@ export default function Home() {
     // The inbox renders the just-read cloud snapshot. Mirror the handling flag
     // there immediately so the resolved report disappears without a refresh.
     setCloudConfirmationRecords(previous => previous ? previous.map(item => item.id === record.id ? markHandled(item) : item) : previous);
-    flash(keepActive ? "已確認維持委託中，更新日期已更新" : "已標示處理完成");
+    flash(keepActive ? "已確認完成，已從待處理列表移除" : "已標示處理完成");
   };
   const submitBookReviews = (reviews: Array<{ record: RecordItem; status: string }>) => { const stamp = new Date().toISOString(), cycle = bookReviewCycleKey(); setRecords(previous => previous.map(item => reviews.some(value => value.record.id === item.id) ? { ...item, bookLocationDate: today(), _bookReviewAt: stamp, _bookReviewCycle: cycle, lastModifiedAt: stamp } : item)); flash(`已確認 ${reviews.length} 筆物件本，日期更新為今天`); };
   const updateTourDate = (date: string) => { setTourDate(date); setTourModifiedAt(new Date().toISOString()); };
@@ -3705,7 +3713,7 @@ function BusinessReportInbox({ records, resolve, archive }: { records: RecordIte
     if (item.report.status === "售出下架") return <button className="primary" onClick={() => archive(item.record, "售出下架")}>確認售出下架</button>;
     if (item.report.status === "下架洽開發") return <button className="primary" onClick={() => archive(item.record, "下架洽開發")}>確認下架</button>;
     if (item.report.status === "請跟開發業務2確認") return <small className="business-report-wait">等待另一位開發確認委託中</small>;
-    return <button onClick={() => resolve(item.record, item.key, true)}>已查看，等待再次確認</button>;
+    return <button onClick={() => void resolve(item.record, item.key, true)}>確認完成</button>;
   };
   return <section className="business-report-inbox"><header><div><div className="business-report-title-row"><b>業務回報待處理</b><div className="business-report-developer-filter">{developers.map(name => <button key={name} className={developerFilter === name ? "selected" : ""} onClick={() => setDeveloperFilter(current => current === name ? "" : name)}>#{name}</button>)}</div></div><span>業務回傳後，請在此完成下架或確認作業</span></div><strong>{shownItems.length}{developerFilter ? `／${items.length}` : ""} 筆</strong></header><div className="business-report-list">{shownItems.map(item => <article key={`${item.record.id}-${item.key}`}><div className="business-report-case"><div className="business-report-case-title"><b>{item.record.propertyNo || "—"}　{item.record.caseName || "未命名案件"}</b><small>開發：{developerFullNameText(item.record.developer) || "未填"}</small></div><small className="business-report-address">地址：{item.record.address || "未填地址"}</small><div className="business-report-action-row"><span>回報：<em>{item.report.status}</em>{item.report.reason ? `　原因：${item.report.reason}` : ""}</span><div className="business-report-action-meta"><small className="business-report-person">{item.report.personName || "業務人員"}　{new Date(item.report.reportedAt || Date.now()).toLocaleString("zh-TW")}</small>{action(item)}</div></div>{item.report.status === "待確認" && item.report.dueDate && <i>下次確認：{displayRocDate(item.report.dueDate)}</i>}</div></article>)}</div></section>;
 }
