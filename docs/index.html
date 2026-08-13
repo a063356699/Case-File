@@ -1607,6 +1607,7 @@ body{background:#f8fbfe!important;color:#405064!important}
 .archive-list-page .sticky-3{left:346px!important}
 .archive-list-page th.col-developer,.archive-list-page td.col-developer{width:1%!important;min-width:0!important;max-width:none!important;padding-left:6px!important;padding-right:6px!important;white-space:nowrap!important}
 .new-case-reminder-list-modal{width:min(1320px,96vw)!important}
+.topbar>.nav .intake-draft-nav-count{margin-left:5px;padding:0!important;border:0!important;background:transparent!important;color:#e00000!important;font-size:13px!important;font-weight:900!important}
 </style>
 </head>
 <body>
@@ -44353,7 +44354,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V197" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V198" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -44399,10 +44400,13 @@ ${changedLabels}
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: tab === "activity" ? "active" : "", onClick: () => setTab("activity"), children: "\u6BCF\u65E5\u7269\u4EF6\u52D5\u614B" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: tab === "inventory" ? "active" : "", onClick: () => setTab("inventory"), children: "\u7269\u4EF6\u5EAB\u5B58" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: tab === "tour" ? "active" : "", onClick: () => setTab("tour"), children: "\u5718\u770B\u5B89\u6392" }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: tab === "intake" ? "active" : "", onClick: () => {
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { className: tab === "intake" ? "active" : "", onClick: () => {
             setTab("intake");
             selectIntakeDraft("");
-          }, children: "\u9032\u6848\u8349\u7A3F" }),
+          }, children: [
+            "\u9032\u6848\u8349\u7A3F",
+            intakeDrafts.filter((draft) => !draft.enteredAt).length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { className: "intake-draft-nav-count", children: intakeDrafts.filter((draft) => !draft.enteredAt).length })
+          ] }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: tab === "public" ? "active" : "", onClick: openPublic, children: "\u524D\u53F0\u7E3D\u8868" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: tab === "settings" ? "active" : "", onClick: () => setTab("settings"), children: "\u8A2D\u5B9A" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "home-last-modified home-sync-times", children: [
