@@ -732,6 +732,9 @@ export default function Home() {
   const [advancedFilter, setAdvancedFilter] = useState<AdvancedFilter>(() => blankAdvancedFilter());
   const [bookReviewOpenRequest, setBookReviewOpenRequest] = useState(0);
   const [monthlyProgressOpen, setMonthlyProgressOpen] = useState(false);
+  // The management confirmation panels must use the just-read cloud snapshot,
+  // rather than waiting for React's normal records state update.
+  const [cloudConfirmationRecords, setCloudConfirmationRecords] = useState<RecordItem[] | null>(null);
   const [frontLastLogins, setFrontLastLogins] = useState<Record<string, string>>({});
   const [editing, setEditing] = useState<RecordItem | null>(null);
   useEffect(() => {
@@ -1806,6 +1809,8 @@ export default function Home() {
       const url = `${settings.supabaseUrl.replace(/\/$/, "")}/rest/v1/${settings.supabaseTable}?id=eq.${encodeURIComponent(settings.supabaseRecord)}&select=data,updated_at`;
       const res = await fetch(url, { headers: cloudHeaders(session) }); const rows = await res.json(); const data = rows[0]?.data;
       if (!res.ok || !data?.records) throw new Error();
+      const confirmationRecords = (data.records as RecordItem[]).map(record => normalizeRecordPings(applySourceLayoutFixes([record])[0])).filter(record => !record.archived && !isExpired(record) && (record.status || "委託中") === "委託中");
+      setCloudConfirmationRecords(confirmationRecords);
       if (rows[0]?.updated_at) { setCloudLastUploadAt(rows[0].updated_at); localStorage.setItem(CLOUD_LAST_UPLOAD_KEY, rows[0].updated_at); }
       if (automatic || confirm("雲端資料將與本機資料合併，本機已修改但尚未同步的同一筆資料將以雲端版本為準。確定嗎？")) {
         setRecords(prev => {
@@ -1883,7 +1888,6 @@ export default function Home() {
   const openMonthlyProgress = async () => {
     // 先讀取雲端回報，下一個畫面更新後才開啟進度；避免拿到更新前的 records。
     if (cloudSession?.accessToken) await supabasePull(true, true);
-    await new Promise<void>(resolve => window.setTimeout(resolve, 180));
     setMonthlyProgressOpen(true);
     if (!cloudSession?.accessToken) return;
     try {
@@ -2118,7 +2122,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V214</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V215</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -2135,8 +2139,8 @@ export default function Home() {
 
     {!internalView && tab === "active" && systemExpiryReminders.length > 0 && <div className="system-expiry-reminder"><b>系統到期提醒</b>{systemExpiryReminders.map(item => <span key={item.label}>{item.label}：{displayRocDate(item.date)} 到期{item.date < today() ? "（已到期）" : item.leadDays === 30 ? "（30天內）" : "（明天到期）"}</span>)}</div>}
     {!internalView && tab === "active" && <PropertyBookReview records={records} settings={settings} openRequest={bookReviewOpenRequest} submit={submitBookReviews} openRecord={setEditing}/>}
-    {monthlyProgressOpen && <MonthlyConfirmationProgress records={active} people={settings.personnel} lastLogins={frontLastLogins} close={() => setMonthlyProgressOpen(false)}/>}
-    {!internalView && tab === "active" && <BusinessReportInbox records={active} resolve={resolveMonthlyPropertyReport} archive={(record, status) => setArchiveChoice({ record, status, date: today(), salesPerson: record.salesPerson || "", reason: record.archiveReason || "" })}/>}
+    {monthlyProgressOpen && <MonthlyConfirmationProgress records={cloudConfirmationRecords || active} people={settings.personnel} lastLogins={frontLastLogins} close={() => setMonthlyProgressOpen(false)}/>}
+    {!internalView && tab === "active" && <BusinessReportInbox records={cloudConfirmationRecords || active} resolve={resolveMonthlyPropertyReport} archive={(record, status) => setArchiveChoice({ record, status, date: today(), salesPerson: record.salesPerson || "", reason: record.archiveReason || "" })}/>}
     {showingPublic && publicUnlocked && publicScope === "mine" && publicPerson && <MonthlyPropertyReport records={myProperties} person={publicPerson} submit={submitMonthlyPropertyReports} holdUntil={publicReportHoldUntil}/>}
     {pptPickerOpen && selectedPptBaseRecords.length > 0 && <aside className="ppt-order-float"><b>調整本次排序</b><small>此順序會保留在本週</small><ol>{selectedPptBaseRecords.map((record, index) => <li key={record.id}><span>{index + 1}. {record.caseName || "未命名案件"}</span><div><button type="button" disabled={index === 0} onClick={() => movePptOrder(record.id, -1)}>↑</button><button type="button" disabled={index === selectedPptBaseRecords.length - 1} onClick={() => movePptOrder(record.id, 1)}>↓</button></div></li>)}</ol></aside>}
 

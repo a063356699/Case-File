@@ -42467,6 +42467,7 @@ ${String(ex)}`);
     const [advancedFilter, setAdvancedFilter] = (0, import_react.useState)(() => blankAdvancedFilter());
     const [bookReviewOpenRequest, setBookReviewOpenRequest] = (0, import_react.useState)(0);
     const [monthlyProgressOpen, setMonthlyProgressOpen] = (0, import_react.useState)(false);
+    const [cloudConfirmationRecords, setCloudConfirmationRecords] = (0, import_react.useState)(null);
     const [frontLastLogins, setFrontLastLogins] = (0, import_react.useState)({});
     const [editing, setEditing] = (0, import_react.useState)(null);
     (0, import_react.useEffect)(() => {
@@ -43995,6 +43996,8 @@ ${changedLabels}
         const rows = await res.json();
         const data = rows[0]?.data;
         if (!res.ok || !data?.records) throw new Error();
+        const confirmationRecords = data.records.map((record) => normalizeRecordPings(applySourceLayoutFixes([record])[0])).filter((record) => !record.archived && !isExpired(record) && (record.status || "\u59D4\u8A17\u4E2D") === "\u59D4\u8A17\u4E2D");
+        setCloudConfirmationRecords(confirmationRecords);
         if (rows[0]?.updated_at) {
           setCloudLastUploadAt(rows[0].updated_at);
           localStorage.setItem(CLOUD_LAST_UPLOAD_KEY, rows[0].updated_at);
@@ -44091,7 +44094,6 @@ ${changedLabels}
     };
     const openMonthlyProgress = async () => {
       if (cloudSession?.accessToken) await supabasePull(true, true);
-      await new Promise((resolve) => window.setTimeout(resolve, 180));
       setMonthlyProgressOpen(true);
       if (!cloudSession?.accessToken) return;
       try {
@@ -44463,7 +44465,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V214" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V215" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -44548,8 +44550,8 @@ ${changedLabels}
         ] }, item.label))
       ] }),
       !internalView && tab === "active" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PropertyBookReview, { records, settings, openRequest: bookReviewOpenRequest, submit: submitBookReviews, openRecord: setEditing }),
-      monthlyProgressOpen && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(MonthlyConfirmationProgress, { records: active, people: settings.personnel, lastLogins: frontLastLogins, close: () => setMonthlyProgressOpen(false) }),
-      !internalView && tab === "active" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(BusinessReportInbox, { records: active, resolve: resolveMonthlyPropertyReport, archive: (record, status) => setArchiveChoice({ record, status, date: today(), salesPerson: record.salesPerson || "", reason: record.archiveReason || "" }) }),
+      monthlyProgressOpen && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(MonthlyConfirmationProgress, { records: cloudConfirmationRecords || active, people: settings.personnel, lastLogins: frontLastLogins, close: () => setMonthlyProgressOpen(false) }),
+      !internalView && tab === "active" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(BusinessReportInbox, { records: cloudConfirmationRecords || active, resolve: resolveMonthlyPropertyReport, archive: (record, status) => setArchiveChoice({ record, status, date: today(), salesPerson: record.salesPerson || "", reason: record.archiveReason || "" }) }),
       showingPublic && publicUnlocked && publicScope === "mine" && publicPerson && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(MonthlyPropertyReport, { records: myProperties, person: publicPerson, submit: submitMonthlyPropertyReports, holdUntil: publicReportHoldUntil }),
       pptPickerOpen && selectedPptBaseRecords.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("aside", { className: "ppt-order-float", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u8ABF\u6574\u672C\u6B21\u6392\u5E8F" }),
