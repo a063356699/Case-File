@@ -42471,6 +42471,7 @@ ${String(ex)}`);
     const [expiryReminderOpen, setExpiryReminderOpen] = (0, import_react.useState)(false);
     const [websitePoReminderOpen, setWebsitePoReminderOpen] = (0, import_react.useState)(false);
     const [archiveCleanupReminderOpen, setArchiveCleanupReminderOpen] = (0, import_react.useState)(false);
+    const suppressArchiveCleanupReminderRef = (0, import_react.useRef)(false);
     const [dealCompletionReminderOpen, setDealCompletionReminderOpen] = (0, import_react.useState)(false);
     const [printEditor, setPrintEditor] = (0, import_react.useState)(null);
     const [colorWorkbookDownloading, setColorWorkbookDownloading] = (0, import_react.useState)(false);
@@ -42969,6 +42970,11 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
     const controlledKeyCount = new Set(records.map((record) => String(record.key || "").match(/公司\s*[#＃]?\s*(\d+)/)?.[1]).filter(Boolean)).size;
     const pendingArchiveCleanup = archived.map((record) => ({ record, tasks: archiveCleanupTasks(record).filter((task) => !record[task.key]) })).filter((item) => item.record.archived && item.tasks.length > 0);
     (0, import_react.useEffect)(() => {
+      if (suppressArchiveCleanupReminderRef.current) {
+        suppressArchiveCleanupReminderRef.current = false;
+        setArchiveCleanupReminderOpen(false);
+        return;
+      }
       if (pendingArchiveCleanup.length) setArchiveCleanupReminderOpen(true);
       else setArchiveCleanupReminderOpen(false);
     }, [pendingArchiveCleanup.map((item) => `${item.record.id}:${item.tasks.map((task) => task.key).join(",")}`).join("|")]);
@@ -43414,6 +43420,8 @@ ${changedLabels}
     const completeArchiveCleanup = (record, key) => setRecords((previous) => previous.map((item) => item.id === record.id ? { ...item, [key]: item[key] ? "" : today() } : item));
     const completeArchiveCleanupAndRefresh = (record, key) => {
       const value = record[key] ? "" : today();
+      suppressArchiveCleanupReminderRef.current = true;
+      setArchiveCleanupReminderOpen(false);
       completeArchiveCleanup(record, key);
       setEditing((current) => current?.id === record.id ? { ...current, [key]: value } : current);
     };
@@ -44362,7 +44370,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V200" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V201" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
