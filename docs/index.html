@@ -41520,6 +41520,15 @@ ${String(ex)}`);
     ...record,
     ...Object.fromEntries(pingFieldKeys.map((key) => [key, formatPingValue(record[key])]))
   });
+  var monthlyReportsOf = (value) => {
+    if (value && typeof value === "object" && !Array.isArray(value)) return value;
+    try {
+      const parsed = JSON.parse(String(value || "{}"));
+      return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+    } catch {
+      return {};
+    }
+  };
   var filterInRange = (value, from = "", to = "", last = false) => {
     const number = filterNumber(value, last);
     return (!from || Number.isFinite(number) && number >= Number(from)) && (!to || Number.isFinite(number) && number <= Number(to));
@@ -48810,13 +48819,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
         const date = normalizeDateInput(record.reportDate || "");
         return !!date && Math.floor((Date.parse(`${today()}T00:00:00`) - Date.parse(`${date}T00:00:00`)) / 864e5) >= 30;
       });
-      const reportOf = (record) => {
-        try {
-          return Object.values(JSON.parse(record._monthlyReports || "{}")).filter((report) => report.personId === person.id).sort((a, b) => String(b.reportedAt || "").localeCompare(String(a.reportedAt || "")))[0];
-        } catch {
-          return void 0;
-        }
-      };
+      const reportOf = (record) => Object.values(monthlyReportsOf(record._monthlyReports)).filter((report) => report.personId === person.id).sort((a, b) => String(b.reportedAt || "").localeCompare(String(a.reportedAt || "")))[0];
       const pending = assigned.filter((record) => {
         const report = reportOf(record);
         if (!report) return true;
@@ -48882,11 +48885,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
   function BusinessReportInbox({ records, resolve, archive }) {
     const [developerFilter, setDeveloperFilter] = (0, import_react.useState)("");
     const items = records.flatMap((record) => {
-      let reports = {};
-      try {
-        reports = JSON.parse(record._monthlyReports || "{}");
-      } catch {
-      }
+      const reports = monthlyReportsOf(record._monthlyReports);
       return Object.entries(reports).map(([key, report]) => ({ record, key, report })).filter((item) => item.report?.status && !item.report.adminHandledAt);
     }).sort((a, b) => String(b.report.reportedAt || "").localeCompare(String(a.report.reportedAt || "")));
     if (!items.length) return null;
@@ -48960,14 +48959,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     const [missingChoices, setMissingChoices] = (0, import_react.useState)([]);
     const [now, setNow] = (0, import_react.useState)(Date.now());
     const firstConfirmationDate = "2026-07-30";
-    const reportOf = (record) => {
-      try {
-        const reports = Object.values(JSON.parse(record._monthlyReports || "{}"));
-        return reports.filter((report) => report.personId === person.id).sort((a, b) => String(b.reportedAt || "").localeCompare(String(a.reportedAt || "")))[0];
-      } catch {
-        return void 0;
-      }
-    };
+    const reportOf = (record) => Object.values(monthlyReportsOf(record._monthlyReports)).filter((report) => report.personId === person.id).sort((a, b) => String(b.reportedAt || "").localeCompare(String(a.reportedAt || "")))[0];
     const oldEnoughRecords = records.filter((record) => {
       const date = normalizeDateInput(record.reportDate || "");
       return !!date && Math.floor((Date.parse(`${today()}T00:00:00`) - Date.parse(`${date}T00:00:00`)) / 864e5) >= 30;

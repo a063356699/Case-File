@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { ChangeEvent, Dispatch, Fragment, SetStateAction, useEffect, useMemo, useRef, useState } from "react";
 import PptxGenJS from "pptxgenjs";
@@ -143,6 +143,10 @@ const normalizeRecordPings = (record: RecordItem): RecordItem => ({
   ...record,
   ...Object.fromEntries(pingFieldKeys.map(key => [key, formatPingValue(record[key])])),
 });
+const monthlyReportsOf = (value: unknown): Record<string, any> => {
+  if (value && typeof value === "object" && !Array.isArray(value)) return value as Record<string, any>;
+  try { const parsed = JSON.parse(String(value || "{}")); return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {}; } catch { return {}; }
+};
 const filterInRange = (value: unknown, from = "", to = "", last = false) => { const number = filterNumber(value, last); return (!from || (Number.isFinite(number) && number >= Number(from))) && (!to || (Number.isFinite(number) && number <= Number(to))); };
 const filterDateInRange = (value: unknown, from = "", to = "") => { const date = normalizeDateInput(String(value || "")); const start = normalizeDateInput(from) || from; const end = normalizeDateInput(to) || to; return (!start || (date && date >= start)) && (!end || (date && date <= end)); };
 const today = () => { const value = new Date(); return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(value.getDate()).padStart(2, "0")}`; };
@@ -3670,7 +3674,7 @@ function MonthlyConfirmationProgress({ records, people, lastLogins, close }: { r
       const date = normalizeDateInput(record.reportDate || "");
       return !!date && Math.floor((Date.parse(`${today()}T00:00:00`) - Date.parse(`${date}T00:00:00`)) / 86400000) >= 30;
     });
-    const reportOf = (record: RecordItem) => { try { return (Object.values(JSON.parse(record._monthlyReports || "{}")) as any[]).filter(report => report.personId === person.id).sort((a, b) => String(b.reportedAt || "").localeCompare(String(a.reportedAt || "")))[0]; } catch { return undefined; } };
+    const reportOf = (record: RecordItem) => (Object.values(monthlyReportsOf(record._monthlyReports)) as any[]).filter(report => report.personId === person.id).sort((a, b) => String(b.reportedAt || "").localeCompare(String(a.reportedAt || "")))[0];
     const pending = assigned.filter(record => { const report = reportOf(record); if (!report) return true; if (report.status === "待確認") return String(report.dueDate || "") <= today(); const date = String(report.reportedAt || "").slice(0, 10); return !date || Math.floor((Date.parse(`${today()}T00:00:00`) - Date.parse(`${date}T00:00:00`)) / 86400000) >= 45; });
     const latest = assigned.map(reportOf).filter(Boolean).sort((a, b) => String(b.reportedAt || "").localeCompare(String(a.reportedAt || "")))[0];
     return { person, total: assigned.length, pending: pending.length, completed: Math.max(0, assigned.length - pending.length), latest: latest?.reportedAt || "", lastLogin: lastLogins[person.id] || "" };
@@ -3685,7 +3689,7 @@ function MonthlyConfirmationProgress({ records, people, lastLogins, close }: { r
 function BusinessReportInbox({ records, resolve, archive }: { records: RecordItem[]; resolve: (record: RecordItem, reportKey: string, keepActive?: boolean) => void; archive: (record: RecordItem, status: string) => void }) {
   const [developerFilter, setDeveloperFilter] = useState("");
   const items = records.flatMap(record => {
-    let reports: Record<string, any> = {}; try { reports = JSON.parse(record._monthlyReports || "{}"); } catch {}
+    const reports = monthlyReportsOf(record._monthlyReports);
     return Object.entries(reports).map(([key, report]) => ({ record, key, report })).filter(item => item.report?.status && !item.report.adminHandledAt);
   }).sort((a, b) => String(b.report.reportedAt || "").localeCompare(String(a.report.reportedAt || "")));
   if (!items.length) return null;
@@ -3702,7 +3706,7 @@ function BusinessReportInbox({ records, resolve, archive }: { records: RecordIte
 
 function MonthlyPropertyReport({ records, person, submit, holdUntil }: { records: RecordItem[]; person: Person; submit: (entries: Array<{ record: RecordItem; status: string; reason: string }>) => Promise<boolean>; holdUntil: number }) {
   const [choices, setChoices] = useState<Record<string, string>>({}); const [reasons, setReasons] = useState<Record<string, string>>({}); const [missingChoices, setMissingChoices] = useState<string[]>([]); const [now, setNow] = useState(Date.now()); const firstConfirmationDate = "2026-07-30";
-  const reportOf = (record: RecordItem) => { try { const reports = Object.values(JSON.parse(record._monthlyReports || "{}")) as any[]; return reports.filter(report => report.personId === person.id).sort((a, b) => String(b.reportedAt || "").localeCompare(String(a.reportedAt || "")))[0]; } catch { return undefined; } };
+  const reportOf = (record: RecordItem) => (Object.values(monthlyReportsOf(record._monthlyReports)) as any[]).filter(report => report.personId === person.id).sort((a, b) => String(b.reportedAt || "").localeCompare(String(a.reportedAt || "")))[0];
   const oldEnoughRecords = records.filter(record => { const date = normalizeDateInput(record.reportDate || ""); return !!date && Math.floor((Date.parse(`${today()}T00:00:00`) - Date.parse(`${date}T00:00:00`)) / 86400000) >= 30; });
   const eligibleRecords = oldEnoughRecords.filter(record => { const report = reportOf(record); if (!report) return true; if (report.status === "待確認") return report.dueDate <= today(); const lastDate = String(report.reportedAt || "").slice(0, 10); return !lastDate || Math.floor((Date.parse(`${today()}T00:00:00`) - Date.parse(`${lastDate}T00:00:00`)) / 86400000) >= 45; });
   const overdue = eligibleRecords.filter(record => { const report = reportOf(record); return report?.status === "待確認" && report.dueDate <= today(); });
