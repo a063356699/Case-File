@@ -44385,7 +44385,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V206" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V207" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -44864,7 +44864,10 @@ ${changedLabels}
             };
             return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("td", { className: "archive-cleanup-case-cell", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: stripRestoredDisplay(record.caseName) || "\u672A\u547D\u540D\u6848\u4EF6" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: "archive-cleanup-case-link", onClick: () => {
+                  setArchiveCleanupReminderOpen(false);
+                  setEditing(record);
+                }, children: stripRestoredDisplay(record.caseName) || "\u672A\u547D\u540D\u6848\u4EF6" }),
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "archive-cleanup-address", children: record.address || "\u672A\u586B\u5BEB\u5730\u5740" }),
                 /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { className: "archive-cleanup-status", children: [
                   record.propertyNo || "\u2014",
