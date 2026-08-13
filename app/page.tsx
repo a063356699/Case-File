@@ -107,6 +107,11 @@ const archiveWebsiteTasks = [
   ["platform591", "591"], ["price5168", "5168"], ["goldExposure", "黃金曝光"], ["windowAd", "櫥窗（專）"],
   ["led", "LED（專）"], ["homeWeb", "我家網"], ["houseinfor", "HOUSE INFOR"], ["yes319", "YES319"],
 ] as const;
+const archiveCleanupTaskIsDone = (record: RecordItem, key: string) => {
+  if (String(record[key] || "").trim()) return true;
+  const websiteField = key.replace(/DownDate$/, "");
+  return archiveWebsiteTasks.some(([field]) => field === websiteField) && /下架/.test(String(record[websiteField] || ""));
+};
 const archiveCleanupTasks = (record: RecordItem) => [
   { key: "housingDownDate", label: "房管下架" },
   { key: "bookDownDate", label: `${record.bookLocationType === "旁5" ? "旁5" : "物件本"}下架` },
@@ -1134,7 +1139,7 @@ export default function Home() {
     setTimeout(() => alert(`今日有 ${dueToday.length} 筆帶看追蹤到期：\n${dueToday.map(record => record.caseName || record.propertyNo).join("\n")}`), 100);
   }, [showingFollowUpRecords.map(record => `${record.id}:${record.showingFollowUpDueDate}`).join("|")]);
   const controlledKeyCount = new Set(records.map(record => String(record.key || "").match(/公司\s*[#＃]?\s*(\d+)/)?.[1]).filter(Boolean)).size;
-  const pendingArchiveCleanup = archived.map(record => ({ record, tasks: archiveCleanupTasks(record).filter(task => !record[task.key]) })).filter(item => item.record.archived && item.tasks.length > 0);
+  const pendingArchiveCleanup = archived.map(record => ({ record, tasks: archiveCleanupTasks(record).filter(task => !archiveCleanupTaskIsDone(record, task.key)) })).filter(item => item.record.archived && item.tasks.length > 0);
   const toggleArchiveCleanupSort = (key: string) => setArchiveCleanupSort(previous => previous.key === key ? { key, direction: previous.direction === "asc" ? "desc" : "asc" } : { key, direction: "asc" });
   const sortedPendingArchiveCleanup = [...pendingArchiveCleanup].sort((a, b) => {
     if (!archiveCleanupSort.key) return 0;
@@ -2066,7 +2071,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V208</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V209</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>

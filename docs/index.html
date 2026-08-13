@@ -41482,6 +41482,11 @@ ${String(ex)}`);
     ["houseinfor", "HOUSE INFOR"],
     ["yes319", "YES319"]
   ];
+  var archiveCleanupTaskIsDone = (record, key) => {
+    if (String(record[key] || "").trim()) return true;
+    const websiteField = key.replace(/DownDate$/, "");
+    return archiveWebsiteTasks.some(([field]) => field === websiteField) && /下架/.test(String(record[websiteField] || ""));
+  };
   var archiveCleanupTasks = (record) => [
     { key: "housingDownDate", label: "\u623F\u7BA1\u4E0B\u67B6" },
     { key: "bookDownDate", label: `${record.bookLocationType === "\u65C15" ? "\u65C15" : "\u7269\u4EF6\u672C"}\u4E0B\u67B6` },
@@ -42971,7 +42976,7 @@ ${String(ex)}`);
 ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 100);
     }, [showingFollowUpRecords.map((record) => `${record.id}:${record.showingFollowUpDueDate}`).join("|")]);
     const controlledKeyCount = new Set(records.map((record) => String(record.key || "").match(/公司\s*[#＃]?\s*(\d+)/)?.[1]).filter(Boolean)).size;
-    const pendingArchiveCleanup = archived.map((record) => ({ record, tasks: archiveCleanupTasks(record).filter((task) => !record[task.key]) })).filter((item) => item.record.archived && item.tasks.length > 0);
+    const pendingArchiveCleanup = archived.map((record) => ({ record, tasks: archiveCleanupTasks(record).filter((task) => !archiveCleanupTaskIsDone(record, task.key)) })).filter((item) => item.record.archived && item.tasks.length > 0);
     const toggleArchiveCleanupSort = (key) => setArchiveCleanupSort((previous) => previous.key === key ? { key, direction: previous.direction === "asc" ? "desc" : "asc" } : { key, direction: "asc" });
     const sortedPendingArchiveCleanup = [...pendingArchiveCleanup].sort((a, b) => {
       if (!archiveCleanupSort.key) return 0;
@@ -44386,7 +44391,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V208" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V209" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
