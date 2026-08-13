@@ -577,6 +577,7 @@ button:hover,.file-button:hover{border-color:#9fbad0;box-shadow:0 2px 8px #7895a
 .active-lead-table th.col-entrustStart,.active-lead-table td.col-entrustStart,.active-lead-table th.col-entrustEnd,.active-lead-table td.col-entrustEnd{text-align:center!important}.active-lead-table td.col-entrustEnd{color:#000!important;background:#fff!important}.active-lead-table td.col-entrustEnd .two-line-value>span:not(.expiry-date-text){color:#000!important;font-weight:400!important}.active-lead-table td.col-entrustEnd .expiry-date-text{color:#d00000!important;font-weight:900!important}
 .restore-choice-modal{width:min(560px,94vw)}.restore-choice-body{display:grid;gap:12px;padding:22px}.restore-choice-body>p{margin:0 0 2px;color:var(--muted)}.restore-choice-body>button{display:flex;flex-direction:column;align-items:flex-start;gap:5px;padding:16px 18px;text-align:left}.restore-choice-body>button b{font-size:16px}.restore-choice-body>button span{font-size:12px;font-weight:500;opacity:.82}
 .archive-choice-modal{width:min(620px,94vw)}.archive-choice-body{display:grid;grid-template-columns:1fr 1.2fr;gap:14px;padding:22px}.archive-choice-body select,.archive-choice-body input{width:100%;border:1px solid #ccd2ce;border-radius:8px;background:#fff;padding:10px 11px}.archive-choice-body small{color:#b24a41;font-weight:700}
+.archive-party-fields{display:grid;gap:8px;align-content:start;padding:4px 0}.archive-party-fields>span{font-weight:800;color:#194e60}.archive-party-fields .field{display:grid;gap:5px}.deal-completion-people{min-width:150px;text-align:left!important;white-space:nowrap}.deal-completion-people span{display:block;line-height:1.55}.deal-completion-table th:first-child{min-width:250px}
 .active-lead-table td.col-caseName .restore-case-annotation,.daily-card td.col-caseName .daily-case-annotation{display:inline-block!important;white-space:nowrap!important;word-break:keep-all!important}.active-lead-table th.col-entrustEnd,.active-lead-table td.col-entrustEnd{text-align:center!important}.active-lead-table td.col-entrustEnd .two-line-value{align-items:center!important;text-align:center!important}
 .active-lead-table td.col-caseName .case-link{display:block!important;width:100%!important;max-width:none!important;color:#000!important;text-align:center!important}.active-lead-table td.col-caseName .restore-case-annotation{display:block!important;margin:4px 0 0!important;white-space:nowrap!important;text-align:center!important;color:#f00!important}
 .record-edit-grid>.edit-entrustStart,.record-edit-grid>.edit-entrustEnd,.record-edit-grid>.edit-contractChangeNo,.record-edit-grid>.edit-reportDate,.record-edit-grid>.edit-updateDate,.record-edit-grid>.edit-groupViewDate{grid-column:span 20!important}.record-edit-grid>.edit-entrustStart .field>span,.record-edit-grid>.edit-entrustEnd .field>span,.record-edit-grid>.edit-contractChangeNo .field>span,.record-edit-grid>.edit-reportDate .field>span,.record-edit-grid>.edit-updateDate .field>span,.record-edit-grid>.edit-groupViewDate .field>span{white-space:nowrap!important}
@@ -43399,15 +43400,15 @@ ${changedLabels}
       setEditing((previous) => previous?.id === next.id ? { ...previous, colorSheetIssue: next.colorSheetIssue } : previous);
       flash(colorSheetIssue ? "\u5DF2\u5132\u5B58\u5F69\u8272\u8868\u7F3A\u4EF6\u7D00\u9304" : "\u5DF2\u6E05\u9664\u5F69\u8272\u8868\u7F3A\u4EF6\u7D00\u9304");
     };
-    const archiveRecord = (r, status = "\u4E0B\u67B6\u6D3D\u958B\u767C", archiveDate = today()) => {
+    const archiveRecord = (r, status = "\u4E0B\u67B6\u6D3D\u958B\u767C", archiveDate = today(), salesPerson = r.salesPerson || "") => {
       const cleanupKeys = ["housingDownDate", "bookDownDate", "salesBookDownDate", ...archiveWebsiteTasks.map(([field]) => `${field}DownDate`), ...dealCompletionTasks.map(([key]) => key)];
-      setRecords((prev) => prev.map((x) => x.id === r.id ? { ...x, status, archived: normalizeDateInput(archiveDate) || today(), _archiveActionDate: today(), ...Object.fromEntries(cleanupKeys.map((key) => [key, ""])) } : x));
+      setRecords((prev) => prev.map((x) => x.id === r.id ? { ...x, status, archived: normalizeDateInput(archiveDate) || today(), salesPerson: salesPerson.trim(), _archiveActionDate: today(), ...Object.fromEntries(cleanupKeys.map((key) => [key, ""])) } : x));
       setArchiveChoice(null);
       flash("\u5DF2\u79FB\u81F3\u5C01\u5B58\uFF0C\u4E26\u5EFA\u7ACB\u4E0B\u67B6\u5F85\u8FA6");
     };
     const completeArchiveCleanup = (record, key) => setRecords((previous) => previous.map((item) => item.id === record.id ? { ...item, [key]: today() } : item));
     const completeDealTask = (record, key) => setRecords((previous) => previous.map((item) => item.id === record.id ? { ...item, [key]: today() } : item));
-    const requestArchive = (record, status) => setArchiveChoice({ record, status, date: status === "\u5230\u671F\u4E0B\u67B6" ? nextDate(record.entrustEnd) : today() });
+    const requestArchive = (record, status) => setArchiveChoice({ record, status, date: status === "\u5230\u671F\u4E0B\u67B6" ? nextDate(record.entrustEnd) : today(), salesPerson: record.salesPerson || "" });
     const restoreRecord = (r, reopened = true) => {
       const cleanupKeys = ["housingDownDate", "bookDownDate", "salesBookDownDate", ...archiveWebsiteTasks.map(([field]) => `${field}DownDate`)];
       setRecords((prev) => prev.map((x) => x.id === r.id ? { ...x, status: "\u59D4\u8A17\u4E2D", archived: "", entrustEnd: x.entrustEnd < today() ? "" : x.entrustEnd, ...reopened ? { _restoredAt: today() } : Object.fromEntries(cleanupKeys.map((key) => [key, ""])) } : x));
@@ -44351,7 +44352,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V194" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V195" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -44635,20 +44636,30 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "archive-cleanup-table-wrap", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("table", { className: "archive-cleanup-table deal-completion-table", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("thead", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "\u6848\u4EF6" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "\u958B\u767C\uFF0F\u92B7\u552E" }),
             dealCompletionTasks.map(([, label]) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: label }, label))
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("tbody", { children: pendingDealCompletion.map(({ record, tasks }) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("td", { className: "archive-cleanup-case-cell", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: stripRestoredDisplay(record.caseName) || "\u672A\u547D\u540D\u6848\u4EF6" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("b", { children: [
+                "\u6848\u540D\uFF1A",
+                stripRestoredDisplay(record.caseName) || "\u672A\u547D\u540D\u6848\u4EF6"
+              ] }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { children: [
                 record.propertyNo || "\u2014",
                 "\u3000",
                 displayRocDate(record.archived || ""),
                 "\u6210\u4EA4\u4E0B\u67B6"
-              ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { className: "deal-completion-developer", children: [
+              ] })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("td", { className: "deal-completion-people", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
                 "\u958B\u767C\uFF1A",
                 developerFullNameText(record.developer, settings.personnel) || "\u2014"
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+                "\u92B7\u552E\uFF1A",
+                record.salesPerson || "\u2014"
               ] })
             ] }),
             dealCompletionTasks.map(([key]) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: tasks.some(([pendingKey]) => pendingKey === key) ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => completeDealTask(record, key), children: "\u5B8C\u6210" }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "archive-cleanup-done", children: "\u5DF2\u5B8C\u6210" }) }, key))
@@ -44853,13 +44864,23 @@ ${changedLabels}
           ] }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "field", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u6848\u540D\u5F8C\u65B9\u986F\u793A\u65E5\u671F" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: displayRocDate(archiveChoice.date), onChange: (event) => setArchiveChoice({ ...archiveChoice, date: event.target.value }), onBlur: (event) => setArchiveChoice({ ...archiveChoice, date: normalizeDateInput(event.target.value) || today() }) }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "\u4E00\u822C\u539F\u56E0\u9810\u8A2D\u4ECA\u5929\uFF1B\u5230\u671F\u4E0B\u67B6\u9810\u8A2D\u59D4\u8A17\u7D50\u675F\u9694\u5929\uFF0C\u53EF\u81EA\u884C\u4FEE\u6539\u3002\u6BCF\u65E5\u7269\u4EF6\u52D5\u614B\u4ECD\u4F9D\u4ECA\u5929\u7684\u5BE6\u969B\u64CD\u4F5C\u65E5\u986F\u793A\u3002" })
-          ] })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: displayRocDate(archiveChoice.date), onChange: (event) => setArchiveChoice({ ...archiveChoice, date: event.target.value }), onBlur: (event) => setArchiveChoice({ ...archiveChoice, date: normalizeDateInput(event.target.value) || today() }) })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "archive-party-fields", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+              "\u958B\u767C\uFF1A",
+              developerFullNameText(archiveChoice.record.developer, settings.personnel) || "\u2014"
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "field", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u92B7\u552E" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: archiveChoice.salesPerson, placeholder: "\u586B\u5BEB\u92B7\u552E\u4EBA\u54E1", onChange: (event) => setArchiveChoice({ ...archiveChoice, salesPerson: event.target.value }) })
+            ] })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "\u4E00\u822C\u539F\u56E0\u9810\u8A2D\u4ECA\u5929\uFF1B\u5230\u671F\u4E0B\u67B6\u9810\u8A2D\u59D4\u8A17\u7D50\u675F\u9694\u5929\uFF0C\u53EF\u81EA\u884C\u4FEE\u6539\u3002\u6BCF\u65E5\u7269\u4EF6\u52D5\u614B\u4ECD\u4F9D\u4ECA\u5929\u7684\u5BE6\u969B\u64CD\u4F5C\u65E5\u986F\u793A\u3002" })
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal-foot", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => setArchiveChoice(null), children: "\u53D6\u6D88" }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "primary", onClick: () => archiveRecord(archiveChoice.record, archiveChoice.status, archiveChoice.date), children: "\u78BA\u8A8D\u5C01\u5B58" })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "primary", onClick: () => archiveRecord(archiveChoice.record, archiveChoice.status, archiveChoice.date, archiveChoice.salesPerson), children: "\u78BA\u8A8D\u5C01\u5B58" })
         ] })
       ] }) }),
       restoreChoiceRecord && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "modal-backdrop", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal restore-choice-modal", children: [
