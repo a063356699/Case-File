@@ -22,7 +22,7 @@ const INTAKE_KEY = "property-desk-intake-draft-v1";
 const PHOTO_INTAKE_CLEANUP_KEY = "property-desk-photo-intake-cleanup-v2";
 const TOUR_KEY = "property-desk-tour-plan-v1";
 const PPT_WEEK_SELECTIONS_KEY = "property-desk-ppt-week-selections-v1";
-const PPT_ORDER_RULE_VERSION = "linked-developer-v1";
+const PPT_ORDER_RULE_VERSION = "linked-developer-v2";
 const DAILY_HIDDEN_KEY = "property-desk-daily-hidden-v1";
 const MISSING_REMINDER_DATE_KEY = "property-desk-missing-reminder-date-v1";
 const CLOUD_SESSION_KEY = "property-desk-supabase-session-v1";
@@ -850,11 +850,17 @@ export default function Home() {
   useEffect(() => { if (!pptPickerOpen) { setPptCustomStart(""); setPptCustomEnd(""); setPptCustomMeeting(""); setPptExtraSearch(""); setPptAdHocOpen(false); } }, [pptPickerOpen]);
   useEffect(() => {
     try {
-      const saved = JSON.parse(localStorage.getItem(PPT_WEEK_SELECTIONS_KEY) || "{}")[pptWeekStart] || {};
+      const all = JSON.parse(localStorage.getItem(PPT_WEEK_SELECTIONS_KEY) || "{}");
+      const saved = all[pptWeekStart] || {};
+      if (saved.orderVersion !== PPT_ORDER_RULE_VERSION) {
+        saved.orderIds = [];
+        saved.orderVersion = PPT_ORDER_RULE_VERSION;
+        all[pptWeekStart] = saved;
+        localStorage.setItem(PPT_WEEK_SELECTIONS_KEY, JSON.stringify(all));
+      }
       pptWeekLoadedRef.current = pptWeekStart;
       setPptExtraIds(Array.isArray(saved.extraIds) ? saved.extraIds : []);
-      // 舊版保存的手動順序使用不同排序規則；升級後先回到目前畫面上的業務關聯排序。
-      setPptOrderIds(saved.orderVersion === PPT_ORDER_RULE_VERSION && Array.isArray(saved.orderIds) ? saved.orderIds : []);
+      setPptOrderIds(Array.isArray(saved.orderIds) ? saved.orderIds : []);
       setPptAdHocRecords(Array.isArray(saved.adHocRecords) ? saved.adHocRecords : []);
       setPptConfirmedSnapshots(saved.confirmedSnapshots && typeof saved.confirmedSnapshots === "object" ? saved.confirmedSnapshots : {});
     } catch {
@@ -2031,13 +2037,16 @@ export default function Home() {
             const localWeeks = JSON.parse(localStorage.getItem(PPT_WEEK_SELECTIONS_KEY) || "{}");
             const mergedWeeks = { ...localWeeks, ...data.pptWeeks };
             Object.entries(data.pptWeeks).forEach(([week, value]) => {
-              const cloudWeek = value && typeof value === "object" ? value as { adHocRecords?: RecordItem[]; confirmedSnapshots?: Record<string, RecordItem> } : {};
+              const cloudWeek = value && typeof value === "object" ? value as { orderVersion?: string; orderIds?: string[]; adHocRecords?: RecordItem[]; confirmedSnapshots?: Record<string, RecordItem> } : {};
               const localWeek = localWeeks[week] || {};
+              const validOrderSource = cloudWeek.orderVersion === PPT_ORDER_RULE_VERSION ? cloudWeek : localWeek.orderVersion === PPT_ORDER_RULE_VERSION ? localWeek : null;
               const localSnapshots = localWeek.confirmedSnapshots || {};
               const localAdHoc = new Map<string, RecordItem>((localWeek.adHocRecords || []).map((record: RecordItem) => [record.id, record]));
               mergedWeeks[week] = {
                 ...localWeek,
                 ...cloudWeek,
+                orderIds: validOrderSource && Array.isArray(validOrderSource.orderIds) ? validOrderSource.orderIds : [],
+                orderVersion: PPT_ORDER_RULE_VERSION,
                 adHocRecords: (cloudWeek.adHocRecords || []).map(record => ({ ...localAdHoc.get(record.id), ...record, photos: localAdHoc.get(record.id)?.photos || [] })),
                 confirmedSnapshots: Object.fromEntries(Object.entries(cloudWeek.confirmedSnapshots || {}).map(([id, record]) => {
                   const local = localSnapshots[id] || records.find(item => item.id === id);
@@ -2352,7 +2361,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V237</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V238</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
