@@ -1246,7 +1246,8 @@ export default function Home() {
   const pptCurrentStart = currentPptWeek().start;
   const standardPptWeeks = Array.from({ length: 24 }, (_, index) => addDaysIso(pptCurrentStart, index * -7));
   const pptWeekOptions = [...new Set([...standardPptWeeks, ...records.flatMap(record => [normalizeDateInput(record.reportDate || ""), ...pptStoredList(record._pptExtraWeeks)]).filter(date => /^\d{4}-\d{2}-\d{2}$/.test(date)).map(date => pptWeekOf(date).start).filter(start => start <= pptCurrentStart)])].sort((a, b) => b.localeCompare(a));
-  const weeklyPptRecords = sortPptRecords(records.filter(record => belongsToPptWeek(record, selectedPptWeek) && !excludedFromPptWeek(record, selectedPptWeek.start)));
+  // 手動「＋加入物件」後，也要直接出現在本週清單；不能只有下載 PPT 時才帶入。
+  const weeklyPptRecords = sortPptRecords(records.filter(record => (belongsToPptWeek(record, selectedPptWeek) || pptExtraIds.includes(record.id)) && !excludedFromPptWeek(record, selectedPptWeek.start)));
   const deferredPptRecords = sortPptRecords(records.filter(record => belongsToPptWeek(record, selectedPptWeek) && excludedFromPptWeek(record, selectedPptWeek.start)));
   const pptDraftRecords = intakeDrafts.filter(draft => !draft.linkedRecordId).map(draft => ({ ...intakeToRecord(draft), id: `ppt-draft-${draft.id}`, reportDate: "", status: "尚未進案", _intakeDraftId: draft.id, _notEntered: "1" }));
   const pptExtraCandidates = [...records.filter(record => !belongsToPptWeek(record, selectedPptWeek)), ...pptDraftRecords].filter(record => [record.caseName, record.address].join(" ").toLowerCase().includes(pptExtraSearch.trim().toLowerCase()));
@@ -1378,12 +1379,15 @@ export default function Home() {
     overlay.append(close, slide); overlay.addEventListener("mousedown", event => { if (event.target === overlay) setPptPreviewRecord(null); }); document.body.append(overlay);
     return () => overlay.remove();
   }, [pptPreviewRecord]);
-  const removeFromPptWeek = (record: RecordItem) => setRecords(previous => previous.map(item => {
+  const removeFromPptWeek = (record: RecordItem) => {
+    setPptExtraIds(previous => previous.filter(id => id !== record.id));
+    setRecords(previous => previous.map(item => {
     if (item.id !== record.id) return item;
     const excluded = [...new Set([...pptStoredList(item._pptExcludedWeeks), selectedPptWeek.start])];
     const choices = { ...pptStoredChoices(item._pptWeekChoices) }; delete choices[selectedPptWeek.start];
     return { ...item, _pptExcludedWeeks: JSON.stringify(excluded), _pptWeekChoices: JSON.stringify(choices), lastModifiedAt: new Date().toISOString() };
-  }));
+    }));
+  };
   const decideRemovedPpt = (record: RecordItem, choice: "next" | "skip") => setRecords(previous => previous.map(item => {
     if (item.id !== record.id) return item;
     const nextWeek = nextPptWeekStart(selectedPptWeek.start);
@@ -2215,7 +2219,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V230</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V231</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>

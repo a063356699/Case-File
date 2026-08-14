@@ -43114,7 +43114,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
     const pptCurrentStart = currentPptWeek().start;
     const standardPptWeeks = Array.from({ length: 24 }, (_, index) => addDaysIso(pptCurrentStart, index * -7));
     const pptWeekOptions = [.../* @__PURE__ */ new Set([...standardPptWeeks, ...records.flatMap((record) => [normalizeDateInput(record.reportDate || ""), ...pptStoredList(record._pptExtraWeeks)]).filter((date) => /^\d{4}-\d{2}-\d{2}$/.test(date)).map((date) => pptWeekOf(date).start).filter((start) => start <= pptCurrentStart)])].sort((a, b) => b.localeCompare(a));
-    const weeklyPptRecords = sortPptRecords(records.filter((record) => belongsToPptWeek(record, selectedPptWeek) && !excludedFromPptWeek(record, selectedPptWeek.start)));
+    const weeklyPptRecords = sortPptRecords(records.filter((record) => (belongsToPptWeek(record, selectedPptWeek) || pptExtraIds.includes(record.id)) && !excludedFromPptWeek(record, selectedPptWeek.start)));
     const deferredPptRecords = sortPptRecords(records.filter((record) => belongsToPptWeek(record, selectedPptWeek) && excludedFromPptWeek(record, selectedPptWeek.start)));
     const pptDraftRecords = intakeDrafts.filter((draft) => !draft.linkedRecordId).map((draft) => ({ ...intakeToRecord(draft), id: `ppt-draft-${draft.id}`, reportDate: "", status: "\u5C1A\u672A\u9032\u6848", _intakeDraftId: draft.id, _notEntered: "1" }));
     const pptExtraCandidates = [...records.filter((record) => !belongsToPptWeek(record, selectedPptWeek)), ...pptDraftRecords].filter((record) => [record.caseName, record.address].join(" ").toLowerCase().includes(pptExtraSearch.trim().toLowerCase()));
@@ -43323,13 +43323,16 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       document.body.append(overlay);
       return () => overlay.remove();
     }, [pptPreviewRecord]);
-    const removeFromPptWeek = (record) => setRecords((previous) => previous.map((item) => {
-      if (item.id !== record.id) return item;
-      const excluded = [.../* @__PURE__ */ new Set([...pptStoredList(item._pptExcludedWeeks), selectedPptWeek.start])];
-      const choices = { ...pptStoredChoices(item._pptWeekChoices) };
-      delete choices[selectedPptWeek.start];
-      return { ...item, _pptExcludedWeeks: JSON.stringify(excluded), _pptWeekChoices: JSON.stringify(choices), lastModifiedAt: (/* @__PURE__ */ new Date()).toISOString() };
-    }));
+    const removeFromPptWeek = (record) => {
+      setPptExtraIds((previous) => previous.filter((id) => id !== record.id));
+      setRecords((previous) => previous.map((item) => {
+        if (item.id !== record.id) return item;
+        const excluded = [.../* @__PURE__ */ new Set([...pptStoredList(item._pptExcludedWeeks), selectedPptWeek.start])];
+        const choices = { ...pptStoredChoices(item._pptWeekChoices) };
+        delete choices[selectedPptWeek.start];
+        return { ...item, _pptExcludedWeeks: JSON.stringify(excluded), _pptWeekChoices: JSON.stringify(choices), lastModifiedAt: (/* @__PURE__ */ new Date()).toISOString() };
+      }));
+    };
     const decideRemovedPpt = (record, choice) => setRecords((previous) => previous.map((item) => {
       if (item.id !== record.id) return item;
       const nextWeek = nextPptWeekStart(selectedPptWeek.start);
@@ -44534,7 +44537,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V230" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V231" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
