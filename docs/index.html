@@ -42590,7 +42590,8 @@ ${String(ex)}`);
     const cloudSyncBaselineRef = (0, import_react.useRef)("");
     const cloudSyncTimerRef = (0, import_react.useRef)(null);
     const cloudAutoPullRef = (0, import_react.useRef)("");
-    const cloudPullSuppressUntilRef = (0, import_react.useRef)(0);
+    const cloudSkipNextPushRef = (0, import_react.useRef)(false);
+    const cloudLocalPendingRef = (0, import_react.useRef)(false);
     const cloudFocusPullAtRef = (0, import_react.useRef)(0);
     const editingInitialRef = (0, import_react.useRef)("");
     const editingInitialIdRef = (0, import_react.useRef)("");
@@ -43990,6 +43991,7 @@ ${changedLabels}
         const uploadedAt = (/* @__PURE__ */ new Date()).toISOString();
         const res = await fetch(url, { method: "POST", headers: { ...cloudHeaders(session), Prefer: "resolution=merge-duplicates,return=minimal" }, body: JSON.stringify({ id: settings.supabaseRecord, data: cloudData(), updated_at: uploadedAt }) });
         if (!res.ok) throw new Error(await res.text());
+        cloudLocalPendingRef.current = false;
         setCloudLastUploadAt(uploadedAt);
         localStorage.setItem(CLOUD_LAST_UPLOAD_KEY, uploadedAt);
         if (!quiet) flash("\u96F2\u7AEF\u540C\u6B65\u5B8C\u6210");
@@ -44009,11 +44011,7 @@ ${changedLabels}
         const rows = await res.json();
         const data = rows[0]?.data;
         if (!res.ok || !data?.records) throw new Error();
-        if (cloudSyncTimerRef.current) {
-          window.clearTimeout(cloudSyncTimerRef.current);
-          cloudSyncTimerRef.current = null;
-        }
-        cloudPullSuppressUntilRef.current = Date.now() + 2e3;
+        if (automatic && cloudLocalPendingRef.current) return;
         const confirmationRecords = data.records.map((record) => normalizeRecordPings(applySourceLayoutFixes([record])[0])).filter((record) => !record.archived && !isExpired(record) && (record.status || "\u59D4\u8A17\u4E2D") === "\u59D4\u8A17\u4E2D");
         setCloudConfirmationRecords(confirmationRecords);
         if (rows[0]?.updated_at) {
@@ -44021,6 +44019,7 @@ ${changedLabels}
           localStorage.setItem(CLOUD_LAST_UPLOAD_KEY, rows[0].updated_at);
         }
         if (automatic || confirm("\u96F2\u7AEF\u8CC7\u6599\u5C07\u8207\u672C\u6A5F\u8CC7\u6599\u5408\u4F75\uFF0C\u672C\u6A5F\u5DF2\u4FEE\u6539\u4F46\u5C1A\u672A\u540C\u6B65\u7684\u540C\u4E00\u7B46\u8CC7\u6599\u5C07\u4EE5\u96F2\u7AEF\u7248\u672C\u70BA\u6E96\u3002\u78BA\u5B9A\u55CE\uFF1F")) {
+          cloudSkipNextPushRef.current = true;
           setRecords((prev) => {
             const map = new Map(prev.map((r) => [r.id, r]));
             data.records.forEach((r) => {
@@ -44080,6 +44079,9 @@ ${changedLabels}
               void supabasePush(true);
             }, 0);
           }
+          window.setTimeout(() => {
+            cloudSkipNextPushRef.current = false;
+          }, 300);
           if (!quiet) flash(automatic ? "\u5DF2\u81EA\u52D5\u540C\u6B65\u6700\u65B0\u96F2\u7AEF\u8CC7\u6599" : "\u96F2\u7AEF\u8CC7\u6599\u5DF2\u5408\u4F75\u5230\u672C\u6A5F");
         }
       } catch {
@@ -44125,7 +44127,8 @@ ${changedLabels}
     };
     const cloudSnapshot = JSON.stringify({ records, personnel: settings.personnel, expiry591: settings.expiry591, expiry5168: settings.expiry5168, brokerExpiry: settings.brokerExpiry, intakeRaw, intakeDrafts, selectedIntakeId, tourDate, tourTitle, tourItems, tourModifiedAt, tourHistory, pptWeekStart, pptExtraIds, pptOrderIds, pptAdHocRecords, pptConfirmedSnapshots });
     (0, import_react.useEffect)(() => {
-      if (Date.now() < cloudPullSuppressUntilRef.current) {
+      if (cloudSkipNextPushRef.current) {
+        cloudSkipNextPushRef.current = false;
         cloudSyncBaselineRef.current = cloudSnapshot;
         return;
       }
@@ -44136,6 +44139,7 @@ ${changedLabels}
       if (cloudSyncBaselineRef.current === cloudSnapshot) return;
       cloudSyncBaselineRef.current = cloudSnapshot;
       if (!cloudSession?.accessToken || !settings.supabaseKey) return;
+      cloudLocalPendingRef.current = true;
       if (cloudSyncTimerRef.current) window.clearTimeout(cloudSyncTimerRef.current);
       cloudSyncTimerRef.current = window.setTimeout(() => {
         void supabasePush(true);
@@ -44502,7 +44506,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V223" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V224" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),

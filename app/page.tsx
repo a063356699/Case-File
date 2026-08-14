@@ -838,7 +838,9 @@ export default function Home() {
   const cloudSyncTimerRef = useRef<number | null>(null);
   const cloudAutoPullRef = useRef("");
   // 雲端資料合併後，僅更新本機基準，不可再把合併前的畫面回推覆蓋雲端。
-  const cloudPullSuppressUntilRef = useRef(0);
+  const cloudSkipNextPushRef = useRef(false);
+  // 本機剛儲存、尚未寫入雲端時，不允許自動拉回舊雲端資料蓋掉內容。
+  const cloudLocalPendingRef = useRef(false);
   const cloudFocusPullAtRef = useRef(0);
   const editingInitialRef = useRef("");
   const editingInitialIdRef = useRef("");
@@ -1806,6 +1808,7 @@ export default function Home() {
       const uploadedAt = new Date().toISOString();
       const res = await fetch(url, { method: "POST", headers: { ...cloudHeaders(session), Prefer: "resolution=merge-duplicates,return=minimal" }, body: JSON.stringify({ id: settings.supabaseRecord, data: cloudData(), updated_at: uploadedAt }) });
       if (!res.ok) throw new Error(await res.text());
+      cloudLocalPendingRef.current = false;
       setCloudLastUploadAt(uploadedAt);
       localStorage.setItem(CLOUD_LAST_UPLOAD_KEY, uploadedAt);
       if (!quiet) flash("雲端同步完成");
@@ -1820,16 +1823,13 @@ export default function Home() {
       const url = `${settings.supabaseUrl.replace(/\/$/, "")}/rest/v1/${settings.supabaseTable}?id=eq.${encodeURIComponent(settings.supabaseRecord)}&select=data,updated_at`;
       const res = await fetch(url, { headers: cloudHeaders(session) }); const rows = await res.json(); const data = rows[0]?.data;
       if (!res.ok || !data?.records) throw new Error();
-      // 若第一台剛好仍有 6 秒延遲上傳，先取消；這次是以雲端最新版本為準。
-      if (cloudSyncTimerRef.current) {
-        window.clearTimeout(cloudSyncTimerRef.current);
-        cloudSyncTimerRef.current = null;
-      }
-      cloudPullSuppressUntilRef.current = Date.now() + 2000;
+      // 自動同步絕不覆蓋本機尚未成功上傳的內容，例如剛輸入的照片文字。
+      if (automatic && cloudLocalPendingRef.current) return;
       const confirmationRecords = (data.records as RecordItem[]).map(record => normalizeRecordPings(applySourceLayoutFixes([record])[0])).filter(record => !record.archived && !isExpired(record) && (record.status || "委託中") === "委託中");
       setCloudConfirmationRecords(confirmationRecords);
       if (rows[0]?.updated_at) { setCloudLastUploadAt(rows[0].updated_at); localStorage.setItem(CLOUD_LAST_UPLOAD_KEY, rows[0].updated_at); }
       if (automatic || confirm("雲端資料將與本機資料合併，本機已修改但尚未同步的同一筆資料將以雲端版本為準。確定嗎？")) {
+        cloudSkipNextPushRef.current = true;
         setRecords(prev => {
           const map = new Map(prev.map(r => [r.id, r]));
           data.records.forEach((r: RecordItem) => {
@@ -1886,6 +1886,8 @@ export default function Home() {
         } else {
           window.setTimeout(() => { void supabasePush(true); }, 0);
         }
+        // 若此次雲端內容與本機完全相同，不會觸發 snapshot effect；短暫後解除標記，避免擋到下一次真正儲存。
+        window.setTimeout(() => { cloudSkipNextPushRef.current = false; }, 300);
         if (!quiet) flash(automatic ? "已自動同步最新雲端資料" : "雲端資料已合併到本機");
       }
     } catch { if (!quiet) flash(automatic ? "自動同步失敗，請檢查雲端登入" : "雲端讀取失敗，請檢查登入與設定"); }
@@ -1917,7 +1919,8 @@ export default function Home() {
   };
   const cloudSnapshot = JSON.stringify({ records, personnel: settings.personnel, expiry591: settings.expiry591, expiry5168: settings.expiry5168, brokerExpiry: settings.brokerExpiry, intakeRaw, intakeDrafts, selectedIntakeId, tourDate, tourTitle, tourItems, tourModifiedAt, tourHistory, pptWeekStart, pptExtraIds, pptOrderIds, pptAdHocRecords, pptConfirmedSnapshots });
   useEffect(() => {
-    if (Date.now() < cloudPullSuppressUntilRef.current) {
+    if (cloudSkipNextPushRef.current) {
+      cloudSkipNextPushRef.current = false;
       cloudSyncBaselineRef.current = cloudSnapshot;
       return;
     }
@@ -1925,6 +1928,7 @@ export default function Home() {
     if (cloudSyncBaselineRef.current === cloudSnapshot) return;
     cloudSyncBaselineRef.current = cloudSnapshot;
     if (!cloudSession?.accessToken || !settings.supabaseKey) return;
+    cloudLocalPendingRef.current = true;
     if (cloudSyncTimerRef.current) window.clearTimeout(cloudSyncTimerRef.current);
     cloudSyncTimerRef.current = window.setTimeout(() => { void supabasePush(true); }, 6000);
     return () => { if (cloudSyncTimerRef.current) window.clearTimeout(cloudSyncTimerRef.current); };
@@ -2179,7 +2183,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V223</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V224</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
