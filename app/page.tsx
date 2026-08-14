@@ -1287,14 +1287,23 @@ export default function Home() {
     const address = normalizePptAssetText(record.address);
     const developer = normalizePptAssetText(developerFullNameText(record.developer));
     const area = normalizePptAssetText(record.area);
-    return pptAssetPairs.map(pair => {
+    const scored = pptAssetPairs.map(pair => {
       let score = 0;
       if (caseName.length >= 4 && pair.key.includes(caseName)) score += 100 + caseName.length;
       if (address.length >= 4 && (pair.key.includes(address) || address.includes(pair.key))) score += 70;
       if (developer.length >= 2 && pair.key.includes(developer)) score += 35;
       if (area.length >= 2 && pair.key.includes(area)) score += 10;
       return { pair, score };
-    }).filter(item => item.score > 0).sort((a, b) => b.score - a.score)[0]?.pair;
+    }).filter(item => item.score > 0).sort((a, b) => b.score - a.score);
+    const gifMatch = scored.find(item => item.pair.gif)?.pair;
+    const layoutMatch = scored.find(item => item.pair.layout)?.pair;
+    if (!gifMatch && !layoutMatch) return undefined;
+    return {
+      key: gifMatch?.key || layoutMatch?.key || "",
+      label: gifMatch?.label || layoutMatch?.label || "",
+      gif: gifMatch?.gif,
+      layout: layoutMatch?.layout,
+    };
   };
   const loadPptAssetFolder = (event: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []).filter(file => /\.(?:gif|jpe?g)$/i.test(file.name));
@@ -1312,8 +1321,9 @@ export default function Home() {
     const pairs = [...grouped.values()];
     setPptAssetPairs(pairs);
     event.target.value = "";
-    const complete = pairs.filter(pair => pair.gif && pair.layout).length;
-    flash(`已讀取 ${pairs.length} 組圖片，其中 ${complete} 組同時有 GIF 與 JPG`);
+    const gifCount = pairs.filter(pair => pair.gif).length;
+    const layoutCount = pairs.filter(pair => pair.layout).length;
+    flash(`已讀取 ${gifCount} 個 GIF、${layoutCount} 張 JPG；兩種圖片會分別比對案件`);
   };
   const readPptImage = (file: File) => new Promise<{ data: string; width: number; height: number }>((resolve, reject) => {
     const reader = new FileReader();
@@ -2312,7 +2322,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V234</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V235</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>

@@ -43153,14 +43153,23 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       const address = normalizePptAssetText(record.address);
       const developer = normalizePptAssetText(developerFullNameText(record.developer));
       const area = normalizePptAssetText(record.area);
-      return pptAssetPairs.map((pair) => {
+      const scored = pptAssetPairs.map((pair) => {
         let score = 0;
         if (caseName.length >= 4 && pair.key.includes(caseName)) score += 100 + caseName.length;
         if (address.length >= 4 && (pair.key.includes(address) || address.includes(pair.key))) score += 70;
         if (developer.length >= 2 && pair.key.includes(developer)) score += 35;
         if (area.length >= 2 && pair.key.includes(area)) score += 10;
         return { pair, score };
-      }).filter((item) => item.score > 0).sort((a, b) => b.score - a.score)[0]?.pair;
+      }).filter((item) => item.score > 0).sort((a, b) => b.score - a.score);
+      const gifMatch = scored.find((item) => item.pair.gif)?.pair;
+      const layoutMatch = scored.find((item) => item.pair.layout)?.pair;
+      if (!gifMatch && !layoutMatch) return void 0;
+      return {
+        key: gifMatch?.key || layoutMatch?.key || "",
+        label: gifMatch?.label || layoutMatch?.label || "",
+        gif: gifMatch?.gif,
+        layout: layoutMatch?.layout
+      };
     };
     const loadPptAssetFolder = (event) => {
       const files = Array.from(event.target.files || []).filter((file) => /\.(?:gif|jpe?g)$/i.test(file.name));
@@ -43178,8 +43187,9 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       const pairs = [...grouped.values()];
       setPptAssetPairs(pairs);
       event.target.value = "";
-      const complete = pairs.filter((pair) => pair.gif && pair.layout).length;
-      flash(`\u5DF2\u8B80\u53D6 ${pairs.length} \u7D44\u5716\u7247\uFF0C\u5176\u4E2D ${complete} \u7D44\u540C\u6642\u6709 GIF \u8207 JPG`);
+      const gifCount = pairs.filter((pair) => pair.gif).length;
+      const layoutCount = pairs.filter((pair) => pair.layout).length;
+      flash(`\u5DF2\u8B80\u53D6 ${gifCount} \u500B GIF\u3001${layoutCount} \u5F35 JPG\uFF1B\u5169\u7A2E\u5716\u7247\u6703\u5206\u5225\u6BD4\u5C0D\u6848\u4EF6`);
     };
     const readPptImage = (file) => new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -44643,7 +44653,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V234" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V235" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
