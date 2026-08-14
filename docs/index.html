@@ -42590,6 +42590,8 @@ ${String(ex)}`);
     const cloudSyncBaselineRef = (0, import_react.useRef)("");
     const cloudSyncTimerRef = (0, import_react.useRef)(null);
     const cloudAutoPullRef = (0, import_react.useRef)("");
+    const cloudPullSuppressUntilRef = (0, import_react.useRef)(0);
+    const cloudFocusPullAtRef = (0, import_react.useRef)(0);
     const editingInitialRef = (0, import_react.useRef)("");
     const editingInitialIdRef = (0, import_react.useRef)("");
     const personnelNameSignature = settings.personnel.map((person) => `${person.id}:${person.name}:${person.status}`).join("|");
@@ -44007,6 +44009,11 @@ ${changedLabels}
         const rows = await res.json();
         const data = rows[0]?.data;
         if (!res.ok || !data?.records) throw new Error();
+        if (cloudSyncTimerRef.current) {
+          window.clearTimeout(cloudSyncTimerRef.current);
+          cloudSyncTimerRef.current = null;
+        }
+        cloudPullSuppressUntilRef.current = Date.now() + 2e3;
         const confirmationRecords = data.records.map((record) => normalizeRecordPings(applySourceLayoutFixes([record])[0])).filter((record) => !record.archived && !isExpired(record) && (record.status || "\u59D4\u8A17\u4E2D") === "\u59D4\u8A17\u4E2D");
         setCloudConfirmationRecords(confirmationRecords);
         if (rows[0]?.updated_at) {
@@ -44118,6 +44125,10 @@ ${changedLabels}
     };
     const cloudSnapshot = JSON.stringify({ records, personnel: settings.personnel, expiry591: settings.expiry591, expiry5168: settings.expiry5168, brokerExpiry: settings.brokerExpiry, intakeRaw, intakeDrafts, selectedIntakeId, tourDate, tourTitle, tourItems, tourModifiedAt, tourHistory, pptWeekStart, pptExtraIds, pptOrderIds, pptAdHocRecords, pptConfirmedSnapshots });
     (0, import_react.useEffect)(() => {
+      if (Date.now() < cloudPullSuppressUntilRef.current) {
+        cloudSyncBaselineRef.current = cloudSnapshot;
+        return;
+      }
       if (!cloudSyncBaselineRef.current) {
         cloudSyncBaselineRef.current = cloudSnapshot;
         return;
@@ -44150,6 +44161,22 @@ ${changedLabels}
         void supabasePull(true, true);
       }, 45e3);
       return () => window.clearInterval(timer);
+    }, [cloudSession?.accessToken, settings.supabaseUrl, settings.supabaseKey, settings.supabaseTable, settings.supabaseRecord]);
+    (0, import_react.useEffect)(() => {
+      if (!cloudSession?.accessToken || !settings.supabaseUrl || !settings.supabaseKey) return;
+      const refreshWhenVisible = () => {
+        if (document.visibilityState === "hidden") return;
+        const now = Date.now();
+        if (now - cloudFocusPullAtRef.current < 2500) return;
+        cloudFocusPullAtRef.current = now;
+        void supabasePull(true, true);
+      };
+      window.addEventListener("focus", refreshWhenVisible);
+      document.addEventListener("visibilitychange", refreshWhenVisible);
+      return () => {
+        window.removeEventListener("focus", refreshWhenVisible);
+        document.removeEventListener("visibilitychange", refreshWhenVisible);
+      };
     }, [cloudSession?.accessToken, settings.supabaseUrl, settings.supabaseKey, settings.supabaseTable, settings.supabaseRecord]);
     const openPublic = () => {
       setTab("public");
@@ -44475,7 +44502,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V222" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V223" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),

@@ -837,6 +837,9 @@ export default function Home() {
   const cloudSyncBaselineRef = useRef("");
   const cloudSyncTimerRef = useRef<number | null>(null);
   const cloudAutoPullRef = useRef("");
+  // 雲端資料合併後，僅更新本機基準，不可再把合併前的畫面回推覆蓋雲端。
+  const cloudPullSuppressUntilRef = useRef(0);
+  const cloudFocusPullAtRef = useRef(0);
   const editingInitialRef = useRef("");
   const editingInitialIdRef = useRef("");
   const personnelNameSignature = settings.personnel.map(person => `${person.id}:${person.name}:${person.status}`).join("|");
@@ -1817,6 +1820,12 @@ export default function Home() {
       const url = `${settings.supabaseUrl.replace(/\/$/, "")}/rest/v1/${settings.supabaseTable}?id=eq.${encodeURIComponent(settings.supabaseRecord)}&select=data,updated_at`;
       const res = await fetch(url, { headers: cloudHeaders(session) }); const rows = await res.json(); const data = rows[0]?.data;
       if (!res.ok || !data?.records) throw new Error();
+      // 若第一台剛好仍有 6 秒延遲上傳，先取消；這次是以雲端最新版本為準。
+      if (cloudSyncTimerRef.current) {
+        window.clearTimeout(cloudSyncTimerRef.current);
+        cloudSyncTimerRef.current = null;
+      }
+      cloudPullSuppressUntilRef.current = Date.now() + 2000;
       const confirmationRecords = (data.records as RecordItem[]).map(record => normalizeRecordPings(applySourceLayoutFixes([record])[0])).filter(record => !record.archived && !isExpired(record) && (record.status || "委託中") === "委託中");
       setCloudConfirmationRecords(confirmationRecords);
       if (rows[0]?.updated_at) { setCloudLastUploadAt(rows[0].updated_at); localStorage.setItem(CLOUD_LAST_UPLOAD_KEY, rows[0].updated_at); }
@@ -1908,6 +1917,10 @@ export default function Home() {
   };
   const cloudSnapshot = JSON.stringify({ records, personnel: settings.personnel, expiry591: settings.expiry591, expiry5168: settings.expiry5168, brokerExpiry: settings.brokerExpiry, intakeRaw, intakeDrafts, selectedIntakeId, tourDate, tourTitle, tourItems, tourModifiedAt, tourHistory, pptWeekStart, pptExtraIds, pptOrderIds, pptAdHocRecords, pptConfirmedSnapshots });
   useEffect(() => {
+    if (Date.now() < cloudPullSuppressUntilRef.current) {
+      cloudSyncBaselineRef.current = cloudSnapshot;
+      return;
+    }
     if (!cloudSyncBaselineRef.current) { cloudSyncBaselineRef.current = cloudSnapshot; return; }
     if (cloudSyncBaselineRef.current === cloudSnapshot) return;
     cloudSyncBaselineRef.current = cloudSnapshot;
@@ -1929,6 +1942,24 @@ export default function Home() {
     if (!cloudSession?.accessToken || !settings.supabaseUrl || !settings.supabaseKey) return;
     const timer = window.setInterval(() => { void supabasePull(true, true); }, 45000);
     return () => window.clearInterval(timer);
+  }, [cloudSession?.accessToken, settings.supabaseUrl, settings.supabaseKey, settings.supabaseTable, settings.supabaseRecord]);
+  // 兩台電腦同時開啟時，切回第一台或回到此分頁即刻取回另一台已同步的最新資料。
+  // 保留 45 秒背景檢查，這裡只在使用者回到畫面時觸發，不會持續增加雲端流量。
+  useEffect(() => {
+    if (!cloudSession?.accessToken || !settings.supabaseUrl || !settings.supabaseKey) return;
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "hidden") return;
+      const now = Date.now();
+      if (now - cloudFocusPullAtRef.current < 2500) return;
+      cloudFocusPullAtRef.current = now;
+      void supabasePull(true, true);
+    };
+    window.addEventListener("focus", refreshWhenVisible);
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+    return () => {
+      window.removeEventListener("focus", refreshWhenVisible);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+    };
   }, [cloudSession?.accessToken, settings.supabaseUrl, settings.supabaseKey, settings.supabaseTable, settings.supabaseRecord]);
 
   const openPublic = () => { setTab("public"); setPublicUnlocked(false); setPublicPersonId(""); setPublicScope("mine"); setPassword(""); };
@@ -2148,7 +2179,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V222</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V223</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
