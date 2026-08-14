@@ -41859,7 +41859,8 @@ ${String(ex)}`);
     return matched ? normalizeDateInput(matched[1]) : "";
   };
   var isExpired = (r) => validDate(r.entrustEnd) && !!r.entrustEnd && r.entrustEnd < today();
-  var displayStatus = (r) => isExpired(r) && r.status === "\u59D4\u8A17\u4E2D" ? "\u5230\u671F\u4E0B\u67B6" : r.status || "\u59D4\u8A17\u4E2D";
+  var archiveStatusOf = (r) => r.archived && r.status === "\u59D4\u8A17\u4E2D" && /^(?:EB|EC)/i.test(String(r.propertyNo || "")) ? "\u79DF\u51FA\u4E0B\u67B6" : r.status || "\u59D4\u8A17\u4E2D";
+  var displayStatus = (r) => isExpired(r) && !r.archived && r.status === "\u59D4\u8A17\u4E2D" ? "\u5230\u671F\u4E0B\u67B6" : archiveStatusOf(r);
   var ageOf = (r) => {
     const completionYear = String(r.completionDate || "").match(/\d{2,4}/)?.[0] || "";
     const raw = Number(completionYear || r.builtYear);
@@ -42000,6 +42001,7 @@ ${String(ex)}`);
   var salesBookDateCorrections = /* @__PURE__ */ new Set(["EG0522899", "EG0522916", "LG0132934", "EG0522910", "EG0522911", "EG0522912", "EG0522915", "EG0522908"]);
   var applySourceLayoutFixes = (records) => records.map((record) => {
     record = moveRestoredTextToCaseNote(clearImportedLandLabels(clearImportedContractChangePlaceholders(record)));
+    if (record.archived && record.status === "\u59D4\u8A17\u4E2D" && /^(?:EB|EC)/i.test(String(record.propertyNo || ""))) record = { ...record, status: "\u79DF\u51FA\u4E0B\u67B6" };
     if (record.archived && record.status === "\u5230\u671F\u4E0B\u67B6" && validDate(record.entrustEnd) && !isExpired(record)) {
       const history = recordUpdateHistory(record);
       delete history[today()];
@@ -44506,7 +44508,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V226" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V227" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -47317,7 +47319,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       const restored = dateOnly(record._restoredAt) === selectedDate;
       return { ...record, caseNameNote: changed.length ? `\u66F4\u65B0\uFF1A${dailyChangedLabels(changed).join("\u3001")}` : "", _dailyHighlight: JSON.stringify(changed), ...restored ? { _dailyAnnotation: `${shortRocMonthDay(selectedDate)}\u91CD\u65B0\u4E0A\u67B6`, _dailyAnnotationType: "restored" } : {} };
     });
-    const removedRecords = records.filter((record) => !!record.archived && dateOnly(record._archiveActionDate || record.archived) === selectedDate).map((record) => ({ ...record, _dailyAnnotation: `${displayRocDate(record.archived)}${record.status || "\u4E0B\u67B6"}` }));
+    const removedRecords = records.filter((record) => !!record.archived && dateOnly(record._archiveActionDate || record.archived) === selectedDate).map((record) => ({ ...record, _dailyAnnotation: `${displayRocDate(record.archived)}${archiveStatusOf(record)}` }));
     const groups = [
       { key: "added", title: "\u65B0\u589E\u7269\u4EF6", records: records.filter((record) => dateOnly(record._dailyAddedAt || record.reportDate) === selectedDate) },
       { key: "updated", title: "\u66F4\u65B0\u7269\u4EF6", records: updateRecords },
