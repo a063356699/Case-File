@@ -42590,6 +42590,22 @@ ${String(ex)}`);
       }
     }, [storageReady, pptWeekStart, pptExtraIds, pptOrderIds, pptAdHocRecords, pptConfirmedSnapshots]);
     (0, import_react.useEffect)(() => {
+      if (!storageReady || pptWeekLoadedRef.current !== pptWeekStart || !pptExtraIds.length) return;
+      const selected = new Set(pptExtraIds.filter((id) => !id.startsWith("ppt-draft-")));
+      if (!selected.size) return;
+      setRecords((previous) => {
+        let changed = false;
+        const next = previous.map((record) => {
+          if (!selected.has(record.id)) return record;
+          const weeks = pptStoredList(record._pptExtraWeeks);
+          if (weeks.includes(pptWeekStart)) return record;
+          changed = true;
+          return { ...record, _pptExtraWeeks: JSON.stringify([...weeks, pptWeekStart]) };
+        });
+        return changed ? next : previous;
+      });
+    }, [storageReady, pptWeekStart, pptExtraIds]);
+    (0, import_react.useEffect)(() => {
       if (!storageReady || pptWeekLoadedRef.current !== pptWeekStart) return;
       const stateKey = `${pptWeekStart}:${JSON.stringify(pptConfirmedSnapshots)}`;
       const previousKey = pptConfirmationStateKeyRef.current;
@@ -44537,7 +44553,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V231" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V232" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
