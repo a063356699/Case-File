@@ -795,6 +795,8 @@ export default function Home() {
   const [pptCustomEnd, setPptCustomEnd] = useState("");
   const [pptCustomMeeting, setPptCustomMeeting] = useState("");
   const pptWeekLoadedRef = useRef("");
+  // PPT 的「確認並鎖定」必須在同一週持久保存；不能因為重新整理或自動同步又變回未確認。
+  const pptConfirmationStateKeyRef = useRef("");
   const reminderAnchorRecord = records.find(record => String(record.address || "").includes("富農街一段188巷40號"));
   const reminderAnchorDraft = reminderAnchorRecord ? intakeDrafts.find(draft => draft.linkedRecordId === reminderAnchorRecord.id) : undefined;
   const reminderAnchorTime = reminderAnchorDraft?.enteredAt || reminderAnchorDraft?.createdAt || "";
@@ -837,6 +839,22 @@ export default function Home() {
       localStorage.setItem(PPT_WEEK_SELECTIONS_KEY, JSON.stringify(all));
     } catch {}
   }, [storageReady, pptWeekStart, pptExtraIds, pptOrderIds, pptAdHocRecords, pptConfirmedSnapshots]);
+  useEffect(() => {
+    if (!storageReady || pptWeekLoadedRef.current !== pptWeekStart) return;
+    const stateKey = `${pptWeekStart}:${JSON.stringify(pptConfirmedSnapshots)}`;
+    const previousKey = pptConfirmationStateKeyRef.current;
+    // 每週第一次載入只建立基準，不可用空白狀態覆蓋雲端已鎖定的案件。
+    if (!previousKey || !previousKey.startsWith(`${pptWeekStart}:`)) {
+      pptConfirmationStateKeyRef.current = stateKey;
+      return;
+    }
+    if (previousKey === stateKey) return;
+    pptConfirmationStateKeyRef.current = stateKey;
+    // 確認／解除確認都是明確操作：本機先寫入，再立即送雲端，不等待一般的 6 秒同步。
+    cloudLocalPendingRef.current = true;
+    const timer = window.setTimeout(() => { void supabasePush(true); }, 0);
+    return () => window.clearTimeout(timer);
+  }, [storageReady, pptWeekStart, pptConfirmedSnapshots]);
   const [tourItems, setTourItems] = useState<TourItem[]>([]);
   const [tourDate, setTourDate] = useState(today());
   const [tourTitle, setTourTitle] = useState(`${displayRocDate(today()).replace(/\//g, ".")}團看`);
@@ -2197,7 +2215,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V229</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V230</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>

@@ -42531,6 +42531,7 @@ ${String(ex)}`);
     const [pptCustomEnd, setPptCustomEnd] = (0, import_react.useState)("");
     const [pptCustomMeeting, setPptCustomMeeting] = (0, import_react.useState)("");
     const pptWeekLoadedRef = (0, import_react.useRef)("");
+    const pptConfirmationStateKeyRef = (0, import_react.useRef)("");
     const reminderAnchorRecord = records.find((record) => String(record.address || "").includes("\u5BCC\u8FB2\u8857\u4E00\u6BB5188\u5DF740\u865F"));
     const reminderAnchorDraft = reminderAnchorRecord ? intakeDrafts.find((draft) => draft.linkedRecordId === reminderAnchorRecord.id) : void 0;
     const reminderAnchorTime = reminderAnchorDraft?.enteredAt || reminderAnchorDraft?.createdAt || "";
@@ -42588,6 +42589,22 @@ ${String(ex)}`);
       } catch {
       }
     }, [storageReady, pptWeekStart, pptExtraIds, pptOrderIds, pptAdHocRecords, pptConfirmedSnapshots]);
+    (0, import_react.useEffect)(() => {
+      if (!storageReady || pptWeekLoadedRef.current !== pptWeekStart) return;
+      const stateKey = `${pptWeekStart}:${JSON.stringify(pptConfirmedSnapshots)}`;
+      const previousKey = pptConfirmationStateKeyRef.current;
+      if (!previousKey || !previousKey.startsWith(`${pptWeekStart}:`)) {
+        pptConfirmationStateKeyRef.current = stateKey;
+        return;
+      }
+      if (previousKey === stateKey) return;
+      pptConfirmationStateKeyRef.current = stateKey;
+      cloudLocalPendingRef.current = true;
+      const timer = window.setTimeout(() => {
+        void supabasePush(true);
+      }, 0);
+      return () => window.clearTimeout(timer);
+    }, [storageReady, pptWeekStart, pptConfirmedSnapshots]);
     const [tourItems, setTourItems] = (0, import_react.useState)([]);
     const [tourDate, setTourDate] = (0, import_react.useState)(today());
     const [tourTitle, setTourTitle] = (0, import_react.useState)(`${displayRocDate(today()).replace(/\//g, ".")}\u5718\u770B`);
@@ -44517,7 +44534,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V229" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V230" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
