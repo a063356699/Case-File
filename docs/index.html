@@ -1409,6 +1409,7 @@ body{background:#f8fbfe!important;color:#405064!important}
 .ppt-adhoc-modal{width:min(1280px,96vw)!important}.ppt-adhoc-modal .modal-head p{margin:4px 0 0;color:#8f5b37;font-size:12px}.ppt-adhoc-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;padding:18px 22px;background:#fff}.ppt-adhoc-grid .ppt-adhoc-caseName,.ppt-adhoc-grid .ppt-adhoc-address{grid-column:span 2}.ppt-adhoc-grid .ppt-adhoc-notes{grid-column:1/-1}@media(max-width:900px){.ppt-adhoc-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ppt-adhoc-grid .ppt-adhoc-caseName,.ppt-adhoc-grid .ppt-adhoc-address,.ppt-adhoc-grid .ppt-adhoc-notes{grid-column:1/-1}}
 .ppt-adhoc-added{display:none}
 .ppt-inline-confirm{display:flex!important;align-items:center;justify-content:center;gap:5px;min-width:0}.ppt-inline-confirm button{padding:6px 8px!important;font-size:11px!important;white-space:nowrap}.ppt-inline-confirm button.confirmed{background:#dceee5!important;border-color:#8eb9a5!important;color:#176247!important}.ppt-inline-confirm .ppt-remove-pill{color:#b0443d!important}
+.ppt-case-date{display:flex!important;flex-direction:column;align-items:center;gap:4px}.ppt-case-date em{font-size:10px;font-style:normal;font-weight:800;white-space:nowrap}.ppt-case-date em.complete{color:#19714f}.ppt-case-date em.partial{color:#b56a00}.ppt-case-date em.missing{color:#a14b45}.ppt-asset-folder-button{display:inline-flex;align-items:center;justify-content:center;padding:8px 13px;border:1px solid #76a890;border-radius:9px;background:#eaf6f0;color:#176247;font-size:13px;font-weight:900;cursor:pointer;white-space:nowrap}.ppt-asset-folder-button:hover{background:#dcefe6}.ppt-asset-folder-button input{display:none}.ppt-asset-folder-summary{align-self:center;color:#61716b;font-size:12px;font-weight:700}.ppt-add-actions{align-items:center;flex-wrap:wrap}
 .ppt-case-name-edit{display:block!important;width:100%!important;padding:2px 3px!important;border:0!important;border-radius:4px!important;background:transparent!important;color:#174f80!important;font-weight:800!important;text-align:center!important;text-decoration:underline!important;text-underline-offset:3px!important;white-space:normal!important;line-height:1.3!important}.ppt-case-name-edit:hover{background:#eaf4fb!important;transform:none!important}
 .modal-backdrop:has(.record-edit-modal){z-index:160!important}
 .print-editor-backdrop{z-index:190!important}
@@ -42530,6 +42531,7 @@ ${String(ex)}`);
     const [pptCustomStart, setPptCustomStart] = (0, import_react.useState)("");
     const [pptCustomEnd, setPptCustomEnd] = (0, import_react.useState)("");
     const [pptCustomMeeting, setPptCustomMeeting] = (0, import_react.useState)("");
+    const [pptAssetPairs, setPptAssetPairs] = (0, import_react.useState)([]);
     const pptWeekLoadedRef = (0, import_react.useRef)("");
     const pptConfirmationStateKeyRef = (0, import_react.useRef)("");
     const reminderAnchorRecord = records.find((record) => String(record.address || "").includes("\u5BCC\u8FB2\u8857\u4E00\u6BB5188\u5DF740\u865F"));
@@ -43145,6 +43147,57 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
     })();
     const selectedPptRecords = selectedPptBaseRecords.map((record) => pptConfirmedSnapshots[record.id] || record);
     const pendingPptConfirmCount = selectedPptBaseRecords.filter((record) => !pptConfirmedSnapshots[record.id]).length;
+    const normalizePptAssetText = (value = "") => String(value || "").normalize("NFKC").toLowerCase().replace(/\.(?:gif|jpe?g)$/i, "").replace(/^ppt[\s_\-－]*/i, "").replace(/[^\p{L}\p{N}]/gu, "");
+    const pptAssetPairForRecord = (record) => {
+      const caseName = normalizePptAssetText(record.caseName);
+      const address = normalizePptAssetText(record.address);
+      const developer = normalizePptAssetText(developerFullNameText(record.developer));
+      const area = normalizePptAssetText(record.area);
+      return pptAssetPairs.map((pair) => {
+        let score = 0;
+        if (caseName.length >= 4 && pair.key.includes(caseName)) score += 100 + caseName.length;
+        if (address.length >= 4 && (pair.key.includes(address) || address.includes(pair.key))) score += 70;
+        if (developer.length >= 2 && pair.key.includes(developer)) score += 35;
+        if (area.length >= 2 && pair.key.includes(area)) score += 10;
+        return { pair, score };
+      }).filter((item) => item.score > 0).sort((a, b) => b.score - a.score)[0]?.pair;
+    };
+    const loadPptAssetFolder = (event) => {
+      const files = Array.from(event.target.files || []).filter((file) => /\.(?:gif|jpe?g)$/i.test(file.name));
+      const grouped = /* @__PURE__ */ new Map();
+      files.forEach((file) => {
+        const rawStem = file.name.replace(/\.(?:gif|jpe?g)$/i, "");
+        const label = rawStem.replace(/^ppt[\s_\-－]*/i, "");
+        const key = normalizePptAssetText(rawStem);
+        if (!key) return;
+        const pair = grouped.get(key) || { key, label };
+        if (/\.gif$/i.test(file.name)) pair.gif = file;
+        else pair.layout = file;
+        grouped.set(key, pair);
+      });
+      const pairs = [...grouped.values()];
+      setPptAssetPairs(pairs);
+      event.target.value = "";
+      const complete = pairs.filter((pair) => pair.gif && pair.layout).length;
+      flash(`\u5DF2\u8B80\u53D6 ${pairs.length} \u7D44\u5716\u7247\uFF0C\u5176\u4E2D ${complete} \u7D44\u540C\u6642\u6709 GIF \u8207 JPG`);
+    };
+    const readPptImage = (file) => new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(reader.error || new Error("\u5716\u7247\u8B80\u53D6\u5931\u6557"));
+      reader.onload = () => {
+        const data = String(reader.result || "");
+        const image = new Image();
+        image.onerror = () => reject(new Error(`\u7121\u6CD5\u8B80\u53D6\u5716\u7247\u5C3A\u5BF8\uFF1A${file.name}`));
+        image.onload = () => resolve({ data, width: image.naturalWidth || 1, height: image.naturalHeight || 1 });
+        image.src = data;
+      };
+      reader.readAsDataURL(file);
+    });
+    const containPptImage = (image, x, y, w, h) => {
+      const scale = Math.min(w / image.width, h / image.height);
+      const width = image.width * scale, height = image.height * scale;
+      return { x: x + (w - width) / 2, y: y + (h - height) / 2, w: width, h: height };
+    };
     const flash = (text) => {
       setNotice(text);
       setTimeout(() => setNotice(""), 2600);
@@ -43908,7 +43961,7 @@ ${changedLabels}
         slide.addText(safeRuns.length ? safeRuns : [{ text: " ", options: { fontFace: font, fontSize: 12 } }], { x: x + 1.08, y: y - 0.04, w: w - 1.08, h: 0.44, fontFace: font, fontSize: 21, color: "000000", margin: 0, align: "center", fit: "shrink", breakLine: false });
         slide.addShape(pptx.ShapeType.line, { x: x + 1.08, y: y + 0.39, w: w - 1.13, h: 0, line: { color: "555555", width: 0.7 } });
       };
-      selected.forEach((record) => {
+      for (const record of selected) {
         const slide = pptx.addSlide();
         slide.background = { color: "FFFFFF" };
         const land = typeShort(record.type) === "\u571F\u5730" || /^(LG|LA)/i.test(record.propertyNo || "");
@@ -43974,13 +44027,28 @@ ${changedLabels}
         slide.addText(`\u7269\u4EF6\u7DE8\u865F\uFF1A${record.propertyNo || ""}`, { x: 3.1, y: 7.22, w: 2.9, h: 0.24, fontFace: font, fontSize: 11, color: "000000", align: "center", margin: 0 });
         slide.addShape(pptx.ShapeType.rect, { x: rightX, y: 1, w: 3.94, h: 3.15, line: { color: "FFFFFF", transparency: 100 }, fill: { color: "FFFFFF", transparency: 100 } });
         slide.addShape(pptx.ShapeType.rect, { x: rightX, y: 4.15, w: 3.94, h: 3.15, line: { color: "FFFFFF", transparency: 100 }, fill: { color: "FFFFFF", transparency: 100 } });
+        const assetPair = pptAssetPairForRecord(record);
+        if (assetPair?.gif) {
+          const gif = await readPptImage(assetPair.gif).catch((error) => {
+            console.error(error);
+            return null;
+          });
+          if (gif) slide.addImage({ data: gif.data, ...containPptImage(gif, rightX, 1, 3.94, 3.15) });
+        }
+        if (assetPair?.layout) {
+          const layoutImage = await readPptImage(assetPair.layout).catch((error) => {
+            console.error(error);
+            return null;
+          });
+          if (layoutImage) slide.addImage({ data: layoutImage.data, ...containPptImage(layoutImage, rightX, 4.15, 3.94, 3.15) });
+        }
         if (land) {
           const blankOne = pptx.addSlide();
           blankOne.background = { color: "FFFFFF" };
           const blankTwo = pptx.addSlide();
           blankTwo.background = { color: "FFFFFF" };
         }
-      });
+      }
       try {
         const pptBlob = await pptx.write({ outputType: "blob" });
         download(`${pptMeetingDateLabel(selectedPptWeek)}\u958B\u6703PPT.pptx`, pptBlob);
@@ -44575,7 +44643,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V233" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V234" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -45328,7 +45396,18 @@ ${changedLabels}
               }, children: record.caseName || "\u672A\u547D\u540D\u6848\u4EF6" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "ppt-case-address", children: chunkText(record.address || "\u2014", 20).map((line, lineIndex) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: line }, `${line}-${lineIndex}`)) }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: developerFullNameText(record.developer) || "\u2014" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: displayRocDate(record.reportDate) || "\u2014" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { className: "ppt-case-date", children: [
+                displayRocDate(record.reportDate) || "\u2014",
+                (() => {
+                  const assets = pptAssetPairForRecord(record);
+                  return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("em", { className: assets?.gif && assets?.layout ? "complete" : assets?.gif || assets?.layout ? "partial" : "missing", children: [
+                    "GIF ",
+                    assets?.gif ? "\u2713" : "\uFF0D",
+                    "\u3000JPG ",
+                    assets?.layout ? "\u2713" : "\uFF0D"
+                  ] });
+                })()
+              ] }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "ppt-inline-confirm", children: [
                 pptConfirmedSnapshots[record.id] ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: "confirmed", onClick: () => setPptConfirmedSnapshots((previous) => {
                   const next = { ...previous };
@@ -45383,6 +45462,11 @@ ${changedLabels}
             ] }, record.id))
           ] }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "ppt-add-actions", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "ppt-asset-folder-button", children: [
+              "\u9078\u64C7 GIF\uFF0FJPG \u8CC7\u6599\u593E",
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "file", accept: ".gif,.jpg,.jpeg,image/gif,image/jpeg", multiple: true, ...{ webkitdirectory: "", directory: "" }, onChange: loadPptAssetFolder })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "ppt-asset-folder-summary", children: pptAssetPairs.length ? `\u5DF2\u8B80\u53D6 ${pptAssetPairs.length} \u7D44\u5716\u7247` : "\u5C1A\u672A\u9078\u64C7\u5716\u7247\u8CC7\u6599\u593E" }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: "ppt-extra-toggle", onClick: () => setPptShowExtras((value) => !value), children: "\uFF0B\u52A0\u5165\u7269\u4EF6" }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: "ppt-adhoc-toggle", onClick: () => {
               setPptAdHocDraft({ ...blankRecord(), id: newId(), status: "\u5C1A\u672A\u9032\u6848" });
