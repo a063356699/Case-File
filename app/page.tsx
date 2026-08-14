@@ -1478,15 +1478,20 @@ export default function Home() {
       lastModifiedAt: savedAt,
     }));
     if (next._intakeDraftId) {
-      setIntakeDrafts(previous => previous.map(draft => draft.id === next._intakeDraftId ? { ...draft, values: syncRecordToDraftValues(draft, next), propertyKind: next.type.includes("土地") ? "土地" : "房屋" } : draft));
+      const savedDrafts = intakeDrafts.map(draft => draft.id === next._intakeDraftId ? { ...draft, values: syncRecordToDraftValues(draft, next), propertyKind: next.type.includes("土地") ? "土地" : "房屋" } : draft);
+      localStorage.setItem(INTAKE_KEY, JSON.stringify({ raw: intakeRaw, drafts: savedDrafts, selectedId: selectedIntakeId }));
+      setIntakeDrafts(savedDrafts);
       setTourItems(previous => previous.map(item => item.data._intakeDraftId === next._intakeDraftId ? { ...item, data: { ...item.data, ...next } } : item));
     } else {
-      setRecords(previous => previous.some(record => record.id === next.id) ? previous.map(record => record.id === next.id ? { ...record, ...next } : record) : [next, ...previous]);
+      // 暫存就是立即寫入本機，不必再按「僅儲存」，即使隨後關閉編輯畫面也保留。
+      const savedRecords = records.some(record => record.id === next.id) ? records.map(record => record.id === next.id ? { ...record, ...next } : record) : [next, ...records];
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(savedRecords));
+      setRecords(savedRecords);
       setIntakeDrafts(previous => previous.map(draft => draft.linkedRecordId === next.id ? { ...draft, values: syncRecordToDraftValues(draft, next) } : draft));
     }
     editingInitialRef.current = JSON.stringify(next);
     setEditing(next);
-    flash("已暫存，可繼續填寫");
+    flash("已儲存，可繼續填寫");
   };
 
   const saveColorSheetIssue = (data: RecordItem) => {
@@ -2186,7 +2191,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V227</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V228</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
