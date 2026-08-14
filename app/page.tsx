@@ -745,7 +745,13 @@ export default function Home() {
   const [frontLastLogins, setFrontLastLogins] = useState<Record<string, string>>({});
   const [editing, setEditing] = useState<RecordItem | null>(null);
   useEffect(() => {
-    setEditing(current => current ? records.find(record => record.id === current.id) || current : current);
+    // 其他電腦或雲端更新 records 時，不可覆蓋正在輸入、尚未按暫存的編輯內容。
+    setEditing(current => {
+      if (!current) return current;
+      const hasUnsavedInput = Boolean(editingInitialRef.current) && JSON.stringify(current) !== editingInitialRef.current;
+      if (hasUnsavedInput) return current;
+      return records.find(record => record.id === current.id) || current;
+    });
   }, [records]);
   const [newCaseReminder, setNewCaseReminder] = useState<RecordItem | null>(null);
   const [newCaseReminderBatchIds, setNewCaseReminderBatchIds] = useState<string[]>([]);
@@ -2191,7 +2197,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V228</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V229</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>

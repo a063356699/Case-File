@@ -42482,7 +42482,12 @@ ${String(ex)}`);
     const [frontLastLogins, setFrontLastLogins] = (0, import_react.useState)({});
     const [editing, setEditing] = (0, import_react.useState)(null);
     (0, import_react.useEffect)(() => {
-      setEditing((current) => current ? records.find((record) => record.id === current.id) || current : current);
+      setEditing((current) => {
+        if (!current) return current;
+        const hasUnsavedInput = Boolean(editingInitialRef.current) && JSON.stringify(current) !== editingInitialRef.current;
+        if (hasUnsavedInput) return current;
+        return records.find((record) => record.id === current.id) || current;
+      });
     }, [records]);
     const [newCaseReminder, setNewCaseReminder] = (0, import_react.useState)(null);
     const [newCaseReminderBatchIds, setNewCaseReminderBatchIds] = (0, import_react.useState)([]);
@@ -44512,7 +44517,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V228" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V229" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
