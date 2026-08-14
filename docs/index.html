@@ -41243,6 +41243,7 @@ ${String(ex)}`);
   var PHOTO_INTAKE_CLEANUP_KEY = "property-desk-photo-intake-cleanup-v2";
   var TOUR_KEY = "property-desk-tour-plan-v1";
   var PPT_WEEK_SELECTIONS_KEY = "property-desk-ppt-week-selections-v1";
+  var PPT_ORDER_RULE_VERSION = "linked-developer-v1";
   var DAILY_HIDDEN_KEY = "property-desk-daily-hidden-v1";
   var MISSING_REMINDER_DATE_KEY = "property-desk-missing-reminder-date-v1";
   var CLOUD_SESSION_KEY = "property-desk-supabase-session-v1";
@@ -42602,7 +42603,7 @@ ${String(ex)}`);
         const saved = JSON.parse(localStorage.getItem(PPT_WEEK_SELECTIONS_KEY) || "{}")[pptWeekStart] || {};
         pptWeekLoadedRef.current = pptWeekStart;
         setPptExtraIds(Array.isArray(saved.extraIds) ? saved.extraIds : []);
-        setPptOrderIds(Array.isArray(saved.orderIds) ? saved.orderIds : []);
+        setPptOrderIds(saved.orderVersion === PPT_ORDER_RULE_VERSION && Array.isArray(saved.orderIds) ? saved.orderIds : []);
         setPptAdHocRecords(Array.isArray(saved.adHocRecords) ? saved.adHocRecords : []);
         setPptConfirmedSnapshots(saved.confirmedSnapshots && typeof saved.confirmedSnapshots === "object" ? saved.confirmedSnapshots : {});
       } catch {
@@ -42617,7 +42618,7 @@ ${String(ex)}`);
       if (!storageReady || pptWeekLoadedRef.current !== pptWeekStart) return;
       try {
         const all = JSON.parse(localStorage.getItem(PPT_WEEK_SELECTIONS_KEY) || "{}");
-        all[pptWeekStart] = { extraIds: pptExtraIds, orderIds: pptOrderIds, adHocRecords: pptAdHocRecords, confirmedSnapshots: pptConfirmedSnapshots };
+        all[pptWeekStart] = { extraIds: pptExtraIds, orderIds: pptOrderIds, orderVersion: PPT_ORDER_RULE_VERSION, adHocRecords: pptAdHocRecords, confirmedSnapshots: pptConfirmedSnapshots };
         localStorage.setItem(PPT_WEEK_SELECTIONS_KEY, JSON.stringify(all));
       } catch {
       }
@@ -44247,7 +44248,7 @@ ${changedLabels}
               localStorage.setItem(PPT_WEEK_SELECTIONS_KEY, JSON.stringify(mergedWeeks));
               const current = mergedWeeks[pptWeekStart] || {};
               setPptExtraIds(Array.isArray(current.extraIds) ? current.extraIds : []);
-              setPptOrderIds(Array.isArray(current.orderIds) ? current.orderIds : []);
+              setPptOrderIds(current.orderVersion === PPT_ORDER_RULE_VERSION && Array.isArray(current.orderIds) ? current.orderIds : []);
               setPptAdHocRecords(Array.isArray(current.adHocRecords) ? current.adHocRecords : []);
               setPptConfirmedSnapshots(current.confirmedSnapshots && typeof current.confirmedSnapshots === "object" ? current.confirmedSnapshots : {});
             } catch {
@@ -44684,7 +44685,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V236" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V237" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
