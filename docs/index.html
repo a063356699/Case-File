@@ -42128,13 +42128,44 @@ ${String(ex)}`);
   var stripRestoredDisplay = (value = "") => String(value || "").replace(/(?:\d{2,4}[.\/-]\d{1,2}[.\/-]\d{1,2}\s*)?重新上架/g, "").replace(/[　\s｜|·・—-]+$/g, "").trim();
   var archiveDisplayRecord = (record) => ({ ...record, caseName: stripRestoredDisplay(record.caseName), caseNameNote: stripRestoredDisplay(record.caseNameNote) });
   var showingFollowUpDisplayRecord = (record) => record;
-  var sortPptRecords = (items) => items.map((record, index) => ({ record, index })).sort((a, b) => {
-    const priority = (record) => /王啟山|蔡宇育/.test(record.developer || "") ? 0 : 1;
-    const priorityDiff = priority(a.record) - priority(b.record);
-    if (priorityDiff) return priorityDiff;
-    const dateDiff = String(a.record.reportDate || "9999-12-31").localeCompare(String(b.record.reportDate || "9999-12-31"), "zh-TW", { numeric: true });
-    return dateDiff || a.index - b.index;
-  }).map((item) => item.record);
+  var sortPptRecords = (items) => {
+    const entries = items.map((record, index) => ({ record, index, names: developerNameLines(record.developer) }));
+    const parent = entries.map((_, index) => index);
+    const rootOf = (index) => parent[index] === index ? index : parent[index] = rootOf(parent[index]);
+    const connect = (left, right) => {
+      const a = rootOf(left), b = rootOf(right);
+      if (a !== b) parent[b] = a;
+    };
+    entries.forEach((entry, left) => entries.slice(left + 1).forEach((other, offset) => {
+      if (entry.names.some((name) => other.names.includes(name))) connect(left, left + offset + 1);
+    }));
+    const groupInfo = /* @__PURE__ */ new Map();
+    entries.forEach((entry) => {
+      const root = rootOf(entry.index);
+      const info = groupInfo.get(root) || { names: /* @__PURE__ */ new Set(), oldestDate: "9999-12-31", firstIndex: entry.index };
+      entry.names.forEach((name) => info.names.add(name));
+      const date = String(entry.record.reportDate || "9999-12-31");
+      if (date < info.oldestDate) info.oldestDate = date;
+      info.firstIndex = Math.min(info.firstIndex, entry.index);
+      groupInfo.set(root, info);
+    });
+    const fixedPriority = (root) => {
+      const names = groupInfo.get(root)?.names;
+      return names?.has("\u738B\u555F\u5C71") ? 0 : names?.has("\u8521\u5B87\u80B2") ? 1 : 2;
+    };
+    return entries.map((entry) => ({ ...entry, group: rootOf(entry.index) })).sort((a, b) => {
+      const priorityDiff = fixedPriority(a.group) - fixedPriority(b.group);
+      if (priorityDiff) return priorityDiff;
+      if (a.group !== b.group) {
+        const aInfo = groupInfo.get(a.group), bInfo = groupInfo.get(b.group);
+        const groupDateDiff = aInfo.oldestDate.localeCompare(bInfo.oldestDate, "zh-TW", { numeric: true });
+        if (groupDateDiff) return groupDateDiff;
+        return aInfo.firstIndex - bInfo.firstIndex;
+      }
+      const dateDiff = String(a.record.reportDate || "9999-12-31").localeCompare(String(b.record.reportDate || "9999-12-31"), "zh-TW", { numeric: true });
+      return dateDiff || a.index - b.index;
+    }).map((item) => item.record);
+  };
   function parseTsv(text) {
     const rows = [];
     let row = [];
@@ -44653,7 +44684,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V235" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V236" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),

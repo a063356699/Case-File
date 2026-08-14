@@ -565,12 +565,40 @@ const developerFullNameText = (value = "", personnel: Person[] = []) => develope
 const stripRestoredDisplay = (value = "") => String(value || "").replace(/(?:\d{2,4}[.\/-]\d{1,2}[.\/-]\d{1,2}\s*)?重新上架/g, "").replace(/[　\s｜|·・—-]+$/g, "").trim();
 const archiveDisplayRecord = (record: RecordItem): RecordItem => ({ ...record, caseName: stripRestoredDisplay(record.caseName), caseNameNote: stripRestoredDisplay(record.caseNameNote) });
 const showingFollowUpDisplayRecord = (record: RecordItem): RecordItem => record;
-const sortPptRecords = (items: RecordItem[]) => items.map((record, index) => ({ record, index })).sort((a, b) => {
-  const priority = (record: RecordItem) => /王啟山|蔡宇育/.test(record.developer || "") ? 0 : 1;
-  const priorityDiff = priority(a.record) - priority(b.record); if (priorityDiff) return priorityDiff;
-  const dateDiff = String(a.record.reportDate || "9999-12-31").localeCompare(String(b.record.reportDate || "9999-12-31"), "zh-TW", { numeric: true });
-  return dateDiff || a.index - b.index;
-}).map(item => item.record);
+const sortPptRecords = (items: RecordItem[]) => {
+  const entries = items.map((record, index) => ({ record, index, names: developerNameLines(record.developer) }));
+  const parent = entries.map((_, index) => index);
+  const rootOf = (index: number): number => parent[index] === index ? index : (parent[index] = rootOf(parent[index]));
+  const connect = (left: number, right: number) => { const a = rootOf(left), b = rootOf(right); if (a !== b) parent[b] = a; };
+  entries.forEach((entry, left) => entries.slice(left + 1).forEach((other, offset) => {
+    if (entry.names.some(name => other.names.includes(name))) connect(left, left + offset + 1);
+  }));
+  const groupInfo = new Map<number, { names: Set<string>; oldestDate: string; firstIndex: number }>();
+  entries.forEach(entry => {
+    const root = rootOf(entry.index);
+    const info = groupInfo.get(root) || { names: new Set<string>(), oldestDate: "9999-12-31", firstIndex: entry.index };
+    entry.names.forEach(name => info.names.add(name));
+    const date = String(entry.record.reportDate || "9999-12-31");
+    if (date < info.oldestDate) info.oldestDate = date;
+    info.firstIndex = Math.min(info.firstIndex, entry.index);
+    groupInfo.set(root, info);
+  });
+  const fixedPriority = (root: number) => {
+    const names = groupInfo.get(root)?.names;
+    return names?.has("王啟山") ? 0 : names?.has("蔡宇育") ? 1 : 2;
+  };
+  return entries.map(entry => ({ ...entry, group: rootOf(entry.index) })).sort((a, b) => {
+    const priorityDiff = fixedPriority(a.group) - fixedPriority(b.group); if (priorityDiff) return priorityDiff;
+    if (a.group !== b.group) {
+      const aInfo = groupInfo.get(a.group)!, bInfo = groupInfo.get(b.group)!;
+      const groupDateDiff = aInfo.oldestDate.localeCompare(bInfo.oldestDate, "zh-TW", { numeric: true });
+      if (groupDateDiff) return groupDateDiff;
+      return aInfo.firstIndex - bInfo.firstIndex;
+    }
+    const dateDiff = String(a.record.reportDate || "9999-12-31").localeCompare(String(b.record.reportDate || "9999-12-31"), "zh-TW", { numeric: true });
+    return dateDiff || a.index - b.index;
+  }).map(item => item.record);
+};
 
 function parseTsv(text: string) {
   const rows: string[][] = []; let row: string[] = []; let cell = ""; let quoted = false;
@@ -2322,7 +2350,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V235</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V236</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
