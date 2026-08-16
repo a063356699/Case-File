@@ -825,6 +825,7 @@ export default function Home() {
   const [pptCustomMeeting, setPptCustomMeeting] = useState("");
   const [pptAssetPairs, setPptAssetPairs] = useState<{ key: string; label: string; gif?: File; layout?: File }[]>([]);
   const pptWeekLoadedRef = useRef("");
+  const pptWeekSkipSaveRef = useRef(true);
   // PPT 的「確認並鎖定」必須在同一週持久保存；不能因為重新整理或自動同步又變回未確認。
   const pptConfirmationStateKeyRef = useRef("");
   const reminderAnchorRecord = records.find(record => String(record.address || "").includes("富農街一段188巷40號"));
@@ -849,6 +850,7 @@ export default function Home() {
   useEffect(() => { setPptCustomStart(""); setPptCustomEnd(""); setPptCustomMeeting(""); }, [pptWeekStart]);
   useEffect(() => { if (!pptPickerOpen) { setPptCustomStart(""); setPptCustomEnd(""); setPptCustomMeeting(""); setPptExtraSearch(""); setPptAdHocOpen(false); } }, [pptPickerOpen]);
   useEffect(() => {
+    pptWeekSkipSaveRef.current = true;
     try {
       const all = JSON.parse(localStorage.getItem(PPT_WEEK_SELECTIONS_KEY) || "{}");
       const saved = all[pptWeekStart] || {};
@@ -870,6 +872,7 @@ export default function Home() {
   }, [pptWeekStart]);
   useEffect(() => {
     if (!storageReady || pptWeekLoadedRef.current !== pptWeekStart) return;
+    if (pptWeekSkipSaveRef.current) { pptWeekSkipSaveRef.current = false; return; }
     try {
       const all = JSON.parse(localStorage.getItem(PPT_WEEK_SELECTIONS_KEY) || "{}");
       all[pptWeekStart] = { extraIds: pptExtraIds, orderIds: pptOrderIds, orderVersion: PPT_ORDER_RULE_VERSION, adHocRecords: pptAdHocRecords, confirmedSnapshots: pptConfirmedSnapshots };
@@ -902,9 +905,11 @@ export default function Home() {
       const next = previous.map(record => {
         if (!selected.has(record.id)) return record;
         const weeks = pptStoredList(record._pptExtraWeeks);
-        if (weeks.includes(pptWeekStart)) return record;
+        const excludedWeeks = pptStoredList(record._pptExcludedWeeks);
+        const excluded = excludedWeeks.filter((week: string) => week !== pptWeekStart);
+        if (weeks.includes(pptWeekStart) && excluded.length === excludedWeeks.length) return record;
         changed = true;
-        return { ...record, _pptExtraWeeks: JSON.stringify([...weeks, pptWeekStart]) };
+        return { ...record, _pptExtraWeeks: JSON.stringify([...new Set([...weeks, pptWeekStart])]), _pptExcludedWeeks: JSON.stringify(excluded) };
       });
       return changed ? next : previous;
     });
@@ -1319,22 +1324,23 @@ export default function Home() {
   const pptDraftRecords = intakeDrafts.filter(draft => !draft.linkedRecordId).map(draft => ({ ...intakeToRecord(draft), id: `ppt-draft-${draft.id}`, reportDate: "", status: "尚未進案", _intakeDraftId: draft.id, _notEntered: "1" }));
   const isRequiredAug17PptRecord = (record: RecordItem) => selectedPptWeek.meeting === "2026-08-17" && (
     ["LA0060477", "LG0128613"].includes(String(record.propertyNo || "").trim()) ||
-    /大內9甲臨路農地|柳營十一米大面寬乙種工業地/.test(String(record.caseName || ""))
+    /大內9甲臨路農地|柳營(?:十一|11)米大面寬乙種工業地/.test(String(record.caseName || ""))
   );
   // 紅框選案列表、產生圖片與下載 PPT 必須共用同一批案件。
   // 除了本週正式進案，也直接列出「＋加入物件」選到的進案草稿與「＋尚未填寫表單案件」。
   const weeklyPptRecords = sortPptRecords([
     ...records.filter(record => {
       const required = isRequiredAug17PptRecord(record);
-      return (belongsToPptWeek(record, selectedPptWeek) || pptExtraIds.includes(record.id) || required) && (required || !excludedFromPptWeek(record, selectedPptWeek.start));
+      const manuallyAdded = pptExtraIds.includes(record.id);
+      return (belongsToPptWeek(record, selectedPptWeek) || manuallyAdded || required) && (manuallyAdded || required || !excludedFromPptWeek(record, selectedPptWeek.start));
     }),
-    ...pptDraftRecords.filter(record => pptExtraIds.includes(record.id)),
+    ...pptDraftRecords.filter(record => pptExtraIds.includes(record.id) || isRequiredAug17PptRecord(record)),
     ...pptAdHocRecords,
   ]);
-  const deferredPptRecords = sortPptRecords(records.filter(record => belongsToPptWeek(record, selectedPptWeek) && excludedFromPptWeek(record, selectedPptWeek.start)));
+  const deferredPptRecords = sortPptRecords(records.filter(record => belongsToPptWeek(record, selectedPptWeek) && excludedFromPptWeek(record, selectedPptWeek.start) && !pptExtraIds.includes(record.id)));
   const pptExtraCandidates = [...records.filter(record => !belongsToPptWeek(record, selectedPptWeek)), ...pptDraftRecords].filter(record => [record.caseName, record.address].join(" ").toLowerCase().includes(pptExtraSearch.trim().toLowerCase()));
   const selectedPptBaseRecords = (() => {
-    const standard = sortPptRecords([...records.filter(record => weeklyPptRecords.some(item => item.id === record.id) || pptExtraIds.includes(record.id)), ...pptDraftRecords.filter(record => pptExtraIds.includes(record.id)), ...pptAdHocRecords]);
+    const standard = sortPptRecords([...records.filter(record => weeklyPptRecords.some(item => item.id === record.id) || pptExtraIds.includes(record.id)), ...pptDraftRecords.filter(record => pptExtraIds.includes(record.id) || isRequiredAug17PptRecord(record)), ...pptAdHocRecords]);
     const position = new Map(pptOrderIds.map((id, index) => [id, index]));
     return standard.slice().sort((a, b) => (position.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (position.get(b.id) ?? Number.MAX_SAFE_INTEGER));
   })();
@@ -2389,7 +2395,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V241</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V242</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>

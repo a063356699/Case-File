@@ -42565,6 +42565,7 @@ ${String(ex)}`);
     const [pptCustomMeeting, setPptCustomMeeting] = (0, import_react.useState)("");
     const [pptAssetPairs, setPptAssetPairs] = (0, import_react.useState)([]);
     const pptWeekLoadedRef = (0, import_react.useRef)("");
+    const pptWeekSkipSaveRef = (0, import_react.useRef)(true);
     const pptConfirmationStateKeyRef = (0, import_react.useRef)("");
     const reminderAnchorRecord = records.find((record) => String(record.address || "").includes("\u5BCC\u8FB2\u8857\u4E00\u6BB5188\u5DF740\u865F"));
     const reminderAnchorDraft = reminderAnchorRecord ? intakeDrafts.find((draft) => draft.linkedRecordId === reminderAnchorRecord.id) : void 0;
@@ -42599,6 +42600,7 @@ ${String(ex)}`);
       }
     }, [pptPickerOpen]);
     (0, import_react.useEffect)(() => {
+      pptWeekSkipSaveRef.current = true;
       try {
         const all = JSON.parse(localStorage.getItem(PPT_WEEK_SELECTIONS_KEY) || "{}");
         const saved = all[pptWeekStart] || {};
@@ -42623,6 +42625,10 @@ ${String(ex)}`);
     }, [pptWeekStart]);
     (0, import_react.useEffect)(() => {
       if (!storageReady || pptWeekLoadedRef.current !== pptWeekStart) return;
+      if (pptWeekSkipSaveRef.current) {
+        pptWeekSkipSaveRef.current = false;
+        return;
+      }
       try {
         const all = JSON.parse(localStorage.getItem(PPT_WEEK_SELECTIONS_KEY) || "{}");
         all[pptWeekStart] = { extraIds: pptExtraIds, orderIds: pptOrderIds, orderVersion: PPT_ORDER_RULE_VERSION, adHocRecords: pptAdHocRecords, confirmedSnapshots: pptConfirmedSnapshots };
@@ -42655,9 +42661,11 @@ ${String(ex)}`);
         const next = previous.map((record) => {
           if (!selected.has(record.id)) return record;
           const weeks = pptStoredList(record._pptExtraWeeks);
-          if (weeks.includes(pptWeekStart)) return record;
+          const excludedWeeks = pptStoredList(record._pptExcludedWeeks);
+          const excluded = excludedWeeks.filter((week) => week !== pptWeekStart);
+          if (weeks.includes(pptWeekStart) && excluded.length === excludedWeeks.length) return record;
           changed = true;
-          return { ...record, _pptExtraWeeks: JSON.stringify([...weeks, pptWeekStart]) };
+          return { ...record, _pptExtraWeeks: JSON.stringify([.../* @__PURE__ */ new Set([...weeks, pptWeekStart])]), _pptExcludedWeeks: JSON.stringify(excluded) };
         });
         return changed ? next : previous;
       });
@@ -43188,19 +43196,20 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
     const standardPptWeeks = Array.from({ length: 24 }, (_, index) => addDaysIso(pptCurrentStart, index * -7));
     const pptWeekOptions = [.../* @__PURE__ */ new Set([...standardPptWeeks, ...records.flatMap((record) => [normalizeDateInput(record.reportDate || ""), ...pptStoredList(record._pptExtraWeeks)]).filter((date) => /^\d{4}-\d{2}-\d{2}$/.test(date)).map((date) => pptWeekOf(date).start).filter((start) => start <= pptCurrentStart)])].sort((a, b) => b.localeCompare(a));
     const pptDraftRecords = intakeDrafts.filter((draft) => !draft.linkedRecordId).map((draft) => ({ ...intakeToRecord(draft), id: `ppt-draft-${draft.id}`, reportDate: "", status: "\u5C1A\u672A\u9032\u6848", _intakeDraftId: draft.id, _notEntered: "1" }));
-    const isRequiredAug17PptRecord = (record) => selectedPptWeek.meeting === "2026-08-17" && (["LA0060477", "LG0128613"].includes(String(record.propertyNo || "").trim()) || /大內9甲臨路農地|柳營十一米大面寬乙種工業地/.test(String(record.caseName || "")));
+    const isRequiredAug17PptRecord = (record) => selectedPptWeek.meeting === "2026-08-17" && (["LA0060477", "LG0128613"].includes(String(record.propertyNo || "").trim()) || /大內9甲臨路農地|柳營(?:十一|11)米大面寬乙種工業地/.test(String(record.caseName || "")));
     const weeklyPptRecords = sortPptRecords([
       ...records.filter((record) => {
         const required = isRequiredAug17PptRecord(record);
-        return (belongsToPptWeek(record, selectedPptWeek) || pptExtraIds.includes(record.id) || required) && (required || !excludedFromPptWeek(record, selectedPptWeek.start));
+        const manuallyAdded = pptExtraIds.includes(record.id);
+        return (belongsToPptWeek(record, selectedPptWeek) || manuallyAdded || required) && (manuallyAdded || required || !excludedFromPptWeek(record, selectedPptWeek.start));
       }),
-      ...pptDraftRecords.filter((record) => pptExtraIds.includes(record.id)),
+      ...pptDraftRecords.filter((record) => pptExtraIds.includes(record.id) || isRequiredAug17PptRecord(record)),
       ...pptAdHocRecords
     ]);
-    const deferredPptRecords = sortPptRecords(records.filter((record) => belongsToPptWeek(record, selectedPptWeek) && excludedFromPptWeek(record, selectedPptWeek.start)));
+    const deferredPptRecords = sortPptRecords(records.filter((record) => belongsToPptWeek(record, selectedPptWeek) && excludedFromPptWeek(record, selectedPptWeek.start) && !pptExtraIds.includes(record.id)));
     const pptExtraCandidates = [...records.filter((record) => !belongsToPptWeek(record, selectedPptWeek)), ...pptDraftRecords].filter((record) => [record.caseName, record.address].join(" ").toLowerCase().includes(pptExtraSearch.trim().toLowerCase()));
     const selectedPptBaseRecords = (() => {
-      const standard = sortPptRecords([...records.filter((record) => weeklyPptRecords.some((item) => item.id === record.id) || pptExtraIds.includes(record.id)), ...pptDraftRecords.filter((record) => pptExtraIds.includes(record.id)), ...pptAdHocRecords]);
+      const standard = sortPptRecords([...records.filter((record) => weeklyPptRecords.some((item) => item.id === record.id) || pptExtraIds.includes(record.id)), ...pptDraftRecords.filter((record) => pptExtraIds.includes(record.id) || isRequiredAug17PptRecord(record)), ...pptAdHocRecords]);
       const position = new Map(pptOrderIds.map((id, index) => [id, index]));
       return standard.slice().sort((a, b) => (position.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (position.get(b.id) ?? Number.MAX_SAFE_INTEGER));
     })();
@@ -44718,7 +44727,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V241" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V242" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
