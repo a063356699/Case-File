@@ -877,10 +877,20 @@ export default function Home() {
     } catch {}
   }, [storageReady, pptWeekStart, pptExtraIds, pptOrderIds, pptAdHocRecords, pptConfirmedSnapshots]);
   useEffect(() => {
-    if (!storageReady || pptWeekStart !== "2026-08-08" || localStorage.getItem("property-desk-ppt-2026-08-17-recover-v1") === "1") return;
+    if (!storageReady || pptWeekStart !== "2026-08-08" || localStorage.getItem("property-desk-ppt-2026-08-17-recover-v2") === "1") return;
     const recoveredIds = records.filter(record => ["LA0060477", "LG0128613"].includes(String(record.propertyNo || "").trim())).map(record => record.id);
-    if (recoveredIds.length) setPptExtraIds(previous => [...new Set([...previous, ...recoveredIds])]);
-    if (recoveredIds.length === 2) localStorage.setItem("property-desk-ppt-2026-08-17-recover-v1", "1");
+    if (!recoveredIds.length) return;
+    try {
+      const allWeeks = JSON.parse(localStorage.getItem(PPT_WEEK_SELECTIONS_KEY) || "{}");
+      const savedWeek = allWeeks[pptWeekStart] || {};
+      const nextExtraIds = [...new Set([...(Array.isArray(savedWeek.extraIds) ? savedWeek.extraIds : []), ...recoveredIds])];
+      allWeeks[pptWeekStart] = { ...savedWeek, extraIds: nextExtraIds };
+      localStorage.setItem(PPT_WEEK_SELECTIONS_KEY, JSON.stringify(allWeeks));
+      setPptExtraIds(previous => [...new Set([...previous, ...nextExtraIds])]);
+      if (recoveredIds.length === 2) localStorage.setItem("property-desk-ppt-2026-08-17-recover-v2", "1");
+    } catch {
+      setPptExtraIds(previous => [...new Set([...previous, ...recoveredIds])]);
+    }
   }, [storageReady, pptWeekStart, records]);
   useEffect(() => {
     if (!storageReady || pptWeekLoadedRef.current !== pptWeekStart || !pptExtraIds.length) return;
@@ -2048,11 +2058,14 @@ export default function Home() {
               const validOrderSource = cloudWeek.orderVersion === PPT_ORDER_RULE_VERSION ? cloudWeek : localWeek.orderVersion === PPT_ORDER_RULE_VERSION ? localWeek : null;
               const localSnapshots = localWeek.confirmedSnapshots || {};
               const localAdHoc = new Map<string, RecordItem>((localWeek.adHocRecords || []).map((record: RecordItem) => [record.id, record]));
+              const requiredExtraIds = week === "2026-08-08"
+                ? records.filter(record => ["LA0060477", "LG0128613"].includes(String(record.propertyNo || "").trim())).map(record => record.id)
+                : [];
               mergedWeeks[week] = {
                 ...localWeek,
                 ...cloudWeek,
                 // 手動加入週報的案件可能在不同電腦建立；雲端與本機必須取聯集，不能由較舊的一方覆蓋刪除。
-                extraIds: [...new Set([...(Array.isArray(localWeek.extraIds) ? localWeek.extraIds : []), ...(Array.isArray(cloudWeek.extraIds) ? cloudWeek.extraIds : [])])],
+                extraIds: [...new Set([...(Array.isArray(localWeek.extraIds) ? localWeek.extraIds : []), ...(Array.isArray(cloudWeek.extraIds) ? cloudWeek.extraIds : []), ...requiredExtraIds])],
                 orderIds: validOrderSource && Array.isArray(validOrderSource.orderIds) ? validOrderSource.orderIds : [],
                 orderVersion: PPT_ORDER_RULE_VERSION,
                 adHocRecords: (cloudWeek.adHocRecords || []).map(record => ({ ...localAdHoc.get(record.id), ...record, photos: localAdHoc.get(record.id)?.photos || [] })),
@@ -2369,7 +2382,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V239</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V240</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
