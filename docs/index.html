@@ -42631,10 +42631,20 @@ ${String(ex)}`);
       }
     }, [storageReady, pptWeekStart, pptExtraIds, pptOrderIds, pptAdHocRecords, pptConfirmedSnapshots]);
     (0, import_react.useEffect)(() => {
-      if (!storageReady || pptWeekStart !== "2026-08-08" || localStorage.getItem("property-desk-ppt-2026-08-17-recover-v1") === "1") return;
+      if (!storageReady || pptWeekStart !== "2026-08-08" || localStorage.getItem("property-desk-ppt-2026-08-17-recover-v2") === "1") return;
       const recoveredIds = records.filter((record) => ["LA0060477", "LG0128613"].includes(String(record.propertyNo || "").trim())).map((record) => record.id);
-      if (recoveredIds.length) setPptExtraIds((previous) => [.../* @__PURE__ */ new Set([...previous, ...recoveredIds])]);
-      if (recoveredIds.length === 2) localStorage.setItem("property-desk-ppt-2026-08-17-recover-v1", "1");
+      if (!recoveredIds.length) return;
+      try {
+        const allWeeks = JSON.parse(localStorage.getItem(PPT_WEEK_SELECTIONS_KEY) || "{}");
+        const savedWeek = allWeeks[pptWeekStart] || {};
+        const nextExtraIds = [.../* @__PURE__ */ new Set([...Array.isArray(savedWeek.extraIds) ? savedWeek.extraIds : [], ...recoveredIds])];
+        allWeeks[pptWeekStart] = { ...savedWeek, extraIds: nextExtraIds };
+        localStorage.setItem(PPT_WEEK_SELECTIONS_KEY, JSON.stringify(allWeeks));
+        setPptExtraIds((previous) => [.../* @__PURE__ */ new Set([...previous, ...nextExtraIds])]);
+        if (recoveredIds.length === 2) localStorage.setItem("property-desk-ppt-2026-08-17-recover-v2", "1");
+      } catch {
+        setPptExtraIds((previous) => [.../* @__PURE__ */ new Set([...previous, ...recoveredIds])]);
+      }
     }, [storageReady, pptWeekStart, records]);
     (0, import_react.useEffect)(() => {
       if (!storageReady || pptWeekLoadedRef.current !== pptWeekStart || !pptExtraIds.length) return;
@@ -44249,11 +44259,12 @@ ${changedLabels}
                 const validOrderSource = cloudWeek.orderVersion === PPT_ORDER_RULE_VERSION ? cloudWeek : localWeek.orderVersion === PPT_ORDER_RULE_VERSION ? localWeek : null;
                 const localSnapshots = localWeek.confirmedSnapshots || {};
                 const localAdHoc = new Map((localWeek.adHocRecords || []).map((record) => [record.id, record]));
+                const requiredExtraIds = week === "2026-08-08" ? records.filter((record) => ["LA0060477", "LG0128613"].includes(String(record.propertyNo || "").trim())).map((record) => record.id) : [];
                 mergedWeeks[week] = {
                   ...localWeek,
                   ...cloudWeek,
                   // 手動加入週報的案件可能在不同電腦建立；雲端與本機必須取聯集，不能由較舊的一方覆蓋刪除。
-                  extraIds: [.../* @__PURE__ */ new Set([...Array.isArray(localWeek.extraIds) ? localWeek.extraIds : [], ...Array.isArray(cloudWeek.extraIds) ? cloudWeek.extraIds : []])],
+                  extraIds: [.../* @__PURE__ */ new Set([...Array.isArray(localWeek.extraIds) ? localWeek.extraIds : [], ...Array.isArray(cloudWeek.extraIds) ? cloudWeek.extraIds : [], ...requiredExtraIds])],
                   orderIds: validOrderSource && Array.isArray(validOrderSource.orderIds) ? validOrderSource.orderIds : [],
                   orderVersion: PPT_ORDER_RULE_VERSION,
                   adHocRecords: (cloudWeek.adHocRecords || []).map((record) => ({ ...localAdHoc.get(record.id), ...record, photos: localAdHoc.get(record.id)?.photos || [] })),
@@ -44703,7 +44714,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V239" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V240" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
