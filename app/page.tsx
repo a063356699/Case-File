@@ -1317,10 +1317,17 @@ export default function Home() {
   const standardPptWeeks = Array.from({ length: 24 }, (_, index) => addDaysIso(pptCurrentStart, index * -7));
   const pptWeekOptions = [...new Set([...standardPptWeeks, ...records.flatMap(record => [normalizeDateInput(record.reportDate || ""), ...pptStoredList(record._pptExtraWeeks)]).filter(date => /^\d{4}-\d{2}-\d{2}$/.test(date)).map(date => pptWeekOf(date).start).filter(start => start <= pptCurrentStart)])].sort((a, b) => b.localeCompare(a));
   const pptDraftRecords = intakeDrafts.filter(draft => !draft.linkedRecordId).map(draft => ({ ...intakeToRecord(draft), id: `ppt-draft-${draft.id}`, reportDate: "", status: "尚未進案", _intakeDraftId: draft.id, _notEntered: "1" }));
+  const isRequiredAug17PptRecord = (record: RecordItem) => selectedPptWeek.meeting === "2026-08-17" && (
+    ["LA0060477", "LG0128613"].includes(String(record.propertyNo || "").trim()) ||
+    /大內9甲臨路農地|柳營十一米大面寬乙種工業地/.test(String(record.caseName || ""))
+  );
   // 紅框選案列表、產生圖片與下載 PPT 必須共用同一批案件。
   // 除了本週正式進案，也直接列出「＋加入物件」選到的進案草稿與「＋尚未填寫表單案件」。
   const weeklyPptRecords = sortPptRecords([
-    ...records.filter(record => (belongsToPptWeek(record, selectedPptWeek) || pptExtraIds.includes(record.id)) && !excludedFromPptWeek(record, selectedPptWeek.start)),
+    ...records.filter(record => {
+      const required = isRequiredAug17PptRecord(record);
+      return (belongsToPptWeek(record, selectedPptWeek) || pptExtraIds.includes(record.id) || required) && (required || !excludedFromPptWeek(record, selectedPptWeek.start));
+    }),
     ...pptDraftRecords.filter(record => pptExtraIds.includes(record.id)),
     ...pptAdHocRecords,
   ]);
@@ -2382,7 +2389,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V240</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V241</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
