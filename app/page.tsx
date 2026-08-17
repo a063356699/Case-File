@@ -2104,6 +2104,20 @@ export default function Home() {
       }
     } catch { if (!quiet) flash(automatic ? "自動同步失敗，請檢查雲端登入" : "雲端讀取失敗，請檢查登入與設定"); }
   };
+  const supabasePullIfChanged = async () => {
+    if (!cloudSession?.accessToken || !settings.supabaseUrl || !settings.supabaseKey || cloudLocalPendingRef.current) return;
+    try {
+      const session = await refreshCloudSession();
+      if (!session) return;
+      const url = `${settings.supabaseUrl.replace(/\/$/, "")}/rest/v1/${settings.supabaseTable}?id=eq.${encodeURIComponent(settings.supabaseRecord)}&select=updated_at`;
+      const response = await fetch(url, { headers: cloudHeaders(session) });
+      const rows = await response.json();
+      if (!response.ok || !rows[0]?.updated_at) return;
+      const remoteUpdatedAt = String(rows[0].updated_at);
+      const knownUpdatedAt = localStorage.getItem(CLOUD_LAST_UPLOAD_KEY) || cloudLastUploadAt || "";
+      if (!knownUpdatedAt || Date.parse(remoteUpdatedAt) > Date.parse(knownUpdatedAt) + 500) await supabasePull(true, true);
+    } catch {}
+  };
   const supabaseSignIn = async (email: string, password: string, signUp = false) => {
     if (!settings.supabaseKey) return flash("請先貼上 Supabase Publishable key");
     try {
@@ -2131,6 +2145,7 @@ export default function Home() {
   };
   const cloudSnapshot = JSON.stringify({ records, personnel: settings.personnel, expiry591: settings.expiry591, expiry5168: settings.expiry5168, brokerExpiry: settings.brokerExpiry, intakeRaw, intakeDrafts, selectedIntakeId, tourDate, tourTitle, tourItems, tourModifiedAt, tourHistory, pptWeekStart, pptExtraIds, pptOrderIds, pptAdHocRecords, pptConfirmedSnapshots });
   useEffect(() => {
+    if (!storageReady) return;
     if (cloudSkipNextPushRef.current) {
       cloudSkipNextPushRef.current = false;
       cloudSyncBaselineRef.current = cloudSnapshot;
@@ -2144,7 +2159,7 @@ export default function Home() {
     if (cloudSyncTimerRef.current) window.clearTimeout(cloudSyncTimerRef.current);
     cloudSyncTimerRef.current = window.setTimeout(() => { void supabasePush(true); }, 6000);
     return () => { if (cloudSyncTimerRef.current) window.clearTimeout(cloudSyncTimerRef.current); };
-  }, [cloudSnapshot, cloudSession?.accessToken, settings.supabaseKey]);
+  }, [storageReady, cloudSnapshot, cloudSession?.accessToken, settings.supabaseKey]);
   useEffect(() => {
     if (!cloudSession?.accessToken || !settings.supabaseUrl || !settings.supabaseKey) return;
     const pullKey = `${settings.supabaseUrl}|${settings.supabaseTable}|${settings.supabaseRecord}|${cloudSession.email || "signed-in"}`;
@@ -2153,12 +2168,12 @@ export default function Home() {
     if (localStorage.getItem("property-desk-import-prefer-local-once") === "1") { localStorage.removeItem("property-desk-import-prefer-local-once"); return; }
     void supabasePull(true);
   }, [cloudSession?.accessToken, cloudSession?.email, settings.supabaseUrl, settings.supabaseKey, settings.supabaseTable, settings.supabaseRecord]);
-  // 管理模式開啟期間定期取得業務前台的新回報；靜默更新，不干擾正在操作的畫面。
+  // 管理模式開啟期間每 45 秒只讀取 updated_at；雲端真的有更新才下載完整資料。
   useEffect(() => {
     if (!cloudSession?.accessToken || !settings.supabaseUrl || !settings.supabaseKey) return;
-    const timer = window.setInterval(() => { void supabasePull(true, true); }, 45000);
+    const timer = window.setInterval(() => { void supabasePullIfChanged(); }, 45000);
     return () => window.clearInterval(timer);
-  }, [cloudSession?.accessToken, settings.supabaseUrl, settings.supabaseKey, settings.supabaseTable, settings.supabaseRecord]);
+  }, [cloudSession?.accessToken, settings.supabaseUrl, settings.supabaseKey, settings.supabaseTable, settings.supabaseRecord, cloudLastUploadAt]);
   // 兩台電腦同時開啟時，切回第一台或回到此分頁即刻取回另一台已同步的最新資料。
   // 保留 45 秒背景檢查，這裡只在使用者回到畫面時觸發，不會持續增加雲端流量。
   useEffect(() => {
@@ -2168,7 +2183,7 @@ export default function Home() {
       const now = Date.now();
       if (now - cloudFocusPullAtRef.current < 2500) return;
       cloudFocusPullAtRef.current = now;
-      void supabasePull(true, true);
+      void supabasePullIfChanged();
     };
     window.addEventListener("focus", refreshWhenVisible);
     document.addEventListener("visibilitychange", refreshWhenVisible);
@@ -2395,7 +2410,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V243</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V244</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
