@@ -52,4 +52,7 @@ $html = @"
   [System.Text.UTF8Encoding]::new($false)
 )
 
-Write-Host "GitHub Pages file created: docs/index.html"
+# 固定業務前台網址：此入口會立即導向不含管理模式的前台。
+Copy-Item -LiteralPath "$projectRoot\public\internal.html" -Destination (Join-Path $outputDir "internal.html") -Force
+
+Write-Host "GitHub Pages files created: docs/index.html, docs/internal.html"
