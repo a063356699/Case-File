@@ -868,6 +868,9 @@ export default function Home() {
   const [publicUnlocked, setPublicUnlocked] = useState(false);
   const [publicAuthReady, setPublicAuthReady] = useState(() => !internalView);
   const publicLoginAttemptRef = useRef(0);
+  const publicCloudVersionRef = useRef("");
+  const publicVersionCheckAtRef = useRef(0);
+  const publicVersionCheckBusyRef = useRef(false);
   const [publicPersonId, setPublicPersonId] = useState("");
   const [publicInventoryGroups, setPublicInventoryGroups] = useState<InventoryGroup[]>([]);
   const [publicLoginLeaderGroup, setPublicLoginLeaderGroup] = useState<InventoryGroup | null>(null);
@@ -2343,7 +2346,16 @@ export default function Home() {
     header.firstElementChild?.append(button);
     return () => { button.removeEventListener("click", logoutPublic); button.remove(); };
   }, [internalView, tab, publicUnlocked]);
-  const unlock = async (requestedId?: unknown) => {
+  const fetchPublicCloudVersion = async () => {
+    const response = await fetch(`${CASE_FILE_SUPABASE_URL}/rest/v1/rpc/case_file_front_version`, {
+      method: "POST",
+      headers: { apikey: CASE_FILE_SUPABASE_PUBLISHABLE_KEY, "Content-Type": "application/json" },
+      body: "{}"
+    });
+    if (!response.ok) throw new Error("front version check failed");
+    return String(await response.json() || "");
+  };
+  const unlock = async (requestedId?: unknown, options?: { preserveScope?: boolean; quiet?: boolean; cloudVersion?: string }) => {
     const attempt = ++publicLoginAttemptRef.current;
     const restoring = typeof requestedId === "string";
     const normalizeLoginId = (value: unknown = "") => String(value ?? "").trim().replace(/\s+/g, "").toUpperCase();
@@ -2351,6 +2363,8 @@ export default function Home() {
     const loginId = normalizeLoginId(typeof requestedId === "string" ? requestedId : password);
     if (!loginId) { if (restoring) setPublicAuthReady(true); return flash("請輸入身分證字號"); }
     try {
+      let loadingVersion = options?.cloudVersion || "";
+      if (!loadingVersion) { try { loadingVersion = await fetchPublicCloudVersion(); } catch {} }
       const response = await fetch(`${CASE_FILE_SUPABASE_URL}/rest/v1/rpc/case_file_front_login`, { method: "POST", headers: { apikey: CASE_FILE_SUPABASE_PUBLISHABLE_KEY, "Content-Type": "application/json" }, body: JSON.stringify({ p_national_id: loginId }) });
       const data = await response.json();
       if (attempt !== publicLoginAttemptRef.current) return;
@@ -2366,13 +2380,47 @@ export default function Home() {
       setPublicLoginLeaderGroup(data.leaderGroup && typeof data.leaderGroup === "object" ? data.leaderGroup as InventoryGroup : loginGroups.find(group => group.members.some(member => member.personId === data.personId && member.role === "組長")) || null);
       setSettings(previous => ({ ...previous, personnel: mergeSuppliedPersonnel(nextPeople), ...(Array.isArray(data.inventoryGroups) ? { inventoryGroups: data.inventoryGroups } : {}) }));
       setPublicPersonId(data.personId);
-      setPublicScope("mine");
+      if (!options?.preserveScope) setPublicScope("mine");
       setPublicUnlocked(true);
       setPublicAuthReady(true);
       rememberPublicLogin(data.personId, loginId);
       setPassword("");
-    } catch { if (attempt !== publicLoginAttemptRef.current) return; setPublicAuthReady(true); flash("目前無法連接雲端，請確認網路後再試一次"); }
+      if (loadingVersion) publicCloudVersionRef.current = loadingVersion;
+    } catch { if (attempt !== publicLoginAttemptRef.current) return; setPublicAuthReady(true); if (!options?.quiet) flash("目前無法連接雲端，請確認網路後再試一次"); }
   };
+  // 手機主畫面捷徑回到前台時，只讀一個雲端時間戳；時間有變才下載完整前台資料。
+  useEffect(() => {
+    if (!(internalView || tab === "public") || !publicUnlocked) return;
+    const checkForPublicUpdate = async () => {
+      if (document.visibilityState === "hidden" || publicVersionCheckBusyRef.current) return;
+      const now = Date.now();
+      if (now - publicVersionCheckAtRef.current < 15000) return;
+      publicVersionCheckAtRef.current = now;
+      publicVersionCheckBusyRef.current = true;
+      try {
+        const remoteVersion = await fetchPublicCloudVersion();
+        const loadedVersion = publicCloudVersionRef.current;
+        if (!loadedVersion) { publicCloudVersionRef.current = remoteVersion; return; }
+        if (!remoteVersion || remoteVersion === loadedVersion) return;
+        const remembered = JSON.parse(localStorage.getItem("case-file-public-daily-login") || "null") as { nationalId?: string } | null;
+        if (!remembered?.nationalId) return;
+        await unlock(remembered.nationalId, { preserveScope: true, quiet: true, cloudVersion: remoteVersion });
+      } catch {
+        // 版本檢查失敗時保留目前畫面，不登出也不重複下載完整資料。
+      } finally {
+        publicVersionCheckBusyRef.current = false;
+      }
+    };
+    const checkWhenVisible = () => { if (document.visibilityState !== "hidden") void checkForPublicUpdate(); };
+    window.addEventListener("focus", checkWhenVisible);
+    window.addEventListener("pageshow", checkWhenVisible);
+    document.addEventListener("visibilitychange", checkWhenVisible);
+    return () => {
+      window.removeEventListener("focus", checkWhenVisible);
+      window.removeEventListener("pageshow", checkWhenVisible);
+      document.removeEventListener("visibilitychange", checkWhenVisible);
+    };
+  }, [internalView, tab, publicUnlocked]);
   const publicPerson = settings.personnel.find(p => p.id === publicPersonId);
   const publicHasAllGroupAccess = publicInventoryGroups.some(group => group.members.some(member => member.personId === publicPersonId && member.role === "全部組別"));
   const publicLeaderGroup = publicHasAllGroupAccess
@@ -2563,7 +2611,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V297</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V298</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>

@@ -42674,6 +42674,9 @@ ${String(ex)}`);
     const [publicUnlocked, setPublicUnlocked] = (0, import_react.useState)(false);
     const [publicAuthReady, setPublicAuthReady] = (0, import_react.useState)(() => !internalView);
     const publicLoginAttemptRef = (0, import_react.useRef)(0);
+    const publicCloudVersionRef = (0, import_react.useRef)("");
+    const publicVersionCheckAtRef = (0, import_react.useRef)(0);
+    const publicVersionCheckBusyRef = (0, import_react.useRef)(false);
     const [publicPersonId, setPublicPersonId] = (0, import_react.useState)("");
     const [publicInventoryGroups, setPublicInventoryGroups] = (0, import_react.useState)([]);
     const [publicLoginLeaderGroup, setPublicLoginLeaderGroup] = (0, import_react.useState)(null);
@@ -44663,7 +44666,16 @@ ${changedLabels}
         button.remove();
       };
     }, [internalView, tab, publicUnlocked]);
-    const unlock = async (requestedId) => {
+    const fetchPublicCloudVersion = async () => {
+      const response = await fetch(`${CASE_FILE_SUPABASE_URL}/rest/v1/rpc/case_file_front_version`, {
+        method: "POST",
+        headers: { apikey: CASE_FILE_SUPABASE_PUBLISHABLE_KEY, "Content-Type": "application/json" },
+        body: "{}"
+      });
+      if (!response.ok) throw new Error("front version check failed");
+      return String(await response.json() || "");
+    };
+    const unlock = async (requestedId, options) => {
       const attempt = ++publicLoginAttemptRef.current;
       const restoring = typeof requestedId === "string";
       const normalizeLoginId = (value = "") => String(value ?? "").trim().replace(/\s+/g, "").toUpperCase();
@@ -44674,6 +44686,13 @@ ${changedLabels}
         return flash("\u8ACB\u8F38\u5165\u8EAB\u5206\u8B49\u5B57\u865F");
       }
       try {
+        let loadingVersion = options?.cloudVersion || "";
+        if (!loadingVersion) {
+          try {
+            loadingVersion = await fetchPublicCloudVersion();
+          } catch {
+          }
+        }
         const response = await fetch(`${CASE_FILE_SUPABASE_URL}/rest/v1/rpc/case_file_front_login`, { method: "POST", headers: { apikey: CASE_FILE_SUPABASE_PUBLISHABLE_KEY, "Content-Type": "application/json" }, body: JSON.stringify({ p_national_id: loginId }) });
         const data = await response.json();
         if (attempt !== publicLoginAttemptRef.current) return;
@@ -44692,17 +44711,54 @@ ${changedLabels}
         setPublicLoginLeaderGroup(data.leaderGroup && typeof data.leaderGroup === "object" ? data.leaderGroup : loginGroups.find((group) => group.members.some((member) => member.personId === data.personId && member.role === "\u7D44\u9577")) || null);
         setSettings((previous) => ({ ...previous, personnel: mergeSuppliedPersonnel(nextPeople), ...Array.isArray(data.inventoryGroups) ? { inventoryGroups: data.inventoryGroups } : {} }));
         setPublicPersonId(data.personId);
-        setPublicScope("mine");
+        if (!options?.preserveScope) setPublicScope("mine");
         setPublicUnlocked(true);
         setPublicAuthReady(true);
         rememberPublicLogin(data.personId, loginId);
         setPassword("");
+        if (loadingVersion) publicCloudVersionRef.current = loadingVersion;
       } catch {
         if (attempt !== publicLoginAttemptRef.current) return;
         setPublicAuthReady(true);
-        flash("\u76EE\u524D\u7121\u6CD5\u9023\u63A5\u96F2\u7AEF\uFF0C\u8ACB\u78BA\u8A8D\u7DB2\u8DEF\u5F8C\u518D\u8A66\u4E00\u6B21");
+        if (!options?.quiet) flash("\u76EE\u524D\u7121\u6CD5\u9023\u63A5\u96F2\u7AEF\uFF0C\u8ACB\u78BA\u8A8D\u7DB2\u8DEF\u5F8C\u518D\u8A66\u4E00\u6B21");
       }
     };
+    (0, import_react.useEffect)(() => {
+      if (!(internalView || tab === "public") || !publicUnlocked) return;
+      const checkForPublicUpdate = async () => {
+        if (document.visibilityState === "hidden" || publicVersionCheckBusyRef.current) return;
+        const now = Date.now();
+        if (now - publicVersionCheckAtRef.current < 15e3) return;
+        publicVersionCheckAtRef.current = now;
+        publicVersionCheckBusyRef.current = true;
+        try {
+          const remoteVersion = await fetchPublicCloudVersion();
+          const loadedVersion = publicCloudVersionRef.current;
+          if (!loadedVersion) {
+            publicCloudVersionRef.current = remoteVersion;
+            return;
+          }
+          if (!remoteVersion || remoteVersion === loadedVersion) return;
+          const remembered = JSON.parse(localStorage.getItem("case-file-public-daily-login") || "null");
+          if (!remembered?.nationalId) return;
+          await unlock(remembered.nationalId, { preserveScope: true, quiet: true, cloudVersion: remoteVersion });
+        } catch {
+        } finally {
+          publicVersionCheckBusyRef.current = false;
+        }
+      };
+      const checkWhenVisible = () => {
+        if (document.visibilityState !== "hidden") void checkForPublicUpdate();
+      };
+      window.addEventListener("focus", checkWhenVisible);
+      window.addEventListener("pageshow", checkWhenVisible);
+      document.addEventListener("visibilitychange", checkWhenVisible);
+      return () => {
+        window.removeEventListener("focus", checkWhenVisible);
+        window.removeEventListener("pageshow", checkWhenVisible);
+        document.removeEventListener("visibilitychange", checkWhenVisible);
+      };
+    }, [internalView, tab, publicUnlocked]);
     const publicPerson = settings.personnel.find((p) => p.id === publicPersonId);
     const publicHasAllGroupAccess = publicInventoryGroups.some((group) => group.members.some((member) => member.personId === publicPersonId && member.role === "\u5168\u90E8\u7D44\u5225"));
     const publicLeaderGroup = publicHasAllGroupAccess ? { id: "D", name: "\u5168\u90E8\u7D44\u5225", members: publicInventoryGroups.flatMap((group) => group.members.map((member) => ({ ...member, role: `${group.id}\u7D44 ${member.role}` }))) } : publicLoginLeaderGroup || publicInventoryGroups.find((group) => group.members.some((member) => member.personId === publicPersonId && member.role === "\u7D44\u9577"));
@@ -44978,7 +45034,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V297" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V298" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
