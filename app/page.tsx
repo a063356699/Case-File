@@ -797,7 +797,7 @@ export default function Home() {
   const [cloudRemoteUpdateAt, setCloudRemoteUpdateAt] = useState("");
   const [cloudUploadState, setCloudUploadState] = useState<"idle" | "uploading" | "complete" | "failed">("idle");
   const [cloudUploadError, setCloudUploadError] = useState("");
-  const [tab, setTab] = useState<"active" | "archive" | "activity" | "inventory" | "tour" | "keys" | "public" | "settings" | "intake">("active");
+  const [tab, setTab] = useState<"active" | "archive" | "activity" | "inventory" | "tour" | "keys" | "public" | "settings" | "contacts" | "intake">("active");
   const [query, setQuery] = useState("");
   const [archiveQuery, setArchiveQuery] = useState("");
   const [missingDataReminderOpen, setMissingDataReminderOpen] = useState(false);
@@ -2494,7 +2494,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V263</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V264</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -2505,6 +2505,7 @@ export default function Home() {
       <button className={tab === "intake" ? "active" : ""} onClick={() => { setTab("intake"); selectIntakeDraft(""); }}>進案草稿{intakeDrafts.filter(draft => !draft.enteredAt).length > 0 && <b className="intake-draft-nav-count">{intakeDrafts.filter(draft => !draft.enteredAt).length}</b>}</button>
       <button className={tab === "public" ? "active" : ""} onClick={openPublic}>前台總表</button>
       <button className={tab === "settings" ? "active" : ""} onClick={() => setTab("settings")}>設定</button>
+      <button className={tab === "contacts" ? "active" : ""} onClick={() => setTab("contacts")}>通訊錄</button>
       <span className="home-last-modified home-sync-times"><span className="local-modified-line"><b>最後修改:</b><em>{latestModifiedAt ? displayHomeModifiedAt(latestModifiedAt) : "尚無紀錄"}</em></span>{cloudSession?.accessToken && <button type="button" className={`cloud-manual-pull${cloudUpdateAvailable ? " available" : ""}`} title={cloudUpdateAvailable ? `雲端更新時間：${displayHomeModifiedAt(cloudRemoteUpdateAt)}` : "只有按下後才下載完整雲端資料"} onClick={() => void supabasePull(true)}>{cloudUpdateAvailable ? "雲端有新資料－讀取" : "讀取雲端最新資料"}</button>}<span className="cloud-upload-line" title={cloudUploadError || undefined}><b>Supabase上傳:</b><em>{cloudLastUploadAt ? displayHomeModifiedAt(cloudLastUploadAt) : "尚無紀錄"}<i className={`cloud-upload-state ${cloudUploadStatus === "上傳完成" ? "complete" : cloudUploadStatus === "上傳中" ? "uploading" : cloudUploadStatus === "上傳失敗" ? "failed" : "signed-out"}`}>{cloudUploadStatus}</i></em></span></span>
       </nav>
     </header>}
@@ -2516,7 +2517,8 @@ export default function Home() {
     {showingPublic && publicUnlocked && publicScope === "mine" && publicPerson && <MonthlyPropertyReport records={myProperties} person={publicPerson} submit={submitMonthlyPropertyReports} holdUntil={publicReportHoldUntil}/>}
     {pptPickerOpen && selectedPptBaseRecords.length > 0 && <aside className="ppt-order-float"><b>調整本次排序</b><small>此順序會保留在本週</small><ol>{selectedPptBaseRecords.map((record, index) => <li key={record.id}><span>{index + 1}. {record.caseName || "未命名案件"}</span><div><button type="button" disabled={index === 0} onClick={() => movePptOrder(record.id, -1)}>↑</button><button type="button" disabled={index === selectedPptBaseRecords.length - 1} onClick={() => movePptOrder(record.id, 1)}>↓</button></div></li>)}</ol></aside>}
 
-    {tab === "settings" ? <SettingsPanel settings={settings} setSettings={setSettings} supabasePush={supabasePush} supabasePull={supabasePull} cloudSession={cloudSession} cloudUploadStatus={cloudUploadStatus} cloudUploadError={cloudUploadError} supabaseSignIn={supabaseSignIn} supabaseSignOut={supabaseSignOut} /> :
+    {tab === "contacts" ? <section className="content admin-contact-page"><ContactDirectory people={contactPeople} printable/></section> :
+    tab === "settings" ? <SettingsPanel settings={settings} setSettings={setSettings} supabasePush={supabasePush} supabasePull={supabasePull} cloudSession={cloudSession} cloudUploadStatus={cloudUploadStatus} cloudUploadError={cloudUploadError} supabaseSignIn={supabaseSignIn} supabaseSignOut={supabaseSignOut} /> :
     tab === "intake" ? <IntakePanel raw={intakeRaw} setRaw={setIntakeRaw} drafts={intakeDrafts} draft={intakeDraft} selectDraft={selectIntakeDraft} deleteDraft={removeIntakeDraft} analyze={analyzeIntake} addManualDraft={addManualIntakeDraft} updateValue={updateIntakeValue} clear={() => setIntakeRaw("")} confirmIntake={confirmIntake} markPrintedForSales={markIntakeDraftPrintedForSales} /> :
     tab === "tour" ? <TourPlanner records={records} drafts={intakeDrafts} items={tourItems} setItems={updateTourItems} history={tourHistory} setHistory={setTourHistory} editRecord={setEditing} updateDraftCaseName={updateIntakeDraftCaseName} tourDate={tourDate} setTourDate={updateTourDate} tourTitle={tourTitle} setTourTitle={updateTourTitle} notify={flash} complete={(date, recordIds, draftIds) => { setRecords(previous => previous.map(record => recordIds.includes(record.id) ? withTrackedUpdate(record, { ...record, groupViewDate: date, updateDate: today() }) : record)); setIntakeDrafts(previous => previous.map(draft => draftIds.includes(draft.id) ? { ...draft, groupViewDate: date } : draft)); updateTourItems([]); flash("團看日期已同步到物件與草稿"); }} /> :
     tab === "activity" ? <DailyActivity records={records} onEdit={setEditing} /> :
@@ -2715,14 +2717,23 @@ function TourPlanner({ records, drafts, items, setItems, history, setHistory, ed
   </>;
 }
 
-function ContactDirectory({ people }: { people: Person[] }) {
+function printContactDirectory(people: Person[]) {
+  const ordered = sortPeopleBySequence(people).slice(0, 33);
+  const escape = (text: string) => text.replace(/[&<>"']/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[character] || character));
+  const cells = (sequence: number) => { const person = ordered[sequence - 1]; return `<td>${sequence}</td><td>${escape(person?.name || "")}</td><td>${escape(person?.phone ? displayPhone(person.phone) : "")}</td>`; };
+  const rows = Array.from({ length: 11 }, (_, row) => `<tr>${[1, 12, 23].map(start => cells(start + row)).join("")}</tr>`).join("");
+  const printWindow = window.open("", "_blank", "width=1200,height=850");
+  if (!printWindow) return alert("瀏覽器阻擋列印視窗，請允許此網站開啟彈出式視窗。");
+  printWindow.document.open();
+  printWindow.document.write(`<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><title>同仁通訊錄</title><style>@page{size:A4 landscape;margin:8mm}*{box-sizing:border-box}html,body{margin:0;background:#fff;color:#17242a;font-family:"Microsoft JhengHei",sans-serif}h1{text-align:center;margin:0 0 5mm;font-size:22pt;letter-spacing:.08em}table{width:100%;border-collapse:collapse;table-layout:fixed}th,td{border:1px solid #7d8983;text-align:center;height:15mm;padding:1.5mm;font-size:13pt}th{height:12mm;background:#e5eee9;color:#35594f;font-weight:800}th:nth-child(3n+1),td:nth-child(3n+1){width:8%}th:nth-child(3n+2),td:nth-child(3n+2){width:11%}th:nth-child(3n),td:nth-child(3n){width:14.33%}</style></head><body><h1>台慶文化崇明店～同仁通訊錄～</h1><table><thead><tr>${[1,12,23].map(() => "<th>序</th><th>姓名</th><th>手機</th>").join("")}</tr></thead><tbody>${rows}</tbody></table><script>window.addEventListener("load",()=>setTimeout(()=>window.print(),150));<\/script></body></html>`);
+  printWindow.document.close();
+}
+
+function ContactDirectory({ people, printable = false }: { people: Person[]; printable?: boolean }) {
   const bySequence = new Map<number, Person>();
-  contactDirectoryOrder.forEach((name, index) => {
-    const person = people.find(item => item.name.trim() === name);
-    if (person) bySequence.set(index + 1, { ...person, sequence: String(index + 1), phone: contactDirectoryPhoneOverrides[name] || person.phone });
-  });
+  sortPeopleBySequence(people).slice(0, 33).forEach((person, index) => bySequence.set(index + 1, { ...person, sequence: String(index + 1), phone: contactDirectoryPhoneOverrides[person.name] || person.phone }));
   const groupStarts = [1, 12, 23];
-  return <section className="contact-directory"><div className="contact-directory-head"><h3>台慶文化崇明店～同仁通訊錄～</h3><button type="button" className="contact-print-button" onClick={() => window.print()}>列印通訊錄</button></div><div className="contact-table-scroll"><table><thead><tr>{groupStarts.map(start => <Fragment key={start}><th>序</th><th>姓名</th><th>手機</th></Fragment>)}</tr></thead><tbody>{Array.from({ length: 11 }, (_, row) => <tr key={row}>{groupStarts.map(start => { const sequence = start + row; const person = bySequence.get(sequence); return <Fragment key={sequence}><td>{sequence}</td><td>{person?.name || ""}</td><td>{person?.phone ? <a href={`tel:${String(person.phone).replace(/\D/g, "")}`}>{displayPhone(person.phone)}</a> : ""}</td></Fragment>; })}</tr>)}</tbody></table></div></section>;
+  return <section className="contact-directory"><div className="contact-directory-head"><h3>台慶文化崇明店～同仁通訊錄～</h3>{printable && <button type="button" className="contact-print-button" onClick={() => printContactDirectory(people)}>列印通訊錄</button>}</div><div className="contact-table-scroll"><table><thead><tr>{groupStarts.map(start => <Fragment key={start}><th>序</th><th>姓名</th><th>手機</th></Fragment>)}</tr></thead><tbody>{Array.from({ length: 11 }, (_, row) => <tr key={row}>{groupStarts.map(start => { const sequence = start + row; const person = bySequence.get(sequence); return <Fragment key={sequence}><td>{sequence}</td><td>{person?.name || ""}</td><td>{person?.phone ? <a href={`tel:${String(person.phone).replace(/\D/g, "")}`}>{displayPhone(person.phone)}</a> : ""}</td></Fragment>; })}</tr>)}</tbody></table></div></section>;
 }
 
 const intakeDraftStamp = (draft: IntakeData) => Date.parse(draft.modifiedAt || draft.createdAt || "") || 0;

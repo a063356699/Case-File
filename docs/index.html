@@ -44849,7 +44849,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V263" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V264" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -44908,6 +44908,7 @@ ${changedLabels}
           ] }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: tab === "public" ? "active" : "", onClick: openPublic, children: "\u524D\u53F0\u7E3D\u8868" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: tab === "settings" ? "active" : "", onClick: () => setTab("settings"), children: "\u8A2D\u5B9A" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: tab === "contacts" ? "active" : "", onClick: () => setTab("contacts"), children: "\u901A\u8A0A\u9304" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "home-last-modified home-sync-times", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "local-modified-line", children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u6700\u5F8C\u4FEE\u6539:" }),
@@ -44953,7 +44954,7 @@ ${changedLabels}
           ] })
         ] }, record.id)) })
       ] }),
-      tab === "settings" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SettingsPanel, { settings, setSettings, supabasePush, supabasePull, cloudSession, cloudUploadStatus, cloudUploadError, supabaseSignIn, supabaseSignOut }) : tab === "intake" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(IntakePanel, { raw: intakeRaw, setRaw: setIntakeRaw, drafts: intakeDrafts, draft: intakeDraft, selectDraft: selectIntakeDraft, deleteDraft: removeIntakeDraft, analyze: analyzeIntake, addManualDraft: addManualIntakeDraft, updateValue: updateIntakeValue, clear: () => setIntakeRaw(""), confirmIntake, markPrintedForSales: markIntakeDraftPrintedForSales }) : tab === "tour" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TourPlanner, { records, drafts: intakeDrafts, items: tourItems, setItems: updateTourItems, history: tourHistory, setHistory: setTourHistory, editRecord: setEditing, updateDraftCaseName: updateIntakeDraftCaseName, tourDate, setTourDate: updateTourDate, tourTitle, setTourTitle: updateTourTitle, notify: flash, complete: (date, recordIds, draftIds) => {
+      tab === "contacts" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("section", { className: "content admin-contact-page", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ContactDirectory, { people: contactPeople, printable: true }) }) : tab === "settings" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SettingsPanel, { settings, setSettings, supabasePush, supabasePull, cloudSession, cloudUploadStatus, cloudUploadError, supabaseSignIn, supabaseSignOut }) : tab === "intake" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(IntakePanel, { raw: intakeRaw, setRaw: setIntakeRaw, drafts: intakeDrafts, draft: intakeDraft, selectDraft: selectIntakeDraft, deleteDraft: removeIntakeDraft, analyze: analyzeIntake, addManualDraft: addManualIntakeDraft, updateValue: updateIntakeValue, clear: () => setIntakeRaw(""), confirmIntake, markPrintedForSales: markIntakeDraftPrintedForSales }) : tab === "tour" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TourPlanner, { records, drafts: intakeDrafts, items: tourItems, setItems: updateTourItems, history: tourHistory, setHistory: setTourHistory, editRecord: setEditing, updateDraftCaseName: updateIntakeDraftCaseName, tourDate, setTourDate: updateTourDate, tourTitle, setTourTitle: updateTourTitle, notify: flash, complete: (date, recordIds, draftIds) => {
         setRecords((previous) => previous.map((record) => recordIds.includes(record.id) ? withTrackedUpdate(record, { ...record, groupViewDate: date, updateDate: today() }) : record));
         setIntakeDrafts((previous) => previous.map((draft) => draftIds.includes(draft.id) ? { ...draft, groupViewDate: date } : draft));
         updateTourItems([]);
@@ -46333,17 +46334,28 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       ] }) })
     ] });
   }
-  function ContactDirectory({ people }) {
+  function printContactDirectory(people) {
+    const ordered = sortPeopleBySequence(people).slice(0, 33);
+    const escape = (text) => text.replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character] || character);
+    const cells = (sequence) => {
+      const person = ordered[sequence - 1];
+      return `<td>${sequence}</td><td>${escape(person?.name || "")}</td><td>${escape(person?.phone ? displayPhone(person.phone) : "")}</td>`;
+    };
+    const rows = Array.from({ length: 11 }, (_, row) => `<tr>${[1, 12, 23].map((start) => cells(start + row)).join("")}</tr>`).join("");
+    const printWindow = window.open("", "_blank", "width=1200,height=850");
+    if (!printWindow) return alert("\u700F\u89BD\u5668\u963B\u64CB\u5217\u5370\u8996\u7A97\uFF0C\u8ACB\u5141\u8A31\u6B64\u7DB2\u7AD9\u958B\u555F\u5F48\u51FA\u5F0F\u8996\u7A97\u3002");
+    printWindow.document.open();
+    printWindow.document.write(`<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><title>\u540C\u4EC1\u901A\u8A0A\u9304</title><style>@page{size:A4 landscape;margin:8mm}*{box-sizing:border-box}html,body{margin:0;background:#fff;color:#17242a;font-family:"Microsoft JhengHei",sans-serif}h1{text-align:center;margin:0 0 5mm;font-size:22pt;letter-spacing:.08em}table{width:100%;border-collapse:collapse;table-layout:fixed}th,td{border:1px solid #7d8983;text-align:center;height:15mm;padding:1.5mm;font-size:13pt}th{height:12mm;background:#e5eee9;color:#35594f;font-weight:800}th:nth-child(3n+1),td:nth-child(3n+1){width:8%}th:nth-child(3n+2),td:nth-child(3n+2){width:11%}th:nth-child(3n),td:nth-child(3n){width:14.33%}</style></head><body><h1>\u53F0\u6176\u6587\u5316\u5D07\u660E\u5E97\uFF5E\u540C\u4EC1\u901A\u8A0A\u9304\uFF5E</h1><table><thead><tr>${[1, 12, 23].map(() => "<th>\u5E8F</th><th>\u59D3\u540D</th><th>\u624B\u6A5F</th>").join("")}</tr></thead><tbody>${rows}</tbody></table><script>window.addEventListener("load",()=>setTimeout(()=>window.print(),150));<\/script></body></html>`);
+    printWindow.document.close();
+  }
+  function ContactDirectory({ people, printable = false }) {
     const bySequence = /* @__PURE__ */ new Map();
-    contactDirectoryOrder.forEach((name, index) => {
-      const person = people.find((item) => item.name.trim() === name);
-      if (person) bySequence.set(index + 1, { ...person, sequence: String(index + 1), phone: contactDirectoryPhoneOverrides[name] || person.phone });
-    });
+    sortPeopleBySequence(people).slice(0, 33).forEach((person, index) => bySequence.set(index + 1, { ...person, sequence: String(index + 1), phone: contactDirectoryPhoneOverrides[person.name] || person.phone }));
     const groupStarts = [1, 12, 23];
     return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", { className: "contact-directory", children: [
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "contact-directory-head", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { children: "\u53F0\u6176\u6587\u5316\u5D07\u660E\u5E97\uFF5E\u540C\u4EC1\u901A\u8A0A\u9304\uFF5E" }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: "contact-print-button", onClick: () => window.print(), children: "\u5217\u5370\u901A\u8A0A\u9304" })
+        printable && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: "contact-print-button", onClick: () => printContactDirectory(people), children: "\u5217\u5370\u901A\u8A0A\u9304" })
       ] }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "contact-table-scroll", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("table", { children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("thead", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("tr", { children: groupStarts.map((start) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_react.Fragment, { children: [
