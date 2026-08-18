@@ -1656,6 +1656,7 @@ body{background:#f8fbfe!important;color:#405064!important}
 .combined-inventory-panel td.monthly-stat-cell{overflow:hidden}.combined-inventory-panel td.monthly-stat-cell .inventory-category-summary{max-width:100%;flex-wrap:wrap;white-space:normal;overflow-wrap:anywhere;word-break:break-word}.combined-inventory-panel td.monthly-stat-cell .inventory-category-summary>span{display:block;max-width:100%;white-space:normal;line-height:1.35;text-align:center}.combined-inventory-panel .monthly-stat-subhead{white-space:normal;line-height:1.25}
 .leader-team-head-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}.leader-team-head-actions button{padding:7px 11px;border:1px solid #8db4a7;border-radius:10px;background:#eff8f5;color:#286451;font-weight:850}.leader-team-head-actions span{padding:7px 12px;border-radius:999px;background:#eef4f2;color:#587069;font-weight:800}.leader-detail-button{min-width:64px!important}.leader-detail-button:not(:disabled){cursor:pointer}.leader-detail-button:not(:disabled):hover{filter:brightness(.96)}.leader-sort-button{padding:3px 7px;border:0;background:transparent;color:inherit;font:inherit;font-weight:900;cursor:pointer}.leader-sort-button b{display:inline-block;min-width:16px;color:var(--team-color);font-size:16px}@media(max-width:760px){.leader-team-overview>header{align-items:flex-start;gap:10px}.leader-team-head-actions{max-width:220px}.leader-team-head-actions button{font-size:12px;padding:6px 8px}}
 .leader-team-overview>header>div:first-child:not(.leader-team-head-actions),.leader-team-head-actions>span{display:none!important}.leader-team-overview>header{justify-content:flex-end}
+.leader-detail-row.combined .leader-monthly-detail-cell{vertical-align:top;background:#fff9ef}.leader-detail-row.combined .leader-stock-detail-cell{vertical-align:top;background:#f0fafb}.leader-detail-row.combined>td:empty{background:#fff}.leader-detail-row.combined .leader-case-list>div{grid-template-columns:minmax(150px,1fr) minmax(180px,1.25fr) auto}@media(max-width:900px){.leader-detail-row.combined .leader-case-list>div{grid-template-columns:1fr auto}.leader-detail-row.combined .leader-case-list small{grid-column:1 / -1}}
 </style>
 </head>
 <body>
@@ -44965,7 +44966,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V285" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V286" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -49683,17 +49684,15 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       return names.includes(name) ? 1 / names.length : 0;
     };
     const numberText = (value) => Number.isInteger(value) ? String(value) : value.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
-    const currentMonth = today().slice(0, 7);
-    const monthlyRecords = records.filter((record) => normalizeDateInput(record.reportDate).slice(0, 7) === currentMonth);
+    const monthlyRecords = records.filter((record) => normalizeDateInput(record.reportDate).slice(0, 7) === today().slice(0, 7));
     const activeRecords = records.filter((record) => !record.archived && !isExpired(record) && (record.status || "\u59D4\u8A17\u4E2D") === "\u59D4\u8A17\u4E2D");
     const rows = group.members.map((member) => {
-      const person = peopleById.get(member.personId);
-      const name = person?.name || "";
+      const name = peopleById.get(member.personId)?.name || "";
       return { member, name, monthly: monthlyRecords.reduce((sum, record) => sum + weightFor(record, name), 0), stock: activeRecords.reduce((sum, record) => sum + weightFor(record, name), 0) };
     }).filter((row) => row.name);
     const detailItems = (items, name) => items.map((record) => ({ record, weight: weightFor(record, name) })).filter((item) => item.weight > 0);
     const sortedRows = [...rows].sort((left, right) => {
-      const difference = left[teamSort.key] - right[teamSort.key];
+      const difference = teamSort.key === "name" ? left.name.localeCompare(right.name, "zh-TW") : teamSort.key === "role" ? left.member.role.localeCompare(right.member.role, "zh-TW") || left.name.localeCompare(right.name, "zh-TW") : left[teamSort.key] - right[teamSort.key];
       return (teamSort.direction === "asc" ? difference : -difference) || left.name.localeCompare(right.name, "zh-TW");
     });
     const changeTeamSort = (key) => setTeamSort((current) => ({ key, direction: current.key === key && current.direction === "desc" ? "asc" : "desc" }));
@@ -49702,24 +49701,19 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     const allMonthlyExpanded = monthlyExpandableIds.length > 0 && monthlyExpandableIds.every((id) => monthlyDetailPersonIds.includes(id));
     const allStockExpanded = stockExpandableIds.length > 0 && stockExpandableIds.every((id) => stockDetailPersonIds.includes(id));
     const toggleId = (ids, id) => ids.includes(id) ? ids.filter((value) => value !== id) : [...ids, id];
+    const caseList = (items, name, prefix) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "leader-case-list", children: detailItems(items, name).map(({ record, weight }) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: record.caseName || "\u672A\u547D\u540D\u6848\u4EF6" }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: record.address || "\u2014" }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("strong", { children: [
+        numberText(weight),
+        "\u4EF6"
+      ] })
+    ] }, `${prefix}-${record.id}`)) });
     return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", { className: `leader-team-overview group-${group.id.toLowerCase()}`, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { children: [
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { children: [
-            group.id,
-            "\u7D44"
-          ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h3", { children: [
-            group.name || `${group.id}\u7D44`,
-            "\u76EE\u524D\u72C0\u6CC1"
-          ] })
-        ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "leader-team-head-actions", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", onClick: () => setMonthlyDetailPersonIds(allMonthlyExpanded ? [] : monthlyExpandableIds), children: allMonthlyExpanded ? "\u6536\u5408\u672C\u6708\u9032\u6848\u660E\u7D30" : "\u5C55\u958B\u672C\u6708\u9032\u6848\u660E\u7D30" }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", onClick: () => setStockDetailPersonIds(allStockExpanded ? [] : stockExpandableIds), children: allStockExpanded ? "\u6536\u5408\u5EAB\u5B58\u660E\u7D30" : "\u5C55\u958B\u5EAB\u5B58\u660E\u7D30" }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u50C5\u7D44\u9577\u53EF\u67E5\u770B" })
-        ] })
-      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("header", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "leader-team-head-actions", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", onClick: () => setMonthlyDetailPersonIds(allMonthlyExpanded ? [] : monthlyExpandableIds), children: allMonthlyExpanded ? "\u6536\u5408\u672C\u6708\u9032\u6848\u660E\u7D30" : "\u5C55\u958B\u672C\u6708\u9032\u6848\u660E\u7D30" }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", onClick: () => setStockDetailPersonIds(allStockExpanded ? [] : stockExpandableIds), children: allStockExpanded ? "\u6536\u5408\u5EAB\u5B58\u660E\u7D30" : "\u5C55\u958B\u5EAB\u5B58\u660E\u7D30" })
+      ] }) }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "leader-team-summary", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: rows.length }),
@@ -49736,8 +49730,14 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       ] }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "leader-team-table-wrap", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("table", { children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("thead", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "\u4EBA\u54E1" }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "\u8EAB\u5206" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { type: "button", className: "leader-sort-button", onClick: () => changeTeamSort("name"), children: [
+            "\u4EBA\u54E1 ",
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: teamSort.key === "name" ? teamSort.direction === "desc" ? "\u2193" : "\u2191" : "\u2195" })
+          ] }) }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { type: "button", className: "leader-sort-button", onClick: () => changeTeamSort("role"), children: [
+            "\u8EAB\u5206 ",
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: teamSort.key === "role" ? teamSort.direction === "desc" ? "\u2193" : "\u2191" : "\u2195" })
+          ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { type: "button", className: "leader-sort-button", onClick: () => changeTeamSort("monthly"), children: [
             "\u672C\u6708\u9032\u6848 ",
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: teamSort.key === "monthly" ? teamSort.direction === "desc" ? "\u2193" : "\u2191" : "\u2195" })
@@ -49747,49 +49747,34 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: teamSort.key === "stock" ? teamSort.direction === "desc" ? "\u2193" : "\u2191" : "\u2195" })
           ] }) })
         ] }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("tbody", { children: sortedRows.map((row) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_react.Fragment, { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: row.name }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: row.member.role }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: "leader-detail-button monthly", disabled: !row.monthly, onClick: () => setMonthlyDetailPersonIds((ids) => toggleId(ids, row.member.personId)), children: numberText(row.monthly) }) }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: "leader-detail-button stock", disabled: !row.stock, onClick: () => setStockDetailPersonIds((ids) => toggleId(ids, row.member.personId)), children: numberText(row.stock) }) })
-          ] }),
-          monthlyDetailPersonIds.includes(row.member.personId) && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { className: "leader-detail-row monthly", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { colSpan: 2 }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("td", { children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("b", { children: [
-                row.name,
-                "\u3000\u672C\u6708\u9032\u6848\u660E\u7D30"
-              ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "leader-case-list", children: detailItems(monthlyRecords, row.name).map(({ record, weight }) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: record.caseName || "\u672A\u547D\u540D\u6848\u4EF6" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: record.address || "\u2014" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("strong", { children: [
-                  numberText(weight),
-                  "\u4EF6"
-                ] })
-              ] }, `leader-month-${record.id}`)) })
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("tbody", { children: sortedRows.map((row) => {
+          const monthlyOpen = monthlyDetailPersonIds.includes(row.member.personId), stockOpen = stockDetailPersonIds.includes(row.member.personId);
+          return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_react.Fragment, { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: row.name }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: row.member.role }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: "leader-detail-button monthly", disabled: !row.monthly, onClick: () => setMonthlyDetailPersonIds((ids) => toggleId(ids, row.member.personId)), children: numberText(row.monthly) }) }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: "leader-detail-button stock", disabled: !row.stock, onClick: () => setStockDetailPersonIds((ids) => toggleId(ids, row.member.personId)), children: numberText(row.stock) }) })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", {})
-          ] }),
-          stockDetailPersonIds.includes(row.member.personId) && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { className: "leader-detail-row stock", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { colSpan: 3 }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("td", { children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("b", { children: [
-                row.name,
-                "\u3000\u76EE\u524D\u5EAB\u5B58\u660E\u7D30"
-              ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "leader-case-list", children: detailItems(activeRecords, row.name).map(({ record, weight }) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: record.caseName || "\u672A\u547D\u540D\u6848\u4EF6" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: record.address || "\u2014" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("strong", { children: [
-                  numberText(weight),
-                  "\u4EF6"
-                ] })
-              ] }, `leader-stock-${record.id}`)) })
+            (monthlyOpen || stockOpen) && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { className: "leader-detail-row combined", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { colSpan: 2 }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { className: "leader-monthly-detail-cell", children: monthlyOpen && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("b", { children: [
+                  row.name,
+                  "\u3000\u672C\u6708\u9032\u6848\u660E\u7D30"
+                ] }),
+                caseList(monthlyRecords, row.name, "leader-month")
+              ] }) }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { className: "leader-stock-detail-cell", children: stockOpen && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("b", { children: [
+                  row.name,
+                  "\u3000\u76EE\u524D\u5EAB\u5B58\u660E\u7D30"
+                ] }),
+                caseList(activeRecords, row.name, "leader-stock")
+              ] }) })
             ] })
-          ] })
-        ] }, row.member.personId)) })
+          ] }, row.member.personId);
+        }) })
       ] }) })
     ] });
   }
