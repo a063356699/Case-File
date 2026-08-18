@@ -44832,7 +44832,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V252" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V253" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -44952,7 +44952,7 @@ ${changedLabels}
             "\u767B\u9304\u4EBA\u54E1\uFF1A",
             publicPerson?.name || "\u696D\u52D9\u4EBA\u54E1"
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", { children: publicScope === "activity" ? "\u6BCF\u65E5\u7269\u4EF6\u52D5\u614B" : publicScope === "mine" ? "\u6211\u7684\u7269\u4EF6" : publicScope === "contacts" ? "\u901A\u8A0A\u9304" : "\u7269\u4EF6\u7E3D\u8868" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", { children: publicScope === "activity" ? "\u6BCF\u65E5\u7269\u4EF6\u52D5\u614B" : publicScope === "mine" ? "\u6211\u7684\u7269\u4EF6" : publicScope === "contacts" ? `\u901A\u8A0A\u9304 ${contactPeople.length}` : "\u7269\u4EF6\u7E3D\u8868" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "scope-tabs", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: publicScope === "activity" ? "selected" : "", onClick: () => setPublicScope("activity"), children: "\u6BCF\u65E5\u7269\u4EF6\u52D5\u614B" }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { className: publicScope === "mine" ? "selected" : "", onClick: () => setPublicScope("mine"), children: [
@@ -44963,7 +44963,10 @@ ${changedLabels}
               "\u7269\u4EF6\u7E3D\u8868 ",
               active.length
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: publicScope === "contacts" ? "selected" : "", onClick: () => setPublicScope("contacts"), children: "\u901A\u8A0A\u9304" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { className: publicScope === "contacts" ? "selected" : "", onClick: () => setPublicScope("contacts"), children: [
+              "\u901A\u8A0A\u9304 ",
+              contactPeople.length
+            ] })
           ] })
         ] }) }),
         publicScope === "mine" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "public-expiry-filters", children: [
