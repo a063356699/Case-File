@@ -1514,7 +1514,7 @@ body{background:#f8fbfe!important;color:#405064!important}
 .topbar-row .brand h1{display:block!important;margin:0!important;color:#304d69!important;font-size:23px!important;line-height:1.2!important;letter-spacing:.04em!important;white-space:nowrap!important}
 .topbar-row .header-actions{display:flex!important;flex:0 1 auto!important;min-width:0!important;align-items:center!important;justify-content:flex-end!important;gap:9px!important;flex-wrap:nowrap!important;overflow-x:auto!important;padding:0!important;position:static!important}
 .topbar-row .header-actions>*{flex:0 0 auto!important}.topbar-row .header-actions button,.topbar-row .header-actions .file-button{white-space:nowrap!important}
-.topbar>.nav{display:flex!important;grid-column:auto!important;grid-row:auto!important;order:initial!important;width:100%!important;min-width:0!important;height:42px!important;min-height:42px!important;margin:0!important;padding:0 20px!important;align-items:center!important;justify-content:flex-start!important;gap:8px!important;overflow-x:auto!important;white-space:nowrap!important;background:#fff!important;border:0!important;pointer-events:auto!important}
+.topbar>.nav{display:flex!important;grid-column:auto!important;grid-row:auto!important;order:initial!important;width:100%!important;min-width:0!important;height:42px!important;min-height:42px!important;margin:0!important;padding:0 20px!important;align-items:center!important;justify-content:flex-start!important;gap:8px!important;overflow-x:auto!important;overflow-y:hidden!important;white-space:nowrap!important;background:#fff!important;border:0!important;pointer-events:auto!important}
 .topbar>.nav .home-last-modified{position:static!important;display:inline-flex!important;flex:none!important;align-items:center!important;height:auto!important;margin:0 0 0 auto!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;color:#1769aa!important;font-size:13px!important;font-weight:700!important;line-height:1.2!important;white-space:nowrap!important}
 .book-review-confirm{display:inline-flex;align-items:center;justify-content:flex-end;gap:7px}.book-review-confirm button{padding:4px 8px!important;font-size:12px!important;line-height:1.2!important;white-space:nowrap}
 /* 首頁功能按鈕用色區分，方便一眼辨識。 */
@@ -1617,7 +1617,7 @@ body{background:#f8fbfe!important;color:#405064!important}
 .topbar>.nav .home-sync-times .cloud-upload-line>em{grid-column:2;grid-row:2}
 .topbar>.nav .home-sync-times>span>b,.topbar>.nav .home-sync-times>span>em{font-size:15px!important;line-height:1.05!important;text-align:right!important;white-space:nowrap!important}
 .topbar>.nav .home-sync-times>span>em{text-align:left!important}
-.topbar>.nav .home-sync-times .cloud-manual-pull{grid-column:3;grid-row:1}
+.topbar>.nav .home-sync-times .cloud-manual-pull{grid-column:3;grid-row:1 / 3;align-self:center!important;justify-self:start!important;margin-left:4px!important}
 .archive-list-page>.table-wrap{max-height:none!important;overflow-x:auto!important;overflow-y:visible!important}
 .archive-list-page th.col-propertyNo,.archive-list-page td.col-propertyNo,.archive-list-page .sticky-0{width:76px!important;min-width:76px!important;max-width:76px!important;padding-left:3px!important;padding-right:3px!important;white-space:nowrap!important}
 .archive-list-page .sticky-1{left:76px!important}
