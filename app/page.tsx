@@ -494,6 +494,13 @@ const applySourceLayoutFixes = (records: RecordItem[]) => records.map(record => 
 });
 const daysUntil = (date = "") => validDate(date) && date ? Math.ceil((Date.parse(`${date}T00:00:00`) - Date.parse(`${today()}T00:00:00`)) / 86400000) : 99999;
 const nextDate = (date = "") => { const normalized = normalizeDateInput(date); if (!validDate(normalized)) return today(); const value = new Date(`${normalized}T00:00:00`); value.setDate(value.getDate() + 1); return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(value.getDate()).padStart(2, "0")}`; };
+const intakeEntrustPeriod = (startValue = "", endValue = "") => {
+  const start = normalizeDateInput(String(startValue || "")); const end = normalizeDateInput(String(endValue || ""));
+  if (!validDate(start) || !validDate(end)) return "";
+  const [startYear, startMonth, startDay] = start.split("-").map(Number); const [endYear, endMonth, endDay] = end.split("-").map(Number);
+  const months = Math.max(1, (endYear - startYear) * 12 + endMonth - startMonth + (endDay >= startDay ? 1 : 0));
+  return `${displayRocDate(start)}~${displayRocDate(end)} 共${months}個月`;
+};
 const activeGroupKey = (record: RecordItem) => {
   const address = String(record.address || "").replace(/臺/g, "台").trim();
   const area = String(record.area || "").replace(/臺/g, "台").trim();
@@ -2456,7 +2463,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V248</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V249</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -3811,17 +3818,18 @@ function ChecklistPageV2({ val }: { val: (...keys: string[]) => string }) {
     </div>
     <ol className="check-list" start={3}>
       <li><b>中人</b>　□無，□有介紹人：____________元</li>
+      <li className="check-entrust-period"><b>委託時間業務填寫</b>：{intakeEntrustPeriod(val("委託開始 日期", "委託開始"), val("委託結束 日期", "委託結束")) || "____________~____________ 共____個月"}</li>
       <li className="note-item"><span><b>地號謄本</b>×_____筆　□紙本已附件　□曾經調閱請列印　□未調閱，請助理協助</span><span className="note-line">備註：____________________________________________________________</span></li>
       <li className="note-item"><span><b>建號謄本</b>×_____筆　□紙本已附件　□曾經調閱請列印　□未調閱，請助理協助</span><span className="note-line">備註：____________________________________________________________</span></li>
-      <li><b>地籍圖</b>　□大樓：無須調　房屋／土地（□紙本已附件　□曾經調閱請列印　□未調閱）</li>
-      <li><b>成果圖</b>　□土地：無須調　有建號（□紙本已附件　□曾經調閱請列印　□未調閱）</li>
+      <li><b>地籍圖</b>　□大樓：無須調　|　房屋／土地（□紙本已附件　□曾經調閱請列印　□未調閱）</li>
+      <li><b>成果圖</b>　□土地：無須調　|　有建號（□紙本已附件　□曾經調閱請列印　□未調閱）</li>
       <li>檢查□ 委託人（賣方）- <b>說明書 是否已簽名</b></li>
       <li>檢查□ 委託人（賣方）- <b>個資法 是否已簽名</b></li>
       <li><b>建物權狀</b>共____張　□已附紙本　◆已傳_____LINE 請列印　◆賣方沒給開發寫無權狀切結□已附上</li>
       <li><b>土地權狀</b>共____張　□已附紙本　◆已傳_____LINE 請列印　◆賣方沒給開發寫無權狀切結□已附上</li>
     </ol>
-    <div className="check-columns"><div><p className="column-heading"><b>12. 委託契約：</b>檢查是否有填寫</p><p>□ (1).　委託日期</p><p>□ (2).　廣告開價</p><p>□ (3).　承辦人開發簽名</p><p>□ (4).　契約現況勾選</p><b>13. 檢查□勾選委託主約 P2：是否一年內取得</b></div><div><p className="column-heading"><b>14. 賣方資訊：</b>檢查是否有填寫</p><div className="seller-info-columns"><div><p>□ (1).　委託人簽名</p><p>□ (2).　賣方 ID</p><p>□ (3).　賣方生日</p><p>□ (4).　賣方地址</p><p>□ (5).　賣方電話</p></div><div><p>□ (1).　代理人簽名</p><p>□ (2).　賣方 ID</p><p>□ (3).　代理人生日</p><p>□ (4).　代理人地址</p><p>□ (5).　代理人電話</p></div></div></div></div>
-    <div className="check-tail"><p><b>15. 契變：</b>　□進案「無」契變<br/>　　　　　　□進案【有】契變（契變編號：______________－檢查契變上□承辦人開發簽名　□委託人賣方簽名）</p><p><b>16. 授權書：</b>(1)出售所有權人共_____人，本件賣方親簽<br/>　　　　　　(2)代理人：進案附上授權書（□正本共_____張／□影本共_____張）。□授權書後補<br/>　　Note：____________________________________________________________</p><p><b>17. 土地使用分區：</b>□本件房屋不需分區<br/>　　　　為都內土地：□進案已附　□曾經申請請列印　□本件為土地請助理申請<br/>　　　　都外土地：使用分區請填寫____________，使用地類別：____________</p><p><b>18. 進案其他文件：</b>____________________________________________________________</p></div>
+    <div className="check-columns"><div><p className="column-heading"><b>13. 委託契約：</b>檢查是否有填寫</p><p>□ (1).　委託日期</p><p>□ (2).　廣告開價</p><p>□ (3).　承辦人開發簽名</p><p>□ (4).　契約現況勾選</p><b>14. 檢查□勾選委託主約 P2：是否一年內取得</b></div><div><p className="column-heading"><b>15. 賣方資訊：</b>檢查是否有填寫</p><div className="seller-info-columns"><div><p>□ (1).　委託人簽名</p><p>□ (2).　賣方 ID</p><p>□ (3).　賣方生日</p><p>□ (4).　賣方地址</p><p>□ (5).　賣方電話</p></div><div><p>□ (1).　代理人簽名</p><p>□ (2).　賣方 ID</p><p>□ (3).　代理人生日</p><p>□ (4).　代理人地址</p><p>□ (5).　代理人電話</p></div></div></div></div>
+    <div className="check-tail"><p><b>16. 契變：</b>　□進案「無」契變<br/>　　　　　　□進案【有】契變（契變編號：______________－檢查契變上□承辦人開發簽名　□委託人賣方簽名）</p><p><b>17. 授權書：</b>(1)出售所有權人共_____人，本件賣方親簽<br/>　　　　　　(2)代理人：進案附上授權書（□正本共_____張／□影本共_____張）。□授權書後補<br/>　　Note：____________________________________________________________</p><p><b>18. 土地使用分區：</b>□本件房屋不需分區<br/>　　　　為都內土地：□進案已附　□曾經申請請列印　□本件為土地請助理申請<br/>　　　　都外土地：使用分區請填寫____________，使用地類別：____________</p><p><b>19. 進案其他文件：</b>____________________________________________________________</p></div>
     <div className="signature-box"><span>以上檢查資訊，填寫人簽名：</span><i aria-hidden="true"/></div>
     <div className="check-strip bottom">案名：{val("案名")}　　標的物：{val("物件(完整)地址")}</div>
   </article>;

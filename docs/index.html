@@ -289,7 +289,7 @@ button:hover,.file-button:hover{border-color:#9fbad0;box-shadow:0 2px 8px #7895a
 .print-document .checklist-page>.check-strip,.print-document .checklist-page>h1,.print-document .checklist-page>.check-price,.print-document .checklist-page>.check-list,.print-document .checklist-page>.check-columns,.print-document .checklist-page>.check-tail,.print-document .checklist-page>.signature-box{min-height:0!important;max-height:none!important;height:auto!important;box-sizing:border-box!important;margin:0!important;overflow:hidden!important}
 .print-document .checklist-page>.check-strip{display:flex!important;align-items:center!important;justify-content:center!important}
 .print-document .checklist-page>h1{display:flex!important;align-items:center!important;justify-content:center!important}
-.print-document .checklist-page>.check-list{display:grid!important;grid-template-rows:7mm 14mm 14mm 10mm 10mm 9mm 9mm 12mm 12mm!important}
+.print-document .checklist-page>.check-list{display:grid!important;grid-template-rows:7mm 10mm 13mm 13mm 9mm 9mm 8mm 8mm 10mm 10mm!important}
 .print-document .checklist-page>.check-list>li{display:list-item!important;list-style-position:outside!important;min-height:0!important;box-sizing:border-box!important;overflow:hidden!important}
 .print-document .checklist-page>.check-tail{display:grid!important;grid-template-rows:13mm 17mm 17mm 10mm!important;min-height:0!important}
 .print-document .checklist-page>.check-tail>p{display:block!important;min-height:0!important;height:auto!important;box-sizing:border-box!important;margin:0!important;overflow:hidden!important}
@@ -305,6 +305,7 @@ button:hover,.file-button:hover{border-color:#9fbad0;box-shadow:0 2px 8px #7895a
 .print-document .checklist-page>.check-price .choice-lines>span{position:static!important;transform:none!important;float:none!important;align-self:center!important;margin:0!important}
 .print-document .checklist-page .note-line{display:inline-block!important;margin-left:0!important;padding-left:0!important}
 .print-document .checklist-page>.check-list>li.note-item{display:flex!important;flex-direction:column!important;justify-content:space-between!important;align-items:flex-start!important;padding-top:1mm!important;padding-bottom:1mm!important}
+.print-document .checklist-page>.check-list>li.check-entrust-period{color:#0b63c7!important;font-weight:700!important}
 .print-document .checklist-page>.check-columns{display:grid!important;grid-template-columns:1fr 1fr!important;align-items:stretch!important}
 .print-document .checklist-page>.check-columns>div{display:flex!important;flex-direction:column!important;justify-content:space-evenly!important;height:100%!important;min-height:0!important;box-sizing:border-box!important}
 .print-document .checklist-page>.check-columns p{margin:0 3mm!important}
@@ -42058,6 +42059,15 @@ ${String(ex)}`);
     value.setDate(value.getDate() + 1);
     return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(value.getDate()).padStart(2, "0")}`;
   };
+  var intakeEntrustPeriod = (startValue = "", endValue = "") => {
+    const start = normalizeDateInput(String(startValue || ""));
+    const end = normalizeDateInput(String(endValue || ""));
+    if (!validDate(start) || !validDate(end)) return "";
+    const [startYear, startMonth, startDay] = start.split("-").map(Number);
+    const [endYear, endMonth, endDay] = end.split("-").map(Number);
+    const months = Math.max(1, (endYear - startYear) * 12 + endMonth - startMonth + (endDay >= startDay ? 1 : 0));
+    return `${displayRocDate(start)}~${displayRocDate(end)} \u5171${months}\u500B\u6708`;
+  };
   var areaCategory = (record) => {
     const address = String(record.address || "").trim();
     if (!address.includes("\u53F0\u5357\u5E02")) return "\u5916\u7E23\u5E02";
@@ -44788,7 +44798,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V248" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V249" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -48263,6 +48273,11 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u4E2D\u4EBA" }),
           "\u3000\u25A1\u7121\uFF0C\u25A1\u6709\u4ECB\u7D39\u4EBA\uFF1A____________\u5143"
         ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("li", { className: "check-entrust-period", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u59D4\u8A17\u6642\u9593\u696D\u52D9\u586B\u5BEB" }),
+          "\uFF1A",
+          intakeEntrustPeriod(val("\u59D4\u8A17\u958B\u59CB \u65E5\u671F", "\u59D4\u8A17\u958B\u59CB"), val("\u59D4\u8A17\u7D50\u675F \u65E5\u671F", "\u59D4\u8A17\u7D50\u675F")) || "____________~____________ \u5171____\u500B\u6708"
+        ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("li", { className: "note-item", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u5730\u865F\u8B04\u672C" }),
@@ -48279,11 +48294,11 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("li", { children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u5730\u7C4D\u5716" }),
-          "\u3000\u25A1\u5927\u6A13\uFF1A\u7121\u9808\u8ABF\u3000\u623F\u5C4B\uFF0F\u571F\u5730\uFF08\u25A1\u7D19\u672C\u5DF2\u9644\u4EF6\u3000\u25A1\u66FE\u7D93\u8ABF\u95B1\u8ACB\u5217\u5370\u3000\u25A1\u672A\u8ABF\u95B1\uFF09"
+          "\u3000\u25A1\u5927\u6A13\uFF1A\u7121\u9808\u8ABF\u3000|\u3000\u623F\u5C4B\uFF0F\u571F\u5730\uFF08\u25A1\u7D19\u672C\u5DF2\u9644\u4EF6\u3000\u25A1\u66FE\u7D93\u8ABF\u95B1\u8ACB\u5217\u5370\u3000\u25A1\u672A\u8ABF\u95B1\uFF09"
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("li", { children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u6210\u679C\u5716" }),
-          "\u3000\u25A1\u571F\u5730\uFF1A\u7121\u9808\u8ABF\u3000\u6709\u5EFA\u865F\uFF08\u25A1\u7D19\u672C\u5DF2\u9644\u4EF6\u3000\u25A1\u66FE\u7D93\u8ABF\u95B1\u8ACB\u5217\u5370\u3000\u25A1\u672A\u8ABF\u95B1\uFF09"
+          "\u3000\u25A1\u571F\u5730\uFF1A\u7121\u9808\u8ABF\u3000|\u3000\u6709\u5EFA\u865F\uFF08\u25A1\u7D19\u672C\u5DF2\u9644\u4EF6\u3000\u25A1\u66FE\u7D93\u8ABF\u95B1\u8ACB\u5217\u5370\u3000\u25A1\u672A\u8ABF\u95B1\uFF09"
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("li", { children: [
           "\u6AA2\u67E5\u25A1 \u59D4\u8A17\u4EBA\uFF08\u8CE3\u65B9\uFF09- ",
@@ -48305,18 +48320,18 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "check-columns", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { className: "column-heading", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "12. \u59D4\u8A17\u5951\u7D04\uFF1A" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "13. \u59D4\u8A17\u5951\u7D04\uFF1A" }),
             "\u6AA2\u67E5\u662F\u5426\u6709\u586B\u5BEB"
           ] }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "\u25A1 (1).\u3000\u59D4\u8A17\u65E5\u671F" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "\u25A1 (2).\u3000\u5EE3\u544A\u958B\u50F9" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "\u25A1 (3).\u3000\u627F\u8FA6\u4EBA\u958B\u767C\u7C3D\u540D" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "\u25A1 (4).\u3000\u5951\u7D04\u73FE\u6CC1\u52FE\u9078" }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "13. \u6AA2\u67E5\u25A1\u52FE\u9078\u59D4\u8A17\u4E3B\u7D04 P2\uFF1A\u662F\u5426\u4E00\u5E74\u5167\u53D6\u5F97" })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "14. \u6AA2\u67E5\u25A1\u52FE\u9078\u59D4\u8A17\u4E3B\u7D04 P2\uFF1A\u662F\u5426\u4E00\u5E74\u5167\u53D6\u5F97" })
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { className: "column-heading", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "14. \u8CE3\u65B9\u8CC7\u8A0A\uFF1A" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "15. \u8CE3\u65B9\u8CC7\u8A0A\uFF1A" }),
             "\u6AA2\u67E5\u662F\u5426\u6709\u586B\u5BEB"
           ] }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "seller-info-columns", children: [
@@ -48339,13 +48354,13 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       ] }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "check-tail", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "15. \u5951\u8B8A\uFF1A" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "16. \u5951\u8B8A\uFF1A" }),
           "\u3000\u25A1\u9032\u6848\u300C\u7121\u300D\u5951\u8B8A",
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("br", {}),
           "\u3000\u3000\u3000\u3000\u3000\u3000\u25A1\u9032\u6848\u3010\u6709\u3011\u5951\u8B8A\uFF08\u5951\u8B8A\u7DE8\u865F\uFF1A______________\uFF0D\u6AA2\u67E5\u5951\u8B8A\u4E0A\u25A1\u627F\u8FA6\u4EBA\u958B\u767C\u7C3D\u540D\u3000\u25A1\u59D4\u8A17\u4EBA\u8CE3\u65B9\u7C3D\u540D\uFF09"
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "16. \u6388\u6B0A\u66F8\uFF1A" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "17. \u6388\u6B0A\u66F8\uFF1A" }),
           "(1)\u51FA\u552E\u6240\u6709\u6B0A\u4EBA\u5171_____\u4EBA\uFF0C\u672C\u4EF6\u8CE3\u65B9\u89AA\u7C3D",
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("br", {}),
           "\u3000\u3000\u3000\u3000\u3000\u3000(2)\u4EE3\u7406\u4EBA\uFF1A\u9032\u6848\u9644\u4E0A\u6388\u6B0A\u66F8\uFF08\u25A1\u6B63\u672C\u5171_____\u5F35\uFF0F\u25A1\u5F71\u672C\u5171_____\u5F35\uFF09\u3002\u25A1\u6388\u6B0A\u66F8\u5F8C\u88DC",
@@ -48353,7 +48368,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
           "\u3000\u3000Note\uFF1A____________________________________________________________"
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "17. \u571F\u5730\u4F7F\u7528\u5206\u5340\uFF1A" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "18. \u571F\u5730\u4F7F\u7528\u5206\u5340\uFF1A" }),
           "\u25A1\u672C\u4EF6\u623F\u5C4B\u4E0D\u9700\u5206\u5340",
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("br", {}),
           "\u3000\u3000\u3000\u3000\u70BA\u90FD\u5167\u571F\u5730\uFF1A\u25A1\u9032\u6848\u5DF2\u9644\u3000\u25A1\u66FE\u7D93\u7533\u8ACB\u8ACB\u5217\u5370\u3000\u25A1\u672C\u4EF6\u70BA\u571F\u5730\u8ACB\u52A9\u7406\u7533\u8ACB",
@@ -48361,7 +48376,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
           "\u3000\u3000\u3000\u3000\u90FD\u5916\u571F\u5730\uFF1A\u4F7F\u7528\u5206\u5340\u8ACB\u586B\u5BEB____________\uFF0C\u4F7F\u7528\u5730\u985E\u5225\uFF1A____________"
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "18. \u9032\u6848\u5176\u4ED6\u6587\u4EF6\uFF1A" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "19. \u9032\u6848\u5176\u4ED6\u6587\u4EF6\uFF1A" }),
           "____________________________________________________________"
         ] })
       ] }),
