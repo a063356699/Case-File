@@ -802,6 +802,7 @@ const sample: RecordItem = {
 export default function Home() {
   const [internalView] = useState(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("view") === "internal");
   const [records, setRecords] = useState<RecordItem[]>([]);
+  const [publicRecords, setPublicRecords] = useState<RecordItem[]>([]);
   const [settings, setSettings] = useState<Settings>({ personnel: [], supabaseUrl: CASE_FILE_SUPABASE_URL, supabaseKey: CASE_FILE_SUPABASE_PUBLISHABLE_KEY, supabaseTable: CASE_FILE_SUPABASE_TABLE, supabaseRecord: "main", bookReviewCurrentDate: "2026-07-30", bookReviewNextDate: "2026-09-30" });
   const [storageReady, setStorageReady] = useState(false);
   developerPersonnelForDisplay = settings.personnel;
@@ -929,7 +930,7 @@ export default function Home() {
     }
   }, [pptWeekStart]);
   useEffect(() => {
-    if (!storageReady || pptWeekLoadedRef.current !== pptWeekStart) return;
+    if (internalView || tab === "public" || !storageReady || pptWeekLoadedRef.current !== pptWeekStart) return;
     if (pptWeekSkipSaveRef.current) { pptWeekSkipSaveRef.current = false; return; }
     try {
       const all = JSON.parse(localStorage.getItem(PPT_WEEK_SELECTIONS_KEY) || "{}");
@@ -987,7 +988,7 @@ export default function Home() {
     cloudLocalPendingRef.current = true;
     const timer = window.setTimeout(() => { void supabasePush(true); }, 0);
     return () => window.clearTimeout(timer);
-  }, [storageReady, pptWeekStart, pptConfirmedSnapshots]);
+  }, [storageReady, pptWeekStart, pptConfirmedSnapshots, internalView, tab]);
   const [tourItems, setTourItems] = useState<TourItem[]>([]);
   const [tourDate, setTourDate] = useState(today());
   const [tourTitle, setTourTitle] = useState(`${displayRocDate(today()).replace(/\//g, ".")}團看`);
@@ -1205,7 +1206,7 @@ export default function Home() {
     }));
     localStorage.setItem(cleanupKey, "1");
   }, [records.length]);
-  useEffect(() => { if (records.length) localStorage.setItem(STORAGE_KEY, JSON.stringify(records)); }, [records]);
+  useEffect(() => { if (!internalView && tab !== "public" && records.length) localStorage.setItem(STORAGE_KEY, JSON.stringify(records)); }, [records, internalView, tab]);
   // 正式進案日與業務交件日分開：進案統計沿用 reportDate，
   // 每日動態則顯示在助理實際按下正式進案的日期。
   useEffect(() => {
@@ -1245,10 +1246,10 @@ export default function Home() {
     return () => window.removeEventListener("storage", syncAcrossTabs);
   }, []);
   // 先完成本機設定讀取，才允許寫回；避免匯入後被初始空白人員覆蓋。
-  useEffect(() => { if (storageReady) localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); }, [settings, storageReady]);
+  useEffect(() => { if (!internalView && tab !== "public" && storageReady) localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); }, [settings, storageReady, internalView, tab]);
   // 等草稿讀取完成後才寫回，避免剛開新版本時用初始空白內容覆寫舊草稿。
-  useEffect(() => { if (storageReady) localStorage.setItem(INTAKE_KEY, JSON.stringify({ raw: intakeRaw, drafts: intakeDrafts, selectedId: selectedIntakeId })); }, [intakeRaw, intakeDrafts, selectedIntakeId, storageReady]);
-  useEffect(() => { localStorage.setItem(TOUR_KEY, JSON.stringify({ date: tourDate, title: tourTitle, items: tourItems, modifiedAt: tourModifiedAt, history: tourHistory })); }, [tourDate, tourTitle, tourItems, tourModifiedAt, tourHistory]);
+  useEffect(() => { if (!internalView && tab !== "public" && storageReady) localStorage.setItem(INTAKE_KEY, JSON.stringify({ raw: intakeRaw, drafts: intakeDrafts, selectedId: selectedIntakeId })); }, [intakeRaw, intakeDrafts, selectedIntakeId, storageReady, internalView, tab]);
+  useEffect(() => { if (!internalView && tab !== "public") localStorage.setItem(TOUR_KEY, JSON.stringify({ date: tourDate, title: tourTitle, items: tourItems, modifiedAt: tourModifiedAt, history: tourHistory })); }, [tourDate, tourTitle, tourItems, tourModifiedAt, tourHistory, internalView, tab]);
   // V181 起保留完成團看歷史；先把舊資料中已有團看日期、但當時尚未建立歷史的案件補成可查看列表。
   useEffect(() => {
     if (!storageReady) return;
@@ -1293,8 +1294,9 @@ export default function Home() {
     });
   }, [storageReady, records, intakeDrafts, tourItems]);
 
-  const archived = useMemo(() => sortArchivedRecords(records.filter(r => r.archived || isExpired(r) || r.status !== "委託中")), [records]);
-  const active = useMemo(() => records.filter(r => !r.archived && !isExpired(r) && (r.status || "委託中") === "委託中"), [records]);
+  const recordsForView = (internalView || tab === "public") && publicUnlocked && publicRecords.length ? publicRecords : records;
+  const archived = useMemo(() => sortArchivedRecords(recordsForView.filter(r => r.archived || isExpired(r) || r.status !== "委託中")), [recordsForView]);
+  const active = useMemo(() => recordsForView.filter(r => !r.archived && !isExpired(r) && (r.status || "委託中") === "委託中"), [recordsForView]);
   const bookReviewCycleStart = normalizeDateInput(settings.bookReviewCurrentDate || "") || "2026-07-30";
   const bookReviewDueCount = today() >= bookReviewCycleStart ? active.filter(record => {
     const confirmedDate = normalizeDateInput(record._bookReviewAt || record.bookLocationDate || "");
@@ -2240,7 +2242,7 @@ export default function Home() {
   };
   const cloudSnapshot = JSON.stringify({ records, personnel: settings.personnel, expiry591: settings.expiry591, expiry5168: settings.expiry5168, brokerExpiry: settings.brokerExpiry, intakeRaw, intakeDrafts, selectedIntakeId, tourDate, tourTitle, tourItems, tourModifiedAt, tourHistory, pptWeekStart, pptExtraIds, pptOrderIds, pptAdHocRecords, pptConfirmedSnapshots });
   useEffect(() => {
-    if (!storageReady) return;
+    if (internalView || tab === "public" || !storageReady) return;
     if (cloudSkipNextPushRef.current) {
       cloudSkipNextPushRef.current = false;
       cloudSyncBaselineRef.current = cloudSnapshot;
@@ -2257,9 +2259,9 @@ export default function Home() {
     if (cloudSyncTimerRef.current) window.clearTimeout(cloudSyncTimerRef.current);
     cloudSyncTimerRef.current = window.setTimeout(() => { void supabasePush(true); }, 6000);
     return () => { if (cloudSyncTimerRef.current) window.clearTimeout(cloudSyncTimerRef.current); };
-  }, [storageReady, cloudSnapshot, cloudSession?.accessToken, settings.supabaseKey]);
+  }, [storageReady, cloudSnapshot, cloudSession?.accessToken, settings.supabaseKey, internalView, tab]);
   useEffect(() => {
-    if (!cloudSession?.accessToken || !settings.supabaseUrl || !settings.supabaseKey) return;
+    if (internalView || tab === "public" || !cloudSession?.accessToken || !settings.supabaseUrl || !settings.supabaseKey) return;
     const pullKey = `${settings.supabaseUrl}|${settings.supabaseTable}|${settings.supabaseRecord}|${cloudSession.email || "signed-in"}`;
     if (cloudAutoPullRef.current === pullKey) return;
     cloudAutoPullRef.current = pullKey;
@@ -2269,16 +2271,16 @@ export default function Home() {
     localStorage.removeItem(CLOUD_LOCAL_PENDING_KEY);
     setCloudUploadState("idle");
     void supabasePull(true);
-  }, [cloudSession?.accessToken, cloudSession?.email, settings.supabaseUrl, settings.supabaseKey, settings.supabaseTable, settings.supabaseRecord, localCloudChangesPending]);
+  }, [cloudSession?.accessToken, cloudSession?.email, settings.supabaseUrl, settings.supabaseKey, settings.supabaseTable, settings.supabaseRecord, localCloudChangesPending, internalView, tab]);
   // 管理模式開啟期間每 45 秒只讀取 updated_at；偵測到新資料只提醒，由使用者決定何時下載完整資料。
   useEffect(() => {
-    if (!cloudSession?.accessToken || !settings.supabaseUrl || !settings.supabaseKey) return;
+    if (internalView || tab === "public" || !cloudSession?.accessToken || !settings.supabaseUrl || !settings.supabaseKey) return;
     const timer = window.setInterval(() => { void supabasePullIfChanged(); }, 45000);
     return () => window.clearInterval(timer);
-  }, [cloudSession?.accessToken, settings.supabaseUrl, settings.supabaseKey, settings.supabaseTable, settings.supabaseRecord, cloudLastUploadAt]);
+  }, [cloudSession?.accessToken, settings.supabaseUrl, settings.supabaseKey, settings.supabaseTable, settings.supabaseRecord, cloudLastUploadAt, internalView, tab]);
   // 切回此分頁時只檢查雲端時間，不自動下載完整資料。
   useEffect(() => {
-    if (!cloudSession?.accessToken || !settings.supabaseUrl || !settings.supabaseKey) return;
+    if (internalView || tab === "public" || !cloudSession?.accessToken || !settings.supabaseUrl || !settings.supabaseKey) return;
     const refreshWhenVisible = () => {
       if (document.visibilityState === "hidden") return;
       const now = Date.now();
@@ -2292,7 +2294,7 @@ export default function Home() {
       window.removeEventListener("focus", refreshWhenVisible);
       document.removeEventListener("visibilitychange", refreshWhenVisible);
     };
-  }, [cloudSession?.accessToken, settings.supabaseUrl, settings.supabaseKey, settings.supabaseTable, settings.supabaseRecord]);
+  }, [cloudSession?.accessToken, settings.supabaseUrl, settings.supabaseKey, settings.supabaseTable, settings.supabaseRecord, internalView, tab]);
 
   const openPublic = () => { setTab("public"); setPublicUnlocked(false); setPublicPersonId(""); setPublicScope("mine"); setPassword(""); };
   const logoutPublic = () => { if (Date.now() < publicReportHoldUntil) return flash(`回報正在保護送出，請等待 ${Math.max(1, Math.ceil((publicReportHoldUntil - Date.now()) / 1000))} 秒`); publicLoginAttemptRef.current += 1; localStorage.removeItem("case-file-public-daily-login"); setPendingPublicRestoreId(""); setPublicAuthReady(true); setPublicUnlocked(false); setPublicPersonId(""); setPublicScope("mine"); setPublicExpiryFilter("all"); setPublicQuery(""); setPassword(""); flash("已登出業務帳號"); };
@@ -2329,7 +2331,7 @@ export default function Home() {
         const local = settings.personnel.find(person => person.id === entry.id || (entry.name && person.name.trim() === String(entry.name).trim()));
         return { ...local, ...entry, id: entry.id || local?.id || newId(), name: entry.name || local?.name || "", nationalId: local?.nationalId || "", phone: entry.phone || local?.phone || "", status: entry.status || local?.status || "在職" } as Person;
       });
-      setRecords(nextRecords);
+      setPublicRecords(nextRecords);
       setSettings(previous => ({ ...previous, personnel: mergeSuppliedPersonnel(nextPeople) }));
       setPublicPersonId(data.personId);
       setPublicScope("mine");
@@ -2445,7 +2447,7 @@ export default function Home() {
       });
       if (!response.ok) throw new Error("front report sync failed");
     } catch { flash("回報未送出雲端，請確認網路後再送出"); return false; }
-    setRecords(previous => previous.map(item => item.id === record.id ? { ...item, _monthlyReports: JSON.stringify(reports), ...(updatesDate ? { updateDate: today(), lastModifiedAt: new Date().toISOString() } : {}) } : item));
+    setPublicRecords(previous => previous.map(item => item.id === record.id ? { ...item, _monthlyReports: JSON.stringify(reports), ...(updatesDate ? { updateDate: today(), lastModifiedAt: new Date().toISOString() } : {}) } : item));
     flash(status === "待確認" ? `已設定 ${displayRocDate(dueDate)} 再次確認` : "物件回報完成");
     return true;
   };
@@ -2471,7 +2473,7 @@ export default function Home() {
     const due = new Date(`${today()}T00:00:00`); due.setDate(due.getDate() + 7);
     const dueDate = `${due.getFullYear()}-${String(due.getMonth() + 1).padStart(2, "0")}-${String(due.getDate()).padStart(2, "0")}`;
     const sentAt = new Date().toISOString(); const byId = new Map(entries.map(entry => [entry.record.id, entry]));
-    setRecords(previous => previous.map(item => {
+    setPublicRecords(previous => previous.map(item => {
       const entry = byId.get(item.id); if (!entry) return item;
       const reports = monthlyReportsOf(item._monthlyReports);
       reports[reportKey] = { personId: publicPerson.id, personName: publicPerson.name, status: entry.status, reason: entry.reason.trim(), reportedAt: sentAt, dueDate: entry.status === "待確認" ? dueDate : "" };
@@ -2520,7 +2522,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V271</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V272</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>

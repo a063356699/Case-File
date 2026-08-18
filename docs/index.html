@@ -42573,6 +42573,7 @@ ${String(ex)}`);
   function Home() {
     const [internalView] = (0, import_react.useState)(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("view") === "internal");
     const [records, setRecords] = (0, import_react.useState)([]);
+    const [publicRecords, setPublicRecords] = (0, import_react.useState)([]);
     const [settings, setSettings] = (0, import_react.useState)({ personnel: [], supabaseUrl: CASE_FILE_SUPABASE_URL, supabaseKey: CASE_FILE_SUPABASE_PUBLISHABLE_KEY, supabaseTable: CASE_FILE_SUPABASE_TABLE, supabaseRecord: "main", bookReviewCurrentDate: "2026-07-30", bookReviewNextDate: "2026-09-30" });
     const [storageReady, setStorageReady] = (0, import_react.useState)(false);
     developerPersonnelForDisplay = settings.personnel;
@@ -42710,7 +42711,7 @@ ${String(ex)}`);
       }
     }, [pptWeekStart]);
     (0, import_react.useEffect)(() => {
-      if (!storageReady || pptWeekLoadedRef.current !== pptWeekStart) return;
+      if (internalView || tab === "public" || !storageReady || pptWeekLoadedRef.current !== pptWeekStart) return;
       if (pptWeekSkipSaveRef.current) {
         pptWeekSkipSaveRef.current = false;
         return;
@@ -42771,7 +42772,7 @@ ${String(ex)}`);
         void supabasePush(true);
       }, 0);
       return () => window.clearTimeout(timer);
-    }, [storageReady, pptWeekStart, pptConfirmedSnapshots]);
+    }, [storageReady, pptWeekStart, pptConfirmedSnapshots, internalView, tab]);
     const [tourItems, setTourItems] = (0, import_react.useState)([]);
     const [tourDate, setTourDate] = (0, import_react.useState)(today());
     const [tourTitle, setTourTitle] = (0, import_react.useState)(`${displayRocDate(today()).replace(/\//g, ".")}\u5718\u770B`);
@@ -43068,8 +43069,8 @@ ${String(ex)}`);
       localStorage.setItem(cleanupKey, "1");
     }, [records.length]);
     (0, import_react.useEffect)(() => {
-      if (records.length) localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
-    }, [records]);
+      if (!internalView && tab !== "public" && records.length) localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+    }, [records, internalView, tab]);
     (0, import_react.useEffect)(() => {
       if (!storageReady || !intakeDrafts.length) return;
       const enteredAtByRecord = new Map(intakeDrafts.filter((draft) => draft.linkedRecordId && draft.enteredAt).map((draft) => [draft.linkedRecordId, draft.enteredAt]));
@@ -43113,14 +43114,14 @@ ${String(ex)}`);
       return () => window.removeEventListener("storage", syncAcrossTabs);
     }, []);
     (0, import_react.useEffect)(() => {
-      if (storageReady) localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
-    }, [settings, storageReady]);
+      if (!internalView && tab !== "public" && storageReady) localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    }, [settings, storageReady, internalView, tab]);
     (0, import_react.useEffect)(() => {
-      if (storageReady) localStorage.setItem(INTAKE_KEY, JSON.stringify({ raw: intakeRaw, drafts: intakeDrafts, selectedId: selectedIntakeId }));
-    }, [intakeRaw, intakeDrafts, selectedIntakeId, storageReady]);
+      if (!internalView && tab !== "public" && storageReady) localStorage.setItem(INTAKE_KEY, JSON.stringify({ raw: intakeRaw, drafts: intakeDrafts, selectedId: selectedIntakeId }));
+    }, [intakeRaw, intakeDrafts, selectedIntakeId, storageReady, internalView, tab]);
     (0, import_react.useEffect)(() => {
-      localStorage.setItem(TOUR_KEY, JSON.stringify({ date: tourDate, title: tourTitle, items: tourItems, modifiedAt: tourModifiedAt, history: tourHistory }));
-    }, [tourDate, tourTitle, tourItems, tourModifiedAt, tourHistory]);
+      if (!internalView && tab !== "public") localStorage.setItem(TOUR_KEY, JSON.stringify({ date: tourDate, title: tourTitle, items: tourItems, modifiedAt: tourModifiedAt, history: tourHistory }));
+    }, [tourDate, tourTitle, tourItems, tourModifiedAt, tourHistory, internalView, tab]);
     (0, import_react.useEffect)(() => {
       if (!storageReady) return;
       const byDate = /* @__PURE__ */ new Map();
@@ -43164,8 +43165,9 @@ ${String(ex)}`);
         return unchanged ? previous : [entry, ...previous.filter((item) => normalizeDateInput(item.date) !== date)].sort((a, b) => String(b.date).localeCompare(String(a.date)));
       });
     }, [storageReady, records, intakeDrafts, tourItems]);
-    const archived = (0, import_react.useMemo)(() => sortArchivedRecords(records.filter((r) => r.archived || isExpired(r) || r.status !== "\u59D4\u8A17\u4E2D")), [records]);
-    const active = (0, import_react.useMemo)(() => records.filter((r) => !r.archived && !isExpired(r) && (r.status || "\u59D4\u8A17\u4E2D") === "\u59D4\u8A17\u4E2D"), [records]);
+    const recordsForView = (internalView || tab === "public") && publicUnlocked && publicRecords.length ? publicRecords : records;
+    const archived = (0, import_react.useMemo)(() => sortArchivedRecords(recordsForView.filter((r) => r.archived || isExpired(r) || r.status !== "\u59D4\u8A17\u4E2D")), [recordsForView]);
+    const active = (0, import_react.useMemo)(() => recordsForView.filter((r) => !r.archived && !isExpired(r) && (r.status || "\u59D4\u8A17\u4E2D") === "\u59D4\u8A17\u4E2D"), [recordsForView]);
     const bookReviewCycleStart = normalizeDateInput(settings.bookReviewCurrentDate || "") || "2026-07-30";
     const bookReviewDueCount = today() >= bookReviewCycleStart ? active.filter((record) => {
       const confirmedDate = normalizeDateInput(record._bookReviewAt || record.bookLocationDate || "");
@@ -44491,7 +44493,7 @@ ${changedLabels}
     };
     const cloudSnapshot = JSON.stringify({ records, personnel: settings.personnel, expiry591: settings.expiry591, expiry5168: settings.expiry5168, brokerExpiry: settings.brokerExpiry, intakeRaw, intakeDrafts, selectedIntakeId, tourDate, tourTitle, tourItems, tourModifiedAt, tourHistory, pptWeekStart, pptExtraIds, pptOrderIds, pptAdHocRecords, pptConfirmedSnapshots });
     (0, import_react.useEffect)(() => {
-      if (!storageReady) return;
+      if (internalView || tab === "public" || !storageReady) return;
       if (cloudSkipNextPushRef.current) {
         cloudSkipNextPushRef.current = false;
         cloudSyncBaselineRef.current = cloudSnapshot;
@@ -44515,9 +44517,9 @@ ${changedLabels}
       return () => {
         if (cloudSyncTimerRef.current) window.clearTimeout(cloudSyncTimerRef.current);
       };
-    }, [storageReady, cloudSnapshot, cloudSession?.accessToken, settings.supabaseKey]);
+    }, [storageReady, cloudSnapshot, cloudSession?.accessToken, settings.supabaseKey, internalView, tab]);
     (0, import_react.useEffect)(() => {
-      if (!cloudSession?.accessToken || !settings.supabaseUrl || !settings.supabaseKey) return;
+      if (internalView || tab === "public" || !cloudSession?.accessToken || !settings.supabaseUrl || !settings.supabaseKey) return;
       const pullKey = `${settings.supabaseUrl}|${settings.supabaseTable}|${settings.supabaseRecord}|${cloudSession.email || "signed-in"}`;
       if (cloudAutoPullRef.current === pullKey) return;
       cloudAutoPullRef.current = pullKey;
@@ -44529,16 +44531,16 @@ ${changedLabels}
       localStorage.removeItem(CLOUD_LOCAL_PENDING_KEY);
       setCloudUploadState("idle");
       void supabasePull(true);
-    }, [cloudSession?.accessToken, cloudSession?.email, settings.supabaseUrl, settings.supabaseKey, settings.supabaseTable, settings.supabaseRecord, localCloudChangesPending]);
+    }, [cloudSession?.accessToken, cloudSession?.email, settings.supabaseUrl, settings.supabaseKey, settings.supabaseTable, settings.supabaseRecord, localCloudChangesPending, internalView, tab]);
     (0, import_react.useEffect)(() => {
-      if (!cloudSession?.accessToken || !settings.supabaseUrl || !settings.supabaseKey) return;
+      if (internalView || tab === "public" || !cloudSession?.accessToken || !settings.supabaseUrl || !settings.supabaseKey) return;
       const timer = window.setInterval(() => {
         void supabasePullIfChanged();
       }, 45e3);
       return () => window.clearInterval(timer);
-    }, [cloudSession?.accessToken, settings.supabaseUrl, settings.supabaseKey, settings.supabaseTable, settings.supabaseRecord, cloudLastUploadAt]);
+    }, [cloudSession?.accessToken, settings.supabaseUrl, settings.supabaseKey, settings.supabaseTable, settings.supabaseRecord, cloudLastUploadAt, internalView, tab]);
     (0, import_react.useEffect)(() => {
-      if (!cloudSession?.accessToken || !settings.supabaseUrl || !settings.supabaseKey) return;
+      if (internalView || tab === "public" || !cloudSession?.accessToken || !settings.supabaseUrl || !settings.supabaseKey) return;
       const refreshWhenVisible = () => {
         if (document.visibilityState === "hidden") return;
         const now = Date.now();
@@ -44552,7 +44554,7 @@ ${changedLabels}
         window.removeEventListener("focus", refreshWhenVisible);
         document.removeEventListener("visibilitychange", refreshWhenVisible);
       };
-    }, [cloudSession?.accessToken, settings.supabaseUrl, settings.supabaseKey, settings.supabaseTable, settings.supabaseRecord]);
+    }, [cloudSession?.accessToken, settings.supabaseUrl, settings.supabaseKey, settings.supabaseTable, settings.supabaseRecord, internalView, tab]);
     const openPublic = () => {
       setTab("public");
       setPublicUnlocked(false);
@@ -44619,7 +44621,7 @@ ${changedLabels}
           const local = settings.personnel.find((person) => person.id === entry.id || entry.name && person.name.trim() === String(entry.name).trim());
           return { ...local, ...entry, id: entry.id || local?.id || newId(), name: entry.name || local?.name || "", nationalId: local?.nationalId || "", phone: entry.phone || local?.phone || "", status: entry.status || local?.status || "\u5728\u8077" };
         });
-        setRecords(nextRecords);
+        setPublicRecords(nextRecords);
         setSettings((previous) => ({ ...previous, personnel: mergeSuppliedPersonnel(nextPeople) }));
         setPublicPersonId(data.personId);
         setPublicScope("mine");
@@ -44797,7 +44799,7 @@ ${changedLabels}
         flash("\u56DE\u5831\u672A\u9001\u51FA\u96F2\u7AEF\uFF0C\u8ACB\u78BA\u8A8D\u7DB2\u8DEF\u5F8C\u518D\u9001\u51FA");
         return false;
       }
-      setRecords((previous) => previous.map((item) => item.id === record.id ? { ...item, _monthlyReports: JSON.stringify(reports), ...updatesDate ? { updateDate: today(), lastModifiedAt: (/* @__PURE__ */ new Date()).toISOString() } : {} } : item));
+      setPublicRecords((previous) => previous.map((item) => item.id === record.id ? { ...item, _monthlyReports: JSON.stringify(reports), ...updatesDate ? { updateDate: today(), lastModifiedAt: (/* @__PURE__ */ new Date()).toISOString() } : {} } : item));
       flash(status === "\u5F85\u78BA\u8A8D" ? `\u5DF2\u8A2D\u5B9A ${displayRocDate(dueDate)} \u518D\u6B21\u78BA\u8A8D` : "\u7269\u4EF6\u56DE\u5831\u5B8C\u6210");
       return true;
     };
@@ -44831,7 +44833,7 @@ ${changedLabels}
       const dueDate = `${due.getFullYear()}-${String(due.getMonth() + 1).padStart(2, "0")}-${String(due.getDate()).padStart(2, "0")}`;
       const sentAt = (/* @__PURE__ */ new Date()).toISOString();
       const byId = new Map(entries.map((entry) => [entry.record.id, entry]));
-      setRecords((previous) => previous.map((item) => {
+      setPublicRecords((previous) => previous.map((item) => {
         const entry = byId.get(item.id);
         if (!entry) return item;
         const reports = monthlyReportsOf(item._monthlyReports);
@@ -44896,7 +44898,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V271" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V272" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),

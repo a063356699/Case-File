@@ -79,7 +79,10 @@ begin
       'price','reducedPrice','direction','builtYear','completionDate','age','titleFloor','currentFloor','floor','layout',
       'indoorPing','buildingPing','landPing','parking','parkingOwnership','parkingType','parkingMethod','parkingNo','managementFee','key','currentState',
       'road','frontage','depth','zoning','coverage','far','developer','reportDate','updateDate','groupViewDate','bookLocationType','bookLocationDate',
-      'salesBook','salesBookDate','photoInfo','_updateHistory','lastModifiedAt','caseNameNoteModifiedAt','reducedPriceModifiedAt','_dailyAnnotationType',
+      'salesBook','salesBookDate','photoInfo','notes','attentionNotes','additionNotes',
+      'platform591','platform591Expiry','platform591None','yes319','yes319None','houseinfor','houseinforNone',
+      'windowAd','windowAdNone','led','ledNone','homeWeb','homeWebNone','price5168','price5168Expiry','price5168None',
+      'goldExposure','goldExposureExpiry','goldExposureNone','_updateHistory','lastModifiedAt','caseNameNoteModifiedAt','reducedPriceModifiedAt','_dailyAnnotationType',
       '_dailyHighlight','_dailyAnnotation','_monthlyReports','_archiveActionDate','_restoredAt'
     ]::text[])
   ) picked;
