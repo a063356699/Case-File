@@ -869,6 +869,7 @@ export default function Home() {
   const [publicAuthReady, setPublicAuthReady] = useState(() => !internalView);
   const publicLoginAttemptRef = useRef(0);
   const [publicPersonId, setPublicPersonId] = useState("");
+  const [publicInventoryGroups, setPublicInventoryGroups] = useState<InventoryGroup[]>([]);
   const [publicScope, setPublicScope] = useState<"activity" | "mine" | "all" | "team" | "contacts">("mine");
   const [publicExpiryFilter, setPublicExpiryFilter] = useState<"all" | "15" | "30">("all");
   const [publicQuery, setPublicQuery] = useState("");
@@ -2323,8 +2324,8 @@ export default function Home() {
     };
   }, [cloudSession?.accessToken, settings.supabaseUrl, settings.supabaseKey, settings.supabaseTable, settings.supabaseRecord, internalView, tab]);
 
-  const openPublic = () => { setTab("public"); setPublicUnlocked(false); setPublicPersonId(""); setPublicScope("mine"); setPassword(""); };
-  const logoutPublic = () => { if (Date.now() < publicReportHoldUntil) return flash(`回報正在保護送出，請等待 ${Math.max(1, Math.ceil((publicReportHoldUntil - Date.now()) / 1000))} 秒`); publicLoginAttemptRef.current += 1; localStorage.removeItem("case-file-public-daily-login"); setPendingPublicRestoreId(""); setPublicAuthReady(true); setPublicUnlocked(false); setPublicPersonId(""); setPublicScope("mine"); setPublicExpiryFilter("all"); setPublicQuery(""); setPassword(""); flash("已登出業務帳號"); };
+  const openPublic = () => { setTab("public"); setPublicUnlocked(false); setPublicPersonId(""); setPublicInventoryGroups([]); setPublicScope("mine"); setPassword(""); };
+  const logoutPublic = () => { if (Date.now() < publicReportHoldUntil) return flash(`回報正在保護送出，請等待 ${Math.max(1, Math.ceil((publicReportHoldUntil - Date.now()) / 1000))} 秒`); publicLoginAttemptRef.current += 1; localStorage.removeItem("case-file-public-daily-login"); setPendingPublicRestoreId(""); setPublicAuthReady(true); setPublicUnlocked(false); setPublicPersonId(""); setPublicInventoryGroups([]); setPublicScope("mine"); setPublicExpiryFilter("all"); setPublicQuery(""); setPassword(""); flash("已登出業務帳號"); };
   const rememberPublicLogin = (personId: string, nationalId = "") => localStorage.setItem("case-file-public-daily-login", JSON.stringify({ date: today(), personId, nationalId }));
   const recordPublicEntry = async (nationalId: string) => {
     try { await fetch(`${CASE_FILE_SUPABASE_URL}/rest/v1/rpc/case_file_front_touch`, { method: "POST", headers: { apikey: CASE_FILE_SUPABASE_PUBLISHABLE_KEY, "Content-Type": "application/json" }, body: JSON.stringify({ p_national_id: nationalId }) }); } catch {}
@@ -2359,6 +2360,7 @@ export default function Home() {
         return { ...local, ...entry, id: entry.id || local?.id || newId(), name: entry.name || local?.name || "", nationalId: local?.nationalId || "", phone: entry.phone || local?.phone || "", status: entry.status || local?.status || "在職" } as Person;
       });
       setPublicRecords(nextRecords);
+      setPublicInventoryGroups(Array.isArray(data.inventoryGroups) ? data.inventoryGroups : []);
       setSettings(previous => ({ ...previous, personnel: mergeSuppliedPersonnel(nextPeople), ...(Array.isArray(data.inventoryGroups) ? { inventoryGroups: data.inventoryGroups } : {}) }));
       setPublicPersonId(data.personId);
       setPublicScope("mine");
@@ -2369,7 +2371,7 @@ export default function Home() {
     } catch { if (attempt !== publicLoginAttemptRef.current) return; setPublicAuthReady(true); flash("目前無法連接雲端，請確認網路後再試一次"); }
   };
   const publicPerson = settings.personnel.find(p => p.id === publicPersonId);
-  const publicLeaderGroup = (settings.inventoryGroups || []).find(group => group.members.some(member => member.personId === publicPersonId && member.role === "組長"));
+  const publicLeaderGroup = publicInventoryGroups.find(group => group.members.some(member => member.personId === publicPersonId && member.role === "組長"));
   const contactPeople = sortPeopleBySequence(settings.personnel.filter(person => person.status === "在職" && person.name.trim() && String(person.phone || "").trim()));
   // 前台通訊錄依店內固定排序顯示；不把秘書或未列入店內名冊的人員算入標籤。
   const publicContactCount = contactDirectoryOrder.filter(name => contactPeople.some(person => person.name.trim() === name)).length;
@@ -2550,7 +2552,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V282</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V283</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -4266,7 +4268,7 @@ function BusinessInventory({ records, settings, setSettings }: { records: Record
   const assignedNames = new Set(inventoryGroups.flatMap(group => group.members.map(member => personNameById(member.personId))).filter(Boolean));
   const groupSections = [
     ...inventoryGroups.map(group => ({ id: group.id as InventoryGroup["id"] | "UNGROUPED", name: group.name || `${group.id}組`, members: group.members.map(member => ({ ...member, name: personNameById(member.personId) })).filter(member => member.name) })),
-    { id: "UNGROUPED" as const, name: "未分組", members: Array.from(new Set([...stockRows.map(row => row.name), ...monthlyRows.map(row => row.name)])).filter(name => !assignedNames.has(name)).map(name => ({ personId: activeSalesPeople.find(person => person.name === name)?.id || "", role: "組員" as const, name })) },
+    { id: "UNGROUPED" as const, name: "未分組", members: Array.from(new Set([...stockRows.filter(row => row.total > 0).map(row => row.name), ...monthlyRows.filter(row => row.total.total > 0).map(row => row.name)])).filter(name => !assignedNames.has(name)).map(name => ({ personId: activeSalesPeople.find(person => person.name === name)?.id || "", role: "組員" as const, name })) },
   ];
   const nonEmptyGroupSections = groupSections.filter(section => section.id !== "UNGROUPED" || section.members.length > 0);
   const visibleGroupSections = inventoryGroupFilter === "ALL" ? nonEmptyGroupSections : nonEmptyGroupSections.filter(section => section.id === inventoryGroupFilter);
@@ -4275,7 +4277,7 @@ function BusinessInventory({ records, settings, setSettings }: { records: Record
   const rocMonth = (() => { const [year, value] = month.split("-"); return `${Number(year) - 1911}年${Number(value)}月`; })();
   const monthlyGrandTotal = monthlyRows.reduce((total, row) => total + row.total.total, 0);
   const stockGrandTotal = stockRows.reduce((total, row) => total + row.total, 0);
-  const categoryText = (values: { exclusiveHouse: number; exclusiveLand: number; generalHouse: number; generalLand: number; rental: number; total: number }, totalOnly = false) => { const parts = ([['房專', values.exclusiveHouse], ['土專', values.exclusiveLand], ['房一', values.generalHouse], ['土一', values.generalLand], ['租', values.rental]] as const).filter(([, count]) => count > 0).map(([label, count]) => `${label}${numberText(count)}`); return totalOnly ? `共${numberText(values.total)}件` : parts.length ? `${parts.join(" +")}=${numberText(values.total)}` : "-"; };
+  const categoryText = (values: { exclusiveHouse: number; exclusiveLand: number; generalHouse: number; generalLand: number; rental: number; total: number }, totalOnly = false) => { const parts = ([['房專', values.exclusiveHouse], ['土專', values.exclusiveLand], ['房一', values.generalHouse], ['土一', values.generalLand], ['租', values.rental]] as const).filter(([, count]) => count > 0).map(([label, count]) => `${label}${numberText(count)}`); return totalOnly ? `共${numberText(values.total)}件` : parts.length ? `${parts.join(" +\u200b")}=\u200b${numberText(values.total)}` : "-"; };
   const categorySummary = (values: { exclusiveHouse: number; exclusiveLand: number; generalHouse: number; generalLand: number; rental: number; total: number }, totalOnly = false) => <div className="inventory-category-summary">{totalOnly ? <b>{categoryText(values, true)}</b> : <span>{categoryText(values)}</span>}</div>;
   const shortPropertyNo = (record: RecordItem) => String(record.propertyNo || "").match(/^[A-Za-z]{2}/)?.[0]?.toUpperCase() || String(record.propertyNo || "").slice(0, 2);
   const inventoryCaseLine = (record: RecordItem) => <><b>{shortPropertyNo(record)}　{record.caseName || "未命名案件"}</b><span>{record.address || "未填地址"}</span></>;
