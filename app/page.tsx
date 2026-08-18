@@ -2082,6 +2082,16 @@ export default function Home() {
         let session = await refreshCloudSession();
         if (!session) throw new Error("登入已過期，請到設定重新登入雲端帳號");
         const url = `${settings.supabaseUrl.replace(/\/$/, "")}/rest/v1/${settings.supabaseTable}`;
+        // 上傳前確認雲端版本；舊分頁不可再用整包舊資料覆蓋較新的雲端內容。
+        const knownUpdatedAt = localStorage.getItem(CLOUD_LAST_UPLOAD_KEY) || cloudLastUploadAt || "";
+        const checkResponse = await fetch(`${url}?id=eq.${encodeURIComponent(settings.supabaseRecord)}&select=updated_at`, { headers: cloudHeaders(session) });
+        const checkRows = await checkResponse.json();
+        if (!checkResponse.ok) throw new Error("無法確認雲端版本，已停止上傳以保護資料");
+        const remoteUpdatedAt = String(checkRows[0]?.updated_at || "");
+        if (remoteUpdatedAt && knownUpdatedAt && Date.parse(remoteUpdatedAt) > Date.parse(knownUpdatedAt) + 500) {
+          setCloudRemoteUpdateAt(remoteUpdatedAt);
+          throw new Error("雲端有較新資料，請先按「雲端有新資料－讀取」後再繼續修改");
+        }
         const uploadedAt = new Date().toISOString();
         const payload = JSON.stringify({ id: settings.supabaseRecord, data: cloudData(), updated_at: uploadedAt });
         let res = await fetch(url, { method: "POST", headers: { ...cloudHeaders(session), Prefer: "resolution=merge-duplicates,return=minimal" }, body: payload });
@@ -2522,7 +2532,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V274</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V275</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
