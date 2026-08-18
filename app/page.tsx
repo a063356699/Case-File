@@ -2494,7 +2494,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V264</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V265</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -2505,7 +2505,7 @@ export default function Home() {
       <button className={tab === "intake" ? "active" : ""} onClick={() => { setTab("intake"); selectIntakeDraft(""); }}>進案草稿{intakeDrafts.filter(draft => !draft.enteredAt).length > 0 && <b className="intake-draft-nav-count">{intakeDrafts.filter(draft => !draft.enteredAt).length}</b>}</button>
       <button className={tab === "public" ? "active" : ""} onClick={openPublic}>前台總表</button>
       <button className={tab === "settings" ? "active" : ""} onClick={() => setTab("settings")}>設定</button>
-      <button className={tab === "contacts" ? "active" : ""} onClick={() => setTab("contacts")}>通訊錄</button>
+      <button className={`contacts-nav-button${tab === "contacts" ? " active" : ""}`} onClick={() => setTab("contacts")}>通訊錄</button>
       <span className="home-last-modified home-sync-times"><span className="local-modified-line"><b>最後修改:</b><em>{latestModifiedAt ? displayHomeModifiedAt(latestModifiedAt) : "尚無紀錄"}</em></span>{cloudSession?.accessToken && <button type="button" className={`cloud-manual-pull${cloudUpdateAvailable ? " available" : ""}`} title={cloudUpdateAvailable ? `雲端更新時間：${displayHomeModifiedAt(cloudRemoteUpdateAt)}` : "只有按下後才下載完整雲端資料"} onClick={() => void supabasePull(true)}>{cloudUpdateAvailable ? "雲端有新資料－讀取" : "讀取雲端最新資料"}</button>}<span className="cloud-upload-line" title={cloudUploadError || undefined}><b>Supabase上傳:</b><em>{cloudLastUploadAt ? displayHomeModifiedAt(cloudLastUploadAt) : "尚無紀錄"}<i className={`cloud-upload-state ${cloudUploadStatus === "上傳完成" ? "complete" : cloudUploadStatus === "上傳中" ? "uploading" : cloudUploadStatus === "上傳失敗" ? "failed" : "signed-out"}`}>{cloudUploadStatus}</i></em></span></span>
       </nav>
     </header>}
@@ -2722,11 +2722,21 @@ function printContactDirectory(people: Person[]) {
   const escape = (text: string) => text.replace(/[&<>"']/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[character] || character));
   const cells = (sequence: number) => { const person = ordered[sequence - 1]; return `<td>${sequence}</td><td>${escape(person?.name || "")}</td><td>${escape(person?.phone ? displayPhone(person.phone) : "")}</td>`; };
   const rows = Array.from({ length: 11 }, (_, row) => `<tr>${[1, 12, 23].map(start => cells(start + row)).join("")}</tr>`).join("");
-  const printWindow = window.open("", "_blank", "width=1200,height=850");
-  if (!printWindow) return alert("瀏覽器阻擋列印視窗，請允許此網站開啟彈出式視窗。");
-  printWindow.document.open();
-  printWindow.document.write(`<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><title>同仁通訊錄</title><style>@page{size:A4 landscape;margin:8mm}*{box-sizing:border-box}html,body{margin:0;background:#fff;color:#17242a;font-family:"Microsoft JhengHei",sans-serif}h1{text-align:center;margin:0 0 5mm;font-size:22pt;letter-spacing:.08em}table{width:100%;border-collapse:collapse;table-layout:fixed}th,td{border:1px solid #7d8983;text-align:center;height:15mm;padding:1.5mm;font-size:13pt}th{height:12mm;background:#e5eee9;color:#35594f;font-weight:800}th:nth-child(3n+1),td:nth-child(3n+1){width:8%}th:nth-child(3n+2),td:nth-child(3n+2){width:11%}th:nth-child(3n),td:nth-child(3n){width:14.33%}</style></head><body><h1>台慶文化崇明店～同仁通訊錄～</h1><table><thead><tr>${[1,12,23].map(() => "<th>序</th><th>姓名</th><th>手機</th>").join("")}</tr></thead><tbody>${rows}</tbody></table><script>window.addEventListener("load",()=>setTimeout(()=>window.print(),150));<\/script></body></html>`);
-  printWindow.document.close();
+  const oldFrame = document.getElementById("contact-directory-print-frame");
+  oldFrame?.remove();
+  const frame = document.createElement("iframe");
+  frame.id = "contact-directory-print-frame";
+  frame.setAttribute("aria-hidden", "true");
+  frame.style.cssText = "position:fixed;width:0;height:0;border:0;right:0;bottom:0;visibility:hidden";
+  document.body.appendChild(frame);
+  const printDocument = frame.contentDocument;
+  if (!printDocument || !frame.contentWindow) { frame.remove(); return alert("目前無法開啟列印功能，請重新整理後再試一次。"); }
+  printDocument.open();
+  printDocument.write(`<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><title>同仁通訊錄</title><style>@page{size:A4 landscape;margin:8mm}*{box-sizing:border-box}html,body{margin:0;background:#fff;color:#17242a;font-family:"Microsoft JhengHei",sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}.card{border:1.2px solid #afc1b8;border-radius:5mm;padding:5mm;background:#fff;box-shadow:inset 0 0 0 1mm #f5faf7}.title{display:flex;align-items:center;justify-content:center;gap:4mm;margin:0 0 4mm;padding:2.8mm;border-radius:3mm;background:linear-gradient(90deg,#edf6f1,#dcece4,#edf6f1);color:#234f43;font-size:20pt;font-weight:900;letter-spacing:.08em}.title:before,.title:after{content:"";width:18mm;height:1px;background:#7fa394}table{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed;overflow:hidden;border:1px solid #9eb3a8;border-radius:3mm}th,td{border-right:1px solid #b9c8c0;border-bottom:1px solid #c6d1cb;text-align:center;height:13.2mm;padding:1.2mm;font-size:12.5pt;background:#fff}tr:last-child td{border-bottom:0}th:last-child,td:last-child{border-right:0}th{height:10.5mm;background:#dcebe4;color:#28584a;font-weight:900}tbody tr:nth-child(even) td{background:#f7faf8}th:nth-child(3n+1),td:nth-child(3n+1){width:6.5%;color:#5a7168}th:nth-child(3n+2),td:nth-child(3n+2){width:10.5%;font-weight:800}th:nth-child(3n),td:nth-child(3n){width:16.33%;color:#174f90;font-weight:800;letter-spacing:.03em}</style></head><body><section class="card"><h1 class="title">台慶文化崇明店～同仁通訊錄～</h1><table><thead><tr>${[1,12,23].map(() => "<th>序</th><th>姓名</th><th>手機</th>").join("")}</tr></thead><tbody>${rows}</tbody></table></section></body></html>`);
+  printDocument.close();
+  const cleanup = () => window.setTimeout(() => frame.remove(), 800);
+  frame.contentWindow.addEventListener("afterprint", cleanup, { once: true });
+  window.setTimeout(() => { frame.contentWindow?.focus(); frame.contentWindow?.print(); window.setTimeout(cleanup, 30000); }, 120);
 }
 
 function ContactDirectory({ people, printable = false }: { people: Person[]; printable?: boolean }) {
