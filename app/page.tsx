@@ -2219,6 +2219,10 @@ export default function Home() {
         }
         // 若此次雲端內容與本機完全相同，不會觸發 snapshot effect；短暫後解除標記，避免擋到下一次真正儲存。
         window.setTimeout(() => { cloudSkipNextPushRef.current = false; }, 300);
+        cloudLocalPendingRef.current = false;
+        localStorage.removeItem(CLOUD_LOCAL_PENDING_KEY);
+        setCloudUploadState("complete");
+        setCloudUploadError("");
         if (!quiet) flash(automatic ? "已讀取雲端最新資料" : "雲端資料已合併到本機");
       }
     } catch { if (!quiet) flash(automatic ? "自動同步失敗，請檢查雲端登入" : "雲端讀取失敗，請檢查登入與設定"); }
@@ -2545,7 +2549,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V276</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V277</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -2557,7 +2561,7 @@ export default function Home() {
       <button className={tab === "public" ? "active" : ""} onClick={openPublic}>前台總表</button>
       <button className={tab === "settings" ? "active" : ""} onClick={() => setTab("settings")}>設定</button>
       <button className={`contacts-nav-button${tab === "contacts" ? " active" : ""}`} onClick={() => setTab("contacts")}>通訊錄</button>
-      <span className="home-last-modified home-sync-times"><span className="local-modified-line"><b>最後修改:</b><em>{latestModifiedAt ? displayHomeModifiedAt(latestModifiedAt) : "尚無紀錄"}</em></span>{cloudSession?.accessToken && <button type="button" className={`cloud-manual-pull${cloudUpdateAvailable ? " available" : ""}`} title={cloudUpdateAvailable ? `雲端更新時間：${displayHomeModifiedAt(cloudRemoteUpdateAt)}` : "只有按下後才下載完整雲端資料"} onClick={() => void supabasePull(true)}>{cloudUpdateAvailable ? "雲端有新資料－讀取" : "讀取雲端最新資料"}</button>}<span className="cloud-upload-line" title={cloudUploadError || undefined}><b>Supabase上傳:</b><em>{cloudLastUploadAt ? displayHomeModifiedAt(cloudLastUploadAt) : "尚無紀錄"}<i className={`cloud-upload-state ${cloudUploadStatus === "上傳完成" ? "complete" : cloudUploadStatus === "上傳中" ? "uploading" : cloudUploadStatus === "上傳失敗" ? "failed" : "signed-out"}`}>{cloudUploadStatus}</i></em></span></span>
+      <span className="home-last-modified home-sync-times"><span className="local-modified-line"><b>最後修改:</b><em>{latestModifiedAt ? displayHomeModifiedAt(latestModifiedAt) : "尚無紀錄"}</em></span>{cloudSession?.accessToken && <button type="button" className={`cloud-manual-pull${cloudUpdateAvailable ? " available" : ""}`} title={cloudUpdateAvailable ? `雲端更新時間：${displayHomeModifiedAt(cloudRemoteUpdateAt)}` : "只有按下後才下載完整雲端資料"} onClick={() => void supabasePull(false)}>{cloudUpdateAvailable ? "雲端有新資料－讀取" : "讀取雲端最新資料"}</button>}<span className="cloud-upload-line" title={cloudUploadError || undefined}><b>Supabase上傳:</b><em>{cloudLastUploadAt ? displayHomeModifiedAt(cloudLastUploadAt) : "尚無紀錄"}<i className={`cloud-upload-state ${cloudUploadStatus === "上傳完成" ? "complete" : cloudUploadStatus === "上傳中" ? "uploading" : cloudUploadStatus === "上傳失敗" ? "failed" : "signed-out"}`}>{cloudUploadStatus}</i></em></span></span>
       </nav>
     </header>}
 

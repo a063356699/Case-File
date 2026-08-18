@@ -44464,6 +44464,10 @@ ${changedLabels}
           window.setTimeout(() => {
             cloudSkipNextPushRef.current = false;
           }, 300);
+          cloudLocalPendingRef.current = false;
+          localStorage.removeItem(CLOUD_LOCAL_PENDING_KEY);
+          setCloudUploadState("complete");
+          setCloudUploadError("");
           if (!quiet) flash(automatic ? "\u5DF2\u8B80\u53D6\u96F2\u7AEF\u6700\u65B0\u8CC7\u6599" : "\u96F2\u7AEF\u8CC7\u6599\u5DF2\u5408\u4F75\u5230\u672C\u6A5F");
         }
       } catch {
@@ -44930,7 +44934,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V276" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V277" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -44995,7 +44999,7 @@ ${changedLabels}
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u6700\u5F8C\u4FEE\u6539:" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("em", { children: latestModifiedAt ? displayHomeModifiedAt(latestModifiedAt) : "\u5C1A\u7121\u7D00\u9304" })
             ] }),
-            cloudSession?.accessToken && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: `cloud-manual-pull${cloudUpdateAvailable ? " available" : ""}`, title: cloudUpdateAvailable ? `\u96F2\u7AEF\u66F4\u65B0\u6642\u9593\uFF1A${displayHomeModifiedAt(cloudRemoteUpdateAt)}` : "\u53EA\u6709\u6309\u4E0B\u5F8C\u624D\u4E0B\u8F09\u5B8C\u6574\u96F2\u7AEF\u8CC7\u6599", onClick: () => void supabasePull(true), children: cloudUpdateAvailable ? "\u96F2\u7AEF\u6709\u65B0\u8CC7\u6599\uFF0D\u8B80\u53D6" : "\u8B80\u53D6\u96F2\u7AEF\u6700\u65B0\u8CC7\u6599" }),
+            cloudSession?.accessToken && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: `cloud-manual-pull${cloudUpdateAvailable ? " available" : ""}`, title: cloudUpdateAvailable ? `\u96F2\u7AEF\u66F4\u65B0\u6642\u9593\uFF1A${displayHomeModifiedAt(cloudRemoteUpdateAt)}` : "\u53EA\u6709\u6309\u4E0B\u5F8C\u624D\u4E0B\u8F09\u5B8C\u6574\u96F2\u7AEF\u8CC7\u6599", onClick: () => void supabasePull(false), children: cloudUpdateAvailable ? "\u96F2\u7AEF\u6709\u65B0\u8CC7\u6599\uFF0D\u8B80\u53D6" : "\u8B80\u53D6\u96F2\u7AEF\u6700\u65B0\u8CC7\u6599" }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "cloud-upload-line", title: cloudUploadError || void 0, children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "Supabase\u4E0A\u50B3:" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("em", { children: [
