@@ -2245,15 +2245,10 @@ export default function Home() {
     if (cloudAutoPullRef.current === pullKey) return;
     cloudAutoPullRef.current = pullKey;
     if (localStorage.getItem("property-desk-import-prefer-local-once") === "1") { localStorage.removeItem("property-desk-import-prefer-local-once"); return; }
-    // 公司這台的最後修改比雲端新，或前次上傳失敗時，一律先上傳。
-    // 不能先自動下載，否則家裡斷線留下的舊雲端資料會覆蓋正確的公司資料。
-    const pending = cloudLocalPendingRef.current || localStorage.getItem(CLOUD_LOCAL_PENDING_KEY) === "1" || localCloudChangesPending;
-    if (pending) {
-      cloudLocalPendingRef.current = true;
-      localStorage.setItem(CLOUD_LOCAL_PENDING_KEY, "1");
-      void supabasePush(true);
-      return;
-    }
+    // 登入時以雲端正式資料為準；舊電腦留下的 pending 標記不可直接觸發整包上傳覆蓋雲端。
+    cloudLocalPendingRef.current = false;
+    localStorage.removeItem(CLOUD_LOCAL_PENDING_KEY);
+    setCloudUploadState("idle");
     void supabasePull(true);
   }, [cloudSession?.accessToken, cloudSession?.email, settings.supabaseUrl, settings.supabaseKey, settings.supabaseTable, settings.supabaseRecord, localCloudChangesPending]);
   // 管理模式開啟期間每 45 秒只讀取 updated_at；偵測到新資料只提醒，由使用者決定何時下載完整資料。
@@ -2499,7 +2494,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V257</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V258</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>

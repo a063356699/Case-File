@@ -44487,13 +44487,9 @@ ${changedLabels}
         localStorage.removeItem("property-desk-import-prefer-local-once");
         return;
       }
-      const pending = cloudLocalPendingRef.current || localStorage.getItem(CLOUD_LOCAL_PENDING_KEY) === "1" || localCloudChangesPending;
-      if (pending) {
-        cloudLocalPendingRef.current = true;
-        localStorage.setItem(CLOUD_LOCAL_PENDING_KEY, "1");
-        void supabasePush(true);
-        return;
-      }
+      cloudLocalPendingRef.current = false;
+      localStorage.removeItem(CLOUD_LOCAL_PENDING_KEY);
+      setCloudUploadState("idle");
       void supabasePull(true);
     }, [cloudSession?.accessToken, cloudSession?.email, settings.supabaseUrl, settings.supabaseKey, settings.supabaseTable, settings.supabaseRecord, localCloudChangesPending]);
     (0, import_react.useEffect)(() => {
@@ -44844,7 +44840,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V257" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V258" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
