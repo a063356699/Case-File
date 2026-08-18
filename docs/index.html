@@ -42500,7 +42500,7 @@ ${String(ex)}`);
     const [cloudSession, setCloudSession] = (0, import_react.useState)(null);
     const [cloudLastUploadAt, setCloudLastUploadAt] = (0, import_react.useState)(() => typeof window !== "undefined" ? localStorage.getItem(CLOUD_LAST_UPLOAD_KEY) || "" : "");
     const [cloudUploadState, setCloudUploadState] = (0, import_react.useState)("idle");
-    const [cloudUploadError2, setCloudUploadError] = (0, import_react.useState)("");
+    const [cloudUploadError, setCloudUploadError] = (0, import_react.useState)("");
     const [tab, setTab] = (0, import_react.useState)("active");
     const [query, setQuery] = (0, import_react.useState)("");
     const [archiveQuery, setArchiveQuery] = (0, import_react.useState)("");
@@ -43092,7 +43092,7 @@ ${String(ex)}`);
     }, "");
     const latestModifiedAt = [latestRecordModifiedAt, latestDraftModifiedAt, tourModifiedAt].filter(Boolean).reduce((latest, candidate) => !latest || new Date(candidate).getTime() > new Date(latest).getTime() ? candidate : latest, "");
     const localCloudChangesPending = Boolean(latestModifiedAt && (!cloudLastUploadAt || Date.parse(latestModifiedAt) > Date.parse(cloudLastUploadAt)));
-    const cloudUploadStatus2 = !cloudSession?.accessToken ? "\u672A\u767B\u5165" : cloudUploadState === "failed" ? "\u4E0A\u50B3\u5931\u6557" : cloudUploadState === "uploading" || localCloudChangesPending ? "\u4E0A\u50B3\u4E2D" : "\u4E0A\u50B3\u5B8C\u6210";
+    const cloudUploadStatus = !cloudSession?.accessToken ? "\u672A\u767B\u5165" : cloudUploadState === "failed" ? "\u4E0A\u50B3\u5931\u6557" : cloudUploadState === "uploading" || localCloudChangesPending ? "\u4E0A\u50B3\u4E2D" : "\u4E0A\u50B3\u5B8C\u6210";
     const showingFollowUpRecords = active.filter((record) => record.showingFollowUp === "\u66AB\u505C\u5E36\u770B\uFF0F\u7B49\u5F85\u696D\u52D9\u56DE\u8986");
     (0, import_react.useEffect)(() => {
       const dueToday = showingFollowUpRecords.filter((record) => normalizeDateInput(record.showingFollowUpDueDate || "") === today());
@@ -44786,7 +44786,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V245" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V246" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -44850,11 +44850,11 @@ ${changedLabels}
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u6700\u5F8C\u4FEE\u6539:" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("em", { children: latestModifiedAt ? displayHomeModifiedAt(latestModifiedAt) : "\u5C1A\u7121\u7D00\u9304" })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "cloud-upload-line", title: cloudUploadError2 || void 0, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "cloud-upload-line", title: cloudUploadError || void 0, children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "Supabase\u4E0A\u50B3:" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("em", { children: [
                 cloudLastUploadAt ? displayHomeModifiedAt(cloudLastUploadAt) : "\u5C1A\u7121\u7D00\u9304",
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("i", { className: `cloud-upload-state ${cloudUploadStatus2 === "\u4E0A\u50B3\u5B8C\u6210" ? "complete" : cloudUploadStatus2 === "\u4E0A\u50B3\u4E2D" ? "uploading" : cloudUploadStatus2 === "\u4E0A\u50B3\u5931\u6557" ? "failed" : "signed-out"}`, children: cloudUploadStatus2 })
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("i", { className: `cloud-upload-state ${cloudUploadStatus === "\u4E0A\u50B3\u5B8C\u6210" ? "complete" : cloudUploadStatus === "\u4E0A\u50B3\u4E2D" ? "uploading" : cloudUploadStatus === "\u4E0A\u50B3\u5931\u6557" ? "failed" : "signed-out"}`, children: cloudUploadStatus })
               ] })
             ] })
           ] })
@@ -44889,7 +44889,7 @@ ${changedLabels}
           ] })
         ] }, record.id)) })
       ] }),
-      tab === "settings" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SettingsPanel, { settings, setSettings, supabasePush, supabasePull, cloudSession, supabaseSignIn, supabaseSignOut }) : tab === "intake" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(IntakePanel, { raw: intakeRaw, setRaw: setIntakeRaw, drafts: intakeDrafts, draft: intakeDraft, selectDraft: selectIntakeDraft, deleteDraft: removeIntakeDraft, analyze: analyzeIntake, addManualDraft: addManualIntakeDraft, updateValue: updateIntakeValue, clear: () => setIntakeRaw(""), confirmIntake, markPrintedForSales: markIntakeDraftPrintedForSales }) : tab === "tour" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TourPlanner, { records, drafts: intakeDrafts, items: tourItems, setItems: updateTourItems, history: tourHistory, setHistory: setTourHistory, editRecord: setEditing, updateDraftCaseName: updateIntakeDraftCaseName, tourDate, setTourDate: updateTourDate, tourTitle, setTourTitle: updateTourTitle, notify: flash, complete: (date, recordIds, draftIds) => {
+      tab === "settings" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SettingsPanel, { settings, setSettings, supabasePush, supabasePull, cloudSession, cloudUploadStatus, cloudUploadError, supabaseSignIn, supabaseSignOut }) : tab === "intake" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(IntakePanel, { raw: intakeRaw, setRaw: setIntakeRaw, drafts: intakeDrafts, draft: intakeDraft, selectDraft: selectIntakeDraft, deleteDraft: removeIntakeDraft, analyze: analyzeIntake, addManualDraft: addManualIntakeDraft, updateValue: updateIntakeValue, clear: () => setIntakeRaw(""), confirmIntake, markPrintedForSales: markIntakeDraftPrintedForSales }) : tab === "tour" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TourPlanner, { records, drafts: intakeDrafts, items: tourItems, setItems: updateTourItems, history: tourHistory, setHistory: setTourHistory, editRecord: setEditing, updateDraftCaseName: updateIntakeDraftCaseName, tourDate, setTourDate: updateTourDate, tourTitle, setTourTitle: updateTourTitle, notify: flash, complete: (date, recordIds, draftIds) => {
         setRecords((previous) => previous.map((record) => recordIds.includes(record.id) ? withTrackedUpdate(record, { ...record, groupViewDate: date, updateDate: today() }) : record));
         setIntakeDrafts((previous) => previous.map((draft) => draftIds.includes(draft.id) ? { ...draft, groupViewDate: date } : draft));
         updateTourItems([]);
@@ -50041,7 +50041,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       ] })
     ] });
   }
-  function SettingsPanel({ settings, setSettings, supabasePush, supabasePull, cloudSession, supabaseSignIn, supabaseSignOut }) {
+  function SettingsPanel({ settings, setSettings, supabasePush, supabasePull, cloudSession, cloudUploadStatus, cloudUploadError, supabaseSignIn, supabaseSignOut }) {
     const set = (k, v) => setSettings({ ...settings, [k]: v });
     (0, import_react.useEffect)(() => {
       const personnelPanel = document.querySelector(".settings .personnel-panel");
