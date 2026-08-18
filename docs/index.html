@@ -44849,7 +44849,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V261" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V262" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -50176,10 +50176,12 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     const reorderPerson = (id, rawSequence) => {
       const current = settings.personnel.find((person) => person.id === id);
       if (!current) return;
-      const ordered = sortPeopleBySequence(settings.personnel.filter((person) => person.id !== id));
+      const sameStatus = sortPeopleBySequence(settings.personnel.filter((person) => person.id !== id && person.status === current.status));
+      const otherStatus = sortPeopleBySequence(settings.personnel.filter((person) => person.status !== current.status));
       const requested = Math.floor(Number(rawSequence));
-      const position = Number.isFinite(requested) && requested > 0 ? Math.min(requested, ordered.length + 1) : ordered.length + 1;
-      ordered.splice(position - 1, 0, current);
+      const position = Number.isFinite(requested) && requested > 0 ? Math.min(requested, sameStatus.length + 1) : sameStatus.length + 1;
+      sameStatus.splice(position - 1, 0, current);
+      const ordered = current.status === "\u5728\u8077" ? [...sameStatus, ...otherStatus] : [...otherStatus, ...sameStatus];
       setSettings({ ...settings, personnel: ordered.map((person, index) => ({ ...person, sequence: String(index + 1) })) });
     };
     const personTextInput = (person, field, placeholder, type = "text") => {
@@ -50212,7 +50214,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     const personRow = (p) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "person-row", children: [
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { className: "person-sequence", type: "number", min: "1", defaultValue: p.sequence || "", onBlur: (e) => reorderPerson(p.id, e.currentTarget.value), onKeyDown: (e) => {
         if (e.key === "Enter") e.currentTarget.blur();
-      }, placeholder: "\u5E8F" }),
+      }, placeholder: "\u5E8F" }, `${p.id}-${p.sequence || ""}`),
       personTextInput(p, "name", "\u59D3\u540D"),
       personTextInput(p, "nationalId", "\u8EAB\u5206\u8B49\u5B57\u865F"),
       personTextInput(p, "phone", "\u624B\u6A5F\u865F\u78BC", "tel"),
