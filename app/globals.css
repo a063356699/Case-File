@@ -282,7 +282,10 @@ button:hover,.file-button:hover{border-color:#9fbad0;box-shadow:0 2px 8px #7895a
 .print-document .checklist-page>.check-strip,.print-document .checklist-page>h1,.print-document .checklist-page>.check-price,.print-document .checklist-page>.check-list,.print-document .checklist-page>.check-columns,.print-document .checklist-page>.check-tail,.print-document .checklist-page>.signature-box{min-height:0!important;max-height:none!important;height:auto!important;box-sizing:border-box!important;margin:0!important;overflow:hidden!important}
 .print-document .checklist-page>.check-strip{display:flex!important;align-items:center!important;justify-content:center!important}
 .print-document .checklist-page>h1{display:flex!important;align-items:center!important;justify-content:center!important}
-.print-document .checklist-page>.check-list{display:grid!important;grid-template-rows:7mm 10mm 13mm 13mm 9mm 9mm 8mm 8mm 10mm 10mm!important}
+.print-document .checklist-page>.check-list{display:grid!important;grid-template-columns:1fr 1fr!important;grid-template-rows:10mm 14mm 14mm 10mm 10mm 9mm 9mm 10mm 11mm!important}
+.print-document .checklist-page>.check-list>li{grid-column:1/-1!important}
+.print-document .checklist-page>.check-list>li:first-child{grid-column:1!important}
+.print-document .checklist-page>.check-list>li.check-entrust-period{grid-column:2!important}
 .print-document .checklist-page>.check-list>li{display:list-item!important;list-style-position:outside!important;min-height:0!important;box-sizing:border-box!important;overflow:hidden!important}
 .print-document .checklist-page>.check-tail{display:grid!important;grid-template-rows:13mm 17mm 17mm 10mm!important;min-height:0!important}
 .print-document .checklist-page>.check-tail>p{display:block!important;min-height:0!important;height:auto!important;box-sizing:border-box!important;margin:0!important;overflow:hidden!important}
@@ -298,7 +301,8 @@ button:hover,.file-button:hover{border-color:#9fbad0;box-shadow:0 2px 8px #7895a
 .print-document .checklist-page>.check-price .choice-lines>span{position:static!important;transform:none!important;float:none!important;align-self:center!important;margin:0!important}
 .print-document .checklist-page .note-line{display:inline-block!important;margin-left:0!important;padding-left:0!important}
 .print-document .checklist-page>.check-list>li.note-item{display:flex!important;flex-direction:column!important;justify-content:space-between!important;align-items:flex-start!important;padding-top:1mm!important;padding-bottom:1mm!important}
-.print-document .checklist-page>.check-list>li.check-entrust-period{color:#0b63c7!important;font-weight:700!important}
+.print-document .checklist-page>.check-list>li.check-entrust-period{color:#0000ff!important;font-weight:700!important;white-space:nowrap!important}
+.print-document .checklist-page>.check-list>li.check-entrust-period small{font-size:8.5pt!important;font-weight:400!important}
 .print-document .checklist-page>.check-columns{display:grid!important;grid-template-columns:1fr 1fr!important;align-items:stretch!important}
 .print-document .checklist-page>.check-columns>div{display:flex!important;flex-direction:column!important;justify-content:space-evenly!important;height:100%!important;min-height:0!important;box-sizing:border-box!important}
 .print-document .checklist-page>.check-columns p{margin:0 3mm!important}

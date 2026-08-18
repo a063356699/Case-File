@@ -496,10 +496,10 @@ const daysUntil = (date = "") => validDate(date) && date ? Math.ceil((Date.parse
 const nextDate = (date = "") => { const normalized = normalizeDateInput(date); if (!validDate(normalized)) return today(); const value = new Date(`${normalized}T00:00:00`); value.setDate(value.getDate() + 1); return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(value.getDate()).padStart(2, "0")}`; };
 const intakeEntrustPeriod = (startValue = "", endValue = "") => {
   const start = normalizeDateInput(String(startValue || "")); const end = normalizeDateInput(String(endValue || ""));
-  if (!validDate(start) || !validDate(end)) return "";
+  if (!validDate(start) || !validDate(end)) return null;
   const [startYear, startMonth, startDay] = start.split("-").map(Number); const [endYear, endMonth, endDay] = end.split("-").map(Number);
   const months = Math.max(1, (endYear - startYear) * 12 + endMonth - startMonth + (endDay >= startDay ? 1 : 0));
-  return `${displayRocDate(start)}~${displayRocDate(end)} 共${months}個月`;
+  return { start: displayRocDate(start), end: displayRocDate(end), months };
 };
 const activeGroupKey = (record: RecordItem) => {
   const address = String(record.address || "").replace(/臺/g, "台").trim();
@@ -2463,7 +2463,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V249</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V250</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -3818,7 +3818,7 @@ function ChecklistPageV2({ val }: { val: (...keys: string[]) => string }) {
     </div>
     <ol className="check-list" start={3}>
       <li><b>中人</b>　□無，□有介紹人：____________元</li>
-      <li className="check-entrust-period"><b>委託時間業務填寫</b>：{intakeEntrustPeriod(val("委託開始 日期", "委託開始"), val("委託結束 日期", "委託結束")) || "____________~____________ 共____個月"}</li>
+      <li className="check-entrust-period">{(() => { const period = intakeEntrustPeriod(val("委託開始 日期", "委託開始"), val("委託結束 日期", "委託結束")); return period ? <>委託開始:{period.start}　~委託結束:{period.end}　<small>(共{period.months}個月)</small></> : <>委託開始:________　~委託結束:________　<small>(共____個月)</small></>; })()}</li>
       <li className="note-item"><span><b>地號謄本</b>×_____筆　□紙本已附件　□曾經調閱請列印　□未調閱，請助理協助</span><span className="note-line">備註：____________________________________________________________</span></li>
       <li className="note-item"><span><b>建號謄本</b>×_____筆　□紙本已附件　□曾經調閱請列印　□未調閱，請助理協助</span><span className="note-line">備註：____________________________________________________________</span></li>
       <li><b>地籍圖</b>　□大樓：無須調　|　房屋／土地（□紙本已附件　□曾經調閱請列印　□未調閱）</li>
