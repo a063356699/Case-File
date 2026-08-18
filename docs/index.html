@@ -41654,7 +41654,8 @@ ${String(ex)}`);
     "\u9EC3\u6587\u6210",
     "\u8CB7\u6DD1\u73B2",
     "\u5289\u52DD\u4EC1",
-    "\u674E\u9E97\u5349"
+    "\u674E\u9E97\u5349",
+    "\u6797\u5FD7\u9298"
   ];
   var contactDirectorySequence = new Map(contactDirectoryOrder.map((name, index) => [name, String(index + 1)]));
   var contactDirectoryPhoneOverrides = { \u90ED\u5EFA\u4F51: "0938-839-308" };
@@ -44572,6 +44573,7 @@ ${changedLabels}
     };
     const publicPerson = settings.personnel.find((p) => p.id === publicPersonId);
     const contactPeople = sortPeopleBySequence(settings.personnel.filter((person) => person.status === "\u5728\u8077" && person.name.trim() && String(person.phone || "").trim()));
+    const publicContactCount = contactDirectoryOrder.filter((name) => contactPeople.some((person) => person.name.trim() === name)).length;
     const myProperties = active.filter((r) => nameMatches(r.developer, publicPerson?.name || ""));
     const expiryAlerts = myProperties.filter((r) => daysUntil(r.entrustEnd) >= 0 && daysUntil(r.entrustEnd) <= 30);
     const publicBaseRecords = publicScope === "mine" ? myProperties.map((record) => ({ ...record, _showEntrustEndInPropertyNo: "1" })) : active;
@@ -44832,7 +44834,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V253" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V254" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -44952,7 +44954,7 @@ ${changedLabels}
             "\u767B\u9304\u4EBA\u54E1\uFF1A",
             publicPerson?.name || "\u696D\u52D9\u4EBA\u54E1"
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", { children: publicScope === "activity" ? "\u6BCF\u65E5\u7269\u4EF6\u52D5\u614B" : publicScope === "mine" ? "\u6211\u7684\u7269\u4EF6" : publicScope === "contacts" ? `\u901A\u8A0A\u9304 ${contactPeople.length}` : "\u7269\u4EF6\u7E3D\u8868" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", { children: publicScope === "activity" ? "\u6BCF\u65E5\u7269\u4EF6\u52D5\u614B" : publicScope === "mine" ? "\u6211\u7684\u7269\u4EF6" : publicScope === "contacts" ? `\u901A\u8A0A\u9304 ${publicContactCount}` : "\u7269\u4EF6\u7E3D\u8868" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "scope-tabs", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: publicScope === "activity" ? "selected" : "", onClick: () => setPublicScope("activity"), children: "\u6BCF\u65E5\u7269\u4EF6\u52D5\u614B" }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { className: publicScope === "mine" ? "selected" : "", onClick: () => setPublicScope("mine"), children: [
@@ -44965,7 +44967,7 @@ ${changedLabels}
             ] }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { className: publicScope === "contacts" ? "selected" : "", onClick: () => setPublicScope("contacts"), children: [
               "\u901A\u8A0A\u9304 ",
-              contactPeople.length
+              publicContactCount
             ] })
           ] })
         ] }) }),
