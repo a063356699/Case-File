@@ -1645,6 +1645,7 @@ body{background:#f8fbfe!important;color:#405064!important}
 .daily-activity .daily-table td.col-caseName .public-case-name>span{font-size:14px!important;line-height:1.45!important;font-weight:800!important}
 .daily-activity .daily-table td.col-address,
 .daily-activity .daily-table td.col-address *{font-size:14px!important;line-height:1.45!important;font-weight:500!important}
+.inventory-group-settings{padding:16px;border:1px solid #d7e1dc;border-radius:14px;background:#fff;box-shadow:0 6px 20px #33473d0a}.inventory-group-settings-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:13px}.inventory-group-settings-head h3{margin:0;color:#254f43;font-size:21px}.inventory-group-settings-head p{margin:4px 0 0;color:#718079;font-size:12px}.inventory-group-grid{display:grid;grid-template-columns:repeat(4,minmax(270px,1fr));gap:14px}.inventory-group-card{--group-color:#4576d8;overflow:hidden;border:2px solid var(--group-color);border-radius:14px;background:#fff}.inventory-group-card.group-a{--group-color:#f05a32}.inventory-group-card.group-b{--group-color:#396ee8}.inventory-group-card.group-c{--group-color:#2aa052}.inventory-group-card.group-d{--group-color:#8152ef}.inventory-group-card>header{display:grid;grid-template-columns:28px minmax(90px,1fr) auto;gap:8px;align-items:center;padding:11px;background:color-mix(in srgb,var(--group-color) 9%,#fff)}.inventory-group-card>header>b{font-size:20px;color:#173148;text-align:center}.inventory-group-card>header input,.inventory-group-card>header button,.inventory-group-member select{min-width:0;height:38px;border:1px solid #bfd0e8;border-radius:10px;background:#fff;padding:6px 9px;font-size:14px}.inventory-group-card>header input{font-weight:800}.inventory-group-card>header button{color:#274c9c;font-weight:800;white-space:nowrap}.inventory-group-labels,.inventory-group-member{display:grid;grid-template-columns:minmax(96px,1.35fr) minmax(70px,.85fr) 42px 46px 46px 34px;gap:5px;align-items:center}.inventory-group-labels{padding:8px 10px 4px;color:#6d7a75;font-size:11px;font-weight:800;text-align:center}.inventory-group-member{margin:7px 10px;padding:7px;border:1px solid #ecd189;border-radius:11px;background:#fffaf0}.inventory-group-member>span,.inventory-group-member>strong{text-align:center;font-size:13px}.inventory-group-member>strong{color:#a6453f}.inventory-group-member>.danger{min-width:0;width:34px;height:34px;padding:0;border-radius:9px}.inventory-group-empty{margin:10px;padding:18px;border:1px dashed #ccd8d2;border-radius:10px;color:#7b8882;text-align:center}@media(max-width:1450px){.inventory-group-grid{grid-template-columns:repeat(2,minmax(300px,1fr))}}@media(max-width:760px){.inventory-group-grid{grid-template-columns:1fr}.inventory-group-settings{padding:10px}.inventory-group-labels,.inventory-group-member{grid-template-columns:minmax(92px,1.2fr) 70px 38px 42px 42px 32px;gap:3px}.inventory-group-member{margin:6px;padding:5px}.inventory-group-member select{padding:5px;font-size:12px}}
 </style>
 </head>
 <body>
@@ -41598,6 +41599,20 @@ ${String(ex)}`);
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
   };
   var sortPeopleBySequence = (people) => people.slice().sort((a, b) => Number(a.sequence || 9999) - Number(b.sequence || 9999) || String(a.sequence || "").localeCompare(String(b.sequence || ""), "zh-TW", { numeric: true }) || a.name.localeCompare(b.name, "zh-TW"));
+  var inventoryGroupDefaults = {
+    A: { name: "A\u7D44", leader: "\u694A\u5DE7\u7504", members: ["\u9EC3\u6587\u6210", "\u8CC8\u6DD1\u73B2", "\u6797\u986F\u660C", "\u7530\u5EAD\u5B87", "\u9673\u73EE\u83C1", "\u67EF\u80B2\u5A77", "\u962E\u6C0F\u91D1\u6C34"] },
+    B: { name: "B\u7D44", leader: "\u8B1D\u99A8\u5100", members: ["\u5B8B\u559C\u8F1D", "\u9673\u4FE1\u826F", "\u9673\u5E1D\u5143", "\u738B\u4FDE\u4E91", "\u6797\u4FCA\u5609", "\u5F35\u5C0F\u66FC", "\u6797\u5FD7\u9298"] },
+    C: { name: "C\u7D44", leader: "\u674E\u4EAB\u5DA7", members: ["\u5289\u52DD\u4EC1", "\u5433\u4F69\u73B2", "\u6797\u59FF\u5C91", "\u90ED\u5EFA\u4F51", "\u4F59\u6C9B\u81FB", "\u8449\u7FBD\u7E3A"] },
+    D: { name: "D\u7D44", leader: "\u8521\u5B87\u80B2", members: ["\u6797\u7389\u74B0", "\u738B\u555F\u5C71", "\u738B\u597D\u5BB8", "\u738B\u82E5\u82B8"] }
+  };
+  var defaultInventoryGroups = (people) => ["A", "B", "C", "D"].map((id) => {
+    const preset = inventoryGroupDefaults[id];
+    const member = (name, role) => {
+      const person = people.find((item) => item.name === name && item.status === "\u5728\u8077");
+      return person ? { personId: person.id, role } : null;
+    };
+    return { id, name: preset.name, members: [member(preset.leader, "\u7D44\u9577"), ...preset.members.map((name) => member(name, "\u7D44\u54E1"))].filter(Boolean) };
+  });
   var displayPhone = (value = "") => {
     const digits = value.replace(/\D/g, "");
     return digits.length === 10 ? `${digits.slice(0, 4)}-${digits.slice(4, 7)}-${digits.slice(7)}` : value;
@@ -44247,7 +44262,7 @@ ${changedLabels}
     };
     const cloudData = () => ({
       records: records.map(({ photos, ...record }) => record),
-      settings: { personnel: settings.personnel, bookReviewCurrentDate: settings.bookReviewCurrentDate, bookReviewNextDate: settings.bookReviewNextDate, expiry591: settings.expiry591, expiry5168: settings.expiry5168, brokerExpiry: settings.brokerExpiry },
+      settings: { personnel: settings.personnel, inventoryGroups: settings.inventoryGroups, bookReviewCurrentDate: settings.bookReviewCurrentDate, bookReviewNextDate: settings.bookReviewNextDate, expiry591: settings.expiry591, expiry5168: settings.expiry5168, brokerExpiry: settings.brokerExpiry },
       intake: { raw: intakeRaw, drafts: intakeDrafts, selectedId: selectedIntakeId },
       tour: { date: tourDate, title: tourTitle, items: tourItems, modifiedAt: tourModifiedAt, history: tourHistory },
       pptWeeks: (() => {
@@ -44390,7 +44405,7 @@ ${changedLabels}
             });
             return [...map.values()];
           });
-          if (data.settings) setSettings((previous) => ({ ...previous, ...data.settings.bookReviewCurrentDate ? { bookReviewCurrentDate: data.settings.bookReviewCurrentDate } : {}, ...data.settings.bookReviewNextDate ? { bookReviewNextDate: data.settings.bookReviewNextDate } : {}, ...data.settings.expiry591 ? { expiry591: data.settings.expiry591 } : {}, ...data.settings.expiry5168 ? { expiry5168: data.settings.expiry5168 } : {}, ...data.settings.brokerExpiry ? { brokerExpiry: data.settings.brokerExpiry } : {}, ...Array.isArray(data.settings.personnel) && data.settings.personnel.length > 0 ? { personnel: mergeSuppliedPersonnel(data.settings.personnel) } : {} }));
+          if (data.settings) setSettings((previous) => ({ ...previous, ...data.settings.bookReviewCurrentDate ? { bookReviewCurrentDate: data.settings.bookReviewCurrentDate } : {}, ...data.settings.bookReviewNextDate ? { bookReviewNextDate: data.settings.bookReviewNextDate } : {}, ...data.settings.expiry591 ? { expiry591: data.settings.expiry591 } : {}, ...data.settings.expiry5168 ? { expiry5168: data.settings.expiry5168 } : {}, ...data.settings.brokerExpiry ? { brokerExpiry: data.settings.brokerExpiry } : {}, ...Array.isArray(data.settings.inventoryGroups) ? { inventoryGroups: data.settings.inventoryGroups } : {}, ...Array.isArray(data.settings.personnel) && data.settings.personnel.length > 0 ? { personnel: mergeSuppliedPersonnel(data.settings.personnel) } : {} }));
           if (data.intake) {
             setIntakeRaw((previous) => previous || data.intake.raw || "");
             setIntakeDrafts((previous) => reconcileIntakeDraftLinks(mergeIntakeDrafts(previous, Array.isArray(data.intake.drafts) ? data.intake.drafts : []), [...records, ...data.records]));
@@ -44508,7 +44523,7 @@ ${changedLabels}
       } catch {
       }
     };
-    const cloudSnapshot = JSON.stringify({ records, personnel: settings.personnel, expiry591: settings.expiry591, expiry5168: settings.expiry5168, brokerExpiry: settings.brokerExpiry, intakeRaw, intakeDrafts, selectedIntakeId, tourDate, tourTitle, tourItems, tourModifiedAt, tourHistory, pptWeekStart, pptExtraIds, pptOrderIds, pptAdHocRecords, pptConfirmedSnapshots });
+    const cloudSnapshot = JSON.stringify({ records, personnel: settings.personnel, inventoryGroups: settings.inventoryGroups, expiry591: settings.expiry591, expiry5168: settings.expiry5168, brokerExpiry: settings.brokerExpiry, intakeRaw, intakeDrafts, selectedIntakeId, tourDate, tourTitle, tourItems, tourModifiedAt, tourHistory, pptWeekStart, pptExtraIds, pptOrderIds, pptAdHocRecords, pptConfirmedSnapshots });
     (0, import_react.useEffect)(() => {
       if (internalView || tab === "public" || !storageReady) return;
       if (cloudSkipNextPushRef.current) {
@@ -44915,7 +44930,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V275" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V276" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -45025,7 +45040,7 @@ ${changedLabels}
         setIntakeDrafts((previous) => previous.map((draft) => draftIds.includes(draft.id) ? { ...draft, groupViewDate: date } : draft));
         updateTourItems([]);
         flash("\u5718\u770B\u65E5\u671F\u5DF2\u540C\u6B65\u5230\u7269\u4EF6\u8207\u8349\u7A3F");
-      } }) : tab === "activity" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(DailyActivity, { records, onEdit: setEditing }) : tab === "inventory" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(BusinessInventory, { records, people: settings.personnel }) : tab === "keys" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(KeySummary, { records }) : showingPublic ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("section", { className: "public-shell", children: !publicUnlocked ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "login-card", children: [
+      } }) : tab === "activity" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(DailyActivity, { records, onEdit: setEditing }) : tab === "inventory" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(BusinessInventory, { records, settings, setSettings }) : tab === "keys" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(KeySummary, { records }) : showingPublic ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("section", { className: "public-shell", children: !publicUnlocked ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "login-card", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", { children: "\u5167\u90E8\u7E3D\u8868" }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "\u8ACB\u8F38\u5165\u696D\u52D9\u4EBA\u54E1\u8EAB\u5206\u8B49\u5B57\u865F\u9032\u5165" }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "password", value: password, onChange: (e) => setPassword(e.target.value), onKeyDown: (e) => e.key === "Enter" && void unlock(), placeholder: "\u8ACB\u8F38\u5165\u5BC6\u78BC" }),
@@ -49617,7 +49632,8 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       }) })
     ] });
   }
-  function BusinessInventory({ records, people }) {
+  function BusinessInventory({ records, settings, setSettings }) {
+    const people = settings.personnel;
     const [month, setMonth] = (0, import_react.useState)(today().slice(0, 7));
     const [monthlyDetailName, setMonthlyDetailName] = (0, import_react.useState)("");
     const [monthlyExpanded, setMonthlyExpanded] = (0, import_react.useState)(false);
@@ -49674,6 +49690,29 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       const rental = sum(activeRecords.filter(isRentalRecord), name);
       return { name, exclusiveHouse, exclusiveLand, generalHouse, generalLand, rental, total: exclusiveHouse + exclusiveLand + generalHouse + generalLand + rental };
     }).sort((a, b) => b.total - a.total || a.name.localeCompare(b.name, "zh-TW"));
+    const groupIds = ["A", "B", "C", "D"];
+    const savedGroupMap = new Map((settings.inventoryGroups || []).map((group) => [group.id, group]));
+    const fallbackGroupMap = new Map(defaultInventoryGroups(people).map((group) => [group.id, group]));
+    const inventoryGroups = groupIds.map((id) => savedGroupMap.get(id) || fallbackGroupMap.get(id));
+    const activeSalesPeople = sortPeopleBySequence(people.filter((person) => person.status === "\u5728\u8077" && person.role !== "\u79D8\u66F8" && person.name.trim()));
+    const saveInventoryGroups = (groups) => setSettings({ ...settings, inventoryGroups: groups });
+    const updateInventoryGroup = (groupId, patch) => saveInventoryGroups(inventoryGroups.map((group) => group.id === groupId ? { ...group, ...patch } : group));
+    const addInventoryMember = (groupId) => {
+      const assigned = new Set(inventoryGroups.flatMap((group) => group.members.map((member) => member.personId)).filter(Boolean));
+      const available = activeSalesPeople.find((person) => !assigned.has(person.id));
+      updateInventoryGroup(groupId, { members: [...inventoryGroups.find((group) => group.id === groupId)?.members || [], { personId: available?.id || "", role: "\u7D44\u54E1" }] });
+    };
+    const changeInventoryMember = (groupId, index, personId) => {
+      const withoutSelected = inventoryGroups.map((group) => ({ ...group, members: group.members.filter((member, memberIndex) => !personId || member.personId !== personId || group.id === groupId && memberIndex === index) }));
+      saveInventoryGroups(withoutSelected.map((group) => group.id === groupId ? { ...group, members: group.members.map((member, memberIndex) => memberIndex === index ? { ...member, personId } : member) } : group));
+    };
+    const changeInventoryRole = (groupId, index, role) => updateInventoryGroup(groupId, { members: (inventoryGroups.find((group) => group.id === groupId)?.members || []).map((member, memberIndex) => ({ ...member, role: memberIndex === index ? role : role === "\u7D44\u9577" && member.role === "\u7D44\u9577" ? "\u7D44\u54E1" : member.role })) });
+    const removeInventoryMember = (groupId, index) => updateInventoryGroup(groupId, { members: (inventoryGroups.find((group) => group.id === groupId)?.members || []).filter((_, memberIndex) => memberIndex !== index) });
+    const stockForPerson = (personId) => {
+      const person = people.find((item) => item.id === personId);
+      const row = stockRows.find((item) => item.name === person?.name);
+      return { person, exclusive: (row?.exclusiveHouse || 0) + (row?.exclusiveLand || 0), general: (row?.generalHouse || 0) + (row?.generalLand || 0), total: row?.total || 0 };
+    };
     const rocMonth = (() => {
       const [year, value] = month.split("-");
       return `${Number(year) - 1911}\u5E74${Number(value)}\u6708`;
@@ -49838,6 +49877,45 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "month", value: month, onChange: (event) => setMonth(event.target.value) })
           ] })
         ] })
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", { className: "inventory-group-settings", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "inventory-group-settings-head", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { children: "A\uFF5ED \u5206\u7D44\u8A2D\u5B9A" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "\u7BA1\u7406\u6A21\u5F0F\u5C08\u7528\uFF1B\u7D44\u9577\u524D\u53F0\u986F\u793A\u8207\u6B0A\u9650\u5C07\u65BC\u4E0B\u4E00\u968E\u6BB5\u8A2D\u5B9A\u3002" })
+        ] }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "inventory-group-grid", children: inventoryGroups.map((group) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("article", { className: `inventory-group-card group-${group.id.toLowerCase()}`, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: group.id }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { value: group.name, onChange: (event) => updateInventoryGroup(group.id, { name: event.target.value }) }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", onClick: () => addInventoryMember(group.id), children: "\uFF0B \u65B0\u589E" })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "inventory-group-labels", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u4EBA\u54E1" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u8EAB\u5206" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u5C08" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u4E00\u822C" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u8A08\u6578" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {})
+          ] }),
+          group.members.map((member, index) => {
+            const stock = stockForPerson(member.personId);
+            return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "inventory-group-member", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", { value: member.personId, onChange: (event) => changeInventoryMember(group.id, index, event.target.value), children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: "", children: "\u9078\u64C7\u4EBA\u54E1" }),
+                activeSalesPeople.map((person) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { value: person.id, children: person.name }, person.id))
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", { value: member.role, onChange: (event) => changeInventoryRole(group.id, index, event.target.value), children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { children: "\u7D44\u9577" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { children: "\u7D44\u54E1" })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: numberText(stock.exclusive) }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: numberText(stock.general) }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: numberText(stock.total) }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: "danger", onClick: () => removeInventoryMember(group.id, index), children: "\xD7" })
+            ] }, `${group.id}-${index}-${member.personId}`);
+          }),
+          !group.members.length && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "inventory-group-empty", children: "\u5C1A\u672A\u8A2D\u5B9A\u4EBA\u54E1" })
+        ] }, group.id)) })
       ] }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "inventory-columns", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "inventory-panel monthly-inventory-panel", id: "monthly-inventory-image", children: [

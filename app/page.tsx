@@ -10,7 +10,9 @@ import { sourceBalconyFixes } from "./source-balcony-fixes";
 type RecordItem = Record<string, string> & { id: string; photos: string[]; archived?: string };
 type AdvancedFilter = Record<string, string>;
 type Person = { id: string; sequence?: string; name: string; nationalId: string; phone?: string; role?: "業務" | "秘書"; status: "在職" | "離職" };
-type Settings = { personnel: Person[]; staffName?: string; staffId?: string; supabaseUrl: string; supabaseKey: string; supabaseTable: string; supabaseRecord: string; expiry591?: string; expiry5168?: string; brokerExpiry?: string; bookReviewCurrentDate?: string; bookReviewNextDate?: string };
+type InventoryGroupMember = { personId: string; role: "組長" | "組員" };
+type InventoryGroup = { id: "A" | "B" | "C" | "D"; name: string; members: InventoryGroupMember[] };
+type Settings = { personnel: Person[]; inventoryGroups?: InventoryGroup[]; staffName?: string; staffId?: string; supabaseUrl: string; supabaseKey: string; supabaseTable: string; supabaseRecord: string; expiry591?: string; expiry5168?: string; brokerExpiry?: string; bookReviewCurrentDate?: string; bookReviewNextDate?: string };
 type CloudSession = { accessToken: string; refreshToken?: string; email?: string };
 type IntakeData = { id: string; values: Record<string, string>; propertyKind: "房屋" | "純土地"; createdAt: string; modifiedAt?: string; raw?: string; linkedRecordId?: string; enteredAt?: string; groupViewDate?: string; printedForSalesAt?: string };
 type TourItem = { id: string; recordId?: string; sequence: string; temporary?: boolean; data: RecordItem };
@@ -163,6 +165,17 @@ const bookReviewCycleKey = () => { const elapsed = Math.floor((Date.parse(`${tod
 const bookReviewCycleStart = () => { const elapsed = Math.floor((Date.parse(`${today()}T00:00:00`) - Date.parse(`${BOOK_REVIEW_START}T00:00:00`)) / 86400000); if (elapsed < 0) return ""; const date = new Date(`${BOOK_REVIEW_START}T00:00:00`); date.setDate(date.getDate() + Math.floor(elapsed / 60) * 60); return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`; };
 const addDaysIso = (iso: string, days: number) => { if (!iso) return ""; const date = new Date(`${iso}T00:00:00`); date.setDate(date.getDate() + days); return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`; };
 const sortPeopleBySequence = (people: Person[]) => people.slice().sort((a, b) => Number(a.sequence || 9999) - Number(b.sequence || 9999) || String(a.sequence || "").localeCompare(String(b.sequence || ""), "zh-TW", { numeric: true }) || a.name.localeCompare(b.name, "zh-TW"));
+const inventoryGroupDefaults: Record<InventoryGroup["id"], { name: string; leader: string; members: string[] }> = {
+  A: { name: "A組", leader: "楊巧甄", members: ["黃文成", "賈淑玲", "林顯昌", "田庭宇", "陳珮菁", "柯育婷", "阮氏金水"] },
+  B: { name: "B組", leader: "謝馨儀", members: ["宋喜輝", "陳信良", "陳帝元", "王俞云", "林俊嘉", "張小曼", "林志銘"] },
+  C: { name: "C組", leader: "李享嶧", members: ["劉勝仁", "吳佩玲", "林姿岑", "郭建佑", "余沛臻", "葉羽縺"] },
+  D: { name: "D組", leader: "蔡宇育", members: ["林玉環", "王啟山", "王好宸", "王若芸"] },
+};
+const defaultInventoryGroups = (people: Person[]): InventoryGroup[] => (["A", "B", "C", "D"] as InventoryGroup["id"][]).map(id => {
+  const preset = inventoryGroupDefaults[id];
+  const member = (name: string, role: InventoryGroupMember["role"]) => { const person = people.find(item => item.name === name && item.status === "在職"); return person ? { personId: person.id, role } : null; };
+  return { id, name: preset.name, members: [member(preset.leader, "組長"), ...preset.members.map(name => member(name, "組員"))].filter(Boolean) as InventoryGroupMember[] };
+});
 const displayPhone = (value = "") => { const digits = value.replace(/\D/g, ""); return digits.length === 10 ? `${digits.slice(0, 4)}-${digits.slice(4, 7)}-${digits.slice(7)}` : value; };
 const parseAreaPaste = (raw: string, record: RecordItem): RecordItem => {
   const text = String(raw || "").replace(/\r/g, "");
@@ -2024,7 +2037,7 @@ export default function Home() {
   // Textual photo notes stay with the record, while real images remain on this computer.
   const cloudData = () => ({
     records: records.map(({ photos, ...record }) => record),
-    settings: { personnel: settings.personnel, bookReviewCurrentDate: settings.bookReviewCurrentDate, bookReviewNextDate: settings.bookReviewNextDate, expiry591: settings.expiry591, expiry5168: settings.expiry5168, brokerExpiry: settings.brokerExpiry },
+    settings: { personnel: settings.personnel, inventoryGroups: settings.inventoryGroups, bookReviewCurrentDate: settings.bookReviewCurrentDate, bookReviewNextDate: settings.bookReviewNextDate, expiry591: settings.expiry591, expiry5168: settings.expiry5168, brokerExpiry: settings.brokerExpiry },
     intake: { raw: intakeRaw, drafts: intakeDrafts, selectedId: selectedIntakeId },
     tour: { date: tourDate, title: tourTitle, items: tourItems, modifiedAt: tourModifiedAt, history: tourHistory },
     pptWeeks: (() => {
@@ -2149,7 +2162,7 @@ export default function Home() {
           });
           return [...map.values()];
         });
-        if (data.settings) setSettings(previous => ({ ...previous, ...(data.settings.bookReviewCurrentDate ? { bookReviewCurrentDate: data.settings.bookReviewCurrentDate } : {}), ...(data.settings.bookReviewNextDate ? { bookReviewNextDate: data.settings.bookReviewNextDate } : {}), ...(data.settings.expiry591 ? { expiry591: data.settings.expiry591 } : {}), ...(data.settings.expiry5168 ? { expiry5168: data.settings.expiry5168 } : {}), ...(data.settings.brokerExpiry ? { brokerExpiry: data.settings.brokerExpiry } : {}), ...(Array.isArray(data.settings.personnel) && data.settings.personnel.length > 0 ? { personnel: mergeSuppliedPersonnel(data.settings.personnel) } : {}) }));
+        if (data.settings) setSettings(previous => ({ ...previous, ...(data.settings.bookReviewCurrentDate ? { bookReviewCurrentDate: data.settings.bookReviewCurrentDate } : {}), ...(data.settings.bookReviewNextDate ? { bookReviewNextDate: data.settings.bookReviewNextDate } : {}), ...(data.settings.expiry591 ? { expiry591: data.settings.expiry591 } : {}), ...(data.settings.expiry5168 ? { expiry5168: data.settings.expiry5168 } : {}), ...(data.settings.brokerExpiry ? { brokerExpiry: data.settings.brokerExpiry } : {}), ...(Array.isArray(data.settings.inventoryGroups) ? { inventoryGroups: data.settings.inventoryGroups } : {}), ...(Array.isArray(data.settings.personnel) && data.settings.personnel.length > 0 ? { personnel: mergeSuppliedPersonnel(data.settings.personnel) } : {}) }));
         if (data.intake) {
           setIntakeRaw(previous => previous || data.intake.raw || "");
           setIntakeDrafts(previous => reconcileIntakeDraftLinks(mergeIntakeDrafts(previous, Array.isArray(data.intake.drafts) ? data.intake.drafts : []), [...records, ...data.records]));
@@ -2250,7 +2263,7 @@ export default function Home() {
       if (response.ok && Array.isArray(rows)) setFrontLastLogins(Object.fromEntries(rows.map((row: { person_id: string; last_entered_at: string }) => [row.person_id, row.last_entered_at])));
     } catch {}
   };
-  const cloudSnapshot = JSON.stringify({ records, personnel: settings.personnel, expiry591: settings.expiry591, expiry5168: settings.expiry5168, brokerExpiry: settings.brokerExpiry, intakeRaw, intakeDrafts, selectedIntakeId, tourDate, tourTitle, tourItems, tourModifiedAt, tourHistory, pptWeekStart, pptExtraIds, pptOrderIds, pptAdHocRecords, pptConfirmedSnapshots });
+  const cloudSnapshot = JSON.stringify({ records, personnel: settings.personnel, inventoryGroups: settings.inventoryGroups, expiry591: settings.expiry591, expiry5168: settings.expiry5168, brokerExpiry: settings.brokerExpiry, intakeRaw, intakeDrafts, selectedIntakeId, tourDate, tourTitle, tourItems, tourModifiedAt, tourHistory, pptWeekStart, pptExtraIds, pptOrderIds, pptAdHocRecords, pptConfirmedSnapshots });
   useEffect(() => {
     if (internalView || tab === "public" || !storageReady) return;
     if (cloudSkipNextPushRef.current) {
@@ -2532,7 +2545,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V275</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V276</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -2560,7 +2573,7 @@ export default function Home() {
     tab === "intake" ? <IntakePanel raw={intakeRaw} setRaw={setIntakeRaw} drafts={intakeDrafts} draft={intakeDraft} selectDraft={selectIntakeDraft} deleteDraft={removeIntakeDraft} analyze={analyzeIntake} addManualDraft={addManualIntakeDraft} updateValue={updateIntakeValue} clear={() => setIntakeRaw("")} confirmIntake={confirmIntake} markPrintedForSales={markIntakeDraftPrintedForSales} /> :
     tab === "tour" ? <TourPlanner records={records} drafts={intakeDrafts} items={tourItems} setItems={updateTourItems} history={tourHistory} setHistory={setTourHistory} editRecord={setEditing} updateDraftCaseName={updateIntakeDraftCaseName} tourDate={tourDate} setTourDate={updateTourDate} tourTitle={tourTitle} setTourTitle={updateTourTitle} notify={flash} complete={(date, recordIds, draftIds) => { setRecords(previous => previous.map(record => recordIds.includes(record.id) ? withTrackedUpdate(record, { ...record, groupViewDate: date, updateDate: today() }) : record)); setIntakeDrafts(previous => previous.map(draft => draftIds.includes(draft.id) ? { ...draft, groupViewDate: date } : draft)); updateTourItems([]); flash("團看日期已同步到物件與草稿"); }} /> :
     tab === "activity" ? <DailyActivity records={records} onEdit={setEditing} /> :
-    tab === "inventory" ? <BusinessInventory records={records} people={settings.personnel} /> :
+    tab === "inventory" ? <BusinessInventory records={records} settings={settings} setSettings={setSettings} /> :
     tab === "keys" ? <KeySummary records={records}/> :
     showingPublic ? <section className="public-shell">{!publicUnlocked ? <div className="login-card"><h2>內部總表</h2><p>請輸入業務人員身分證字號進入</p><input type="password" value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === "Enter" && void unlock()} placeholder="請輸入密碼"/><button className="primary wide" onClick={() => void unlock()}>進入內部總表</button><small>連城不動產開發有限公司物件資料屬公司重要資訊，僅限內部使用；未經授權，禁止外傳、外流、轉載或提供他人使用。</small></div> : <><div className="public-head"><div><p className="logged-person">登錄人員：{publicPerson?.name || "業務人員"}</p><h2>{publicScope === "activity" ? "每日物件動態" : publicScope === "mine" ? "我的物件" : publicScope === "contacts" ? `通訊錄 ${publicContactCount}` : "物件總表"}</h2><div className="scope-tabs"><button className={publicScope === "activity" ? "selected" : ""} onClick={() => setPublicScope("activity")}>每日物件動態</button><button className={publicScope === "mine" ? "selected" : ""} onClick={() => setPublicScope("mine")}>我的物件 {myProperties.length}</button><button className={publicScope === "all" ? "selected" : ""} onClick={() => setPublicScope("all")}>物件總表 {active.length}</button><button className={publicScope === "contacts" ? "selected" : ""} onClick={() => setPublicScope("contacts")}>通訊錄 {publicContactCount}</button></div></div></div>{publicScope === "mine" && <div className="public-expiry-filters"><button className={publicExpiryFilter === "all" ? "selected" : ""} onClick={() => setPublicExpiryFilter("all")}>全部</button><button className={publicExpiryFilter === "15" ? "selected" : ""} onClick={() => setPublicExpiryFilter("15")}>15天內到期 {publicExpiry15Count}</button><button className={publicExpiryFilter === "30" ? "selected" : ""} onClick={() => setPublicExpiryFilter("30")}>30天內到期 {publicExpiry30Count}</button></div>}{(publicScope === "mine" || publicScope === "all") && <div className="public-search-tools"><label className="search">⌕<input value={publicQuery} onChange={event => setPublicQuery(event.target.value)} placeholder="搜尋編號、地區、案名、地址、開發…"/></label><button type="button" onClick={() => { setPublicQuery(""); setPublicExpiryFilter("all"); }}>清除篩選</button><div className="public-zoom-tools"><button type="button" onClick={() => setPublicZoom(value => Math.max(25, value - 10))}>－縮小</button><b>{publicZoom}%</b><button type="button" onClick={() => setPublicZoom(value => Math.min(140, value + 10))}>＋放大</button></div></div>}{publicScope === "activity" ? <DailyActivity records={records} compact/> : publicScope === "contacts" ? <ContactDirectory people={contactPeople}/> : <>{publicScope === "mine" && expiryAlerts.length > 0 && <div className="expiry-alert"><b>委託到期提醒</b>{expiryAlerts.map(r => <span key={r.id}>{r.caseName}：還有 {daysUntil(r.entrustEnd)} 天到期{daysUntil(r.entrustEnd) <= 15 ? "（15天內）" : "（30天內）"}</span>)}</div>}<PropertyTable records={publicTableRecords} columns={publicColumns} publicMode zoom={publicZoom} expiryAnnotation={publicScope === "mine"} onEdit={() => {}} onArchive={() => {}} onRestore={() => {}} onRemove={() => {}}/></>}</>}</section> :
     <section className={`content ${tab === "archive" ? "archive-list-page" : "active-list-page"}`}>
@@ -4142,7 +4155,8 @@ function MonthlyPropertyReport({ records, person, submit, holdUntil }: { records
   return <section className="monthly-report-panel"><div className="monthly-report-head"><div><b>每45天物件確認</b><span>{person.name}，最近45天已確認過的物件不會重複列出</span></div><strong>{eligibleRecords.length} 筆待處理</strong></div><div className="monthly-report-list">{eligibleRecords.map(record => { const report = reportOf(record), choice = choices[record.id] || ""; return <div className={`monthly-report-row ${report?.status === "待確認" && report.dueDate <= today() ? "overdue" : ""}`} key={record.id}><div><b>{record.caseName || record.propertyNo}</b><small>{record.propertyNo}　{record.address}</small>{report?.status === "待確認" && <em>待確認已到期：{displayRocDate(report.dueDate)}</em>}</div><select value={choice} onChange={event => setChoices(previous => ({ ...previous, [record.id]: event.target.value }))}><option value="">選擇回報</option><option>委託中</option><option>請跟 B 業務確認</option><option>請跟開發業務確認</option><option>售出下架</option><option>下架洽開發</option><option>待確認</option></select>{choice === "下架洽開發" && <input value={reasons[record.id] || ""} onChange={event => setReasons(previous => ({ ...previous, [record.id]: event.target.value }))} placeholder="請填寫下架原因"/>}<button disabled={!choice || (choice === "下架洽開發" && !String(reasons[record.id] || "").trim())} onClick={() => submit(record, choice, reasons[record.id] || "")}>送出</button></div>; })}</div></section>;
 }
 
-function BusinessInventory({ records, people }: { records: RecordItem[]; people: Person[] }) {
+function BusinessInventory({ records, settings, setSettings }: { records: RecordItem[]; settings: Settings; setSettings: (settings: Settings) => void }) {
+  const people = settings.personnel;
   const [month, setMonth] = useState(today().slice(0, 7));
   const [monthlyDetailName, setMonthlyDetailName] = useState("");
   const [monthlyExpanded, setMonthlyExpanded] = useState(false);
@@ -4191,6 +4205,29 @@ function BusinessInventory({ records, people }: { records: RecordItem[]; people:
     const rental = sum(activeRecords.filter(isRentalRecord), name);
     return { name, exclusiveHouse, exclusiveLand, generalHouse, generalLand, rental, total: exclusiveHouse + exclusiveLand + generalHouse + generalLand + rental };
   }).sort((a, b) => b.total - a.total || a.name.localeCompare(b.name, "zh-TW"));
+  const groupIds: InventoryGroup["id"][] = ["A", "B", "C", "D"];
+  const savedGroupMap = new Map((settings.inventoryGroups || []).map(group => [group.id, group]));
+  const fallbackGroupMap = new Map(defaultInventoryGroups(people).map(group => [group.id, group]));
+  const inventoryGroups = groupIds.map(id => savedGroupMap.get(id) || fallbackGroupMap.get(id)!);
+  const activeSalesPeople = sortPeopleBySequence(people.filter(person => person.status === "在職" && person.role !== "秘書" && person.name.trim()));
+  const saveInventoryGroups = (groups: InventoryGroup[]) => setSettings({ ...settings, inventoryGroups: groups });
+  const updateInventoryGroup = (groupId: InventoryGroup["id"], patch: Partial<InventoryGroup>) => saveInventoryGroups(inventoryGroups.map(group => group.id === groupId ? { ...group, ...patch } : group));
+  const addInventoryMember = (groupId: InventoryGroup["id"]) => {
+    const assigned = new Set(inventoryGroups.flatMap(group => group.members.map(member => member.personId)).filter(Boolean));
+    const available = activeSalesPeople.find(person => !assigned.has(person.id));
+    updateInventoryGroup(groupId, { members: [...(inventoryGroups.find(group => group.id === groupId)?.members || []), { personId: available?.id || "", role: "組員" }] });
+  };
+  const changeInventoryMember = (groupId: InventoryGroup["id"], index: number, personId: string) => {
+    const withoutSelected = inventoryGroups.map(group => ({ ...group, members: group.members.filter((member, memberIndex) => !personId || member.personId !== personId || (group.id === groupId && memberIndex === index)) }));
+    saveInventoryGroups(withoutSelected.map(group => group.id === groupId ? { ...group, members: group.members.map((member, memberIndex) => memberIndex === index ? { ...member, personId } : member) } : group));
+  };
+  const changeInventoryRole = (groupId: InventoryGroup["id"], index: number, role: InventoryGroupMember["role"]) => updateInventoryGroup(groupId, { members: (inventoryGroups.find(group => group.id === groupId)?.members || []).map((member, memberIndex) => ({ ...member, role: memberIndex === index ? role : role === "組長" && member.role === "組長" ? "組員" : member.role })) });
+  const removeInventoryMember = (groupId: InventoryGroup["id"], index: number) => updateInventoryGroup(groupId, { members: (inventoryGroups.find(group => group.id === groupId)?.members || []).filter((_, memberIndex) => memberIndex !== index) });
+  const stockForPerson = (personId: string) => {
+    const person = people.find(item => item.id === personId);
+    const row = stockRows.find(item => item.name === person?.name);
+    return { person, exclusive: (row?.exclusiveHouse || 0) + (row?.exclusiveLand || 0), general: (row?.generalHouse || 0) + (row?.generalLand || 0), total: row?.total || 0 };
+  };
   const rocMonth = (() => { const [year, value] = month.split("-"); return `${Number(year) - 1911}年${Number(value)}月`; })();
   const monthlyGrandTotal = monthlyRows.reduce((total, row) => total + row.total.total, 0);
   const stockGrandTotal = stockRows.reduce((total, row) => total + row.total, 0);
@@ -4224,6 +4261,7 @@ function BusinessInventory({ records, people }: { records: RecordItem[]; people:
   };
   return <section className="content business-inventory-page">
     <div className="list-head"><SectionTitle title="物件庫存件數表" subtitle="共同開發案件依人數平均計算；未對應人員的案件列入未歸屬業務"/><div className="inventory-month-controls"><b>統計月份</b><button className={month === previousMonth ? "selected" : ""} onClick={() => setMonth(previousMonth)}>上月 {shortMonth(previousMonth)}</button><button className={month === currentMonth ? "selected" : ""} onClick={() => setMonth(currentMonth)}>本月 {shortMonth(currentMonth)}</button><label className="inventory-month"><span>選月份</span><input type="month" value={month} onChange={event => setMonth(event.target.value)}/></label></div></div>
+    <section className="inventory-group-settings"><div className="inventory-group-settings-head"><div><h3>A～D 分組設定</h3><p>管理模式專用；組長前台顯示與權限將於下一階段設定。</p></div></div><div className="inventory-group-grid">{inventoryGroups.map(group => <article className={`inventory-group-card group-${group.id.toLowerCase()}`} key={group.id}><header><b>{group.id}</b><input value={group.name} onChange={event => updateInventoryGroup(group.id, { name: event.target.value })}/><button type="button" onClick={() => addInventoryMember(group.id)}>＋ 新增</button></header><div className="inventory-group-labels"><span>人員</span><span>身分</span><span>專</span><span>一般</span><span>計數</span><span></span></div>{group.members.map((member, index) => { const stock = stockForPerson(member.personId); return <div className="inventory-group-member" key={`${group.id}-${index}-${member.personId}`}><select value={member.personId} onChange={event => changeInventoryMember(group.id, index, event.target.value)}><option value="">選擇人員</option>{activeSalesPeople.map(person => <option value={person.id} key={person.id}>{person.name}</option>)}</select><select value={member.role} onChange={event => changeInventoryRole(group.id, index, event.target.value as InventoryGroupMember["role"])}><option>組長</option><option>組員</option></select><span>{numberText(stock.exclusive)}</span><span>{numberText(stock.general)}</span><strong>{numberText(stock.total)}</strong><button type="button" className="danger" onClick={() => removeInventoryMember(group.id, index)}>×</button></div>})}{!group.members.length && <div className="inventory-group-empty">尚未設定人員</div>}</article>)}</div></section>
     <div className="inventory-columns"><div className="inventory-panel monthly-inventory-panel" id="monthly-inventory-image">
       <div className="inventory-panel-title"><h3>{rocMonth}進案統計　總件數 :{numberText(monthlyGrandTotal)}件</h3><div className="inventory-title-actions"><button onClick={() => exportInventoryCanvas("monthly")}>產圖</button><button onClick={() => setMonthlyExpanded(value => !value)}>{monthlyExpanded ? "收合" : "展開"}</button></div></div>
       <table><colgroup><col style={{width:"16%"}}/><col style={{width:"46%"}}/><col style={{width:"20%"}}/><col style={{width:"18%"}}/></colgroup><thead><tr><th>人員</th><th>本月進案</th><th>本月下架</th><th>本月件數</th></tr></thead>
