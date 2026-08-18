@@ -1230,6 +1230,7 @@ body{background:#f8fbfe!important;color:#405064!important}
 .business-inventory-page .inventory-panel-title button{background:#fff!important;color:#304d69!important;border-color:#b9d3e4!important}
 .inventory-group-filter{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}.business-inventory-page .inventory-group-filter button{min-width:58px;padding:6px 12px;border:1px solid #cad8e4!important;border-radius:999px;background:#f5f8fa!important;color:#486070!important;font-weight:800}.business-inventory-page .inventory-group-filter button.selected{border-color:#315f87!important;background:#315f87!important;color:#fff!important;box-shadow:0 3px 10px #315f8730}.business-inventory-page .inventory-group-filter button.group-a{--chip:#ef5d35}.business-inventory-page .inventory-group-filter button.group-b{--chip:#3c70df}.business-inventory-page .inventory-group-filter button.group-c{--chip:#269957}.business-inventory-page .inventory-group-filter button.group-d{--chip:#8054df}.business-inventory-page .inventory-group-filter button[class*="group-"]:not(.selected){border-color:color-mix(in srgb,var(--chip) 42%,#fff)!important;background:color-mix(in srgb,var(--chip) 9%,#fff)!important;color:var(--chip)!important}.business-inventory-page .inventory-group-filter button[class*="group-"].selected{border-color:var(--chip)!important;background:var(--chip)!important}
 .stock-inventory-panel table{min-width:850px}.inventory-group-heading td{padding:8px 13px!important;text-align:left;background:#eef5f2!important;border-top:2px solid #b9ccc3!important;color:#244f43}.inventory-group-heading td span{margin-left:10px;color:#71817a;font-size:12px}.inventory-group-heading.group-a td{background:#fff1ec!important;border-top-color:#ef7655!important}.inventory-group-heading.group-b td{background:#edf3ff!important;border-top-color:#5f88e7!important}.inventory-group-heading.group-c td{background:#ecf8f0!important;border-top-color:#50ac70!important}.inventory-group-heading.group-d td{background:#f3efff!important;border-top-color:#936fea!important}.inventory-group-heading.group-ungrouped td{background:#f2f4f5!important;border-top-color:#aeb9be!important}.inventory-group-badge,.inventory-leader-badge{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;padding:4px 9px;font-size:12px;font-weight:900;white-space:nowrap}.inventory-group-badge{background:#edf2f6;color:#526673}.inventory-group-badge.group-a{background:#fff0eb;color:#cf4926}.inventory-group-badge.group-b{background:#edf3ff;color:#315fc4}.inventory-group-badge.group-c{background:#eaf7ee;color:#208047}.inventory-group-badge.group-d{background:#f2edff;color:#6c43c8}.inventory-leader-badge{background:#fff2c9;color:#8b5a00;border:1px solid #e9c75f}.inventory-member-label{color:#7a8782;font-size:12px}.inventory-group-subtotal td{background:#f7faf8!important;color:#365449;font-weight:850;border-top:2px solid #c9d7d0}.inventory-group-subtotal td:first-child{text-align:right;padding-right:16px}.inventory-company-total td{background:#234f43!important;color:#fff!important;font-size:16px!important;font-weight:900}.inventory-company-total td:first-child{text-align:right;padding-right:18px}.stock-inventory-panel .inventory-panel-title,.monthly-inventory-panel .inventory-panel-title{align-items:flex-start}.inventory-panel-title>div:first-child{min-width:0}@media(max-width:760px){.inventory-group-filter{flex-wrap:nowrap;overflow-x:auto;padding-bottom:3px}.business-inventory-page .inventory-group-filter button{flex:0 0 auto}.stock-inventory-panel{padding:13px 9px}}
+.combined-inventory-panel{width:100%;overflow:auto}.combined-inventory-panel .inventory-panel-title{align-items:flex-start}.combined-inventory-panel .inventory-panel-title h3{margin-bottom:3px}.combined-inventory-panel .inventory-panel-title p{margin:0;color:#687972;font-size:13px;font-weight:750}.combined-inventory-panel table{min-width:1280px;table-layout:auto}.combined-inventory-panel th:nth-child(4),.combined-inventory-panel td:nth-child(4){min-width:190px}.combined-inventory-panel th{vertical-align:middle}.combined-inventory-panel td{padding:8px 5px}.combined-inventory-panel .inventory-category-summary{font-size:13px}.combined-inventory-panel .inventory-group-subtotal .inventory-category-summary{font-size:12px}@media(max-width:760px){.combined-inventory-panel{padding:12px 8px}.combined-inventory-panel .inventory-panel-title{min-width:680px}.combined-inventory-panel table{min-width:1220px}}
 .inventory-title-actions{display:flex;align-items:center;gap:7px}
 .inventory-person-cell>button.inventory-person-toggle{display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:5px!important;margin:0!important;padding:2px 5px!important;border:0!important;background:transparent!important;color:#304d69!important;border-radius:6px!important;font-size:inherit!important;width:100%!important}
 .inventory-person-toggle span{font-weight:800}
@@ -44936,7 +44937,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V278" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V279" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -49763,18 +49764,15 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       const rank = (record) => /^[A-Z]A/i.test(String(record.propertyNo || "")) ? 0 : /^[A-Z]G/i.test(String(record.propertyNo || "")) ? 1 : 2;
       return rank(a) - rank(b) || String(a.propertyNo || "").localeCompare(String(b.propertyNo || ""), "zh-TW");
     }) : [];
-    const exportInventoryCanvas = (kind) => {
-      const monthly = kind === "monthly";
-      const title = monthly ? `${rocMonth}\u9032\u6848\u7D71\u8A08\u3000\u7E3D\u4EF6\u6578 :${numberText(monthlyGrandTotal)}\u4EF6` : `\u76EE\u524D\u4EBA\u54E1\u7E3D\u4EF6\u6578\u8868\u3000\u7E3D\u4EF6\u6578 :${numberText(stockGrandTotal)}\u4EF6`;
-      const headers = monthly ? ["\u7D44\u5225", "\u8EAB\u5206", "\u4EBA\u54E1", "\u672C\u6708\u9032\u6848", "\u672C\u6708\u4E0B\u67B6", "\u672C\u6708\u4EF6\u6578"] : ["\u7D44\u5225", "\u8EAB\u5206", "\u4EBA\u54E1", "\u623F\u5C08", "\u571F\u5C08", "\u623F\u4E00", "\u571F\u4E00", "\u79DF\u4EF6", "\u7E3D\u4EF6\u6578"];
-      const rows = monthly ? visibleGroupSections.flatMap((section) => section.members.map((member) => {
-        const row = monthlyRows.find((item) => item.name === member.name) || emptyMonthlyRow(member.name);
-        return [section.name, member.role, row.name, categoryText(row.entered), categoryText(row.archived), categoryText(row.total, true)];
-      })) : visibleGroupSections.flatMap((section) => section.members.map((member) => {
-        const row = stockRows.find((item) => item.name === member.name) || emptyStockRow(member.name);
-        return [section.name, member.role, row.name, numberText(row.exclusiveHouse), numberText(row.exclusiveLand), numberText(row.generalHouse), numberText(row.generalLand), numberText(row.rental), `${numberText(row.total)}\u4EF6`];
+    const exportInventoryCanvas = () => {
+      const title = `${rocMonth}\u9032\u6848\u8207\u76EE\u524D\u5EAB\u5B58\u7D71\u8A08`;
+      const headers = ["\u7D44\u5225", "\u8EAB\u5206", "\u4EBA\u54E1", "\u672C\u6708\u9032\u6848", "\u672C\u6708\u4E0B\u67B6", "\u672C\u6708\u4EF6\u6578", "\u623F\u5C08", "\u571F\u5C08", "\u623F\u4E00", "\u571F\u4E00", "\u79DF\u4EF6", "\u5EAB\u5B58\u7E3D\u6578"];
+      const rows = visibleGroupSections.flatMap((section) => section.members.map((member) => {
+        const monthly = monthlyRows.find((item) => item.name === member.name) || emptyMonthlyRow(member.name);
+        const stock = stockRows.find((item) => item.name === member.name) || emptyStockRow(member.name);
+        return [section.name, member.role, member.name, categoryText(monthly.entered), categoryText(monthly.archived), categoryText(monthly.total, true), numberText(stock.exclusiveHouse), numberText(stock.exclusiveLand), numberText(stock.generalHouse), numberText(stock.generalLand), numberText(stock.rental), `${numberText(stock.total)}\u4EF6`];
       }));
-      const widths = monthly ? [170, 150, 220, 650, 330, 260] : [170, 150, 220, 170, 170, 170, 170, 150, 200];
+      const widths = [150, 130, 200, 460, 280, 220, 135, 135, 135, 135, 125, 175];
       const margin = 44, titleHeight = 124, headerHeight = 88, rowHeight = 86, tableWidth = widths.reduce((sum2, value) => sum2 + value, 0);
       const canvas = document.createElement("canvas");
       canvas.width = (tableWidth + margin * 2) * 2;
@@ -49812,7 +49810,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
           context.lineWidth = 1.8;
           context.strokeRect(x, y, widths[index], rowHeight);
           context.fillStyle = index === row.length - 1 ? "#a83f3b" : "#17242a";
-          context.font = `${index === 0 || index === row.length - 1 ? "bold " : ""}${monthly ? 30 : 32}px Microsoft JhengHei`;
+          context.font = `${index === 0 || index === row.length - 1 ? "bold " : ""}27px Microsoft JhengHei`;
           context.fillText(String(value), x + widths[index] / 2, y + rowHeight / 2);
           x += widths[index];
         });
@@ -49822,7 +49820,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
         const link = document.createElement("a");
         const url = URL.createObjectURL(blob);
         link.href = url;
-        link.download = `${monthly ? `${rocMonth}\u9032\u6848\u7D71\u8A08` : "\u76EE\u524D\u4EBA\u54E1\u7E3D\u4EF6\u6578\u8868"}.png`;
+        link.download = `${rocMonth}\u9032\u6848\u8207\u76EE\u524D\u5EAB\u5B58\u7D71\u8A08.png`;
         document.body.appendChild(link);
         link.click();
         setTimeout(() => {
@@ -49946,170 +49944,123 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
           !group.members.length && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "inventory-group-empty", children: "\u5C1A\u672A\u8A2D\u5B9A\u4EBA\u54E1" })
         ] }, group.id)) })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "inventory-columns", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "inventory-panel monthly-inventory-panel", id: "monthly-inventory-image", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "inventory-panel-title", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h3", { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "inventory-panel combined-inventory-panel", id: "combined-inventory-image", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "inventory-panel-title", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h3", { children: [
+              rocMonth,
+              "\u9032\u6848\u8207\u76EE\u524D\u5EAB\u5B58\u7D71\u8A08"
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { children: [
+              "\u672C\u6708\u9032\u6848 ",
+              numberText(monthlyGrandTotal),
+              " \u4EF6\u3000\uFF5C\u3000\u76EE\u524D\u5EAB\u5B58 ",
+              numberText(stockGrandTotal),
+              " \u4EF6"
+            ] }),
+            groupFilterButtons
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "inventory-title-actions", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: exportInventoryCanvas, children: "\u7522\u5716" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => setMonthlyExpanded((value) => !value), children: monthlyExpanded ? "\u6536\u5408\u660E\u7D30" : "\u5C55\u958B\u672C\u6708\u660E\u7D30" })
+          ] })
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("table", { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("thead", { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { rowSpan: 2, children: "\u7D44\u5225" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { rowSpan: 2, children: "\u8EAB\u5206" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { rowSpan: 2, children: "\u4EBA\u54E1" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("th", { colSpan: 3, children: [
                 rocMonth,
-                "\u9032\u6848\u7D71\u8A08\u3000\u7E3D\u4EF6\u6578 :",
+                "\u9032\u6848\u7D71\u8A08"
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { colSpan: 6, children: "\u76EE\u524D\u5EAB\u5B58" })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "\u672C\u6708\u9032\u6848" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "\u672C\u6708\u4E0B\u67B6" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "\u672C\u6708\u4EF6\u6578" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "\u623F\u5C08" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "\u571F\u5C08" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "\u623F\u4E00" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "\u571F\u4E00" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "\u79DF\u4EF6" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "\u7E3D\u4EF6\u6578" })
+            ] })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tbody", { children: [
+            visibleGroupSections.map((section) => {
+              const rows = section.members.map((member) => ({ member, monthly: monthlyRows.find((row) => row.name === member.name) || emptyMonthlyRow(member.name), stock: stockRows.find((row) => row.name === member.name) || emptyStockRow(member.name) }));
+              const entered = addCategories(rows.map((item) => item.monthly.entered));
+              const archived = addCategories(rows.map((item) => item.monthly.archived));
+              const monthlyTotal = addCategories(rows.map((item) => item.monthly.total));
+              const stockTotal = addCategories(rows.map((item) => item.stock));
+              return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_react.Fragment, { children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("tr", { className: `inventory-group-heading group-${String(section.id).toLowerCase()}`, children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("td", { colSpan: 12, children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: section.name }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+                    section.members.length,
+                    " \u4EBA"
+                  ] })
+                ] }) }),
+                rows.map(({ member, monthly, stock }) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_react.Fragment, { children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: `inventory-group-badge group-${String(section.id).toLowerCase()}`, children: section.name }) }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: member.role === "\u7D44\u9577" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { className: "inventory-leader-badge", children: "\u7D44\u9577" }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "inventory-member-label", children: "\u7D44\u54E1" }) }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: member.name }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: categorySummary(monthly.entered) }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: categorySummary(monthly.archived) }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { className: "inventory-total", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "inventory-count-button", onClick: () => setMonthlyDetailName(member.name), children: categorySummary(monthly.total, true) }) }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: numberText(stock.exclusiveHouse) }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: numberText(stock.exclusiveLand) }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: numberText(stock.generalHouse) }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: numberText(stock.generalLand) }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: numberText(stock.rental) }),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { className: "inventory-total", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "inventory-count-button", onClick: () => setStockDetailName(member.name), children: numberText(stock.total) }) })
+                  ] }),
+                  monthlyExpanded && monthly.total.total > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("tr", { className: "inventory-month-detail-row", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { colSpan: 12, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "inventory-case-list inventory-inline-detail", children: monthlyItemsFor(member.name).map(({ record, action, weight }, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("em", { children: action }),
+                    inventoryCaseLine(record),
+                    /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("strong", { children: [
+                      numberText(weight),
+                      "\u4EF6"
+                    ] })
+                  ] }, `${record.id}-${action}-${index}`)) }) }) })
+                ] }, `${section.id}-${member.name}`)),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { className: "inventory-group-subtotal", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("td", { colSpan: 3, children: [
+                    section.name,
+                    "\u5C0F\u8A08"
+                  ] }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: categorySummary(entered) }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: categorySummary(archived) }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: categorySummary(monthlyTotal, true) }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: numberText(stockTotal.exclusiveHouse) }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: numberText(stockTotal.exclusiveLand) }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: numberText(stockTotal.generalHouse) }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: numberText(stockTotal.generalLand) }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: numberText(stockTotal.rental) }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: numberText(stockTotal.total) })
+                ] })
+              ] }, `combined-${section.id}`);
+            }),
+            !visibleGroupSections.some((section) => section.members.length) && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("tr", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { colSpan: 12, className: "inventory-empty", children: "\u76EE\u524D\u6C92\u6709\u5206\u7D44\u4EBA\u54E1" }) }),
+            inventoryGroupFilter === "ALL" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { className: "inventory-company-total", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { colSpan: 5, children: "\u5168\u516C\u53F8\u7E3D\u8A08" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("td", { children: [
                 numberText(monthlyGrandTotal),
                 "\u4EF6"
               ] }),
-              groupFilterButtons
-            ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "inventory-title-actions", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => exportInventoryCanvas("monthly"), children: "\u7522\u5716" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => setMonthlyExpanded((value) => !value), children: monthlyExpanded ? "\u6536\u5408" : "\u5C55\u958B" })
-            ] })
-          ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("table", { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("colgroup", { children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("col", { style: { width: "12%" } }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("col", { style: { width: "11%" } }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("col", { style: { width: "15%" } }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("col", { style: { width: "36%" } }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("col", { style: { width: "14%" } }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("col", { style: { width: "12%" } })
-            ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("thead", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "\u7D44\u5225" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "\u8EAB\u5206" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "\u4EBA\u54E1" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "\u672C\u6708\u9032\u6848" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "\u672C\u6708\u4E0B\u67B6" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "\u672C\u6708\u4EF6\u6578" })
-            ] }) }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tbody", { children: [
-              visibleGroupSections.map((section) => {
-                const rows = section.members.map((member) => ({ member, row: monthlyRows.find((row) => row.name === member.name) || emptyMonthlyRow(member.name) }));
-                const entered = addCategories(rows.map((item) => item.row.entered));
-                const archived = addCategories(rows.map((item) => item.row.archived));
-                const total = addCategories(rows.map((item) => item.row.total));
-                return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_react.Fragment, { children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("tr", { className: `inventory-group-heading group-${String(section.id).toLowerCase()}`, children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("td", { colSpan: 6, children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: section.name }),
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
-                      section.members.length,
-                      " \u4EBA"
-                    ] })
-                  ] }) }),
-                  rows.map(({ member, row }) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_react.Fragment, { children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { children: [
-                      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: `inventory-group-badge group-${String(section.id).toLowerCase()}`, children: section.name }) }),
-                      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: member.role === "\u7D44\u9577" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { className: "inventory-leader-badge", children: "\u7D44\u9577" }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "inventory-member-label", children: "\u7D44\u54E1" }) }),
-                      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: row.name }),
-                      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: categorySummary(row.entered) }),
-                      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: categorySummary(row.archived) }),
-                      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { className: "inventory-total", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "inventory-count-button", onClick: () => setMonthlyDetailName(row.name), children: categorySummary(row.total, true) }) })
-                    ] }),
-                    monthlyExpanded && row.total.total > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("tr", { className: "inventory-month-detail-row", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { colSpan: 6, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "inventory-case-list inventory-inline-detail", children: monthlyItemsFor(row.name).map(({ record, action, weight }, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
-                      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("em", { children: action }),
-                      inventoryCaseLine(record),
-                      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("strong", { children: [
-                        numberText(weight),
-                        "\u4EF6"
-                      ] })
-                    ] }, `${record.id}-${action}-${index}`)) }) }) })
-                  ] }, `${section.id}-${row.name}`)),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { className: "inventory-group-subtotal", children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("td", { colSpan: 3, children: [
-                      section.name,
-                      "\u5C0F\u8A08"
-                    ] }),
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: categorySummary(entered) }),
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: categorySummary(archived) }),
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: categorySummary(total, true) })
-                  ] })
-                ] }, `monthly-${section.id}`);
-              }),
-              !visibleGroupSections.some((section) => section.members.length) && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("tr", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { colSpan: 6, className: "inventory-empty", children: "\u672C\u6708\u76EE\u524D\u6C92\u6709\u5206\u7D44\u4EBA\u54E1" }) }),
-              inventoryGroupFilter === "ALL" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { className: "inventory-company-total", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { colSpan: 5, children: "\u5168\u516C\u53F8\u7E3D\u8A08" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("td", { children: [
-                  numberText(monthlyGrandTotal),
-                  "\u4EF6"
-                ] })
-              ] })
-            ] })
-          ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "\u672C\u6708\u4EF6\u6578\u4EE5\u6848\u4EF6\u53BB\u91CD\u8A08\u7B97\uFF1B\u672C\u6708\u9032\u6848\u5F8C\u53C8\u5728\u540C\u6708\u4E0B\u67B6\uFF0C\u4ECD\u53EA\u8A08\u539F\u672C\u7684 1 \u4EF6\u6216\u5171\u540C\u958B\u767C\u7684\u5206\u6524\u4EF6\u6578\u3002\u91CD\u65B0\u4E0A\u67B6\u4E0D\u91CD\u8907\u8A08\u5165\u3002" })
-        ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "inventory-panel stock-inventory-panel", id: "stock-inventory-image", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "inventory-panel-title", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h3", { children: [
-                "\u76EE\u524D\u4EBA\u54E1\u7E3D\u4EF6\u6578\u8868\u3000\u7E3D\u4EF6\u6578 :",
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { colSpan: 5 }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("td", { children: [
                 numberText(stockGrandTotal),
                 "\u4EF6"
-              ] }),
-              groupFilterButtons
-            ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => exportInventoryCanvas("stock"), children: "\u7522\u5716" })
-          ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("table", { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("thead", { children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { rowSpan: 2, children: "\u7D44\u5225" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { rowSpan: 2, children: "\u8EAB\u5206" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { rowSpan: 2, children: "\u4EBA\u54E1" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { colSpan: 2, children: "\u5C08\u7D04" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { colSpan: 2, children: "\u4E00\u822C\u7D04" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { rowSpan: 2, children: "\u79DF\u4EF6" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { rowSpan: 2, children: "\u7E3D\u4EF6\u6578" })
-              ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "\u623F\u5C4B" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "\u571F\u5730" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "\u623F\u5C4B" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "\u571F\u5730" })
-              ] })
-            ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tbody", { children: [
-              visibleGroupSections.map((section) => {
-                const rows = section.members.map((member) => ({ member, row: stockRows.find((row) => row.name === member.name) || emptyStockRow(member.name) }));
-                const subtotal = addCategories(rows.map((item) => item.row));
-                return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_react.Fragment, { children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("tr", { className: `inventory-group-heading group-${String(section.id).toLowerCase()}`, children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("td", { colSpan: 9, children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: section.name }),
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
-                      section.members.length,
-                      " \u4EBA"
-                    ] })
-                  ] }) }),
-                  rows.map(({ member, row }) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: `inventory-group-badge group-${String(section.id).toLowerCase()}`, children: section.name }) }),
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: member.role === "\u7D44\u9577" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { className: "inventory-leader-badge", children: "\u7D44\u9577" }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "inventory-member-label", children: "\u7D44\u54E1" }) }),
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: row.name }),
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: numberText(row.exclusiveHouse) }),
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: numberText(row.exclusiveLand) }),
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: numberText(row.generalHouse) }),
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: numberText(row.generalLand) }),
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: numberText(row.rental) }),
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { className: "inventory-total", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "inventory-count-button", onClick: () => setStockDetailName(row.name), children: numberText(row.total) }) })
-                  ] }, `${section.id}-${row.name}`)),
-                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { className: "inventory-group-subtotal", children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("td", { colSpan: 3, children: [
-                      section.name,
-                      "\u5C0F\u8A08"
-                    ] }),
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: numberText(subtotal.exclusiveHouse) }),
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: numberText(subtotal.exclusiveLand) }),
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: numberText(subtotal.generalHouse) }),
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: numberText(subtotal.generalLand) }),
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: numberText(subtotal.rental) }),
-                    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: numberText(subtotal.total) })
-                  ] })
-                ] }, `stock-${section.id}`);
-              }),
-              !visibleGroupSections.some((section) => section.members.length) && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("tr", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { colSpan: 9, className: "inventory-empty", children: "\u76EE\u524D\u6C92\u6709\u5206\u7D44\u4EBA\u54E1" }) }),
-              inventoryGroupFilter === "ALL" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { className: "inventory-company-total", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { colSpan: 8, children: "\u5168\u516C\u53F8\u7E3D\u8A08" }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: numberText(stockGrandTotal) })
               ] })
             ] })
           ] })
-        ] })
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "\u672C\u6708\u4EF6\u6578\u4EE5\u6848\u4EF6\u53BB\u91CD\u8A08\u7B97\uFF1B\u672C\u6708\u9032\u6848\u5F8C\u53C8\u5728\u540C\u6708\u4E0B\u67B6\uFF0C\u4ECD\u53EA\u8A08\u539F\u672C\u7684 1 \u4EF6\u6216\u5171\u540C\u958B\u767C\u7684\u5206\u6524\u4EF6\u6578\u3002\u91CD\u65B0\u4E0A\u67B6\u4E0D\u91CD\u8907\u8A08\u5165\u3002" })
       ] }),
       monthlyDetailName && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "modal-backdrop", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal inventory-detail-modal", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal-head", children: [
