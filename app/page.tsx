@@ -27,6 +27,7 @@ const DAILY_HIDDEN_KEY = "property-desk-daily-hidden-v1";
 const MISSING_REMINDER_DATE_KEY = "property-desk-missing-reminder-date-v1";
 const CLOUD_SESSION_KEY = "property-desk-supabase-session-v1";
 const CLOUD_LAST_UPLOAD_KEY = "property-desk-supabase-last-upload-v1";
+const CLOUD_LOCAL_PENDING_KEY = "property-desk-supabase-local-pending-v1";
 const CASE_FILE_SUPABASE_URL = "https://oiywtmjbasoonfuxemtr.supabase.co";
 const CASE_FILE_SUPABASE_TABLE = "case_file_state";
 const newCaseReminderPending = (record: RecordItem) => !["housingListingCompleted", "newBookCompleted", "wangReviewCompleted"].every(key => record[key] === "1");
@@ -754,6 +755,8 @@ export default function Home() {
   developerPersonnelForDisplay = settings.personnel;
   const [cloudSession, setCloudSession] = useState<CloudSession | null>(null);
   const [cloudLastUploadAt, setCloudLastUploadAt] = useState(() => typeof window !== "undefined" ? localStorage.getItem(CLOUD_LAST_UPLOAD_KEY) || "" : "");
+  const [cloudUploadState, setCloudUploadState] = useState<"idle" | "uploading" | "complete" | "failed">("idle");
+  const [cloudUploadError, setCloudUploadError] = useState("");
   const [tab, setTab] = useState<"active" | "archive" | "activity" | "inventory" | "tour" | "keys" | "public" | "settings" | "intake">("active");
   const [query, setQuery] = useState("");
   const [archiveQuery, setArchiveQuery] = useState("");
@@ -938,6 +941,7 @@ export default function Home() {
   const selectedIntakeRef = useRef("");
   const cloudSyncBaselineRef = useRef("");
   const cloudSyncTimerRef = useRef<number | null>(null);
+  const cloudPushInFlightRef = useRef<Promise<boolean> | null>(null);
   const cloudAutoPullRef = useRef("");
   // 雲端資料合併後，僅更新本機基準，不可再把合併前的畫面回推覆蓋雲端。
   const cloudSkipNextPushRef = useRef(false);
@@ -1248,7 +1252,8 @@ export default function Home() {
     return !latest || new Date(candidate).getTime() > new Date(latest).getTime() ? candidate : latest;
   }, "");
   const latestModifiedAt = [latestRecordModifiedAt, latestDraftModifiedAt, tourModifiedAt].filter(Boolean).reduce((latest, candidate) => !latest || new Date(candidate).getTime() > new Date(latest).getTime() ? candidate : latest, "");
-  const cloudUploadStatus = !cloudSession?.accessToken ? "未登入" : cloudLastUploadAt && (!latestModifiedAt || Date.parse(cloudLastUploadAt) >= Date.parse(latestModifiedAt)) ? "上傳完成" : "ING";
+  const localCloudChangesPending = Boolean(latestModifiedAt && (!cloudLastUploadAt || Date.parse(latestModifiedAt) > Date.parse(cloudLastUploadAt)));
+  const cloudUploadStatus = !cloudSession?.accessToken ? "未登入" : cloudUploadState === "failed" ? "上傳失敗" : cloudUploadState === "uploading" || localCloudChangesPending ? "上傳中" : "上傳完成";
   const showingFollowUpRecords = active.filter(record => record.showingFollowUp === "暫停帶看／等待業務回覆");
   useEffect(() => {
     const dueToday = showingFollowUpRecords.filter(record => normalizeDateInput(record.showingFollowUpDueDate || "") === today());
@@ -2005,19 +2010,47 @@ export default function Home() {
   const supabasePush = async (quiet = false) => {
     if (!cloudSession?.accessToken) { if (!quiet) flash("請先登入雲端帳號"); return false; }
     if (!settings.supabaseUrl || !settings.supabaseKey) { if (!quiet) flash("請先填入 Supabase Publishable key"); return false; }
-    try {
-      const session = await refreshCloudSession();
-      if (!session) throw new Error("cloud session expired");
-      const url = `${settings.supabaseUrl.replace(/\/$/, "")}/rest/v1/${settings.supabaseTable}`;
-      const uploadedAt = new Date().toISOString();
-      const res = await fetch(url, { method: "POST", headers: { ...cloudHeaders(session), Prefer: "resolution=merge-duplicates,return=minimal" }, body: JSON.stringify({ id: settings.supabaseRecord, data: cloudData(), updated_at: uploadedAt }) });
-      if (!res.ok) throw new Error(await res.text());
-      cloudLocalPendingRef.current = false;
-      setCloudLastUploadAt(uploadedAt);
-      localStorage.setItem(CLOUD_LAST_UPLOAD_KEY, uploadedAt);
-      if (!quiet) flash("雲端同步完成");
-      return true;
-    } catch { if (!quiet) flash("雲端同步失敗，請檢查登入與設定"); return false; }
+    if (cloudPushInFlightRef.current) return cloudPushInFlightRef.current;
+    const pushTask = (async () => {
+      cloudLocalPendingRef.current = true;
+      localStorage.setItem(CLOUD_LOCAL_PENDING_KEY, "1");
+      setCloudUploadState("uploading");
+      setCloudUploadError("");
+      try {
+        let session = await refreshCloudSession();
+        if (!session) throw new Error("登入已過期，請到設定重新登入雲端帳號");
+        const url = `${settings.supabaseUrl.replace(/\/$/, "")}/rest/v1/${settings.supabaseTable}`;
+        const uploadedAt = new Date().toISOString();
+        const payload = JSON.stringify({ id: settings.supabaseRecord, data: cloudData(), updated_at: uploadedAt });
+        let res = await fetch(url, { method: "POST", headers: { ...cloudHeaders(session), Prefer: "resolution=merge-duplicates,return=minimal" }, body: payload });
+        // Access token 剛失效時只重新整理一次後重送，避免資料停留在「上傳中」。
+        if (res.status === 401) {
+          session = await refreshCloudSession(true);
+          if (!session) throw new Error("登入已過期，請到設定重新登入雲端帳號");
+          res = await fetch(url, { method: "POST", headers: { ...cloudHeaders(session), Prefer: "resolution=merge-duplicates,return=minimal" }, body: payload });
+        }
+        if (!res.ok) {
+          const reason = (await res.text()).replace(/\s+/g, " ").slice(0, 180);
+          throw new Error(reason || `雲端回應 ${res.status}`);
+        }
+        cloudLocalPendingRef.current = false;
+        localStorage.removeItem(CLOUD_LOCAL_PENDING_KEY);
+        setCloudLastUploadAt(uploadedAt);
+        localStorage.setItem(CLOUD_LAST_UPLOAD_KEY, uploadedAt);
+        setCloudUploadState("complete");
+        if (!quiet) flash("雲端同步完成");
+        return true;
+      } catch (error) {
+        const reason = error instanceof Error && error.message ? error.message : "網路或雲端設定異常";
+        setCloudUploadState("failed");
+        setCloudUploadError(reason);
+        if (!quiet) flash(`雲端同步失敗：${reason}`);
+        return false;
+      }
+    })();
+    cloudPushInFlightRef.current = pushTask;
+    try { return await pushTask; }
+    finally { cloudPushInFlightRef.current = null; }
   };
   const supabasePull = async (automatic = false, quiet = false) => {
     if (!cloudSession?.accessToken) return flash("請先登入雲端帳號");
@@ -2156,6 +2189,9 @@ export default function Home() {
     cloudSyncBaselineRef.current = cloudSnapshot;
     if (!cloudSession?.accessToken || !settings.supabaseKey) return;
     cloudLocalPendingRef.current = true;
+    localStorage.setItem(CLOUD_LOCAL_PENDING_KEY, "1");
+    setCloudUploadState("uploading");
+    setCloudUploadError("");
     if (cloudSyncTimerRef.current) window.clearTimeout(cloudSyncTimerRef.current);
     cloudSyncTimerRef.current = window.setTimeout(() => { void supabasePush(true); }, 6000);
     return () => { if (cloudSyncTimerRef.current) window.clearTimeout(cloudSyncTimerRef.current); };
@@ -2166,8 +2202,17 @@ export default function Home() {
     if (cloudAutoPullRef.current === pullKey) return;
     cloudAutoPullRef.current = pullKey;
     if (localStorage.getItem("property-desk-import-prefer-local-once") === "1") { localStorage.removeItem("property-desk-import-prefer-local-once"); return; }
+    // 公司這台的最後修改比雲端新，或前次上傳失敗時，一律先上傳。
+    // 不能先自動下載，否則家裡斷線留下的舊雲端資料會覆蓋正確的公司資料。
+    const pending = cloudLocalPendingRef.current || localStorage.getItem(CLOUD_LOCAL_PENDING_KEY) === "1" || localCloudChangesPending;
+    if (pending) {
+      cloudLocalPendingRef.current = true;
+      localStorage.setItem(CLOUD_LOCAL_PENDING_KEY, "1");
+      void supabasePush(true);
+      return;
+    }
     void supabasePull(true);
-  }, [cloudSession?.accessToken, cloudSession?.email, settings.supabaseUrl, settings.supabaseKey, settings.supabaseTable, settings.supabaseRecord]);
+  }, [cloudSession?.accessToken, cloudSession?.email, settings.supabaseUrl, settings.supabaseKey, settings.supabaseTable, settings.supabaseRecord, localCloudChangesPending]);
   // 管理模式開啟期間每 45 秒只讀取 updated_at；雲端真的有更新才下載完整資料。
   useEffect(() => {
     if (!cloudSession?.accessToken || !settings.supabaseUrl || !settings.supabaseKey) return;
@@ -2410,7 +2455,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V244</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V245</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -2421,7 +2466,7 @@ export default function Home() {
       <button className={tab === "intake" ? "active" : ""} onClick={() => { setTab("intake"); selectIntakeDraft(""); }}>進案草稿{intakeDrafts.filter(draft => !draft.enteredAt).length > 0 && <b className="intake-draft-nav-count">{intakeDrafts.filter(draft => !draft.enteredAt).length}</b>}</button>
       <button className={tab === "public" ? "active" : ""} onClick={openPublic}>前台總表</button>
       <button className={tab === "settings" ? "active" : ""} onClick={() => setTab("settings")}>設定</button>
-      <span className="home-last-modified home-sync-times"><span className="local-modified-line"><b>最後修改:</b><em>{latestModifiedAt ? displayHomeModifiedAt(latestModifiedAt) : "尚無紀錄"}</em></span><span className="cloud-upload-line"><b>Supabase上傳:</b><em>{cloudLastUploadAt ? displayHomeModifiedAt(cloudLastUploadAt) : "尚無紀錄"}<i className={`cloud-upload-state ${cloudUploadStatus === "上傳完成" ? "complete" : cloudUploadStatus === "ING" ? "uploading" : "signed-out"}`}>{cloudUploadStatus}</i></em></span></span>
+      <span className="home-last-modified home-sync-times"><span className="local-modified-line"><b>最後修改:</b><em>{latestModifiedAt ? displayHomeModifiedAt(latestModifiedAt) : "尚無紀錄"}</em></span><span className="cloud-upload-line" title={cloudUploadError || undefined}><b>Supabase上傳:</b><em>{cloudLastUploadAt ? displayHomeModifiedAt(cloudLastUploadAt) : "尚無紀錄"}<i className={`cloud-upload-state ${cloudUploadStatus === "上傳完成" ? "complete" : cloudUploadStatus === "上傳中" ? "uploading" : cloudUploadStatus === "上傳失敗" ? "failed" : "signed-out"}`}>{cloudUploadStatus}</i></em></span></span>
       </nav>
     </header>}
 
@@ -4185,7 +4230,7 @@ function SettingsPanel({ settings, setSettings, supabasePush, supabasePull, clou
   const activePeople = sortPeopleBySequence(settings.personnel.filter(p => p.status === "在職"));
   const formerPeople = sortPeopleBySequence(settings.personnel.filter(p => p.status === "離職"));
   const personRow = (p: Person) => <div className="person-row" key={p.id}><input className="person-sequence" type="number" min="1" value={p.sequence || ""} onChange={e => updatePerson(p.id, { sequence: e.target.value })} placeholder="序"/>{personTextInput(p, "name", "姓名")}{personTextInput(p, "nationalId", "身分證字號")}{personTextInput(p, "phone", "手機號碼", "tel")}<select value={p.role || "業務"} onChange={e => updatePerson(p.id, { role: e.target.value as Person["role"] })}><option>業務</option><option>秘書</option></select><select value={p.status} onChange={e => updatePerson(p.id, { status: e.target.value as Person["status"] })}><option>在職</option><option>離職</option></select><button className="danger" onClick={() => removePerson(p.id)}>刪除</button></div>;
-  return <section className="settings content"><SectionTitle title="系統設定" subtitle=""/><details className="supabase"><summary><span>進階：Supabase 雲端同步</span><small>{cloudSession ? `已登入：${cloudSession.email || "雲端帳號"}（自動同步）` : "預設隱藏"}</small></summary><div className="supabase-body"><div className="warning">登入後，開啟系統會自動取得最新雲端資料；修改後等待 6 秒自動上傳。照片檔案不會上傳到雲端。</div><div className="form-grid"><label className="field"><span>Project URL</span><input value={settings.supabaseUrl} onChange={e => set("supabaseUrl", e.target.value)}/></label><label className="field"><span>Supabase Publishable key</span><input type="password" value={settings.supabaseKey} onChange={e => set("supabaseKey", e.target.value)} placeholder="貼上 anon / publishable key"/></label></div>{cloudSession ? <div className="backup-actions"><span className="cloud-auto-sync-status">已啟用自動下載與自動上傳</span><button onClick={supabaseSignOut}>登出雲端帳號</button></div> : <><div className="form-grid"><label className="field"><span>雲端登入 Email</span><input type="email" value={cloudEmail} onChange={e => setCloudEmail(e.target.value)}/></label><label className="field"><span>雲端登入密碼</span><input type="password" value={cloudPassword} onChange={e => setCloudPassword(e.target.value)}/></label></div><div className="backup-actions"><button onClick={() => void supabaseSignIn(cloudEmail, cloudPassword, false)}>登入</button><button className="primary" onClick={() => void supabaseSignIn(cloudEmail, cloudPassword, true)}>第一次使用：註冊雲端帳號</button></div></>}</div></details><details className="panel book-review-settings-panel"><summary>物件本確認日期</summary><div className="form-grid"><label className="field"><span>本次確認日期</span><input type="text" inputMode="numeric" value={displayRocDate(settings.bookReviewCurrentDate || "2026-07-30")} onChange={e => set("bookReviewCurrentDate", e.target.value)} onBlur={e => set("bookReviewCurrentDate", normalizeDateInput(e.target.value) || "2026-07-30")} placeholder="115/7/30"/></label><label className="field"><span>下次確認日期</span><input type="text" inputMode="numeric" value={displayRocDate(settings.bookReviewNextDate || "2026-09-30")} onChange={e => set("bookReviewNextDate", e.target.value)} onBlur={e => set("bookReviewNextDate", normalizeDateInput(e.target.value) || "2026-09-30")} placeholder="115/9/30"/></label></div></details><article className="panel personnel-panel personnel-open"><div className="personnel-head"><h3>人員設定</h3><button className="primary" onClick={addPerson}>＋ 新增人員</button></div><div className="personnel-table"><div className="person-row person-labels"><span>序</span><span>人員</span><span>身分證字號（前台密碼）</span><span>手機號碼</span><span>職務</span><span>狀態</span><span>操作</span></div>{activePeople.map(personRow)}{!activePeople.length && <div className="no-person">尚未新增在職人員</div>}</div>{formerPeople.length > 0 && <details className="former-people"><summary>離職人員（{formerPeople.length}）</summary><div className="personnel-table">{formerPeople.map(personRow)}</div></details>}</article></section>;
+  return <section className="settings content"><SectionTitle title="系統設定" subtitle=""/><details className="supabase"><summary><span>進階：Supabase 雲端同步</span><small>{cloudSession ? `已登入：${cloudSession.email || "雲端帳號"}（${cloudUploadStatus}）` : "預設隱藏"}</small></summary><div className="supabase-body"><div className="warning">登入後，開啟系統會自動取得最新雲端資料；修改後等待 6 秒自動上傳。照片檔案不會上傳到雲端。</div><div className="form-grid"><label className="field"><span>Project URL</span><input value={settings.supabaseUrl} onChange={e => set("supabaseUrl", e.target.value)}/></label><label className="field"><span>Supabase Publishable key</span><input type="password" value={settings.supabaseKey} onChange={e => set("supabaseKey", e.target.value)} placeholder="貼上 anon / publishable key"/></label></div>{cloudSession ? <div className="backup-actions"><span className="cloud-auto-sync-status">已啟用自動下載與自動上傳</span><button className="primary" onClick={() => void supabasePush(false)}>立即重試上傳</button><button onClick={supabaseSignOut}>登出雲端帳號</button></div> : <><div className="form-grid"><label className="field"><span>雲端登入 Email</span><input type="email" value={cloudEmail} onChange={e => setCloudEmail(e.target.value)}/></label><label className="field"><span>雲端登入密碼</span><input type="password" value={cloudPassword} onChange={e => setCloudPassword(e.target.value)}/></label></div><div className="backup-actions"><button onClick={() => void supabaseSignIn(cloudEmail, cloudPassword, false)}>登入</button><button className="primary" onClick={() => void supabaseSignIn(cloudEmail, cloudPassword, true)}>第一次使用：註冊雲端帳號</button></div></>}{cloudUploadError && <p className="cloud-upload-error">上傳未完成：{cloudUploadError}</p>}</div></details><details className="panel book-review-settings-panel"><summary>物件本確認日期</summary><div className="form-grid"><label className="field"><span>本次確認日期</span><input type="text" inputMode="numeric" value={displayRocDate(settings.bookReviewCurrentDate || "2026-07-30")} onChange={e => set("bookReviewCurrentDate", e.target.value)} onBlur={e => set("bookReviewCurrentDate", normalizeDateInput(e.target.value) || "2026-07-30")} placeholder="115/7/30"/></label><label className="field"><span>下次確認日期</span><input type="text" inputMode="numeric" value={displayRocDate(settings.bookReviewNextDate || "2026-09-30")} onChange={e => set("bookReviewNextDate", e.target.value)} onBlur={e => set("bookReviewNextDate", normalizeDateInput(e.target.value) || "2026-09-30")} placeholder="115/9/30"/></label></div></details><article className="panel personnel-panel personnel-open"><div className="personnel-head"><h3>人員設定</h3><button className="primary" onClick={addPerson}>＋ 新增人員</button></div><div className="personnel-table"><div className="person-row person-labels"><span>序</span><span>人員</span><span>身分證字號（前台密碼）</span><span>手機號碼</span><span>職務</span><span>狀態</span><span>操作</span></div>{activePeople.map(personRow)}{!activePeople.length && <div className="no-person">尚未新增在職人員</div>}</div>{formerPeople.length > 0 && <details className="former-people"><summary>離職人員（{formerPeople.length}）</summary><div className="personnel-table">{formerPeople.map(personRow)}</div></details>}</article></section>;
 }
 
 function SectionTitle({ title, subtitle }: { title: string; subtitle: string }) { return <div className="section-title"><h2>{title}</h2>{subtitle && <p>{subtitle}</p>}</div>; }

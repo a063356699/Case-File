@@ -1598,6 +1598,7 @@ body{background:#f8fbfe!important;color:#405064!important}
 .topbar>.nav .home-sync-times{display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:flex-start!important;gap:20px!important;line-height:1.2!important}
 .topbar>.nav .home-sync-times>span{display:grid!important;grid-template-columns:auto auto!important;column-gap:5px!important}
 .cloud-upload-state{margin-left:3px!important;padding:0!important;border-radius:0!important;background:transparent!important;font-size:inherit!important;font-weight:700!important}
+.cloud-upload-state.failed,.cloud-upload-error{color:#c83b31!important}.cloud-upload-error{margin:10px 0 0;font-weight:700}
 .topbar>.nav .home-sync-times{gap:24px!important;font-size:15px!important;line-height:1.15!important}
 .topbar>.nav .home-sync-times>span{display:flex!important;flex-direction:column!important;align-items:flex-start!important;gap:2px!important}
 .topbar>.nav .home-sync-times>span>b{font-size:14px!important;text-align:left!important}
@@ -41248,6 +41249,7 @@ ${String(ex)}`);
   var MISSING_REMINDER_DATE_KEY = "property-desk-missing-reminder-date-v1";
   var CLOUD_SESSION_KEY = "property-desk-supabase-session-v1";
   var CLOUD_LAST_UPLOAD_KEY = "property-desk-supabase-last-upload-v1";
+  var CLOUD_LOCAL_PENDING_KEY = "property-desk-supabase-local-pending-v1";
   var CASE_FILE_SUPABASE_URL = "https://oiywtmjbasoonfuxemtr.supabase.co";
   var CASE_FILE_SUPABASE_TABLE = "case_file_state";
   var newCaseReminderPending = (record) => !["housingListingCompleted", "newBookCompleted", "wangReviewCompleted"].every((key) => record[key] === "1");
@@ -42497,6 +42499,8 @@ ${String(ex)}`);
     developerPersonnelForDisplay = settings.personnel;
     const [cloudSession, setCloudSession] = (0, import_react.useState)(null);
     const [cloudLastUploadAt, setCloudLastUploadAt] = (0, import_react.useState)(() => typeof window !== "undefined" ? localStorage.getItem(CLOUD_LAST_UPLOAD_KEY) || "" : "");
+    const [cloudUploadState, setCloudUploadState] = (0, import_react.useState)("idle");
+    const [cloudUploadError2, setCloudUploadError] = (0, import_react.useState)("");
     const [tab, setTab] = (0, import_react.useState)("active");
     const [query, setQuery] = (0, import_react.useState)("");
     const [archiveQuery, setArchiveQuery] = (0, import_react.useState)("");
@@ -42694,6 +42698,7 @@ ${String(ex)}`);
     const selectedIntakeRef = (0, import_react.useRef)("");
     const cloudSyncBaselineRef = (0, import_react.useRef)("");
     const cloudSyncTimerRef = (0, import_react.useRef)(null);
+    const cloudPushInFlightRef = (0, import_react.useRef)(null);
     const cloudAutoPullRef = (0, import_react.useRef)("");
     const cloudSkipNextPushRef = (0, import_react.useRef)(false);
     const cloudLocalPendingRef = (0, import_react.useRef)(false);
@@ -43086,7 +43091,8 @@ ${String(ex)}`);
       return !latest || new Date(candidate).getTime() > new Date(latest).getTime() ? candidate : latest;
     }, "");
     const latestModifiedAt = [latestRecordModifiedAt, latestDraftModifiedAt, tourModifiedAt].filter(Boolean).reduce((latest, candidate) => !latest || new Date(candidate).getTime() > new Date(latest).getTime() ? candidate : latest, "");
-    const cloudUploadStatus = !cloudSession?.accessToken ? "\u672A\u767B\u5165" : cloudLastUploadAt && (!latestModifiedAt || Date.parse(cloudLastUploadAt) >= Date.parse(latestModifiedAt)) ? "\u4E0A\u50B3\u5B8C\u6210" : "ING";
+    const localCloudChangesPending = Boolean(latestModifiedAt && (!cloudLastUploadAt || Date.parse(latestModifiedAt) > Date.parse(cloudLastUploadAt)));
+    const cloudUploadStatus2 = !cloudSession?.accessToken ? "\u672A\u767B\u5165" : cloudUploadState === "failed" ? "\u4E0A\u50B3\u5931\u6557" : cloudUploadState === "uploading" || localCloudChangesPending ? "\u4E0A\u50B3\u4E2D" : "\u4E0A\u50B3\u5B8C\u6210";
     const showingFollowUpRecords = active.filter((record) => record.showingFollowUp === "\u66AB\u505C\u5E36\u770B\uFF0F\u7B49\u5F85\u696D\u52D9\u56DE\u8986");
     (0, import_react.useEffect)(() => {
       const dueToday = showingFollowUpRecords.filter((record) => normalizeDateInput(record.showingFollowUpDueDate || "") === today());
@@ -44199,21 +44205,48 @@ ${changedLabels}
         if (!quiet) flash("\u8ACB\u5148\u586B\u5165 Supabase Publishable key");
         return false;
       }
+      if (cloudPushInFlightRef.current) return cloudPushInFlightRef.current;
+      const pushTask = (async () => {
+        cloudLocalPendingRef.current = true;
+        localStorage.setItem(CLOUD_LOCAL_PENDING_KEY, "1");
+        setCloudUploadState("uploading");
+        setCloudUploadError("");
+        try {
+          let session = await refreshCloudSession();
+          if (!session) throw new Error("\u767B\u5165\u5DF2\u904E\u671F\uFF0C\u8ACB\u5230\u8A2D\u5B9A\u91CD\u65B0\u767B\u5165\u96F2\u7AEF\u5E33\u865F");
+          const url = `${settings.supabaseUrl.replace(/\/$/, "")}/rest/v1/${settings.supabaseTable}`;
+          const uploadedAt = (/* @__PURE__ */ new Date()).toISOString();
+          const payload = JSON.stringify({ id: settings.supabaseRecord, data: cloudData(), updated_at: uploadedAt });
+          let res = await fetch(url, { method: "POST", headers: { ...cloudHeaders(session), Prefer: "resolution=merge-duplicates,return=minimal" }, body: payload });
+          if (res.status === 401) {
+            session = await refreshCloudSession(true);
+            if (!session) throw new Error("\u767B\u5165\u5DF2\u904E\u671F\uFF0C\u8ACB\u5230\u8A2D\u5B9A\u91CD\u65B0\u767B\u5165\u96F2\u7AEF\u5E33\u865F");
+            res = await fetch(url, { method: "POST", headers: { ...cloudHeaders(session), Prefer: "resolution=merge-duplicates,return=minimal" }, body: payload });
+          }
+          if (!res.ok) {
+            const reason = (await res.text()).replace(/\s+/g, " ").slice(0, 180);
+            throw new Error(reason || `\u96F2\u7AEF\u56DE\u61C9 ${res.status}`);
+          }
+          cloudLocalPendingRef.current = false;
+          localStorage.removeItem(CLOUD_LOCAL_PENDING_KEY);
+          setCloudLastUploadAt(uploadedAt);
+          localStorage.setItem(CLOUD_LAST_UPLOAD_KEY, uploadedAt);
+          setCloudUploadState("complete");
+          if (!quiet) flash("\u96F2\u7AEF\u540C\u6B65\u5B8C\u6210");
+          return true;
+        } catch (error) {
+          const reason = error instanceof Error && error.message ? error.message : "\u7DB2\u8DEF\u6216\u96F2\u7AEF\u8A2D\u5B9A\u7570\u5E38";
+          setCloudUploadState("failed");
+          setCloudUploadError(reason);
+          if (!quiet) flash(`\u96F2\u7AEF\u540C\u6B65\u5931\u6557\uFF1A${reason}`);
+          return false;
+        }
+      })();
+      cloudPushInFlightRef.current = pushTask;
       try {
-        const session = await refreshCloudSession();
-        if (!session) throw new Error("cloud session expired");
-        const url = `${settings.supabaseUrl.replace(/\/$/, "")}/rest/v1/${settings.supabaseTable}`;
-        const uploadedAt = (/* @__PURE__ */ new Date()).toISOString();
-        const res = await fetch(url, { method: "POST", headers: { ...cloudHeaders(session), Prefer: "resolution=merge-duplicates,return=minimal" }, body: JSON.stringify({ id: settings.supabaseRecord, data: cloudData(), updated_at: uploadedAt }) });
-        if (!res.ok) throw new Error(await res.text());
-        cloudLocalPendingRef.current = false;
-        setCloudLastUploadAt(uploadedAt);
-        localStorage.setItem(CLOUD_LAST_UPLOAD_KEY, uploadedAt);
-        if (!quiet) flash("\u96F2\u7AEF\u540C\u6B65\u5B8C\u6210");
-        return true;
-      } catch {
-        if (!quiet) flash("\u96F2\u7AEF\u540C\u6B65\u5931\u6557\uFF0C\u8ACB\u6AA2\u67E5\u767B\u5165\u8207\u8A2D\u5B9A");
-        return false;
+        return await pushTask;
+      } finally {
+        cloudPushInFlightRef.current = null;
       }
     };
     const supabasePull = async (automatic = false, quiet = false) => {
@@ -44377,6 +44410,9 @@ ${changedLabels}
       cloudSyncBaselineRef.current = cloudSnapshot;
       if (!cloudSession?.accessToken || !settings.supabaseKey) return;
       cloudLocalPendingRef.current = true;
+      localStorage.setItem(CLOUD_LOCAL_PENDING_KEY, "1");
+      setCloudUploadState("uploading");
+      setCloudUploadError("");
       if (cloudSyncTimerRef.current) window.clearTimeout(cloudSyncTimerRef.current);
       cloudSyncTimerRef.current = window.setTimeout(() => {
         void supabasePush(true);
@@ -44394,8 +44430,15 @@ ${changedLabels}
         localStorage.removeItem("property-desk-import-prefer-local-once");
         return;
       }
+      const pending = cloudLocalPendingRef.current || localStorage.getItem(CLOUD_LOCAL_PENDING_KEY) === "1" || localCloudChangesPending;
+      if (pending) {
+        cloudLocalPendingRef.current = true;
+        localStorage.setItem(CLOUD_LOCAL_PENDING_KEY, "1");
+        void supabasePush(true);
+        return;
+      }
       void supabasePull(true);
-    }, [cloudSession?.accessToken, cloudSession?.email, settings.supabaseUrl, settings.supabaseKey, settings.supabaseTable, settings.supabaseRecord]);
+    }, [cloudSession?.accessToken, cloudSession?.email, settings.supabaseUrl, settings.supabaseKey, settings.supabaseTable, settings.supabaseRecord, localCloudChangesPending]);
     (0, import_react.useEffect)(() => {
       if (!cloudSession?.accessToken || !settings.supabaseUrl || !settings.supabaseKey) return;
       const timer = window.setInterval(() => {
@@ -44743,7 +44786,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V244" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V245" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -44807,11 +44850,11 @@ ${changedLabels}
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u6700\u5F8C\u4FEE\u6539:" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("em", { children: latestModifiedAt ? displayHomeModifiedAt(latestModifiedAt) : "\u5C1A\u7121\u7D00\u9304" })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "cloud-upload-line", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "cloud-upload-line", title: cloudUploadError2 || void 0, children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "Supabase\u4E0A\u50B3:" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("em", { children: [
                 cloudLastUploadAt ? displayHomeModifiedAt(cloudLastUploadAt) : "\u5C1A\u7121\u7D00\u9304",
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("i", { className: `cloud-upload-state ${cloudUploadStatus === "\u4E0A\u50B3\u5B8C\u6210" ? "complete" : cloudUploadStatus === "ING" ? "uploading" : "signed-out"}`, children: cloudUploadStatus })
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("i", { className: `cloud-upload-state ${cloudUploadStatus2 === "\u4E0A\u50B3\u5B8C\u6210" ? "complete" : cloudUploadStatus2 === "\u4E0A\u50B3\u4E2D" ? "uploading" : cloudUploadStatus2 === "\u4E0A\u50B3\u5931\u6557" ? "failed" : "signed-out"}`, children: cloudUploadStatus2 })
               ] })
             ] })
           ] })
@@ -50090,7 +50133,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("details", { className: "supabase", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("summary", { children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u9032\u968E\uFF1ASupabase \u96F2\u7AEF\u540C\u6B65" }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: cloudSession ? `\u5DF2\u767B\u5165\uFF1A${cloudSession.email || "\u96F2\u7AEF\u5E33\u865F"}\uFF08\u81EA\u52D5\u540C\u6B65\uFF09` : "\u9810\u8A2D\u96B1\u85CF" })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: cloudSession ? `\u5DF2\u767B\u5165\uFF1A${cloudSession.email || "\u96F2\u7AEF\u5E33\u865F"}\uFF08${cloudUploadStatus}\uFF09` : "\u9810\u8A2D\u96B1\u85CF" })
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "supabase-body", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "warning", children: "\u767B\u5165\u5F8C\uFF0C\u958B\u555F\u7CFB\u7D71\u6703\u81EA\u52D5\u53D6\u5F97\u6700\u65B0\u96F2\u7AEF\u8CC7\u6599\uFF1B\u4FEE\u6539\u5F8C\u7B49\u5F85 6 \u79D2\u81EA\u52D5\u4E0A\u50B3\u3002\u7167\u7247\u6A94\u6848\u4E0D\u6703\u4E0A\u50B3\u5230\u96F2\u7AEF\u3002" }),
@@ -50106,6 +50149,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
           ] }),
           cloudSession ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "backup-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "cloud-auto-sync-status", children: "\u5DF2\u555F\u7528\u81EA\u52D5\u4E0B\u8F09\u8207\u81EA\u52D5\u4E0A\u50B3" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "primary", onClick: () => void supabasePush(false), children: "\u7ACB\u5373\u91CD\u8A66\u4E0A\u50B3" }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: supabaseSignOut, children: "\u767B\u51FA\u96F2\u7AEF\u5E33\u865F" })
           ] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "form-grid", children: [
@@ -50122,6 +50166,10 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => void supabaseSignIn(cloudEmail, cloudPassword, false), children: "\u767B\u5165" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "primary", onClick: () => void supabaseSignIn(cloudEmail, cloudPassword, true), children: "\u7B2C\u4E00\u6B21\u4F7F\u7528\uFF1A\u8A3B\u518A\u96F2\u7AEF\u5E33\u865F" })
             ] })
+          ] }),
+          cloudUploadError && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { className: "cloud-upload-error", children: [
+            "\u4E0A\u50B3\u672A\u5B8C\u6210\uFF1A",
+            cloudUploadError
           ] })
         ] })
       ] }),
