@@ -545,6 +545,7 @@ button:hover,.file-button:hover{border-color:#9fbad0;box-shadow:0 2px 8px #7895a
 .contact-directory th:nth-child(3n+2),.contact-directory td:nth-child(3n+2){width:105px}
 .contact-directory th:nth-child(3n),.contact-directory td:nth-child(3n){width:165px}
 .contact-directory a{color:#174f90;text-decoration:none;font-weight:800;letter-spacing:.04em}
+.internal-public-app:not(.public-auth-ready) .public-shell{visibility:hidden!important}
 .topbar>.nav .contacts-nav-button{background:#e7f3ea!important;color:#356c50!important;border-color:#c8dfcf!important}
 .topbar>.nav .contacts-nav-button.active{background:#d5eadc!important;color:#1f6845!important;border-color:#8fc2a1!important;box-shadow:0 2px 8px #43875c2b!important}
 @media print{body:has(.contact-directory) *{visibility:hidden!important}body:has(.contact-directory) .contact-directory,body:has(.contact-directory) .contact-directory *{visibility:visible!important}body:has(.contact-directory) .contact-directory{position:absolute!important;left:0!important;top:0!important;width:100%!important;margin:0!important;padding:10mm!important;border:0!important;box-shadow:none!important}body:has(.contact-directory) .contact-print-button{display:none!important}body:has(.contact-directory) .contact-table-scroll{overflow:visible!important}body:has(.contact-directory) .contact-directory table{min-width:0!important;width:100%!important}body:has(.contact-directory) .contact-directory th,body:has(.contact-directory) .contact-directory td{height:10mm!important;padding:1.5mm!important;font-size:11pt!important}@page{size:A4 portrait;margin:8mm}}
@@ -42617,6 +42618,8 @@ ${String(ex)}`);
     const [restoreChoiceRecord, setRestoreChoiceRecord] = (0, import_react.useState)(null);
     const [archiveChoice, setArchiveChoice] = (0, import_react.useState)(null);
     const [publicUnlocked, setPublicUnlocked] = (0, import_react.useState)(false);
+    const [publicAuthReady, setPublicAuthReady] = (0, import_react.useState)(() => !internalView);
+    const publicLoginAttemptRef = (0, import_react.useRef)(0);
     const [publicPersonId, setPublicPersonId] = (0, import_react.useState)("");
     const [publicScope, setPublicScope] = (0, import_react.useState)("mine");
     const [publicExpiryFilter, setPublicExpiryFilter] = (0, import_react.useState)("all");
@@ -43008,21 +43011,26 @@ ${String(ex)}`);
       if (internalView) setTab("public");
     }, [internalView]);
     (0, import_react.useEffect)(() => {
-      if (!internalView) return;
+      if (!internalView || publicUnlocked) return;
       try {
         const saved = JSON.parse(localStorage.getItem("case-file-public-daily-login") || "{}");
         if (saved.date === today() && saved.personId) {
           const localPerson = settings.personnel.find((person) => person.id === saved.personId);
           const nationalId = String(saved.nationalId || localPerson?.nationalId || "").trim();
           if (nationalId) setPendingPublicRestoreId(nationalId);
-          else localStorage.removeItem("case-file-public-daily-login");
+          else {
+            localStorage.removeItem("case-file-public-daily-login");
+            setPublicAuthReady(true);
+          }
         } else {
           localStorage.removeItem("case-file-public-daily-login");
+          setPublicAuthReady(true);
         }
       } catch {
         localStorage.removeItem("case-file-public-daily-login");
+        setPublicAuthReady(true);
       }
-    }, [internalView, settings.personnel]);
+    }, [internalView, publicUnlocked, settings.personnel]);
     (0, import_react.useEffect)(() => {
       if (!internalView || !publicUnlocked) return;
       const timer = window.setInterval(() => {
@@ -44552,7 +44560,10 @@ ${changedLabels}
     };
     const logoutPublic = () => {
       if (Date.now() < publicReportHoldUntil) return flash(`\u56DE\u5831\u6B63\u5728\u4FDD\u8B77\u9001\u51FA\uFF0C\u8ACB\u7B49\u5F85 ${Math.max(1, Math.ceil((publicReportHoldUntil - Date.now()) / 1e3))} \u79D2`);
+      publicLoginAttemptRef.current += 1;
       localStorage.removeItem("case-file-public-daily-login");
+      setPendingPublicRestoreId("");
+      setPublicAuthReady(true);
       setPublicUnlocked(false);
       setPublicPersonId("");
       setPublicScope("mine");
@@ -44584,14 +44595,23 @@ ${changedLabels}
       };
     }, [internalView, tab, publicUnlocked]);
     const unlock = async (requestedId) => {
+      const attempt = ++publicLoginAttemptRef.current;
+      const restoring = typeof requestedId === "string";
       const normalizeLoginId = (value = "") => String(value ?? "").trim().replace(/\s+/g, "").toUpperCase();
       const activePeople = settings.personnel.filter((p) => (p.status || "\u5728\u8077") === "\u5728\u8077" && normalizeLoginId(p.nationalId));
       const loginId = normalizeLoginId(typeof requestedId === "string" ? requestedId : password);
-      if (!loginId) return flash("\u8ACB\u8F38\u5165\u8EAB\u5206\u8B49\u5B57\u865F");
+      if (!loginId) {
+        if (restoring) setPublicAuthReady(true);
+        return flash("\u8ACB\u8F38\u5165\u8EAB\u5206\u8B49\u5B57\u865F");
+      }
       try {
         const response = await fetch(`${CASE_FILE_SUPABASE_URL}/rest/v1/rpc/case_file_front_login`, { method: "POST", headers: { apikey: CASE_FILE_SUPABASE_PUBLISHABLE_KEY, "Content-Type": "application/json" }, body: JSON.stringify({ p_national_id: loginId }) });
         const data = await response.json();
-        if (!response.ok || !data?.personId || !Array.isArray(data.records)) return flash("\u8EAB\u5206\u8B49\u5B57\u865F\u932F\u8AA4\uFF0C\u6216\u4EBA\u54E1\u76EE\u524D\u4E0D\u662F\u5728\u8077");
+        if (attempt !== publicLoginAttemptRef.current) return;
+        if (!response.ok || !data?.personId || !Array.isArray(data.records)) {
+          setPublicAuthReady(true);
+          return flash("\u8EAB\u5206\u8B49\u5B57\u865F\u932F\u8AA4\uFF0C\u6216\u4EBA\u54E1\u76EE\u524D\u4E0D\u662F\u5728\u8077");
+        }
         const nextRecords = applySourceLayoutFixes(data.records).map((record) => normalizeRecordPings({ ...record, photos: [] }));
         const nextPeople = (Array.isArray(data.personnel) ? data.personnel : []).filter((entry) => !removedPersonnelNames.has(String(entry.name || "").trim())).map((entry) => {
           const local = settings.personnel.find((person) => person.id === entry.id || entry.name && person.name.trim() === String(entry.name).trim());
@@ -44602,9 +44622,12 @@ ${changedLabels}
         setPublicPersonId(data.personId);
         setPublicScope("mine");
         setPublicUnlocked(true);
+        setPublicAuthReady(true);
         rememberPublicLogin(data.personId, loginId);
         setPassword("");
       } catch {
+        if (attempt !== publicLoginAttemptRef.current) return;
+        setPublicAuthReady(true);
         flash("\u76EE\u524D\u7121\u6CD5\u9023\u63A5\u96F2\u7AEF\uFF0C\u8ACB\u78BA\u8A8D\u7DB2\u8DEF\u5F8C\u518D\u8A66\u4E00\u6B21");
       }
     };
@@ -44866,12 +44889,12 @@ ${changedLabels}
       setTourModifiedAt((/* @__PURE__ */ new Date()).toISOString());
     };
     const showingPublic = internalView || tab === "public";
-    return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("main", { lang: "en-GB", className: internalView ? "internal-public-app" : "", children: [
+    return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("main", { lang: "en-GB", className: internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : "", children: [
       !internalView && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { className: "topbar", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V269" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V270" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),

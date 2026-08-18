@@ -852,6 +852,8 @@ export default function Home() {
   const [restoreChoiceRecord, setRestoreChoiceRecord] = useState<RecordItem | null>(null);
   const [archiveChoice, setArchiveChoice] = useState<{ record: RecordItem; status: string; date: string; salesPerson: string; reason: string } | null>(null);
   const [publicUnlocked, setPublicUnlocked] = useState(false);
+  const [publicAuthReady, setPublicAuthReady] = useState(() => !internalView);
+  const publicLoginAttemptRef = useRef(0);
   const [publicPersonId, setPublicPersonId] = useState("");
   const [publicScope, setPublicScope] = useState<"activity" | "mine" | "all" | "contacts">("mine");
   const [publicExpiryFilter, setPublicExpiryFilter] = useState<"all" | "15" | "30">("all");
@@ -1153,7 +1155,7 @@ export default function Home() {
   }, []);
   useEffect(() => { if (internalView) setTab("public"); }, [internalView]);
   useEffect(() => {
-    if (!internalView) return;
+    if (!internalView || publicUnlocked) return;
     try {
       const saved = JSON.parse(localStorage.getItem("case-file-public-daily-login") || "{}");
       if (saved.date === today() && saved.personId) {
@@ -1162,12 +1164,13 @@ export default function Home() {
         // A retained phone login still has to re-read the current cloud records.
         // Without this, a successful report remained hidden only on that phone.
         if (nationalId) setPendingPublicRestoreId(nationalId);
-        else localStorage.removeItem("case-file-public-daily-login");
+        else { localStorage.removeItem("case-file-public-daily-login"); setPublicAuthReady(true); }
       } else {
         localStorage.removeItem("case-file-public-daily-login");
+        setPublicAuthReady(true);
       }
-    } catch { localStorage.removeItem("case-file-public-daily-login"); }
-  }, [internalView, settings.personnel]);
+    } catch { localStorage.removeItem("case-file-public-daily-login"); setPublicAuthReady(true); }
+  }, [internalView, publicUnlocked, settings.personnel]);
   useEffect(() => {
     if (!internalView || !publicUnlocked) return;
     const timer = window.setInterval(() => {
@@ -2292,7 +2295,7 @@ export default function Home() {
   }, [cloudSession?.accessToken, settings.supabaseUrl, settings.supabaseKey, settings.supabaseTable, settings.supabaseRecord]);
 
   const openPublic = () => { setTab("public"); setPublicUnlocked(false); setPublicPersonId(""); setPublicScope("mine"); setPassword(""); };
-  const logoutPublic = () => { if (Date.now() < publicReportHoldUntil) return flash(`回報正在保護送出，請等待 ${Math.max(1, Math.ceil((publicReportHoldUntil - Date.now()) / 1000))} 秒`); localStorage.removeItem("case-file-public-daily-login"); setPublicUnlocked(false); setPublicPersonId(""); setPublicScope("mine"); setPublicExpiryFilter("all"); setPublicQuery(""); setPassword(""); flash("已登出業務帳號"); };
+  const logoutPublic = () => { if (Date.now() < publicReportHoldUntil) return flash(`回報正在保護送出，請等待 ${Math.max(1, Math.ceil((publicReportHoldUntil - Date.now()) / 1000))} 秒`); publicLoginAttemptRef.current += 1; localStorage.removeItem("case-file-public-daily-login"); setPendingPublicRestoreId(""); setPublicAuthReady(true); setPublicUnlocked(false); setPublicPersonId(""); setPublicScope("mine"); setPublicExpiryFilter("all"); setPublicQuery(""); setPassword(""); flash("已登出業務帳號"); };
   const rememberPublicLogin = (personId: string, nationalId = "") => localStorage.setItem("case-file-public-daily-login", JSON.stringify({ date: today(), personId, nationalId }));
   const recordPublicEntry = async (nationalId: string) => {
     try { await fetch(`${CASE_FILE_SUPABASE_URL}/rest/v1/rpc/case_file_front_touch`, { method: "POST", headers: { apikey: CASE_FILE_SUPABASE_PUBLISHABLE_KEY, "Content-Type": "application/json" }, body: JSON.stringify({ p_national_id: nationalId }) }); } catch {}
@@ -2310,14 +2313,17 @@ export default function Home() {
     return () => { button.removeEventListener("click", logoutPublic); button.remove(); };
   }, [internalView, tab, publicUnlocked]);
   const unlock = async (requestedId?: unknown) => {
+    const attempt = ++publicLoginAttemptRef.current;
+    const restoring = typeof requestedId === "string";
     const normalizeLoginId = (value: unknown = "") => String(value ?? "").trim().replace(/\s+/g, "").toUpperCase();
     const activePeople = settings.personnel.filter(p => (p.status || "在職") === "在職" && normalizeLoginId(p.nationalId));
     const loginId = normalizeLoginId(typeof requestedId === "string" ? requestedId : password);
-    if (!loginId) return flash("請輸入身分證字號");
+    if (!loginId) { if (restoring) setPublicAuthReady(true); return flash("請輸入身分證字號"); }
     try {
       const response = await fetch(`${CASE_FILE_SUPABASE_URL}/rest/v1/rpc/case_file_front_login`, { method: "POST", headers: { apikey: CASE_FILE_SUPABASE_PUBLISHABLE_KEY, "Content-Type": "application/json" }, body: JSON.stringify({ p_national_id: loginId }) });
       const data = await response.json();
-      if (!response.ok || !data?.personId || !Array.isArray(data.records)) return flash("身分證字號錯誤，或人員目前不是在職");
+      if (attempt !== publicLoginAttemptRef.current) return;
+      if (!response.ok || !data?.personId || !Array.isArray(data.records)) { setPublicAuthReady(true); return flash("身分證字號錯誤，或人員目前不是在職"); }
       const nextRecords = applySourceLayoutFixes(data.records).map((record: RecordItem) => normalizeRecordPings({ ...record, photos: [] }));
       const nextPeople = (Array.isArray(data.personnel) ? data.personnel : []).filter((entry: Partial<Person>) => !removedPersonnelNames.has(String(entry.name || "").trim())).map((entry: Partial<Person>) => {
         const local = settings.personnel.find(person => person.id === entry.id || (entry.name && person.name.trim() === String(entry.name).trim()));
@@ -2328,9 +2334,10 @@ export default function Home() {
       setPublicPersonId(data.personId);
       setPublicScope("mine");
       setPublicUnlocked(true);
+      setPublicAuthReady(true);
       rememberPublicLogin(data.personId, loginId);
       setPassword("");
-    } catch { flash("目前無法連接雲端，請確認網路後再試一次"); }
+    } catch { if (attempt !== publicLoginAttemptRef.current) return; setPublicAuthReady(true); flash("目前無法連接雲端，請確認網路後再試一次"); }
   };
   const publicPerson = settings.personnel.find(p => p.id === publicPersonId);
   const contactPeople = sortPeopleBySequence(settings.personnel.filter(person => person.status === "在職" && person.name.trim() && String(person.phone || "").trim()));
@@ -2511,9 +2518,9 @@ export default function Home() {
 
   const showingPublic = internalView || tab === "public";
 
-  return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
+  return <main lang="en-GB" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V269</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V270</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
