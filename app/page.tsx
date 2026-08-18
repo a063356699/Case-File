@@ -30,7 +30,12 @@ const CLOUD_LAST_UPLOAD_KEY = "property-desk-supabase-last-upload-v1";
 const CLOUD_LOCAL_PENDING_KEY = "property-desk-supabase-local-pending-v1";
 const CASE_FILE_SUPABASE_URL = "https://oiywtmjbasoonfuxemtr.supabase.co";
 const CASE_FILE_SUPABASE_TABLE = "case_file_state";
-const newCaseReminderPending = (record: RecordItem) => !["housingListingCompleted", "newBookCompleted", "wangReviewCompleted"].every(key => record[key] === "1");
+const newCaseReminderCompletionKeys = ["housingListingCompleted", "newBookCompleted", "wangReviewCompleted"] as const;
+const newCaseReminderPending = (record: RecordItem) => !newCaseReminderCompletionKeys.every(key => record[key] === "1");
+const preserveNewCaseReminderCompletion = (local: RecordItem | undefined, incoming: RecordItem) => {
+  if (!local) return incoming;
+  return newCaseReminderCompletionKeys.reduce((record, key) => ({ ...record, [key]: local[key] === "1" || incoming[key] === "1" ? "1" : incoming[key] || "" }), { ...incoming });
+};
 // This is Supabase's browser-safe publishable key. Access is protected by the
 // signed-in user and the table's row-level security policy, never by this key.
 const CASE_FILE_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_dhr81918k0zRtar14yepIA_ZWmTKT10";
@@ -1224,7 +1229,10 @@ export default function Home() {
   useEffect(() => {
     const syncAcrossTabs = (event: StorageEvent) => {
       if (event.key === STORAGE_KEY && event.newValue) {
-        try { setRecords(applySourceLayoutFixes(JSON.parse(event.newValue)).map(normalizeRecordPings)); } catch {}
+        try {
+          const incoming = applySourceLayoutFixes(JSON.parse(event.newValue)).map(normalizeRecordPings);
+          setRecords(previous => { const local = new Map(previous.map(record => [record.id, record])); return incoming.map(record => preserveNewCaseReminderCompletion(local.get(record.id), record)); });
+        } catch {}
       }
       if (event.key === SETTINGS_KEY && event.newValue) {
         try { const next = JSON.parse(event.newValue); setSettings(previous => ({ ...previous, ...next, personnel: mergeSuppliedPersonnel(next.personnel || previous.personnel) })); } catch {}
@@ -2122,7 +2130,7 @@ export default function Home() {
           data.records.forEach((r: RecordItem) => {
             const normalized = normalizeRecordPings(applySourceLayoutFixes([r])[0]);
             const local = map.get(normalized.id);
-            map.set(normalized.id, { ...local, ...normalized, photos: normalized.photos || local?.photos || [] });
+            map.set(normalized.id, preserveNewCaseReminderCompletion(local, { ...local, ...normalized, photos: normalized.photos || local?.photos || [] } as RecordItem));
           });
           return [...map.values()];
         });
@@ -2505,7 +2513,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V268</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V269</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>

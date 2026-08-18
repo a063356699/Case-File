@@ -41274,7 +41274,12 @@ ${String(ex)}`);
   var CLOUD_LOCAL_PENDING_KEY = "property-desk-supabase-local-pending-v1";
   var CASE_FILE_SUPABASE_URL = "https://oiywtmjbasoonfuxemtr.supabase.co";
   var CASE_FILE_SUPABASE_TABLE = "case_file_state";
-  var newCaseReminderPending = (record) => !["housingListingCompleted", "newBookCompleted", "wangReviewCompleted"].every((key) => record[key] === "1");
+  var newCaseReminderCompletionKeys = ["housingListingCompleted", "newBookCompleted", "wangReviewCompleted"];
+  var newCaseReminderPending = (record) => !newCaseReminderCompletionKeys.every((key) => record[key] === "1");
+  var preserveNewCaseReminderCompletion = (local, incoming) => {
+    if (!local) return incoming;
+    return newCaseReminderCompletionKeys.reduce((record, key) => ({ ...record, [key]: local[key] === "1" || incoming[key] === "1" ? "1" : incoming[key] || "" }), { ...incoming });
+  };
   var CASE_FILE_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_dhr81918k0zRtar14yepIA_ZWmTKT10";
   var newId = () => globalThis.crypto?.randomUUID?.() || `id-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   var jsonExportFileName = (date = /* @__PURE__ */ new Date()) => {
@@ -43078,7 +43083,11 @@ ${String(ex)}`);
       const syncAcrossTabs = (event) => {
         if (event.key === STORAGE_KEY && event.newValue) {
           try {
-            setRecords(applySourceLayoutFixes(JSON.parse(event.newValue)).map(normalizeRecordPings));
+            const incoming = applySourceLayoutFixes(JSON.parse(event.newValue)).map(normalizeRecordPings);
+            setRecords((previous) => {
+              const local = new Map(previous.map((record) => [record.id, record]));
+              return incoming.map((record) => preserveNewCaseReminderCompletion(local.get(record.id), record));
+            });
           } catch {
           }
         }
@@ -44348,7 +44357,7 @@ ${changedLabels}
             data.records.forEach((r) => {
               const normalized = normalizeRecordPings(applySourceLayoutFixes([r])[0]);
               const local = map.get(normalized.id);
-              map.set(normalized.id, { ...local, ...normalized, photos: normalized.photos || local?.photos || [] });
+              map.set(normalized.id, preserveNewCaseReminderCompletion(local, { ...local, ...normalized, photos: normalized.photos || local?.photos || [] }));
             });
             return [...map.values()];
           });
@@ -44862,7 +44871,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V268" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V269" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
