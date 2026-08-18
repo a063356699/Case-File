@@ -41674,6 +41674,16 @@ ${String(ex)}`);
   ];
   var contactDirectoryPhoneOverrides = { \u90ED\u5EFA\u4F51: "0938-839-308" };
   var removedPersonnelNames = /* @__PURE__ */ new Set(["\u65BD\u7D39\u8587"]);
+  var enforcePersonnelOrder = (people) => {
+    const active = sortPeopleBySequence(people.filter((person) => person.status !== "\u96E2\u8077"));
+    const former = sortPeopleBySequence(people.filter((person) => person.status === "\u96E2\u8077"));
+    const linIndex = active.findIndex((person) => String(person.name || "").trim() === "\u6797\u5FD7\u9298");
+    if (linIndex >= 0) {
+      const [lin] = active.splice(linIndex, 1);
+      active.splice(Math.min(8, active.length), 0, lin);
+    }
+    return [...active, ...former].map((person, index) => ({ ...person, sequence: String(index + 1) }));
+  };
   var mergeSuppliedPersonnel = (people) => {
     const remaining = people.filter((person) => !removedPersonnelNames.has(String(person.name || "").trim()));
     const supplied = suppliedPersonnel.filter((entry) => !removedPersonnelNames.has(entry.name)).map((entry) => {
@@ -41681,10 +41691,10 @@ ${String(ex)}`);
       const existing = index >= 0 ? remaining.splice(index, 1)[0] : void 0;
       return { ...entry, ...existing || {}, id: existing?.id || `staff-${entry.nationalId}`, sequence: existing?.sequence || entry.sequence, nationalId: existing?.nationalId || entry.nationalId, phone: existing?.phone || entry.phone, role: ["\u674E\u9E97\u5349", "\u65BD\u7D39\u8587"].includes(entry.name) ? "\u79D8\u66F8" : existing?.role || "\u696D\u52D9", status: existing?.status || "\u5728\u8077" };
     });
-    return [...supplied, ...remaining].map((person) => ({
+    return enforcePersonnelOrder([...supplied, ...remaining].map((person) => ({
       ...person,
       phone: contactDirectoryPhoneOverrides[person.name.trim()] || person.phone
-    }));
+    })));
   };
   var recordUpdateHistory = (record) => {
     try {
@@ -44579,7 +44589,7 @@ ${changedLabels}
           return { ...local, ...entry, id: entry.id || local?.id || newId(), name: entry.name || local?.name || "", nationalId: local?.nationalId || "", phone: entry.phone || local?.phone || "", status: entry.status || local?.status || "\u5728\u8077" };
         });
         setRecords(nextRecords);
-        setSettings((previous) => ({ ...previous, personnel: nextPeople }));
+        setSettings((previous) => ({ ...previous, personnel: mergeSuppliedPersonnel(nextPeople) }));
         setPublicPersonId(data.personId);
         setPublicScope("mine");
         setPublicUnlocked(true);
@@ -44852,7 +44862,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V267" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V268" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),

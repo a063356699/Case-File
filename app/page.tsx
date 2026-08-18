@@ -216,6 +216,16 @@ const contactDirectoryOrder = [
 ];
 const contactDirectoryPhoneOverrides: Record<string, string> = { 郭建佑: "0938-839-308" };
 const removedPersonnelNames = new Set(["施紹薇"]);
+const enforcePersonnelOrder = (people: Person[]) => {
+  const active = sortPeopleBySequence(people.filter(person => person.status !== "離職"));
+  const former = sortPeopleBySequence(people.filter(person => person.status === "離職"));
+  const linIndex = active.findIndex(person => String(person.name || "").trim() === "林志銘");
+  if (linIndex >= 0) {
+    const [lin] = active.splice(linIndex, 1);
+    active.splice(Math.min(8, active.length), 0, lin);
+  }
+  return [...active, ...former].map((person, index) => ({ ...person, sequence: String(index + 1) }));
+};
 const mergeSuppliedPersonnel = (people: Person[]) => {
   const remaining = people.filter(person => !removedPersonnelNames.has(String(person.name || "").trim()));
   const supplied = suppliedPersonnel.filter(entry => !removedPersonnelNames.has(entry.name)).map(entry => {
@@ -223,10 +233,10 @@ const mergeSuppliedPersonnel = (people: Person[]) => {
     const existing = index >= 0 ? remaining.splice(index, 1)[0] : undefined;
     return { ...entry, ...(existing || {}), id: existing?.id || `staff-${entry.nationalId}`, sequence: existing?.sequence || entry.sequence, nationalId: existing?.nationalId || entry.nationalId, phone: existing?.phone || entry.phone, role: ["李麗卉", "施紹薇"].includes(entry.name) ? "秘書" as const : existing?.role || "業務" as const, status: existing?.status || "在職" as const };
   });
-  return [...supplied, ...remaining].map(person => ({
+  return enforcePersonnelOrder([...supplied, ...remaining].map(person => ({
     ...person,
     phone: contactDirectoryPhoneOverrides[person.name.trim()] || person.phone,
-  }));
+  })));
 };
 const recordUpdateHistory = (record: RecordItem): Record<string, string[]> => { try { return JSON.parse(record._updateHistory || "{}"); } catch { return {}; } };
 const editedFieldKeys = (record: RecordItem): string[] => { try { const value = JSON.parse(record._editedFields || "[]"); return Array.isArray(value) ? value.map(String) : []; } catch { return []; } };
@@ -2306,7 +2316,7 @@ export default function Home() {
         return { ...local, ...entry, id: entry.id || local?.id || newId(), name: entry.name || local?.name || "", nationalId: local?.nationalId || "", phone: entry.phone || local?.phone || "", status: entry.status || local?.status || "在職" } as Person;
       });
       setRecords(nextRecords);
-      setSettings(previous => ({ ...previous, personnel: nextPeople }));
+      setSettings(previous => ({ ...previous, personnel: mergeSuppliedPersonnel(nextPeople) }));
       setPublicPersonId(data.personId);
       setPublicScope("mine");
       setPublicUnlocked(true);
@@ -2495,7 +2505,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V267</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V268</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
