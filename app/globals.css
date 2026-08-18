@@ -1606,7 +1606,7 @@ body{background:#f8fbfe!important;color:#405064!important}
 .topbar>.nav .home-sync-times>span>b{font-size:14px!important;text-align:left!important}
 .topbar>.nav .home-sync-times>span>em{font-size:15px!important;font-weight:700!important;text-align:left!important}
 .topbar>.nav .cloud-manual-pull{flex:0 0 auto;align-self:center;border:1px solid #c4ccd4;background:#eef1f4;color:#536273;border-radius:10px;padding:8px 12px;font-weight:800;white-space:nowrap;cursor:pointer}
-.topbar>.nav .cloud-manual-pull.available{border-color:#df7a42;background:#fff0df;color:#b84318;box-shadow:0 0 0 2px rgba(223,122,66,.16)}
+.topbar>.nav .cloud-manual-pull.available{border-color:#e46a6a;background:#fff3f3;color:#d71920;box-shadow:0 0 0 2px rgba(215,25,32,.13)}
 .archive-list-page>.table-wrap{max-height:none!important;overflow-x:auto!important;overflow-y:visible!important}
 .archive-list-page th.col-propertyNo,.archive-list-page td.col-propertyNo,.archive-list-page .sticky-0{width:76px!important;min-width:76px!important;max-width:76px!important;padding-left:3px!important;padding-right:3px!important;white-space:nowrap!important}
 .archive-list-page .sticky-1{left:76px!important}
