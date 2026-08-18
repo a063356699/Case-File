@@ -87,7 +87,7 @@ begin
     ]::text[])
   ) picked;
 
-  return jsonb_build_object('personId', v_person->>'id', 'records', v_front_records, 'personnel', v_people);
+  return jsonb_build_object('personId', v_person->>'id', 'records', v_front_records, 'personnel', v_people, 'inventoryGroups', coalesce(v_data->'settings'->'inventoryGroups', '[]'::jsonb));
 end;
 $$;
 
