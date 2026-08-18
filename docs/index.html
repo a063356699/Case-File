@@ -1658,6 +1658,7 @@ body{background:#f8fbfe!important;color:#405064!important}
 .leader-team-overview>header>div:first-child:not(.leader-team-head-actions),.leader-team-head-actions>span{display:none!important}.leader-team-overview>header{justify-content:flex-end}
 .leader-detail-row.combined .leader-monthly-detail-cell{vertical-align:top;background:#fff9ef}.leader-detail-row.combined .leader-stock-detail-cell{vertical-align:top;background:#f0fafb}.leader-detail-row.combined>td:empty{background:#fff}.leader-detail-row.combined .leader-case-list>div{grid-template-columns:minmax(150px,1fr) minmax(180px,1.25fr) auto}@media(max-width:900px){.leader-detail-row.combined .leader-case-list>div{grid-template-columns:1fr auto}.leader-detail-row.combined .leader-case-list small{grid-column:1 / -1}}
 .all-groups-overview{display:grid;gap:18px;margin-top:14px}.all-group-section{--group-block:#557a6e;padding:0 12px 12px;border:2px solid var(--group-block);border-radius:18px;background:color-mix(in srgb,var(--group-block) 9%,#fff);overflow:hidden}.all-group-section.group-a{--group-block:#e35c39}.all-group-section.group-b{--group-block:#396ee8}.all-group-section.group-c{--group-block:#2a9b52}.all-group-section.group-d{--group-block:#8152ef}.all-group-section>h3{margin:0 -12px 10px;padding:12px 18px;background:color-mix(in srgb,var(--group-block) 18%,#fff);color:var(--group-block);font-size:22px}.all-group-section>.leader-team-overview{margin:0;padding:10px;border:0;background:transparent;box-shadow:none}.all-group-section>.leader-team-overview .leader-team-summary>div{background:color-mix(in srgb,var(--group-block) 10%,#fff)}.all-group-section>.leader-team-overview .leader-team-summary b,.all-group-section>.leader-team-overview .leader-sort-button b{color:var(--group-block)}@media(max-width:760px){.all-groups-overview{gap:12px}.all-group-section{padding:0 6px 8px}.all-group-section>h3{margin:0 -6px 8px;padding:9px 12px;font-size:19px}}
+.compact-groups-overview{margin-top:12px}.compact-groups-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}.compact-group-filters,.compact-expand-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.compact-group-filters button,.compact-expand-actions button{min-width:72px;padding:8px 14px;border:1px solid #b6c9dc;border-radius:10px;background:#fff;color:#244761;font-weight:900}.compact-group-filters button.selected{background:#244f88;color:#fff}.compact-group-filters button.group-a{border-color:#e3a087}.compact-group-filters button.group-b{border-color:#91afe9}.compact-group-filters button.group-c{border-color:#8ec69d}.compact-group-filters button.group-d{border-color:#b49ae8}.compact-expand-actions button.monthly{border-color:#df9c60;color:#9a531a}.compact-expand-actions button.stock{border-color:#72aeb7;color:#23636c}.compact-groups-table-wrap{overflow-x:auto;border:1px solid #ccd9e2;border-radius:12px;background:#fff}.compact-groups-table-wrap table{width:100%;min-width:760px;border-collapse:collapse;table-layout:fixed}.compact-groups-table-wrap th,.compact-groups-table-wrap td{padding:9px 10px;border:1px solid #d7e0e6;text-align:center}.compact-groups-table-wrap th{background:#f1f6f9;color:#28465c}.compact-groups-table-wrap th button{border:0;background:transparent;color:inherit;font:inherit;font-weight:900;cursor:pointer}.compact-groups-table-wrap th button b{color:#376da2}.compact-group-heading td{padding:9px 16px!important;text-align:left!important;font-size:17px}.compact-group-heading.group-a td{background:#fff0e8;color:#d65b31}.compact-group-heading.group-b td{background:#eaf2ff;color:#326bd1}.compact-group-heading.group-c td{background:#eaf7ed;color:#27854a}.compact-group-heading.group-d td{background:#f2edff;color:#7548d5}.compact-person-row td:first-child{font-weight:900;color:#29455a}.compact-count{min-width:64px;padding:5px 13px;border-radius:999px;background:#fff;font-size:15px;font-weight:900}.compact-count.monthly{border:1px solid #e1a160;color:#a35a17}.compact-count.stock{border:1px solid #69aab4;color:#236873}.compact-count:disabled{border-color:#d5ddda;color:#98a39e;background:#f6f7f7}.compact-detail-row>td{vertical-align:top;padding:10px}.compact-detail-row>td:empty{background:#fff}.compact-detail-row .monthly-detail{background:#fff9ef}.compact-detail-row .stock-detail{background:#f0fafb}.compact-detail-row h4{margin:0 0 8px;color:#254f43;font-size:15px}.compact-case-list{display:grid;gap:6px;text-align:left}.compact-case-list>div{display:grid;grid-template-columns:minmax(140px,1fr) minmax(180px,1.3fr) auto;gap:8px;align-items:center;padding:7px 9px;border:1px solid #dce4e1;border-radius:8px;background:#fff}.compact-case-list b{color:#29465b}.compact-case-list span{color:#687771;font-size:13px}.compact-case-list strong{white-space:nowrap;color:#356cf0}@media(max-width:760px){.compact-groups-toolbar{align-items:flex-start;flex-direction:column}.compact-group-filters,.compact-expand-actions{width:100%}.compact-group-filters button,.compact-expand-actions button{flex:1;padding:7px 8px}.compact-case-list>div{grid-template-columns:1fr auto}.compact-case-list span{grid-column:1 / -1}}
 </style>
 </head>
 <body>
@@ -44967,7 +44968,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V287" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V288" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -49670,6 +49671,110 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       }) })
     ] });
   }
+  function CompactGroupsOverview({ records, settings, groups }) {
+    const [filter, setFilter] = (0, import_react.useState)(groups.length > 1 ? "ALL" : groups[0]?.id || "A");
+    const [monthlyOpenIds, setMonthlyOpenIds] = (0, import_react.useState)([]);
+    const [stockOpenIds, setStockOpenIds] = (0, import_react.useState)([]);
+    const [sort, setSort] = (0, import_react.useState)({ key: "monthly", direction: "desc" });
+    const peopleById = new Map(settings.personnel.map((person) => [person.id, person]));
+    const secretaryNames = settings.personnel.filter((person) => person.role === "\u79D8\u66F8").map((person) => person.name.trim()).filter(Boolean);
+    const namesFor = (record) => {
+      const names = [...new Set(developerNameLines(String(record.developer || "").replace(/[\s、，,／/+&和與]/g, ""), settings.personnel).filter((name) => !secretaryNames.includes(name)))];
+      return names.length ? names : ["\u672A\u6B78\u5C6C\u696D\u52D9"];
+    };
+    const weightFor = (record, name) => {
+      const names = namesFor(record);
+      return names.includes(name) ? 1 / names.length : 0;
+    };
+    const numberText = (value) => Number.isInteger(value) ? String(value) : value.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
+    const monthlyRecords = records.filter((record) => normalizeDateInput(record.reportDate).slice(0, 7) === today().slice(0, 7));
+    const activeRecords = records.filter((record) => !record.archived && !isExpired(record) && (record.status || "\u59D4\u8A17\u4E2D") === "\u59D4\u8A17\u4E2D");
+    const visibleGroups = filter === "ALL" ? groups : groups.filter((group) => group.id === filter);
+    const rowsFor = (group) => group.members.map((member) => {
+      const name = peopleById.get(member.personId)?.name || "";
+      return { member, name, monthly: monthlyRecords.reduce((sum, record) => sum + weightFor(record, name), 0), stock: activeRecords.reduce((sum, record) => sum + weightFor(record, name), 0) };
+    }).filter((row) => row.name).sort((left, right) => {
+      const difference = sort.key === "name" ? left.name.localeCompare(right.name, "zh-TW") : sort.key === "role" ? left.member.role.localeCompare(right.member.role, "zh-TW") || left.name.localeCompare(right.name, "zh-TW") : left[sort.key] - right[sort.key];
+      return (sort.direction === "asc" ? difference : -difference) || left.name.localeCompare(right.name, "zh-TW");
+    });
+    const visibleRows = visibleGroups.flatMap(rowsFor);
+    const monthlyIds = visibleRows.filter((row) => row.monthly > 0).map((row) => row.member.personId), stockIds = visibleRows.filter((row) => row.stock > 0).map((row) => row.member.personId);
+    const allMonthlyOpen = monthlyIds.length > 0 && monthlyIds.every((id) => monthlyOpenIds.includes(id)), allStockOpen = stockIds.length > 0 && stockIds.every((id) => stockOpenIds.includes(id));
+    const toggle = (ids, id) => ids.includes(id) ? ids.filter((value) => value !== id) : [...ids, id];
+    const changeSort = (key) => setSort((current) => ({ key, direction: current.key === key && current.direction === "desc" ? "asc" : "desc" }));
+    const arrow = (key) => sort.key === key ? sort.direction === "desc" ? "\u2193" : "\u2191" : "\u2195";
+    const caseList = (items, name, prefix) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "compact-case-list", children: items.map((record) => ({ record, weight: weightFor(record, name) })).filter((item) => item.weight > 0).map(({ record, weight }) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: record.caseName || "\u672A\u547D\u540D\u6848\u4EF6" }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: record.address || "\u2014" }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("strong", { children: [
+        numberText(weight),
+        "\u4EF6"
+      ] })
+    ] }, `${prefix}-${record.id}`)) });
+    return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", { className: "compact-groups-overview", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "compact-groups-toolbar", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "compact-group-filters", children: [
+          groups.length > 1 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: filter === "ALL" ? "selected" : "", onClick: () => setFilter("ALL"), children: "\u5168\u90E8" }),
+          groups.map((group) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: `${filter === group.id ? "selected" : ""} group-${group.id.toLowerCase()}`, onClick: () => setFilter(group.id), children: group.name || `${group.id}\u7D44` }, group.id))
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "compact-expand-actions", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "monthly", onClick: () => setMonthlyOpenIds(allMonthlyOpen ? [] : monthlyIds), children: allMonthlyOpen ? "\u6536\u5408\u672C\u6708\u9032\u6848\u660E\u7D30" : "\u5C55\u958B\u672C\u6708\u9032\u6848\u660E\u7D30" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "stock", onClick: () => setStockOpenIds(allStockOpen ? [] : stockIds), children: allStockOpen ? "\u6536\u5408\u5EAB\u5B58\u660E\u7D30" : "\u5C55\u958B\u5EAB\u5B58\u660E\u7D30" })
+        ] })
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "compact-groups-table-wrap", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("table", { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("thead", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { onClick: () => changeSort("name"), children: [
+            "\u4EBA\u54E1 ",
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: arrow("name") })
+          ] }) }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { onClick: () => changeSort("role"), children: [
+            "\u8EAB\u5206 ",
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: arrow("role") })
+          ] }) }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { onClick: () => changeSort("monthly"), children: [
+            "\u672C\u6708\u9032\u6848 ",
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: arrow("monthly") })
+          ] }) }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { onClick: () => changeSort("stock"), children: [
+            "\u76EE\u524D\u5EAB\u5B58 ",
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: arrow("stock") })
+          ] }) })
+        ] }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("tbody", { children: visibleGroups.map((group) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_react.Fragment, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("tr", { className: `compact-group-heading group-${group.id.toLowerCase()}`, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { colSpan: 4, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: group.name || `${group.id}\u7D44` }) }) }),
+          rowsFor(group).map((row) => {
+            const monthlyOpen = monthlyOpenIds.includes(row.member.personId), stockOpen = stockOpenIds.includes(row.member.personId);
+            return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_react.Fragment, { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { className: "compact-person-row", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: row.name }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: row.member.role }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "compact-count monthly", disabled: !row.monthly, onClick: () => setMonthlyOpenIds((ids) => toggle(ids, row.member.personId)), children: numberText(row.monthly) }) }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "compact-count stock", disabled: !row.stock, onClick: () => setStockOpenIds((ids) => toggle(ids, row.member.personId)), children: numberText(row.stock) }) })
+              ] }),
+              (monthlyOpen || stockOpen) && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { className: "compact-detail-row", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { colSpan: 2 }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { className: "monthly-detail", children: monthlyOpen && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h4", { children: [
+                    row.name,
+                    "\u3000\u672C\u6708\u9032\u6848\u660E\u7D30"
+                  ] }),
+                  caseList(monthlyRecords, row.name, "monthly")
+                ] }) }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { className: "stock-detail", children: stockOpen && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h4", { children: [
+                    row.name,
+                    "\u3000\u76EE\u524D\u5EAB\u5B58\u660E\u7D30"
+                  ] }),
+                  caseList(activeRecords, row.name, "stock")
+                ] }) })
+              ] })
+            ] }, `${group.id}-${row.member.personId}`);
+          })
+        ] }, group.id)) })
+      ] }) })
+    ] });
+  }
   function LeaderTeamOverview({ records, settings, group }) {
     const [monthlyDetailPersonIds, setMonthlyDetailPersonIds] = (0, import_react.useState)([]);
     const [stockDetailPersonIds, setStockDetailPersonIds] = (0, import_react.useState)([]);
@@ -49677,11 +49782,9 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     if (group.name === "\u5168\u90E8\u7D44\u5225") {
       const groupIds = ["A", "B", "C", "D"];
       const separatedGroups = groupIds.map((id) => ({ id, name: `${id}\u7D44`, members: group.members.filter((member) => String(member.role).startsWith(`${id}\u7D44 `)).map((member) => ({ ...member, role: String(member.role).replace(`${id}\u7D44 `, "") })) }));
-      return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("section", { className: "all-groups-overview", children: separatedGroups.map((item) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("article", { className: `all-group-section group-${item.id.toLowerCase()}`, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { children: item.name }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)(LeaderTeamOverview, { records, settings, group: item })
-      ] }, item.id)) });
+      return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CompactGroupsOverview, { records, settings, groups: separatedGroups });
     }
+    return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CompactGroupsOverview, { records, settings, groups: [group] });
     const peopleById = new Map(settings.personnel.map((person) => [person.id, person]));
     const secretaryNames = settings.personnel.filter((person) => person.role === "\u79D8\u66F8").map((person) => person.name.trim()).filter(Boolean);
     const namesFor = (record) => {
