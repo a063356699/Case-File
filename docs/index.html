@@ -41595,7 +41595,37 @@ ${String(ex)}`);
       landPing: landShare || record.landPing || ""
     };
   };
-  var suppliedPersonnel = [];
+  var suppliedPersonnel = [
+    { sequence: "1", name: "\u738B\u555F\u5C71", nationalId: "D120138769", phone: "0986-468-538" },
+    { sequence: "2", name: "\u738B\u82E5\u82B8", nationalId: "D222966898", phone: "0973-681-209" },
+    { sequence: "3", name: "\u738B\u4FDE\u4E91", nationalId: "R223617813", phone: "0955-415-510" },
+    { sequence: "4", name: "\u738B\u59A4\u5BB8", nationalId: "D222532507", phone: "0979-011-247" },
+    { sequence: "5", name: "\u6797\u7389\u74B0", nationalId: "S220375257", phone: "0986-978-729" },
+    { sequence: "6", name: "\u6797\u986F\u660C", nationalId: "S121487352", phone: "0939-705-899" },
+    { sequence: "7", name: "\u6797\u59FF\u5C91", nationalId: "D223106083", phone: "0903-121-622" },
+    { sequence: "8", name: "\u6797\u4FCA\u5609", nationalId: "R123982019", phone: "0937-850-185" },
+    { sequence: "9", name: "\u9673\u5E1D\u5143", nationalId: "R121992375", phone: "0905-355-903" },
+    { sequence: "10", name: "\u9673\u73EE\u83C1", nationalId: "L222587311", phone: "0921-402-358" },
+    { sequence: "11", name: "\u9673\u4FE1\u826F", nationalId: "T122785116", phone: "0918-706-123" },
+    { sequence: "12", name: "\u90ED\u5EFA\u4F51", nationalId: "R123701201", phone: "0981-917-964" },
+    { sequence: "13", name: "\u8B1D\u99A8\u5100", nationalId: "R223978857", phone: "0978-665-852" },
+    { sequence: "14", name: "\u8521\u5B87\u80B2", nationalId: "E124539503", phone: "0989-644-329" },
+    { sequence: "15", name: "\u7530\u5EAD\u5B87", nationalId: "R124280167", phone: "0987-688-653" },
+    { sequence: "16", name: "\u5433\u4F69\u73B2", nationalId: "R223324582", phone: "0987-980-616" },
+    { sequence: "17", name: "\u9EC3\u6587\u6210", nationalId: "D120428580", phone: "0926-777-923" },
+    { sequence: "18", name: "\u8CB7\u6DD1\u73B2", nationalId: "R221959578", phone: "0978-737-011" },
+    { sequence: "19", name: "\u5289\u52DD\u4EC1", nationalId: "R121093760", phone: "0911-715-799" },
+    { sequence: "20", name: "\u5F35\u5C0F\u66FC", nationalId: "D290082318", phone: "0976-828-826" },
+    { sequence: "21", name: "\u674E\u4EAB\u5DA7", nationalId: "R122697002", phone: "0976-213-019" },
+    { sequence: "22", name: "\u962E\u6C0F\u91D1\u6C34", nationalId: "D260011981", phone: "0919-632-122" },
+    { sequence: "23", name: "\u5B8B\u559C\u8F1D", nationalId: "T120451804", phone: "0931-925-450" },
+    { sequence: "24", name: "\u67EF\u80B2\u5A77", nationalId: "I200062630", phone: "0972-798-530" },
+    { sequence: "25", name: "\u674E\u9E97\u5349", nationalId: "S224031185", phone: "0982-508-091" },
+    { sequence: "26", name: "\u65BD\u7D39\u8587", nationalId: "D223031321", phone: "0919-514-125" },
+    { sequence: "27", name: "\u4F59\u6C9B\u81FB", nationalId: "R220963452", phone: "0931-913-915" },
+    { sequence: "28", name: "\u8449\u7FCA\u7DC1", nationalId: "R223676812", phone: "0938-067-561" },
+    { sequence: "29", name: "\u694A\u5DE7\u7504", nationalId: "V221068389", phone: "0967-286-668" }
+  ];
   var contactDirectoryOrder = [
     "\u738B\u555F\u5C71",
     "\u738B\u82E5\u82B8",
@@ -41633,7 +41663,7 @@ ${String(ex)}`);
     const supplied = suppliedPersonnel.map((entry) => {
       const index = remaining.findIndex((person) => person.nationalId.toUpperCase() === entry.nationalId || person.name.trim() === entry.name);
       const existing = index >= 0 ? remaining.splice(index, 1)[0] : void 0;
-      return { ...existing || {}, id: existing?.id || `staff-${entry.nationalId}`, ...entry, role: ["\u674E\u9E97\u5349", "\u65BD\u7D39\u8587"].includes(entry.name) ? "\u79D8\u66F8" : existing?.role || "\u696D\u52D9", status: "\u5728\u8077" };
+      return { ...entry, ...existing || {}, id: existing?.id || `staff-${entry.nationalId}`, sequence: existing?.sequence || entry.sequence, nationalId: existing?.nationalId || entry.nationalId, phone: existing?.phone || entry.phone, role: ["\u674E\u9E97\u5349", "\u65BD\u7D39\u8587"].includes(entry.name) ? "\u79D8\u66F8" : existing?.role || "\u696D\u52D9", status: existing?.status || "\u5728\u8077" };
     });
     return [...supplied, ...remaining].map((person) => ({
       ...person,
@@ -44802,7 +44832,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V250" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V251" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),

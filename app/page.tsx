@@ -178,7 +178,38 @@ const parseAreaPaste = (raw: string, record: RecordItem): RecordItem => {
     landSharePing: landShare || record.landSharePing || "", landPing: landShare || record.landPing || ""
   };
 };
-const suppliedPersonnel: Array<Pick<Person, "sequence" | "name" | "nationalId" | "phone">> = [];
+// 保護既有人員資料：雲端／舊版若只回傳姓名，不可把身分證字號與手機覆蓋成空白。
+const suppliedPersonnel: Array<Pick<Person, "sequence" | "name" | "nationalId" | "phone">> = [
+  { sequence: "1", name: "王啟山", nationalId: "D120138769", phone: "0986-468-538" },
+  { sequence: "2", name: "王若芸", nationalId: "D222966898", phone: "0973-681-209" },
+  { sequence: "3", name: "王俞云", nationalId: "R223617813", phone: "0955-415-510" },
+  { sequence: "4", name: "王妤宸", nationalId: "D222532507", phone: "0979-011-247" },
+  { sequence: "5", name: "林玉環", nationalId: "S220375257", phone: "0986-978-729" },
+  { sequence: "6", name: "林顯昌", nationalId: "S121487352", phone: "0939-705-899" },
+  { sequence: "7", name: "林姿岑", nationalId: "D223106083", phone: "0903-121-622" },
+  { sequence: "8", name: "林俊嘉", nationalId: "R123982019", phone: "0937-850-185" },
+  { sequence: "9", name: "陳帝元", nationalId: "R121992375", phone: "0905-355-903" },
+  { sequence: "10", name: "陳珮菁", nationalId: "L222587311", phone: "0921-402-358" },
+  { sequence: "11", name: "陳信良", nationalId: "T122785116", phone: "0918-706-123" },
+  { sequence: "12", name: "郭建佑", nationalId: "R123701201", phone: "0981-917-964" },
+  { sequence: "13", name: "謝馨儀", nationalId: "R223978857", phone: "0978-665-852" },
+  { sequence: "14", name: "蔡宇育", nationalId: "E124539503", phone: "0989-644-329" },
+  { sequence: "15", name: "田庭宇", nationalId: "R124280167", phone: "0987-688-653" },
+  { sequence: "16", name: "吳佩玲", nationalId: "R223324582", phone: "0987-980-616" },
+  { sequence: "17", name: "黃文成", nationalId: "D120428580", phone: "0926-777-923" },
+  { sequence: "18", name: "買淑玲", nationalId: "R221959578", phone: "0978-737-011" },
+  { sequence: "19", name: "劉勝仁", nationalId: "R121093760", phone: "0911-715-799" },
+  { sequence: "20", name: "張小曼", nationalId: "D290082318", phone: "0976-828-826" },
+  { sequence: "21", name: "李享嶧", nationalId: "R122697002", phone: "0976-213-019" },
+  { sequence: "22", name: "阮氏金水", nationalId: "D260011981", phone: "0919-632-122" },
+  { sequence: "23", name: "宋喜輝", nationalId: "T120451804", phone: "0931-925-450" },
+  { sequence: "24", name: "柯育婷", nationalId: "I200062630", phone: "0972-798-530" },
+  { sequence: "25", name: "李麗卉", nationalId: "S224031185", phone: "0982-508-091" },
+  { sequence: "26", name: "施紹薇", nationalId: "D223031321", phone: "0919-514-125" },
+  { sequence: "27", name: "余沛臻", nationalId: "R220963452", phone: "0931-913-915" },
+  { sequence: "28", name: "葉翊緁", nationalId: "R223676812", phone: "0938-067-561" },
+  { sequence: "29", name: "楊巧甄", nationalId: "V221068389", phone: "0967-286-668" },
+];
 const contactDirectoryOrder = [
   "王啟山", "王若芸", "王俞云", "王妤宸", "林玉環", "林顯昌", "林姿岑", "林俊嘉", "陳帝元", "陳珮菁", "陳信良",
   "郭建佑", "謝馨儀", "蔡宇育", "田庭宇", "張小曼", "李享嶧", "楊巧甄", "阮氏金水", "柯育婷", "余沛臻", "葉翊緁",
@@ -191,7 +222,7 @@ const mergeSuppliedPersonnel = (people: Person[]) => {
   const supplied = suppliedPersonnel.map(entry => {
     const index = remaining.findIndex(person => person.nationalId.toUpperCase() === entry.nationalId || person.name.trim() === entry.name);
     const existing = index >= 0 ? remaining.splice(index, 1)[0] : undefined;
-    return { ...(existing || {}), id: existing?.id || `staff-${entry.nationalId}`, ...entry, role: ["李麗卉", "施紹薇"].includes(entry.name) ? "秘書" as const : existing?.role || "業務" as const, status: "在職" as const };
+    return { ...entry, ...(existing || {}), id: existing?.id || `staff-${entry.nationalId}`, sequence: existing?.sequence || entry.sequence, nationalId: existing?.nationalId || entry.nationalId, phone: existing?.phone || entry.phone, role: ["李麗卉", "施紹薇"].includes(entry.name) ? "秘書" as const : existing?.role || "業務" as const, status: existing?.status || "在職" as const };
   });
   return [...supplied, ...remaining].map(person => ({
     ...person,
@@ -2463,7 +2494,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V250</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V251</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
