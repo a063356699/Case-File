@@ -205,7 +205,6 @@ const suppliedPersonnel: Array<Pick<Person, "sequence" | "name" | "nationalId" |
   { sequence: "23", name: "宋喜輝", nationalId: "T120451804", phone: "0931-925-450" },
   { sequence: "24", name: "柯育婷", nationalId: "I200062630", phone: "0972-798-530" },
   { sequence: "25", name: "李麗卉", nationalId: "S224031185", phone: "0982-508-091" },
-  { sequence: "26", name: "施紹薇", nationalId: "D223031321", phone: "0919-514-125" },
   { sequence: "27", name: "余沛臻", nationalId: "R220963452", phone: "0931-913-915" },
   { sequence: "28", name: "葉翊緁", nationalId: "R223676812", phone: "0938-067-561" },
   { sequence: "29", name: "楊巧甄", nationalId: "V221068389", phone: "0967-286-668" },
@@ -215,18 +214,17 @@ const contactDirectoryOrder = [
   "郭建佑", "謝馨儀", "蔡宇育", "田庭宇", "張小曼", "李享嶧", "楊巧甄", "阮氏金水", "柯育婷", "余沛臻", "葉翊緁",
   "宋喜輝", "吳佩玲", "黃文成", "買淑玲", "劉勝仁", "李麗卉", "林志銘",
 ];
-const contactDirectorySequence = new Map(contactDirectoryOrder.map((name, index) => [name, String(index + 1)]));
 const contactDirectoryPhoneOverrides: Record<string, string> = { 郭建佑: "0938-839-308" };
+const removedPersonnelNames = new Set(["施紹薇"]);
 const mergeSuppliedPersonnel = (people: Person[]) => {
-  const remaining = people.slice();
-  const supplied = suppliedPersonnel.map(entry => {
+  const remaining = people.filter(person => !removedPersonnelNames.has(String(person.name || "").trim()));
+  const supplied = suppliedPersonnel.filter(entry => !removedPersonnelNames.has(entry.name)).map(entry => {
     const index = remaining.findIndex(person => person.nationalId.toUpperCase() === entry.nationalId || person.name.trim() === entry.name);
     const existing = index >= 0 ? remaining.splice(index, 1)[0] : undefined;
     return { ...entry, ...(existing || {}), id: existing?.id || `staff-${entry.nationalId}`, sequence: existing?.sequence || entry.sequence, nationalId: existing?.nationalId || entry.nationalId, phone: existing?.phone || entry.phone, role: ["李麗卉", "施紹薇"].includes(entry.name) ? "秘書" as const : existing?.role || "業務" as const, status: existing?.status || "在職" as const };
   });
   return [...supplied, ...remaining].map(person => ({
     ...person,
-    sequence: contactDirectorySequence.get(person.name.trim()) || person.sequence,
     phone: contactDirectoryPhoneOverrides[person.name.trim()] || person.phone,
   }));
 };
@@ -2303,7 +2301,10 @@ export default function Home() {
       const data = await response.json();
       if (!response.ok || !data?.personId || !Array.isArray(data.records)) return flash("身分證字號錯誤，或人員目前不是在職");
       const nextRecords = applySourceLayoutFixes(data.records).map((record: RecordItem) => normalizeRecordPings({ ...record, photos: [] }));
-      const nextPeople = (Array.isArray(data.personnel) ? data.personnel : []).map((entry: Partial<Person>) => ({ ...entry, id: entry.id || newId(), name: entry.name || "", nationalId: "", status: entry.status || "在職" })) as Person[];
+      const nextPeople = (Array.isArray(data.personnel) ? data.personnel : []).filter((entry: Partial<Person>) => !removedPersonnelNames.has(String(entry.name || "").trim())).map((entry: Partial<Person>) => {
+        const local = settings.personnel.find(person => person.id === entry.id || (entry.name && person.name.trim() === String(entry.name).trim()));
+        return { ...local, ...entry, id: entry.id || local?.id || newId(), name: entry.name || local?.name || "", nationalId: local?.nationalId || "", phone: entry.phone || local?.phone || "", status: entry.status || local?.status || "在職" } as Person;
+      });
       setRecords(nextRecords);
       setSettings(previous => ({ ...previous, personnel: nextPeople }));
       setPublicPersonId(data.personId);
@@ -2494,7 +2495,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V266</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V267</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>

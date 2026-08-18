@@ -41637,7 +41637,6 @@ ${String(ex)}`);
     { sequence: "23", name: "\u5B8B\u559C\u8F1D", nationalId: "T120451804", phone: "0931-925-450" },
     { sequence: "24", name: "\u67EF\u80B2\u5A77", nationalId: "I200062630", phone: "0972-798-530" },
     { sequence: "25", name: "\u674E\u9E97\u5349", nationalId: "S224031185", phone: "0982-508-091" },
-    { sequence: "26", name: "\u65BD\u7D39\u8587", nationalId: "D223031321", phone: "0919-514-125" },
     { sequence: "27", name: "\u4F59\u6C9B\u81FB", nationalId: "R220963452", phone: "0931-913-915" },
     { sequence: "28", name: "\u8449\u7FCA\u7DC1", nationalId: "R223676812", phone: "0938-067-561" },
     { sequence: "29", name: "\u694A\u5DE7\u7504", nationalId: "V221068389", phone: "0967-286-668" }
@@ -41673,18 +41672,17 @@ ${String(ex)}`);
     "\u674E\u9E97\u5349",
     "\u6797\u5FD7\u9298"
   ];
-  var contactDirectorySequence = new Map(contactDirectoryOrder.map((name, index) => [name, String(index + 1)]));
   var contactDirectoryPhoneOverrides = { \u90ED\u5EFA\u4F51: "0938-839-308" };
+  var removedPersonnelNames = /* @__PURE__ */ new Set(["\u65BD\u7D39\u8587"]);
   var mergeSuppliedPersonnel = (people) => {
-    const remaining = people.slice();
-    const supplied = suppliedPersonnel.map((entry) => {
+    const remaining = people.filter((person) => !removedPersonnelNames.has(String(person.name || "").trim()));
+    const supplied = suppliedPersonnel.filter((entry) => !removedPersonnelNames.has(entry.name)).map((entry) => {
       const index = remaining.findIndex((person) => person.nationalId.toUpperCase() === entry.nationalId || person.name.trim() === entry.name);
       const existing = index >= 0 ? remaining.splice(index, 1)[0] : void 0;
       return { ...entry, ...existing || {}, id: existing?.id || `staff-${entry.nationalId}`, sequence: existing?.sequence || entry.sequence, nationalId: existing?.nationalId || entry.nationalId, phone: existing?.phone || entry.phone, role: ["\u674E\u9E97\u5349", "\u65BD\u7D39\u8587"].includes(entry.name) ? "\u79D8\u66F8" : existing?.role || "\u696D\u52D9", status: existing?.status || "\u5728\u8077" };
     });
     return [...supplied, ...remaining].map((person) => ({
       ...person,
-      sequence: contactDirectorySequence.get(person.name.trim()) || person.sequence,
       phone: contactDirectoryPhoneOverrides[person.name.trim()] || person.phone
     }));
   };
@@ -44576,7 +44574,10 @@ ${changedLabels}
         const data = await response.json();
         if (!response.ok || !data?.personId || !Array.isArray(data.records)) return flash("\u8EAB\u5206\u8B49\u5B57\u865F\u932F\u8AA4\uFF0C\u6216\u4EBA\u54E1\u76EE\u524D\u4E0D\u662F\u5728\u8077");
         const nextRecords = applySourceLayoutFixes(data.records).map((record) => normalizeRecordPings({ ...record, photos: [] }));
-        const nextPeople = (Array.isArray(data.personnel) ? data.personnel : []).map((entry) => ({ ...entry, id: entry.id || newId(), name: entry.name || "", nationalId: "", status: entry.status || "\u5728\u8077" }));
+        const nextPeople = (Array.isArray(data.personnel) ? data.personnel : []).filter((entry) => !removedPersonnelNames.has(String(entry.name || "").trim())).map((entry) => {
+          const local = settings.personnel.find((person) => person.id === entry.id || entry.name && person.name.trim() === String(entry.name).trim());
+          return { ...local, ...entry, id: entry.id || local?.id || newId(), name: entry.name || local?.name || "", nationalId: local?.nationalId || "", phone: entry.phone || local?.phone || "", status: entry.status || local?.status || "\u5728\u8077" };
+        });
         setRecords(nextRecords);
         setSettings((previous) => ({ ...previous, personnel: nextPeople }));
         setPublicPersonId(data.personId);
@@ -44851,7 +44852,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V266" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V267" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
