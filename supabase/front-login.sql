@@ -87,7 +87,21 @@ begin
     ]::text[])
   ) picked;
 
-  return jsonb_build_object('personId', v_person->>'id', 'records', v_front_records, 'personnel', v_people, 'inventoryGroups', coalesce(v_data->'settings'->'inventoryGroups', '[]'::jsonb));
+  return jsonb_build_object(
+    'personId', v_person->>'id',
+    'records', v_front_records,
+    'personnel', v_people,
+    'inventoryGroups', coalesce(v_data->'settings'->'inventoryGroups', '[]'::jsonb),
+    'leaderGroup', (
+      select g
+      from jsonb_array_elements(coalesce(v_data->'settings'->'inventoryGroups', '[]'::jsonb)) g
+      where exists (
+        select 1 from jsonb_array_elements(coalesce(g->'members', '[]'::jsonb)) m
+        where m->>'personId' = v_person->>'id' and m->>'role' = '組長'
+      )
+      limit 1
+    )
+  );
 end;
 $$;
 

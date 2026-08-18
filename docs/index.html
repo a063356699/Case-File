@@ -42656,6 +42656,7 @@ ${String(ex)}`);
     const publicLoginAttemptRef = (0, import_react.useRef)(0);
     const [publicPersonId, setPublicPersonId] = (0, import_react.useState)("");
     const [publicInventoryGroups, setPublicInventoryGroups] = (0, import_react.useState)([]);
+    const [publicLoginLeaderGroup, setPublicLoginLeaderGroup] = (0, import_react.useState)(null);
     const [publicScope, setPublicScope] = (0, import_react.useState)("mine");
     const [publicExpiryFilter, setPublicExpiryFilter] = (0, import_react.useState)("all");
     const [publicQuery, setPublicQuery] = (0, import_react.useState)("");
@@ -44605,6 +44606,7 @@ ${changedLabels}
       setPublicUnlocked(false);
       setPublicPersonId("");
       setPublicInventoryGroups([]);
+      setPublicLoginLeaderGroup(null);
       setPublicScope("mine");
       setPassword("");
     };
@@ -44617,6 +44619,7 @@ ${changedLabels}
       setPublicUnlocked(false);
       setPublicPersonId("");
       setPublicInventoryGroups([]);
+      setPublicLoginLeaderGroup(null);
       setPublicScope("mine");
       setPublicExpiryFilter("all");
       setPublicQuery("");
@@ -44669,7 +44672,9 @@ ${changedLabels}
           return { ...local, ...entry, id: entry.id || local?.id || newId(), name: entry.name || local?.name || "", nationalId: local?.nationalId || "", phone: entry.phone || local?.phone || "", status: entry.status || local?.status || "\u5728\u8077" };
         });
         setPublicRecords(nextRecords);
-        setPublicInventoryGroups(Array.isArray(data.inventoryGroups) ? data.inventoryGroups : []);
+        const loginGroups = Array.isArray(data.inventoryGroups) ? data.inventoryGroups : [];
+        setPublicInventoryGroups(loginGroups);
+        setPublicLoginLeaderGroup(data.leaderGroup && typeof data.leaderGroup === "object" ? data.leaderGroup : loginGroups.find((group) => group.members.some((member) => member.personId === data.personId && member.role === "\u7D44\u9577")) || null);
         setSettings((previous) => ({ ...previous, personnel: mergeSuppliedPersonnel(nextPeople), ...Array.isArray(data.inventoryGroups) ? { inventoryGroups: data.inventoryGroups } : {} }));
         setPublicPersonId(data.personId);
         setPublicScope("mine");
@@ -44684,7 +44689,7 @@ ${changedLabels}
       }
     };
     const publicPerson = settings.personnel.find((p) => p.id === publicPersonId);
-    const publicLeaderGroup = publicInventoryGroups.find((group) => group.members.some((member) => member.personId === publicPersonId && member.role === "\u7D44\u9577"));
+    const publicLeaderGroup = publicLoginLeaderGroup || publicInventoryGroups.find((group) => group.members.some((member) => member.personId === publicPersonId && member.role === "\u7D44\u9577"));
     const contactPeople = sortPeopleBySequence(settings.personnel.filter((person) => person.status === "\u5728\u8077" && person.name.trim() && String(person.phone || "").trim()));
     const publicContactCount = contactDirectoryOrder.filter((name) => contactPeople.some((person) => person.name.trim() === name)).length;
     const myProperties = active.filter((r) => nameMatches(r.developer, publicPerson?.name || ""));
@@ -44947,7 +44952,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V283" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V284" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
