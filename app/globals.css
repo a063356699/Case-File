@@ -526,6 +526,7 @@ button:hover,.file-button:hover{border-color:#9fbad0;box-shadow:0 2px 8px #7895a
   grid-template-columns: 64px 1fr 1.35fr 1.05fr 90px 90px 80px;
 }
 .person-sequence{text-align:center}
+.personnel-panel .person-row{grid-template-columns:58px minmax(100px,.85fr) minmax(145px,1.15fr) minmax(120px,.9fr) minmax(210px,1.5fr) 82px 82px 62px}.personnel-panel .person-row input[type="url"]{color:#14684e}.personnel-panel .person-row input[type="url"]::placeholder{color:#82968e}@media(max-width:1050px){.personnel-panel .personnel-table{overflow-x:auto}.personnel-panel .person-row{min-width:1050px}}
 .contact-directory{width:min(1180px,100%);margin:8px auto 0;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#fff;box-shadow:0 8px 28px #38463e0a;padding:18px}
 .contact-directory-head{position:relative;display:flex;justify-content:center;align-items:center;margin:2px 0 18px}
 .contact-directory h3{text-align:center;margin:0;font-size:23px;letter-spacing:.08em;color:#17242a}
@@ -539,6 +540,7 @@ button:hover,.file-button:hover{border-color:#9fbad0;box-shadow:0 2px 8px #7895a
 .contact-directory th:nth-child(3n+2),.contact-directory td:nth-child(3n+2){width:105px}
 .contact-directory th:nth-child(3n),.contact-directory td:nth-child(3n){width:165px}
 .contact-directory a{color:#174f90;text-decoration:none;font-weight:800;letter-spacing:.04em}
+.contact-person-name{display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap}.contact-directory .contact-line-link{display:inline-grid;place-items:center;min-width:31px;height:20px;padding:0 5px;border-radius:999px;background:#06c755;color:#fff!important;font-size:9px;font-weight:900;line-height:1;letter-spacing:0}.contact-directory .contact-line-link:hover{background:#00ad49;transform:none}
 .internal-public-app:not(.public-auth-ready) .public-shell{visibility:hidden!important}
 .topbar>.nav .contacts-nav-button{background:#e7f3ea!important;color:#356c50!important;border-color:#c8dfcf!important}
 .topbar>.nav .contacts-nav-button.active{background:#d5eadc!important;color:#1f6845!important;border-color:#8fc2a1!important;box-shadow:0 2px 8px #43875c2b!important}
