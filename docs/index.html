@@ -1638,6 +1638,13 @@ body{background:#f8fbfe!important;color:#405064!important}
 .new-case-reminder-list-modal{width:min(1320px,96vw)!important}
 .archive-cleanup-sort-header{cursor:pointer!important;user-select:none}.archive-cleanup-sort-header:hover{background:#dcebe5!important}.archive-cleanup-sort-header b{font-size:11px;color:#28725b}
 .topbar>.nav .intake-draft-nav-count{margin-left:5px;padding:0!important;border:0!important;background:transparent!important;color:#e00000!important;font-size:13px!important;font-weight:900!important}
+/* 每日物件動態：管理模式與業務前台的案名、地址比照團看清單放大。 */
+.daily-activity .daily-table td.col-caseName,
+.daily-activity .daily-table td.col-caseName .case-link,
+.daily-activity .daily-table td.col-caseName .public-case-name,
+.daily-activity .daily-table td.col-caseName .public-case-name>span{font-size:14px!important;line-height:1.45!important;font-weight:800!important}
+.daily-activity .daily-table td.col-address,
+.daily-activity .daily-table td.col-address *{font-size:14px!important;line-height:1.45!important;font-weight:500!important}
 </style>
 </head>
 <body>
@@ -44899,7 +44906,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V273" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V274" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
