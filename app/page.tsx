@@ -10,7 +10,7 @@ import { sourceBalconyFixes } from "./source-balcony-fixes";
 type RecordItem = Record<string, string> & { id: string; photos: string[]; archived?: string };
 type AdvancedFilter = Record<string, string>;
 type Person = { id: string; sequence?: string; name: string; nationalId: string; phone?: string; role?: "業務" | "秘書"; status: "在職" | "離職" };
-type InventoryGroupMember = { personId: string; role: "組長" | "組員" };
+type InventoryGroupMember = { personId: string; role: "組長" | "組員" | "全部組別" };
 type InventoryGroup = { id: "A" | "B" | "C" | "D"; name: string; members: InventoryGroupMember[] };
 type Settings = { personnel: Person[]; inventoryGroups?: InventoryGroup[]; staffName?: string; staffId?: string; supabaseUrl: string; supabaseKey: string; supabaseTable: string; supabaseRecord: string; expiry591?: string; expiry5168?: string; brokerExpiry?: string; bookReviewCurrentDate?: string; bookReviewNextDate?: string };
 type CloudSession = { accessToken: string; refreshToken?: string; email?: string };
@@ -2374,7 +2374,15 @@ export default function Home() {
     } catch { if (attempt !== publicLoginAttemptRef.current) return; setPublicAuthReady(true); flash("目前無法連接雲端，請確認網路後再試一次"); }
   };
   const publicPerson = settings.personnel.find(p => p.id === publicPersonId);
-  const publicLeaderGroup = publicLoginLeaderGroup || publicInventoryGroups.find(group => group.members.some(member => member.personId === publicPersonId && member.role === "組長"));
+  const publicHasAllGroupAccess = publicInventoryGroups.some(group => group.members.some(member => member.personId === publicPersonId && member.role === "全部組別"));
+  const publicLeaderGroup = publicHasAllGroupAccess
+    ? { id: "D" as const, name: "全部組別", members: publicInventoryGroups.flatMap(group => group.members.map(member => ({ ...member, role: `${group.id}組 ${member.role}` as InventoryGroupMember["role"] }))) }
+    : publicLoginLeaderGroup || publicInventoryGroups.find(group => group.members.some(member => member.personId === publicPersonId && member.role === "組長"));
+  useEffect(() => {
+    if (!publicLeaderGroup || !publicUnlocked) return;
+    document.querySelectorAll<HTMLButtonElement>(".scope-tabs button").forEach(button => { if (button.textContent?.trim() === "我的組別") button.textContent = "組別"; });
+    if (publicScope === "team") { const heading = document.querySelector<HTMLElement>(".public-head h2"); if (heading) heading.textContent = "組別"; }
+  }, [publicLeaderGroup, publicUnlocked, publicScope]);
   const contactPeople = sortPeopleBySequence(settings.personnel.filter(person => person.status === "在職" && person.name.trim() && String(person.phone || "").trim()));
   // 前台通訊錄依店內固定排序顯示；不把秘書或未列入店內名冊的人員算入標籤。
   const publicContactCount = contactDirectoryOrder.filter(name => contactPeople.some(person => person.name.trim() === name)).length;
@@ -2555,7 +2563,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V284</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V285</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -4166,8 +4174,9 @@ function MonthlyPropertyReport({ records, person, submit, holdUntil }: { records
 }
 
 function LeaderTeamOverview({ records, settings, group }: { records: RecordItem[]; settings: Settings; group: InventoryGroup }) {
-  const [monthlyDetailPersonId, setMonthlyDetailPersonId] = useState("");
-  const [stockDetailPersonId, setStockDetailPersonId] = useState("");
+  const [monthlyDetailPersonIds, setMonthlyDetailPersonIds] = useState<string[]>([]);
+  const [stockDetailPersonIds, setStockDetailPersonIds] = useState<string[]>([]);
+  const [teamSort, setTeamSort] = useState<{ key: "monthly" | "stock"; direction: "asc" | "desc" }>({ key: "monthly", direction: "desc" });
   const peopleById = new Map(settings.personnel.map(person => [person.id, person]));
   const secretaryNames = settings.personnel.filter(person => person.role === "秘書").map(person => person.name.trim()).filter(Boolean);
   const namesFor = (record: RecordItem) => {
@@ -4185,7 +4194,14 @@ function LeaderTeamOverview({ records, settings, group }: { records: RecordItem[
     return { member, name, monthly: monthlyRecords.reduce((sum, record) => sum + weightFor(record, name), 0), stock: activeRecords.reduce((sum, record) => sum + weightFor(record, name), 0) };
   }).filter(row => row.name);
   const detailItems = (items: RecordItem[], name: string) => items.map(record => ({ record, weight: weightFor(record, name) })).filter(item => item.weight > 0);
-  return <section className={`leader-team-overview group-${group.id.toLowerCase()}`}><header><div><small>{group.id}組</small><h3>{group.name || `${group.id}組`}目前狀況</h3></div><span>僅組長可查看</span></header><div className="leader-team-summary"><div><b>{rows.length}</b><span>組內人數</span></div><div><b>{numberText(rows.reduce((sum, row) => sum + row.monthly, 0))}</b><span>本月進案</span></div><div><b>{numberText(rows.reduce((sum, row) => sum + row.stock, 0))}</b><span>目前庫存</span></div></div><div className="leader-team-table-wrap"><table><thead><tr><th>人員</th><th>身分</th><th>本月進案</th><th>目前庫存</th></tr></thead><tbody>{rows.map(row => <Fragment key={row.member.personId}><tr><td>{row.name}</td><td>{row.member.role}</td><td><button type="button" className="leader-detail-button monthly" disabled={!row.monthly} onClick={() => setMonthlyDetailPersonId(value => value === row.member.personId ? "" : row.member.personId)}>{numberText(row.monthly)} 件　{row.monthly ? monthlyDetailPersonId === row.member.personId ? "收合" : "展開" : ""}</button></td><td><button type="button" className="leader-detail-button stock" disabled={!row.stock} onClick={() => setStockDetailPersonId(value => value === row.member.personId ? "" : row.member.personId)}>{numberText(row.stock)} 件　{row.stock ? stockDetailPersonId === row.member.personId ? "收合" : "展開" : ""}</button></td></tr>{monthlyDetailPersonId === row.member.personId && <tr className="leader-detail-row monthly"><td colSpan={2}></td><td><b>{row.name}　本月進案明細</b><div className="leader-case-list">{detailItems(monthlyRecords, row.name).map(({ record, weight }) => <div key={`leader-month-${record.id}`}><span>{record.caseName || "未命名案件"}</span><small>{record.address || "—"}</small><strong>{numberText(weight)}件</strong></div>)}</div></td><td></td></tr>}{stockDetailPersonId === row.member.personId && <tr className="leader-detail-row stock"><td colSpan={3}></td><td><b>{row.name}　目前庫存明細</b><div className="leader-case-list">{detailItems(activeRecords, row.name).map(({ record, weight }) => <div key={`leader-stock-${record.id}`}><span>{record.caseName || "未命名案件"}</span><small>{record.address || "—"}</small><strong>{numberText(weight)}件</strong></div>)}</div></td></tr>}</Fragment>)}</tbody></table></div></section>;
+  const sortedRows = [...rows].sort((left, right) => { const difference = left[teamSort.key] - right[teamSort.key]; return (teamSort.direction === "asc" ? difference : -difference) || left.name.localeCompare(right.name, "zh-TW"); });
+  const changeTeamSort = (key: "monthly" | "stock") => setTeamSort(current => ({ key, direction: current.key === key && current.direction === "desc" ? "asc" : "desc" }));
+  const monthlyExpandableIds = rows.filter(row => row.monthly > 0).map(row => row.member.personId);
+  const stockExpandableIds = rows.filter(row => row.stock > 0).map(row => row.member.personId);
+  const allMonthlyExpanded = monthlyExpandableIds.length > 0 && monthlyExpandableIds.every(id => monthlyDetailPersonIds.includes(id));
+  const allStockExpanded = stockExpandableIds.length > 0 && stockExpandableIds.every(id => stockDetailPersonIds.includes(id));
+  const toggleId = (ids: string[], id: string) => ids.includes(id) ? ids.filter(value => value !== id) : [...ids, id];
+  return <section className={`leader-team-overview group-${group.id.toLowerCase()}`}><header><div><small>{group.id}組</small><h3>{group.name || `${group.id}組`}目前狀況</h3></div><div className="leader-team-head-actions"><button type="button" onClick={() => setMonthlyDetailPersonIds(allMonthlyExpanded ? [] : monthlyExpandableIds)}>{allMonthlyExpanded ? "收合本月進案明細" : "展開本月進案明細"}</button><button type="button" onClick={() => setStockDetailPersonIds(allStockExpanded ? [] : stockExpandableIds)}>{allStockExpanded ? "收合庫存明細" : "展開庫存明細"}</button><span>僅組長可查看</span></div></header><div className="leader-team-summary"><div><b>{rows.length}</b><span>組內人數</span></div><div><b>{numberText(rows.reduce((sum, row) => sum + row.monthly, 0))}</b><span>本月進案</span></div><div><b>{numberText(rows.reduce((sum, row) => sum + row.stock, 0))}</b><span>目前庫存</span></div></div><div className="leader-team-table-wrap"><table><thead><tr><th>人員</th><th>身分</th><th><button type="button" className="leader-sort-button" onClick={() => changeTeamSort("monthly")}>本月進案 <b>{teamSort.key === "monthly" ? teamSort.direction === "desc" ? "↓" : "↑" : "↕"}</b></button></th><th><button type="button" className="leader-sort-button" onClick={() => changeTeamSort("stock")}>目前庫存 <b>{teamSort.key === "stock" ? teamSort.direction === "desc" ? "↓" : "↑" : "↕"}</b></button></th></tr></thead><tbody>{sortedRows.map(row => <Fragment key={row.member.personId}><tr><td>{row.name}</td><td>{row.member.role}</td><td><button type="button" className="leader-detail-button monthly" disabled={!row.monthly} onClick={() => setMonthlyDetailPersonIds(ids => toggleId(ids, row.member.personId))}>{numberText(row.monthly)}</button></td><td><button type="button" className="leader-detail-button stock" disabled={!row.stock} onClick={() => setStockDetailPersonIds(ids => toggleId(ids, row.member.personId))}>{numberText(row.stock)}</button></td></tr>{monthlyDetailPersonIds.includes(row.member.personId) && <tr className="leader-detail-row monthly"><td colSpan={2}></td><td><b>{row.name}　本月進案明細</b><div className="leader-case-list">{detailItems(monthlyRecords, row.name).map(({ record, weight }) => <div key={`leader-month-${record.id}`}><span>{record.caseName || "未命名案件"}</span><small>{record.address || "—"}</small><strong>{numberText(weight)}件</strong></div>)}</div></td><td></td></tr>}{stockDetailPersonIds.includes(row.member.personId) && <tr className="leader-detail-row stock"><td colSpan={3}></td><td><b>{row.name}　目前庫存明細</b><div className="leader-case-list">{detailItems(activeRecords, row.name).map(({ record, weight }) => <div key={`leader-stock-${record.id}`}><span>{record.caseName || "未命名案件"}</span><small>{record.address || "—"}</small><strong>{numberText(weight)}件</strong></div>)}</div></td></tr>}</Fragment>)}</tbody></table></div></section>;
 }
 
 function BusinessInventory({ records, settings, setSettings }: { records: RecordItem[]; settings: Settings; setSettings: (settings: Settings) => void }) {
@@ -4195,6 +4211,14 @@ function BusinessInventory({ records, settings, setSettings }: { records: Record
   const [monthlyExpanded, setMonthlyExpanded] = useState(false);
   const [stockExpanded, setStockExpanded] = useState(false);
   const [groupSettingsOpen, setGroupSettingsOpen] = useState(false);
+  useEffect(() => {
+    if (!groupSettingsOpen) return;
+    const frame = requestAnimationFrame(() => document.querySelectorAll<HTMLSelectElement>(".inventory-group-member select:nth-child(2)").forEach(select => {
+      if ([...select.options].some(option => option.value === "全部組別")) return;
+      const option = document.createElement("option"); option.value = "全部組別"; option.textContent = "全部組別"; select.append(option);
+    }));
+    return () => cancelAnimationFrame(frame);
+  }, [groupSettingsOpen, settings.inventoryGroups]);
   const [stockDetailName, setStockDetailName] = useState("");
   const [inventoryGroupFilter, setInventoryGroupFilter] = useState<"ALL" | InventoryGroup["id"] | "UNGROUPED">("ALL");
   const monthAt = (offset: number) => { const [year, value] = today().slice(0, 7).split("-").map(Number); const date = new Date(year, value - 1 + offset, 1); return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`; };
