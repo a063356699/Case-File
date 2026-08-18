@@ -794,6 +794,7 @@ export default function Home() {
   developerPersonnelForDisplay = settings.personnel;
   const [cloudSession, setCloudSession] = useState<CloudSession | null>(null);
   const [cloudLastUploadAt, setCloudLastUploadAt] = useState(() => typeof window !== "undefined" ? localStorage.getItem(CLOUD_LAST_UPLOAD_KEY) || "" : "");
+  const [cloudRemoteUpdateAt, setCloudRemoteUpdateAt] = useState("");
   const [cloudUploadState, setCloudUploadState] = useState<"idle" | "uploading" | "complete" | "failed">("idle");
   const [cloudUploadError, setCloudUploadError] = useState("");
   const [tab, setTab] = useState<"active" | "archive" | "activity" | "inventory" | "tour" | "keys" | "public" | "settings" | "intake">("active");
@@ -1292,6 +1293,7 @@ export default function Home() {
   }, "");
   const latestModifiedAt = [latestRecordModifiedAt, latestDraftModifiedAt, tourModifiedAt].filter(Boolean).reduce((latest, candidate) => !latest || new Date(candidate).getTime() > new Date(latest).getTime() ? candidate : latest, "");
   const localCloudChangesPending = Boolean(latestModifiedAt && (!cloudLastUploadAt || Date.parse(latestModifiedAt) > Date.parse(cloudLastUploadAt)));
+  const cloudUpdateAvailable = Boolean(cloudRemoteUpdateAt && (!cloudLastUploadAt || Date.parse(cloudRemoteUpdateAt) > Date.parse(cloudLastUploadAt) + 500));
   const cloudUploadStatus = !cloudSession?.accessToken ? "未登入" : cloudUploadState === "failed" ? "上傳失敗" : cloudUploadState === "uploading" || localCloudChangesPending ? "上傳中" : "上傳完成";
   const showingFollowUpRecords = active.filter(record => record.showingFollowUp === "暫停帶看／等待業務回覆");
   useEffect(() => {
@@ -2075,6 +2077,7 @@ export default function Home() {
         cloudLocalPendingRef.current = false;
         localStorage.removeItem(CLOUD_LOCAL_PENDING_KEY);
         setCloudLastUploadAt(uploadedAt);
+        setCloudRemoteUpdateAt("");
         localStorage.setItem(CLOUD_LAST_UPLOAD_KEY, uploadedAt);
         setCloudUploadState("complete");
         if (!quiet) flash("雲端同步完成");
@@ -2103,7 +2106,7 @@ export default function Home() {
       if (automatic && cloudLocalPendingRef.current) return;
       const confirmationRecords = (data.records as RecordItem[]).map(record => normalizeRecordPings(applySourceLayoutFixes([record])[0])).filter(record => !record.archived && !isExpired(record) && (record.status || "委託中") === "委託中");
       setCloudConfirmationRecords(confirmationRecords);
-      if (rows[0]?.updated_at) { setCloudLastUploadAt(rows[0].updated_at); localStorage.setItem(CLOUD_LAST_UPLOAD_KEY, rows[0].updated_at); }
+      if (rows[0]?.updated_at) { setCloudLastUploadAt(rows[0].updated_at); setCloudRemoteUpdateAt(""); localStorage.setItem(CLOUD_LAST_UPLOAD_KEY, rows[0].updated_at); }
       if (automatic || confirm("雲端資料將與本機資料合併，本機已修改但尚未同步的同一筆資料將以雲端版本為準。確定嗎？")) {
         cloudSkipNextPushRef.current = true;
         setRecords(prev => {
@@ -2172,7 +2175,7 @@ export default function Home() {
         }
         // 若此次雲端內容與本機完全相同，不會觸發 snapshot effect；短暫後解除標記，避免擋到下一次真正儲存。
         window.setTimeout(() => { cloudSkipNextPushRef.current = false; }, 300);
-        if (!quiet) flash(automatic ? "已自動同步最新雲端資料" : "雲端資料已合併到本機");
+        if (!quiet) flash(automatic ? "已讀取雲端最新資料" : "雲端資料已合併到本機");
       }
     } catch { if (!quiet) flash(automatic ? "自動同步失敗，請檢查雲端登入" : "雲端讀取失敗，請檢查登入與設定"); }
   };
@@ -2187,7 +2190,8 @@ export default function Home() {
       if (!response.ok || !rows[0]?.updated_at) return;
       const remoteUpdatedAt = String(rows[0].updated_at);
       const knownUpdatedAt = localStorage.getItem(CLOUD_LAST_UPLOAD_KEY) || cloudLastUploadAt || "";
-      if (!knownUpdatedAt || Date.parse(remoteUpdatedAt) > Date.parse(knownUpdatedAt) + 500) await supabasePull(true, true);
+      if (!knownUpdatedAt || Date.parse(remoteUpdatedAt) > Date.parse(knownUpdatedAt) + 500) setCloudRemoteUpdateAt(remoteUpdatedAt);
+      else setCloudRemoteUpdateAt("");
     } catch {}
   };
   const supabaseSignIn = async (email: string, password: string, signUp = false) => {
@@ -2252,14 +2256,13 @@ export default function Home() {
     }
     void supabasePull(true);
   }, [cloudSession?.accessToken, cloudSession?.email, settings.supabaseUrl, settings.supabaseKey, settings.supabaseTable, settings.supabaseRecord, localCloudChangesPending]);
-  // 管理模式開啟期間每 45 秒只讀取 updated_at；雲端真的有更新才下載完整資料。
+  // 管理模式開啟期間每 45 秒只讀取 updated_at；偵測到新資料只提醒，由使用者決定何時下載完整資料。
   useEffect(() => {
     if (!cloudSession?.accessToken || !settings.supabaseUrl || !settings.supabaseKey) return;
     const timer = window.setInterval(() => { void supabasePullIfChanged(); }, 45000);
     return () => window.clearInterval(timer);
   }, [cloudSession?.accessToken, settings.supabaseUrl, settings.supabaseKey, settings.supabaseTable, settings.supabaseRecord, cloudLastUploadAt]);
-  // 兩台電腦同時開啟時，切回第一台或回到此分頁即刻取回另一台已同步的最新資料。
-  // 保留 45 秒背景檢查，這裡只在使用者回到畫面時觸發，不會持續增加雲端流量。
+  // 切回此分頁時只檢查雲端時間，不自動下載完整資料。
   useEffect(() => {
     if (!cloudSession?.accessToken || !settings.supabaseUrl || !settings.supabaseKey) return;
     const refreshWhenVisible = () => {
@@ -2496,7 +2499,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? "internal-public-app" : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V256</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V257</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -2508,6 +2511,7 @@ export default function Home() {
       <button className={tab === "public" ? "active" : ""} onClick={openPublic}>前台總表</button>
       <button className={tab === "settings" ? "active" : ""} onClick={() => setTab("settings")}>設定</button>
       <span className="home-last-modified home-sync-times"><span className="local-modified-line"><b>最後修改:</b><em>{latestModifiedAt ? displayHomeModifiedAt(latestModifiedAt) : "尚無紀錄"}</em></span><span className="cloud-upload-line" title={cloudUploadError || undefined}><b>Supabase上傳:</b><em>{cloudLastUploadAt ? displayHomeModifiedAt(cloudLastUploadAt) : "尚無紀錄"}<i className={`cloud-upload-state ${cloudUploadStatus === "上傳完成" ? "complete" : cloudUploadStatus === "上傳中" ? "uploading" : cloudUploadStatus === "上傳失敗" ? "failed" : "signed-out"}`}>{cloudUploadStatus}</i></em></span></span>
+      {cloudSession?.accessToken && <button type="button" className={`cloud-manual-pull${cloudUpdateAvailable ? " available" : ""}`} title={cloudUpdateAvailable ? `雲端更新時間：${displayHomeModifiedAt(cloudRemoteUpdateAt)}` : "只有按下後才下載完整雲端資料"} onClick={() => void supabasePull(true)}>{cloudUpdateAvailable ? "雲端有新資料－讀取" : "讀取雲端最新資料"}</button>}
       </nav>
     </header>}
 
