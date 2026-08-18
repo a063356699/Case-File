@@ -530,6 +530,7 @@ button:hover,.file-button:hover{border-color:#9fbad0;box-shadow:0 2px 8px #7895a
 .contact-directory-head{position:relative;display:flex;justify-content:center;align-items:center;margin:2px 0 18px}
 .contact-directory h3{text-align:center;margin:0;font-size:23px;letter-spacing:.08em;color:#17242a}
 .contact-print-button{position:absolute;right:0;top:50%;transform:translateY(-50%);padding:8px 14px;border-color:#5b8a79;color:#1f5a4a;background:#f6fbf8;font-weight:800}
+.contact-print-button:hover{transform:translateY(-50%)!important}
 .contact-table-scroll{overflow-x:auto}
 .contact-directory table{width:100%;min-width:960px;border-collapse:collapse;table-layout:fixed}
 .contact-directory th,.contact-directory td{border:1px solid #bfc9c3;text-align:center;padding:10px 8px;height:45px;font-size:15px}
