@@ -44834,7 +44834,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V254" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V255" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -50154,6 +50154,15 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     const [cloudEmail, setCloudEmail] = (0, import_react.useState)("");
     const [cloudPassword, setCloudPassword] = (0, import_react.useState)("");
     const updatePerson = (id, patch) => setSettings({ ...settings, personnel: settings.personnel.map((p) => p.id === id ? { ...p, ...patch } : p) });
+    const reorderPerson = (id, rawSequence) => {
+      const current = settings.personnel.find((person) => person.id === id);
+      if (!current) return;
+      const ordered = sortPeopleBySequence(settings.personnel.filter((person) => person.id !== id));
+      const requested = Math.floor(Number(rawSequence));
+      const position = Number.isFinite(requested) && requested > 0 ? Math.min(requested, ordered.length + 1) : ordered.length + 1;
+      ordered.splice(position - 1, 0, current);
+      setSettings({ ...settings, personnel: ordered.map((person, index) => ({ ...person, sequence: String(index + 1) })) });
+    };
     const personTextInput = (person, field, placeholder, type = "text") => {
       const normalize = (value) => field === "nationalId" ? value.toUpperCase() : value;
       const save = (value) => updatePerson(person.id, { [field]: normalize(value) });
@@ -50182,7 +50191,9 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     const activePeople = sortPeopleBySequence(settings.personnel.filter((p) => p.status === "\u5728\u8077"));
     const formerPeople = sortPeopleBySequence(settings.personnel.filter((p) => p.status === "\u96E2\u8077"));
     const personRow = (p) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "person-row", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { className: "person-sequence", type: "number", min: "1", value: p.sequence || "", onChange: (e) => updatePerson(p.id, { sequence: e.target.value }), placeholder: "\u5E8F" }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { className: "person-sequence", type: "number", min: "1", defaultValue: p.sequence || "", onBlur: (e) => reorderPerson(p.id, e.currentTarget.value), onKeyDown: (e) => {
+        if (e.key === "Enter") e.currentTarget.blur();
+      }, placeholder: "\u5E8F" }),
       personTextInput(p, "name", "\u59D3\u540D"),
       personTextInput(p, "nationalId", "\u8EAB\u5206\u8B49\u5B57\u865F"),
       personTextInput(p, "phone", "\u624B\u6A5F\u865F\u78BC", "tel"),
