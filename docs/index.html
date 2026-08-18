@@ -1657,6 +1657,7 @@ body{background:#f8fbfe!important;color:#405064!important}
 .leader-team-head-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}.leader-team-head-actions button{padding:7px 11px;border:1px solid #8db4a7;border-radius:10px;background:#eff8f5;color:#286451;font-weight:850}.leader-team-head-actions span{padding:7px 12px;border-radius:999px;background:#eef4f2;color:#587069;font-weight:800}.leader-detail-button{min-width:64px!important}.leader-detail-button:not(:disabled){cursor:pointer}.leader-detail-button:not(:disabled):hover{filter:brightness(.96)}.leader-sort-button{padding:3px 7px;border:0;background:transparent;color:inherit;font:inherit;font-weight:900;cursor:pointer}.leader-sort-button b{display:inline-block;min-width:16px;color:var(--team-color);font-size:16px}@media(max-width:760px){.leader-team-overview>header{align-items:flex-start;gap:10px}.leader-team-head-actions{max-width:220px}.leader-team-head-actions button{font-size:12px;padding:6px 8px}}
 .leader-team-overview>header>div:first-child:not(.leader-team-head-actions),.leader-team-head-actions>span{display:none!important}.leader-team-overview>header{justify-content:flex-end}
 .leader-detail-row.combined .leader-monthly-detail-cell{vertical-align:top;background:#fff9ef}.leader-detail-row.combined .leader-stock-detail-cell{vertical-align:top;background:#f0fafb}.leader-detail-row.combined>td:empty{background:#fff}.leader-detail-row.combined .leader-case-list>div{grid-template-columns:minmax(150px,1fr) minmax(180px,1.25fr) auto}@media(max-width:900px){.leader-detail-row.combined .leader-case-list>div{grid-template-columns:1fr auto}.leader-detail-row.combined .leader-case-list small{grid-column:1 / -1}}
+.all-groups-overview{display:grid;gap:18px;margin-top:14px}.all-group-section{--group-block:#557a6e;padding:0 12px 12px;border:2px solid var(--group-block);border-radius:18px;background:color-mix(in srgb,var(--group-block) 9%,#fff);overflow:hidden}.all-group-section.group-a{--group-block:#e35c39}.all-group-section.group-b{--group-block:#396ee8}.all-group-section.group-c{--group-block:#2a9b52}.all-group-section.group-d{--group-block:#8152ef}.all-group-section>h3{margin:0 -12px 10px;padding:12px 18px;background:color-mix(in srgb,var(--group-block) 18%,#fff);color:var(--group-block);font-size:22px}.all-group-section>.leader-team-overview{margin:0;padding:10px;border:0;background:transparent;box-shadow:none}.all-group-section>.leader-team-overview .leader-team-summary>div{background:color-mix(in srgb,var(--group-block) 10%,#fff)}.all-group-section>.leader-team-overview .leader-team-summary b,.all-group-section>.leader-team-overview .leader-sort-button b{color:var(--group-block)}@media(max-width:760px){.all-groups-overview{gap:12px}.all-group-section{padding:0 6px 8px}.all-group-section>h3{margin:0 -6px 8px;padding:9px 12px;font-size:19px}}
 </style>
 </head>
 <body>
@@ -44966,7 +44967,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V286" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V287" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -49673,6 +49674,14 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     const [monthlyDetailPersonIds, setMonthlyDetailPersonIds] = (0, import_react.useState)([]);
     const [stockDetailPersonIds, setStockDetailPersonIds] = (0, import_react.useState)([]);
     const [teamSort, setTeamSort] = (0, import_react.useState)({ key: "monthly", direction: "desc" });
+    if (group.name === "\u5168\u90E8\u7D44\u5225") {
+      const groupIds = ["A", "B", "C", "D"];
+      const separatedGroups = groupIds.map((id) => ({ id, name: `${id}\u7D44`, members: group.members.filter((member) => String(member.role).startsWith(`${id}\u7D44 `)).map((member) => ({ ...member, role: String(member.role).replace(`${id}\u7D44 `, "") })) }));
+      return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("section", { className: "all-groups-overview", children: separatedGroups.map((item) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("article", { className: `all-group-section group-${item.id.toLowerCase()}`, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { children: item.name }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)(LeaderTeamOverview, { records, settings, group: item })
+      ] }, item.id)) });
+    }
     const peopleById = new Map(settings.personnel.map((person) => [person.id, person]));
     const secretaryNames = settings.personnel.filter((person) => person.role === "\u79D8\u66F8").map((person) => person.name.trim()).filter(Boolean);
     const namesFor = (record) => {

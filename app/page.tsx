@@ -2563,7 +2563,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V286</small></h1></div>
+      <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V287</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -4208,6 +4208,11 @@ function LeaderTeamOverview({ records, settings, group }: { records: RecordItem[
   const [monthlyDetailPersonIds, setMonthlyDetailPersonIds] = useState<string[]>([]);
   const [stockDetailPersonIds, setStockDetailPersonIds] = useState<string[]>([]);
   const [teamSort, setTeamSort] = useState<{ key: "name" | "role" | "monthly" | "stock"; direction: "asc" | "desc" }>({ key: "monthly", direction: "desc" });
+  if (group.name === "全部組別") {
+    const groupIds: InventoryGroup["id"][] = ["A", "B", "C", "D"];
+    const separatedGroups = groupIds.map(id => ({ id, name: `${id}組`, members: group.members.filter(member => String(member.role).startsWith(`${id}組 `)).map(member => ({ ...member, role: String(member.role).replace(`${id}組 `, "") as InventoryGroupMember["role"] })) }));
+    return <section className="all-groups-overview">{separatedGroups.map(item => <article className={`all-group-section group-${item.id.toLowerCase()}`} key={item.id}><h3>{item.name}</h3><LeaderTeamOverview records={records} settings={settings} group={item}/></article>)}</section>;
+  }
   const peopleById = new Map(settings.personnel.map(person => [person.id, person]));
   const secretaryNames = settings.personnel.filter(person => person.role === "秘書").map(person => person.name.trim()).filter(Boolean);
   const namesFor = (record: RecordItem) => {
