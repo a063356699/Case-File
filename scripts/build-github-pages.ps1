@@ -6,7 +6,7 @@ $env:PATH = $nodeBin + ";" + $env:PATH
 
 $esbuild = "$projectRoot\node_modules\.bin\esbuild.cmd"
 if (-not (Test-Path -LiteralPath $esbuild)) {
-  $esbuild = "C:\Users\user\Documents\Codex\2026-07-24\7-24-7-24-5-5\node_modules\.bin\esbuild.cmd"
+  $esbuild = "$projectRoot\node_modules\.pnpm\node_modules\.bin\esbuild.cmd"
 }
 & $esbuild `
   "$projectRoot\scripts\standalone-entry.tsx" `
