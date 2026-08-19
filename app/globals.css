@@ -1768,6 +1768,20 @@ body{background:#f8fbfe!important;color:#405064!important}
 .daily-activity:not(.compact) .daily-table td.col-address,
 .daily-activity:not(.compact) .daily-table td.col-address *{font-size:18.48px!important}
 
+/* V326：頂端標籤維持原尺寸，空間不足時只捲動按鈕列，不向左覆蓋管理模式標題。 */
+.topbar>.brand{min-width:270px!important}
+.topbar>.header-actions{
+  justify-self:stretch!important;
+  justify-content:flex-start!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:calc(100vw - 330px)!important;
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+}
+.topbar>.header-actions>button,
+.topbar>.header-actions>.file-button{flex:0 0 auto!important;font-size:inherit!important}
+
 /* V317：每日動態常用資訊欄位加寬，管理模式與前台一致。 */
 .daily-activity .daily-table th.col-age,
 .daily-activity .daily-table td.col-age{width:5.5%!important;min-width:64px!important;max-width:none!important}
