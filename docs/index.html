@@ -1670,9 +1670,10 @@ body{background:#f8fbfe!important;color:#405064!important}
 .combined-inventory-panel td.monthly-stat-cell{overflow:hidden}.combined-inventory-panel td.monthly-stat-cell .inventory-category-summary{max-width:100%;flex-wrap:wrap;white-space:normal;overflow-wrap:anywhere;word-break:break-word}.combined-inventory-panel td.monthly-stat-cell .inventory-category-summary>span{display:block;max-width:100%;white-space:normal;line-height:1.35;text-align:center}.combined-inventory-panel .monthly-stat-subhead{white-space:normal;line-height:1.25}
 /* 列印進案草稿：保留印表機必要的極小安全邊，內容滿版使用 A4。 */
 @media print{
+  html,body,main,.intake-page,.print-document{background:#fff!important}
   .print-document{width:210mm!important;margin:0!important}
-  .print-document .print-page{width:210mm!important;height:297mm!important;min-height:297mm!important;max-height:297mm!important;margin:0!important}
-  .print-document .data-page.excel-print{padding:1.5mm 1.5mm .5mm!important;display:flex!important;flex-direction:column!important}
+  .print-document .print-page{width:210mm!important;height:297mm!important;min-height:297mm!important;max-height:297mm!important;padding:5mm!important;margin:0!important}
+  .print-document .data-page.excel-print{display:flex!important;flex-direction:column!important}
   .print-document .data-page.excel-print .print-main{flex:1 1 auto!important}
 }
 .leader-team-head-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}.leader-team-head-actions button{padding:7px 11px;border:1px solid #8db4a7;border-radius:10px;background:#eff8f5;color:#286451;font-weight:850}.leader-team-head-actions span{padding:7px 12px;border-radius:999px;background:#eef4f2;color:#587069;font-weight:800}.leader-detail-button{min-width:64px!important}.leader-detail-button:not(:disabled){cursor:pointer}.leader-detail-button:not(:disabled):hover{filter:brightness(.96)}.leader-sort-button{padding:3px 7px;border:0;background:transparent;color:inherit;font:inherit;font-weight:900;cursor:pointer}.leader-sort-button b{display:inline-block;min-width:16px;color:var(--team-color);font-size:16px}@media(max-width:760px){.leader-team-overview>header{align-items:flex-start;gap:10px}.leader-team-head-actions{max-width:220px}.leader-team-head-actions button{font-size:12px;padding:6px 8px}}
@@ -45042,7 +45043,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V305" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V306" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
