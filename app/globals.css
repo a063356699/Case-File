@@ -1729,6 +1729,35 @@ body{background:#f8fbfe!important;color:#405064!important}
 .daily-activity:not(.compact) .daily-table th.col-updateDate,.daily-activity:not(.compact) .daily-table td.col-updateDate{width:85px!important;min-width:85px!important;max-width:85px!important}
 .daily-activity:not(.compact) .daily-table th.col-groupViewDate,.daily-activity:not(.compact) .daily-table td.col-groupViewDate{width:70px!important;min-width:70px!important;max-width:70px!important}
 
+/* V324：依確認比例換算 2360px；欄位共 2243px，右側保留 117px。 */
+.daily-activity:not(.compact) .daily-table table{width:2243px!important;min-width:2243px!important;max-width:2243px!important;margin-right:117px!important}
+.daily-activity:not(.compact) .daily-table th.col-dailyHide,.daily-activity:not(.compact) .daily-table td.col-dailyHide{width:31px!important;min-width:31px!important;max-width:31px!important}
+.daily-activity:not(.compact) .daily-table th.col-area,.daily-activity:not(.compact) .daily-table td.col-area{width:47px!important;min-width:47px!important;max-width:47px!important}
+.daily-activity:not(.compact) .daily-table th.col-caseName,.daily-activity:not(.compact) .daily-table td.col-caseName{width:212px!important;min-width:212px!important;max-width:212px!important}
+.daily-activity:not(.compact) .daily-table th.col-address,.daily-activity:not(.compact) .daily-table td.col-address{width:236px!important;min-width:236px!important;max-width:236px!important}
+.daily-activity:not(.compact) .daily-table th.col-price,.daily-activity:not(.compact) .daily-table td.col-price{width:71px!important;min-width:71px!important;max-width:71px!important}
+.daily-activity:not(.compact) .daily-table th.col-direction,.daily-activity:not(.compact) .daily-table td.col-direction{width:35px!important;min-width:35px!important;max-width:35px!important}
+.daily-activity:not(.compact) .daily-table th.col-age,.daily-activity:not(.compact) .daily-table td.col-age{width:83px!important;min-width:83px!important;max-width:83px!important}
+.daily-activity:not(.compact) .daily-table th.col-floor,.daily-activity:not(.compact) .daily-table td.col-floor,
+.daily-activity:not(.compact) .daily-table th.col-layout,.daily-activity:not(.compact) .daily-table td.col-layout{width:59px!important;min-width:59px!important;max-width:59px!important}
+.daily-activity:not(.compact) .daily-table th.col-indoorPing,.daily-activity:not(.compact) .daily-table td.col-indoorPing,
+.daily-activity:not(.compact) .daily-table th.col-buildingPing,.daily-activity:not(.compact) .daily-table td.col-buildingPing,
+.daily-activity:not(.compact) .daily-table th.col-landPing,.daily-activity:not(.compact) .daily-table td.col-landPing{width:80px!important;min-width:80px!important;max-width:80px!important}
+.daily-activity:not(.compact) .daily-table th.col-parking,.daily-activity:not(.compact) .daily-table td.col-parking{width:99px!important;min-width:99px!important;max-width:99px!important}
+.daily-activity:not(.compact) .daily-table th.col-managementFee,.daily-activity:not(.compact) .daily-table td.col-managementFee{width:90px!important;min-width:90px!important;max-width:90px!important}
+.daily-activity:not(.compact) .daily-table th.col-key,.daily-activity:not(.compact) .daily-table td.col-key{width:80px!important;min-width:80px!important;max-width:80px!important}
+.daily-activity:not(.compact) .daily-table th.col-currentState,.daily-activity:not(.compact) .daily-table td.col-currentState{width:35px!important;min-width:35px!important;max-width:35px!important}
+.daily-activity:not(.compact) .daily-table th.col-road,.daily-activity:not(.compact) .daily-table td.col-road,
+.daily-activity:not(.compact) .daily-table th.col-frontage,.daily-activity:not(.compact) .daily-table td.col-frontage,
+.daily-activity:not(.compact) .daily-table th.col-depth,.daily-activity:not(.compact) .daily-table td.col-depth{width:52px!important;min-width:52px!important;max-width:52px!important}
+.daily-activity:not(.compact) .daily-table th.col-zoning,.daily-activity:not(.compact) .daily-table td.col-zoning{width:90px!important;min-width:90px!important;max-width:90px!important}
+.daily-activity:not(.compact) .daily-table th.col-coverageFar,.daily-activity:not(.compact) .daily-table td.col-coverageFar{width:80px!important;min-width:80px!important;max-width:80px!important}
+.daily-activity:not(.compact) .daily-table th.col-developer,.daily-activity:not(.compact) .daily-table td.col-developer{width:87px!important;min-width:87px!important;max-width:87px!important}
+.daily-activity:not(.compact) .daily-table th.col-notes,.daily-activity:not(.compact) .daily-table td.col-notes{width:212px!important;min-width:212px!important;max-width:212px!important}
+.daily-activity:not(.compact) .daily-table th.col-reportDate,.daily-activity:not(.compact) .daily-table td.col-reportDate,
+.daily-activity:not(.compact) .daily-table th.col-updateDate,.daily-activity:not(.compact) .daily-table td.col-updateDate{width:85px!important;min-width:85px!important;max-width:85px!important}
+.daily-activity:not(.compact) .daily-table th.col-groupViewDate,.daily-activity:not(.compact) .daily-table td.col-groupViewDate{width:71px!important;min-width:71px!important;max-width:71px!important}
+
 /* V317：每日動態常用資訊欄位加寬，管理模式與前台一致。 */
 .daily-activity .daily-table th.col-age,
 .daily-activity .daily-table td.col-age{width:5.5%!important;min-width:64px!important;max-width:none!important}
