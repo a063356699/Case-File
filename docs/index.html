@@ -1672,6 +1672,10 @@ body{background:#f8fbfe!important;color:#405064!important}
 @media print{
   .print-document{width:210mm!important;margin:0!important}
   .print-document .print-page{width:210mm!important;height:297mm!important;min-height:297mm!important;max-height:297mm!important;padding:1.5mm!important;margin:0!important}
+  .print-document .data-page.excel-print{display:flex!important;flex-direction:column!important}
+  .print-document .data-page.excel-print .print-main{flex:1 1 auto!important}
+  .print-document .checklist-page{display:flex!important;flex-direction:column!important}
+  .print-document .checklist-page .check-strip.bottom{margin-top:auto!important}
 }
 .leader-team-head-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}.leader-team-head-actions button{padding:7px 11px;border:1px solid #8db4a7;border-radius:10px;background:#eff8f5;color:#286451;font-weight:850}.leader-team-head-actions span{padding:7px 12px;border-radius:999px;background:#eef4f2;color:#587069;font-weight:800}.leader-detail-button{min-width:64px!important}.leader-detail-button:not(:disabled){cursor:pointer}.leader-detail-button:not(:disabled):hover{filter:brightness(.96)}.leader-sort-button{padding:3px 7px;border:0;background:transparent;color:inherit;font:inherit;font-weight:900;cursor:pointer}.leader-sort-button b{display:inline-block;min-width:16px;color:var(--team-color);font-size:16px}@media(max-width:760px){.leader-team-overview>header{align-items:flex-start;gap:10px}.leader-team-head-actions{max-width:220px}.leader-team-head-actions button{font-size:12px;padding:6px 8px}}
 .leader-team-overview>header>div:first-child:not(.leader-team-head-actions),.leader-team-head-actions>span{display:none!important}.leader-team-overview>header{justify-content:flex-end}
@@ -23146,9 +23150,9 @@ body{background:#f8fbfe!important;color:#405064!important}
     }
   });
 
-  // ../../../../../../.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/jszip/dist/jszip.min.js
+  // ../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/dist/jszip.min.js
   var require_jszip_min = __commonJS({
-    "../../../../../../.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/jszip/dist/jszip.min.js"(exports, module) {
+    "../../node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/dist/jszip.min.js"(exports, module) {
       !(function(e) {
         if ("object" == typeof exports && "undefined" != typeof module) module.exports = e();
         else if ("function" == typeof define && define.amd) define([], e);
@@ -35819,7 +35823,7 @@ body{background:#f8fbfe!important;color:#405064!important}
   // app/page.tsx
   var import_react = __toESM(require_react(), 1);
 
-  // ../../../../../../.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/pptxgenjs/dist/pptxgen.es.js
+  // ../../node_modules/.pnpm/pptxgenjs@4.0.1/node_modules/pptxgenjs/dist/pptxgen.es.js
   var import_jszip = __toESM(require_jszip_min());
   function __awaiter(thisArg, _arguments, P, generator) {
     function adopt(value) {
@@ -45040,7 +45044,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V302" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V303" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
