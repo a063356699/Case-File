@@ -1700,7 +1700,12 @@ body{background:#f8fbfe!important;color:#405064!important}
 .missing-data-table th:nth-child(4),.missing-data-table td:nth-child(4){width:24%!important}
 .missing-data-case-link{white-space:normal!important}
 
-.new-case-reminder-header-button{border-color:#6ea89a!important;background:#e1f1eb!important;color:#175c4c!important}
+.new-case-reminder-header-button{border-color:#b99adf!important;background:#f0e6ff!important;color:#6b3ca0!important}
+.new-case-reminder-header-button:hover{border-color:#9368c6!important;background:#e5d3fb!important;color:#562889!important}
+
+/* V322：管理模式每日動態保留正常欄寬，不再為塞入單一畫面而壓縮全部欄位。 */
+.daily-activity:not(.compact) .daily-card .table-wrap.daily-table{overflow-x:auto!important;overflow-y:auto!important}
+.daily-activity:not(.compact) .daily-table table{width:max-content!important;min-width:2400px!important;table-layout:fixed!important}
 
 /* V317：每日動態常用資訊欄位加寬，管理模式與前台一致。 */
 .daily-activity .daily-table th.col-age,
@@ -45123,7 +45128,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V320" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V322" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
