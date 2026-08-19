@@ -1665,6 +1665,7 @@ body{background:#f8fbfe!important;color:#405064!important}
   scrollbar-gutter:stable;
 }
 .daily-card .daily-table thead th{position:sticky!important;top:0!important;z-index:8!important}
+.daily-card .daily-table thead th[class*="col-"]{left:auto!important;right:auto!important}
 
 /* 管理模式與業務前台的每日動態使用相同清楚字級。 */
 .daily-activity .daily-table th{font-size:14px!important;line-height:1.35!important;font-weight:900!important}
