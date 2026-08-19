@@ -1789,6 +1789,17 @@ body{background:#f8fbfe!important;color:#405064!important}
 .topbar>.header-actions>button,
 .topbar>.header-actions>.file-button{flex:0 0 auto!important;font-size:inherit!important}
 
+/* V327：管理模式每日動態比照「委託中物件」的緊湊表格密度。 */
+.daily-activity:not(.compact) .daily-table table{zoom:.85}
+.daily-activity:not(.compact) .daily-table th{font-size:14px!important;line-height:1.3!important;padding-top:7px!important;padding-bottom:7px!important}
+.daily-activity:not(.compact) .daily-table td,
+.daily-activity:not(.compact) .daily-table td *{font-size:15px!important;line-height:1.35!important}
+.daily-activity:not(.compact) .daily-table td.col-caseName,
+.daily-activity:not(.compact) .daily-table td.col-caseName *,
+.daily-activity:not(.compact) .daily-table td.col-address,
+.daily-activity:not(.compact) .daily-table td.col-address *{font-size:15px!important;line-height:1.35!important}
+.daily-activity:not(.compact) .daily-table td{height:40px!important;padding-top:5px!important;padding-bottom:5px!important}
+
 /* V317：每日動態常用資訊欄位加寬，管理模式與前台一致。 */
 .daily-activity .daily-table th.col-age,
 .daily-activity .daily-table td.col-age{width:5.5%!important;min-width:64px!important;max-width:none!important}
@@ -45210,7 +45221,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V326" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V327" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
