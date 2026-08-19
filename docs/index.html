@@ -43826,7 +43826,7 @@ ${changedLabels}
       completeArchiveCleanup(record, key);
       setEditing((current) => current?.id === record.id ? { ...current, [key]: value } : current);
     };
-    const completeDealTask = (record, key) => setRecords((previous) => previous.map((item) => item.id === record.id ? { ...item, [key]: today() } : item));
+    const completeDealTask = (record, key) => setRecords((previous) => previous.map((item) => item.id === record.id ? { ...item, [key]: item[key] ? "" : today() } : item));
     const requestArchive = (record, status) => setArchiveChoice({ record, status, date: status === "\u5230\u671F\u4E0B\u67B6" ? nextDate(record.entrustEnd) : today(), salesPerson: record.salesPerson || "", reason: record.archiveReason || "" });
     const restoreRecord = (r, reopened = true) => {
       const cleanupKeys = ["housingDownDate", "bookDownDate", "salesBookDownDate", ...archiveWebsiteTasks.map(([field]) => `${field}DownDate`)];
@@ -45047,7 +45047,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V310" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V311" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -45351,11 +45351,15 @@ ${changedLabels}
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "\u958B\u767C\uFF0F\u92B7\u552E" }),
             dealCompletionTasks.map(([, label]) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: label }, label))
           ] }) }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("tbody", { children: pendingDealCompletion.map(({ record, tasks }) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("tbody", { children: pendingDealCompletion.map(({ record }) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("td", { className: "archive-cleanup-case-cell", children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("b", { children: [
                 "\u6848\u540D\uFF1A",
                 stripRestoredDisplay(record.caseName) || "\u672A\u547D\u540D\u6848\u4EF6"
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { className: "archive-cleanup-address", children: [
+                "\u5730\u5740\uFF1A",
+                record.address || "\u2014"
               ] }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "deal-completion-property-no", children: record.propertyNo || "\u2014" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { className: "deal-completion-status", children: [
@@ -45373,11 +45377,11 @@ ${changedLabels}
                 record.salesPerson || "\u2014"
               ] })
             ] }),
-            dealCompletionTasks.map(([key]) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: tasks.some(([pendingKey]) => pendingKey === key) ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => completeDealTask(record, key), children: "\u5B8C\u6210" }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "archive-cleanup-done", children: "\u5DF2\u5B8C\u6210" }) }, key))
+            dealCompletionTasks.map(([key]) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: record[key] ? "archive-cleanup-done" : "", onClick: () => completeDealTask(record, key), children: record[key] ? "\u5DF2\u5B8C\u6210\uFF08\u9EDE\u6B64\u6062\u5FA9\uFF09" : "\u5B8C\u6210" }) }, key))
           ] }, record.id)) })
         ] }) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal-foot", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u516D\u9805\u5168\u90E8\u5B8C\u6210\u524D\uFF0C\u4E0B\u6B21\u958B\u555F\u7CFB\u7D71\u4ECD\u6703\u63D0\u9192" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u53EF\u518D\u6B21\u9EDE\u9078\u300C\u5DF2\u5B8C\u6210\u300D\u6062\u5FA9\u70BA\u5F85\u5B8C\u6210" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => setDealCompletionReminderOpen(false), children: "\u7A0D\u5F8C\u8655\u7406" })
         ] })
       ] }) }),
