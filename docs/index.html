@@ -361,10 +361,9 @@ button:hover,.file-button:hover{border-color:#9fbad0;box-shadow:0 2px 8px #7895a
 .record-edit-grid>.edit-direction,.record-edit-grid>.edit-builtYear,.record-edit-grid>.edit-managementFee{grid-column:span 20!important}
 .record-edit-grid>.edit-buildingPing,.record-edit-grid>.edit-indoorPing,.record-edit-grid>.edit-landPing,.record-edit-grid>.edit-floor,.record-edit-grid>.edit-layout,.record-edit-grid>.edit-parking{grid-column:span 20!important}
 .intake-draft-modal{width:min(1700px,98vw)!important;overflow-x:hidden!important}
-.intake-modal-preview{margin:22px 0 8px;padding:18px;background:#e9eeeb;border:1px solid #cfd8d3;border-radius:12px;overflow:hidden}
-.intake-modal-preview .print-document{margin-top:0!important;zoom:.72}
-@media(max-width:1200px){.intake-modal-preview .print-document{zoom:.58}}
-@media(max-width:900px){.intake-modal-preview .print-document{zoom:.46}}
+.intake-modal-preview{margin:22px 0 8px;padding:5mm;background:#e9eeeb;border:1px solid #cfd8d3;border-radius:12px;overflow:auto}
+/* 草稿預覽必須與 A4 實際列印 1:1：先前 zoom 縮放會造成內容四周再出現一圈假空白。 */
+.intake-modal-preview .print-document{margin:0!important;zoom:1!important}
 .print-output-only{display:none!important}
 @media print{.intake-modal-preview{display:none!important}.print-output-only{display:block!important}}
 .draft-summary>.draft-address{max-width:26em;white-space:normal!important;overflow-wrap:anywhere;line-height:1.35;text-overflow:clip!important}
@@ -45046,7 +45045,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V307" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V308" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
