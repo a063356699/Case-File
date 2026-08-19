@@ -1765,6 +1765,16 @@ body{background:#f8fbfe!important;color:#405064!important}
 .daily-activity:not(.compact) .daily-table th.col-updateDate,.daily-activity:not(.compact) .daily-table td.col-updateDate{width:85px!important;min-width:85px!important;max-width:85px!important}
 .daily-activity:not(.compact) .daily-table th.col-groupViewDate,.daily-activity:not(.compact) .daily-table td.col-groupViewDate{width:71px!important;min-width:71px!important;max-width:71px!important}
 
+/* V325：管理模式縮至 92%，畫面直接看到備註欄；三個日期欄保留在右側捲動區。 */
+.daily-activity:not(.compact) .daily-table table{zoom:.92}
+.daily-activity:not(.compact) .daily-table th{font-size:15.22px!important}
+.daily-activity:not(.compact) .daily-table td,
+.daily-activity:not(.compact) .daily-table td *{font-size:16.30px!important}
+.daily-activity:not(.compact) .daily-table td.col-caseName,
+.daily-activity:not(.compact) .daily-table td.col-caseName *,
+.daily-activity:not(.compact) .daily-table td.col-address,
+.daily-activity:not(.compact) .daily-table td.col-address *{font-size:18.48px!important}
+
 /* V317：每日動態常用資訊欄位加寬，管理模式與前台一致。 */
 .daily-activity .daily-table th.col-age,
 .daily-activity .daily-table td.col-age{width:5.5%!important;min-width:64px!important;max-width:none!important}
@@ -45186,7 +45196,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V324" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V325" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
