@@ -1556,6 +1556,12 @@ export default function Home() {
     const price = clean(record.reducedPrice || record.price).replace(/萬/g, "");
     const landPing = num(record.landPing);
     const unitPrice = price && landPing ? `$${Math.round(Number(price) * 10000 / Number(landPing)).toLocaleString("en-US")}` : "";
+    const previewManagementFee = (value = "") => {
+      const raw = String(value || "").trim();
+      const noMonthlySuffix = raw.replace(/\s*[\/／]\s*月\s*$/, "").trim();
+      if (!noMonthlySuffix || /^\$?0(?:\.0+)?(?:\s*[\/／]\s*月)?$/.test(raw) || /^無(?:\s*[\/／]\s*月)?$/.test(raw)) return "無$0";
+      return raw;
+    };
     const linkedDraft = intakeDrafts.find(draft => draft.id === record._intakeDraftId || draft.linkedRecordId === record.id);
     const draftValue = (...keys: string[]) => linkedDraft ? intakeValue(linkedDraft.values, ...keys) : "";
     const previewCompletionDate = (value = "") => {
@@ -1599,7 +1605,7 @@ export default function Home() {
       field("面寬", num(record.frontage) ? `${num(record.frontage)}米` : clean(record.frontage), .08, 4.26, 2.85, 23, 18, .58); field("深度", num(record.depth) ? `${num(record.depth)}米` : clean(record.depth), 3.02, 4.26, 2.82, 23, 18, .58);
       field("建蔽容積", [record.coverage, record.far].filter(Boolean).join("／"), .08, 5.33, 2.85, 18, 12, .58); field("使用分區", record.zoning, 3.02, 5.33, 2.82, 20, 18, .58);
     } else {
-      const entries: [string,string,string,string,number][] = [["總地坪",landPing ? `${landPing}坪` : "","總建坪",num(record.buildingPing) ? `${num(record.buildingPing)}坪` : "",1.8],["室內坪",num(record.indoorPing) ? `${num(record.indoorPing)}坪` : "","格局",record.layout || "",2.36],["面寬",num(record.frontage) ? `${num(record.frontage)}米` : clean(record.frontage),"深度",num(record.depth) ? `${num(record.depth)}米` : clean(record.depth),2.92],["臨路",num(record.road) ? `${num(record.road)}米` : clean(record.road),"樓層",floorPptDisplay(record.floor),3.48],["朝向",record.direction || "","車位",parkingShort(record.parking),4.04],["管理費",/^\$?0(?:\.0+)?(?:元)?$/.test(record.managementFee || "") ? "無0" : record.managementFee || "","社區名稱",draftValue("大樓名稱") || record.communityName || "",4.6],["建築完成日期",previewCompletionDate(draftValue("建築完成日期") || record.completionDate || record.builtYear || ""),"屋齡",ageOf(record),5.16],["現況",record.currentState || "","鑰匙",record.key || "",5.72]];
+      const entries: [string,string,string,string,number][] = [["總地坪",landPing ? `${landPing}坪` : "","總建坪",num(record.buildingPing) ? `${num(record.buildingPing)}坪` : "",1.8],["室內坪",num(record.indoorPing) ? `${num(record.indoorPing)}坪` : "","格局",record.layout || "",2.36],["面寬",num(record.frontage) ? `${num(record.frontage)}米` : clean(record.frontage),"深度",num(record.depth) ? `${num(record.depth)}米` : clean(record.depth),2.92],["臨路",num(record.road) ? `${num(record.road)}米` : clean(record.road),"樓層",floorPptDisplay(record.floor),3.48],["朝向",record.direction || "","車位",parkingShort(record.parking),4.04],["管理費",previewManagementFee(record.managementFee),"社區名稱",draftValue("大樓名稱") || record.communityName || "",4.6],["建築完成日期",previewCompletionDate(draftValue("建築完成日期") || record.completionDate || record.builtYear || ""),"屋齡",ageOf(record),5.16],["現況",record.currentState || "","鑰匙",record.key || "",5.72]];
       entries.forEach(([leftLabel,leftValue,rightLabel,rightValue,y]) => { field(leftLabel,leftValue,.08,y,2.85); field(rightLabel,rightValue,3.02,y,2.82,rightLabel === "車位" ? 15.5 : rightLabel === "社區名稱" || rightLabel === "建築完成日期" ? 16 : 19); });
     }
     const notesY = land ? 6.4 : 6.28; alignedLabel("備註", .08, notesY); draw("：", .96, notesY, .2, .36, 15); draw(displayNoteSegments(record.notes).join("；"), 1.16, notesY, 4.61, .72, 14, { align: "left", wrap: true });
@@ -1927,7 +1933,7 @@ export default function Home() {
         addLine(slide, "面寬", record.frontage, .42, 3.06, 2.55); addLine(slide, "深度", record.depth, 3.05, 3.06, 2.45);
         addLine(slide, "臨路", record.road, .42, 3.49, 2.55); addLine(slide, "樓層", floorPptDisplay(record.floor), 3.05, 3.49, 2.45);
         addLine(slide, "朝向", record.direction, .42, 3.92, 2.55); addLine(slide, "車位", parkingShort(record.parking), 3.05, 3.92, 2.45);
-        addLine(slide, "管理費", /^\$?0(?:\.0+)?(?:元)?$/.test(record.managementFee || "") ? "無" : record.managementFee ? `${record.managementFee.replace(/\s*\/月\s*$/, "")}/月` : "—", .42, 4.35, 2.55); addLine(slide, "完工日&屋齡", `${draftValue("建築完成日期") || record.builtYear || "—"} ${ageOf(record)}`, 3.05, 4.35, 2.45);
+        addLine(slide, "管理費", !String(record.managementFee || "").trim() || /^\$?0(?:\.0+)?(?:\s*[\/／]\s*月)?$/.test(String(record.managementFee || "").trim()) || /^無(?:\s*[\/／]\s*月)?$/.test(String(record.managementFee || "").trim()) ? "無$0" : record.managementFee ? `${record.managementFee.replace(/\s*\/月\s*$/, "")}/月` : "無$0", .42, 4.35, 2.55); addLine(slide, "完工日&屋齡", `${draftValue("建築完成日期") || record.builtYear || "—"} ${ageOf(record)}`, 3.05, 4.35, 2.45);
         addLine(slide, "社區名稱", draftValue("大樓名稱") || record.communityName, .42, 4.78, 2.55); addLine(slide, "現況", record.currentState, 3.05, 4.78, 2.45);
         addLine(slide, "鑰匙", record.key, .42, 5.21, 2.55);
         slide.addText("備註：", { x: 3.05, y: 5.21, w: 1.05, h: .38, fontFace: "Microsoft JhengHei", fontSize: 14, bold: true, color: "245A4A", margin: 0 });
@@ -2690,7 +2696,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V337</small></h1></div>
+<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V338</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingIntakeReminderRecords.length > 0 && <button className="new-case-reminder-header-button" onClick={() => { setNewCaseReminder({ ...pendingIntakeReminderRecords[0] }); setNewCaseReminderBatchIds(pendingIntakeReminderRecords.map(record => record.id)); }}>新進案件提醒 {pendingIntakeReminderRecords.length}</button>}{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
