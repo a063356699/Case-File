@@ -1760,6 +1760,14 @@ export default function Home() {
       completionDate: normalizeDateInput(editing.completionDate || ""),
       lastModifiedAt: savedAt,
     }));
+    // 暫存一律先寫回正式案件資料。過去有連結進案草稿的案件只更新草稿，
+    // 畫面切換後便可能重新讀到舊的案件副本而看起來像資料遺失。
+    const savedRecords = records.some(record => record.id === next.id)
+      ? records.map(record => record.id === next.id ? { ...record, ...next } : record)
+      : [next, ...records];
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(savedRecords));
+    setRecords(savedRecords);
+
     if (next._intakeDraftId) {
       const savedDrafts = intakeDrafts.map(draft => draft.id === next._intakeDraftId ? { ...draft, values: syncRecordToDraftValues(draft, next), propertyKind: next.type.includes("土地") ? "土地" : "房屋" } : draft);
       localStorage.setItem(INTAKE_KEY, JSON.stringify({ raw: intakeRaw, drafts: savedDrafts, selectedId: selectedIntakeId }));
@@ -1767,9 +1775,6 @@ export default function Home() {
       setTourItems(previous => previous.map(item => item.data._intakeDraftId === next._intakeDraftId ? { ...item, data: { ...item.data, ...next } } : item));
     } else {
       // 暫存就是立即寫入本機，不必再按「僅儲存」，即使隨後關閉編輯畫面也保留。
-      const savedRecords = records.some(record => record.id === next.id) ? records.map(record => record.id === next.id ? { ...record, ...next } : record) : [next, ...records];
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(savedRecords));
-      setRecords(savedRecords);
       setIntakeDrafts(previous => previous.map(draft => draft.linkedRecordId === next.id ? { ...draft, values: syncRecordToDraftValues(draft, next) } : draft));
     }
     editingInitialRef.current = JSON.stringify(next);
@@ -2519,8 +2524,15 @@ export default function Home() {
   const openRecordIntakeDraft = (record: RecordItem) => {
     const linked = intakeDrafts.find(draft => draft.linkedRecordId === record.id);
     const baseDraft = recordToIntake(record);
-    const draft = linked || { ...baseDraft, values: syncRecordToDraftValues(baseDraft, record), linkedRecordId: record.id, enteredAt: new Date().toISOString() };
-    if (!linked) setIntakeDrafts(previous => [draft, ...previous]);
+    // 每次由委託中開啟草稿時，都用目前已暫存的案件資料同步草稿，避免讀取舊副本。
+    const draft = linked
+      ? { ...linked, values: syncRecordToDraftValues(linked, record), propertyKind: record.type.includes("土地") ? "純土地" : "房屋", modifiedAt: new Date().toISOString() }
+      : { ...baseDraft, values: syncRecordToDraftValues(baseDraft, record), linkedRecordId: record.id, enteredAt: new Date().toISOString() };
+    if (linked) {
+      setIntakeDrafts(previous => previous.map(item => item.id === draft.id ? draft : item));
+    } else {
+      setIntakeDrafts(previous => [draft, ...previous]);
+    }
     setEditing(null);
     setTab("intake");
     selectIntakeDraft(draft.id);
@@ -2678,7 +2690,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V336</small></h1></div>
+<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V337</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingIntakeReminderRecords.length > 0 && <button className="new-case-reminder-header-button" onClick={() => { setNewCaseReminder({ ...pendingIntakeReminderRecords[0] }); setNewCaseReminderBatchIds(pendingIntakeReminderRecords.map(record => record.id)); }}>新進案件提醒 {pendingIntakeReminderRecords.length}</button>}{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>

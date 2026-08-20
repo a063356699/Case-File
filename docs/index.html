@@ -44036,15 +44036,15 @@ ${changedLabels}
         completionDate: normalizeDateInput(editing.completionDate || ""),
         lastModifiedAt: savedAt
       }));
+      const savedRecords = records.some((record) => record.id === next.id) ? records.map((record) => record.id === next.id ? { ...record, ...next } : record) : [next, ...records];
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(savedRecords));
+      setRecords(savedRecords);
       if (next._intakeDraftId) {
         const savedDrafts = intakeDrafts.map((draft) => draft.id === next._intakeDraftId ? { ...draft, values: syncRecordToDraftValues(draft, next), propertyKind: next.type.includes("\u571F\u5730") ? "\u571F\u5730" : "\u623F\u5C4B" } : draft);
         localStorage.setItem(INTAKE_KEY, JSON.stringify({ raw: intakeRaw, drafts: savedDrafts, selectedId: selectedIntakeId }));
         setIntakeDrafts(savedDrafts);
         setTourItems((previous) => previous.map((item) => item.data._intakeDraftId === next._intakeDraftId ? { ...item, data: { ...item.data, ...next } } : item));
       } else {
-        const savedRecords = records.some((record) => record.id === next.id) ? records.map((record) => record.id === next.id ? { ...record, ...next } : record) : [next, ...records];
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(savedRecords));
-        setRecords(savedRecords);
         setIntakeDrafts((previous) => previous.map((draft) => draft.linkedRecordId === next.id ? { ...draft, values: syncRecordToDraftValues(draft, next) } : draft));
       }
       editingInitialRef.current = JSON.stringify(next);
@@ -45116,8 +45116,12 @@ ${changedLabels}
     const openRecordIntakeDraft = (record) => {
       const linked = intakeDrafts.find((draft2) => draft2.linkedRecordId === record.id);
       const baseDraft = recordToIntake(record);
-      const draft = linked || { ...baseDraft, values: syncRecordToDraftValues(baseDraft, record), linkedRecordId: record.id, enteredAt: (/* @__PURE__ */ new Date()).toISOString() };
-      if (!linked) setIntakeDrafts((previous) => [draft, ...previous]);
+      const draft = linked ? { ...linked, values: syncRecordToDraftValues(linked, record), propertyKind: record.type.includes("\u571F\u5730") ? "\u7D14\u571F\u5730" : "\u623F\u5C4B", modifiedAt: (/* @__PURE__ */ new Date()).toISOString() } : { ...baseDraft, values: syncRecordToDraftValues(baseDraft, record), linkedRecordId: record.id, enteredAt: (/* @__PURE__ */ new Date()).toISOString() };
+      if (linked) {
+        setIntakeDrafts((previous) => previous.map((item) => item.id === draft.id ? draft : item));
+      } else {
+        setIntakeDrafts((previous) => [draft, ...previous]);
+      }
       setEditing(null);
       setTab("intake");
       selectIntakeDraft(draft.id);
@@ -45339,7 +45343,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V336" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V337" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
