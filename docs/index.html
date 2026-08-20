@@ -42533,9 +42533,14 @@ ${String(ex)}`);
       }
       return names;
     };
-    return String(value || "").split(/[\/／,，、。]+/).map((name) => name.trim()).filter(Boolean).flatMap(expand);
+    return String(value || "").split(/[\/／,，、。]+/).map((name) => name.trim()).filter(Boolean).flatMap((segment) => {
+      const compactName = Array.from(segment).join("");
+      if (people.some((person) => String(person.name || "").trim().replace(/氏/g, "") === compactName)) return [segment];
+      return expand(segment);
+    });
   };
   var developerFullNameText = (value = "", personnel = []) => developerNameLines(value, personnel).join("\u3001");
+  var developerStoredText = (value = "") => String(value || "").trim();
   var stripRestoredDisplay = (value = "") => String(value || "").replace(/(?:\d{2,4}[.\/-]\d{1,2}[.\/-]\d{1,2}\s*)?重新上架/g, "").replace(/[　\s｜|·・—-]+$/g, "").trim();
   var archiveDisplayRecord = (record) => ({ ...record, caseName: stripRestoredDisplay(record.caseName), caseNameNote: stripRestoredDisplay(record.caseNameNote) });
   var showingFollowUpDisplayRecord = (record) => record;
@@ -44006,7 +44011,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       if (editing.bookLocationType === "\u65C15" && !String(editing.bookLocationReason || "").trim()) return flash("\u8ACB\u586B\u5BEB\u65C15\u539F\u56E0\u5F8C\u518D\u5132\u5B58");
       const normalizedEditing = normalizeRecordPings(clearImportedLandLabels({
         ...editing,
-        developer: developerFullNameText(editing.developer || "", settings.personnel) || editing.developer,
+        developer: developerStoredText(editing.developer),
         ...Object.fromEntries([...dateKeys].map((key) => [key, normalizeDateInput(editing[key] || "")])),
         completionDate: normalizeDateInput(editing.completionDate || "")
       }));
@@ -44090,7 +44095,7 @@ ${changedLabels}
       const savedAt = (/* @__PURE__ */ new Date()).toISOString();
       const next = normalizeRecordPings(clearImportedLandLabels({
         ...editing,
-        developer: developerFullNameText(editing.developer || "", settings.personnel) || editing.developer,
+        developer: developerStoredText(editing.developer),
         ...Object.fromEntries([...dateKeys].map((key) => [key, normalizeDateInput(editing[key] || "")])),
         completionDate: normalizeDateInput(editing.completionDate || ""),
         lastModifiedAt: savedAt
@@ -45414,7 +45419,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V346" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V347" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -46491,7 +46496,7 @@ ${changedLabels}
       setTemporaryOpen(true);
     };
     const addTemporary = () => {
-      const normalizedDraft = normalizeRecordPings({ ...temporaryDraft, developer: developerFullNameText(temporaryDraft.developer || "") || temporaryDraft.developer });
+      const normalizedDraft = normalizeRecordPings({ ...temporaryDraft, developer: developerStoredText(temporaryDraft.developer) });
       if (temporaryEditId) setItems(items.map((item) => item.id === temporaryEditId ? { ...item, data: { ...normalizedDraft } } : item));
       else setItems([...items, { id: newId(), sequence: nextTourSequence(), temporary: true, data: { ...normalizedDraft } }]);
       setTemporaryOpen(false);

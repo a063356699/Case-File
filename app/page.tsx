@@ -654,9 +654,16 @@ const developerNameLines = (value = "", personnel: Person[] = []) => {
     }
     return names;
   };
-  return String(value || "").split(/[\/／,，、。]+/).map(name => name.trim()).filter(Boolean).flatMap(expand);
+  return String(value || "").split(/[\/／,，、。]+/).map(name => name.trim()).filter(Boolean).flatMap(segment => {
+    // 例如「阮金水」是名冊「阮氏金水」的常用寫法，保留使用者輸入，不拆成「阮金、水」。
+    const compactName = Array.from(segment).join("");
+    if (people.some(person => String(person.name || "").trim().replace(/氏/g, "") === compactName)) return [segment];
+    return expand(segment);
+  });
 };
 const developerFullNameText = (value = "", personnel: Person[] = []) => developerNameLines(value, personnel).join("、");
+// 開發業務可手動輸入姓名；儲存時不得再把未列入名冊的姓名拆成多段。
+const developerStoredText = (value = "") => String(value || "").trim();
 const stripRestoredDisplay = (value = "") => String(value || "").replace(/(?:\d{2,4}[.\/-]\d{1,2}[.\/-]\d{1,2}\s*)?重新上架/g, "").replace(/[　\s｜|·・—-]+$/g, "").trim();
 const archiveDisplayRecord = (record: RecordItem): RecordItem => ({ ...record, caseName: stripRestoredDisplay(record.caseName), caseNameNote: stripRestoredDisplay(record.caseNameNote) });
 const showingFollowUpDisplayRecord = (record: RecordItem): RecordItem => record;
@@ -1712,7 +1719,7 @@ export default function Home() {
     if (editing.bookLocationType === "旁5" && !String(editing.bookLocationReason || "").trim()) return flash("請填寫旁5原因後再儲存");
     const normalizedEditing = normalizeRecordPings(clearImportedLandLabels({
       ...editing,
-      developer: developerFullNameText(editing.developer || "", settings.personnel) || editing.developer,
+      developer: developerStoredText(editing.developer),
       ...Object.fromEntries([...dateKeys].map(key => [key, normalizeDateInput(editing[key] || "")])),
       completionDate: normalizeDateInput(editing.completionDate || ""),
     }));
@@ -1794,7 +1801,7 @@ export default function Home() {
     const savedAt = new Date().toISOString();
     const next = normalizeRecordPings(clearImportedLandLabels({
       ...editing,
-      developer: developerFullNameText(editing.developer || "", settings.personnel) || editing.developer,
+      developer: developerStoredText(editing.developer),
       ...Object.fromEntries([...dateKeys].map(key => [key, normalizeDateInput(editing[key] || "")])),
       completionDate: normalizeDateInput(editing.completionDate || ""),
       lastModifiedAt: savedAt,
@@ -2731,7 +2738,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V346</small></h1></div>
+<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V347</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingIntakeReminderRecords.length > 0 && <button className="new-case-reminder-header-button" onClick={() => { setNewCaseReminder({ ...pendingIntakeReminderRecords[0] }); setNewCaseReminderBatchIds(pendingIntakeReminderRecords.map(record => record.id)); }}>新進案件提醒 {pendingIntakeReminderRecords.length}</button>}{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -2844,7 +2851,7 @@ function TourPlanner({ records, drafts, items, setItems, history, setHistory, ed
   const addRecord = (record: RecordItem) => setItems([...items, { id: newId(), recordId: record._intakeDraftId ? undefined : record.id, sequence: nextTourSequence(), temporary: !!record._intakeDraftId, data: { ...record } }]);
   const openTemporary = () => { const data = blankRecord(); data.propertyNo = "臨時"; data.status = "臨時團看"; data.reportDate = ""; data._notEntered = "1"; setTemporaryEditId(""); setTemporaryDraft(data); setTemporaryOpen(true); };
   const editTemporary = (item: TourItem) => { setTemporaryEditId(item.id); setTemporaryDraft({ ...item.data }); setTemporaryOpen(true); };
-  const addTemporary = () => { const normalizedDraft = normalizeRecordPings({ ...temporaryDraft, developer: developerFullNameText(temporaryDraft.developer || "") || temporaryDraft.developer }); if (temporaryEditId) setItems(items.map(item => item.id === temporaryEditId ? { ...item, data: { ...normalizedDraft } } : item)); else setItems([...items, { id: newId(), sequence: nextTourSequence(), temporary: true, data: { ...normalizedDraft } }]); setTemporaryOpen(false); setTemporaryEditId(""); };
+  const addTemporary = () => { const normalizedDraft = normalizeRecordPings({ ...temporaryDraft, developer: developerStoredText(temporaryDraft.developer) }); if (temporaryEditId) setItems(items.map(item => item.id === temporaryEditId ? { ...item, data: { ...normalizedDraft } } : item)); else setItems([...items, { id: newId(), sequence: nextTourSequence(), temporary: true, data: { ...normalizedDraft } }]); setTemporaryOpen(false); setTemporaryEditId(""); };
   const updateItem = (id: string, patch: Partial<TourItem>) => setItems(items.map(item => item.id === id ? { ...item, ...patch } : item));
   const updateTemp = (item: TourItem, key: string, value: string) => updateItem(item.id, { data: { ...item.data, [key]: value } });
   // 團看項目可能在 JSON 匯入或雲端合併後換了內部 ID；正常委託中案件優先重新對應目前總表，避免顯示加入當時的舊快照。
