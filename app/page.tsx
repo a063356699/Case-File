@@ -384,6 +384,18 @@ const ageOf = (r: RecordItem) => {
 const locationOf = (r: RecordItem) => `${r.bookLocationDate ? r.bookLocationDate.slice(5).replace("-", "/") : ""}${r.bookLocationType || "架上"}`;
 const contractFromNo = (value: string) => ({ EG: "房屋一般約", EA: "房屋專約", LG: "土地一般約", LA: "土地專約", EB: "租賃一般約", EC: "租賃專約", RG: "預售一般約", RA: "預售專約" }[value.trim().toUpperCase().slice(0, 2)] || "");
 const typeShort = (value = "") => value.includes("廠房") || value.includes("廠辦") ? "廠房" : value.includes("透天") ? "透天" : value.includes("公寓") ? "公寓" : value.includes("華廈") || value.includes("華厦") || value.includes("華夏") ? "華廈" : value.includes("大樓") ? "大樓" : value.includes("土地") ? "土地" : value;
+const splitPptCaseName = (value = "") => {
+  const chars = Array.from(String(value || "").trim());
+  if (chars.length <= 18) return [chars.join("")];
+  const middle = Math.ceil(chars.length / 2);
+  let splitAt = middle;
+  for (let distance = 0; distance <= 8; distance += 1) {
+    const choices = [middle - distance, middle + distance].filter(index => index > 0 && index < chars.length);
+    const matched = choices.find(index => /[，,、｜|／/]/.test(chars[index - 1] || ""));
+    if (matched) { splitAt = matched; break; }
+  }
+  return [chars.slice(0, splitAt).join(""), chars.slice(splitAt).join("")];
+};
 const parkingShort = (value = "") => { if (!value) return ""; if (value.includes("無車位") || value.includes("無產權")) return "無"; if (value.includes("獨立車庫")) return "車庫"; const mechanical = value.match(/昇降[／/]機械\s*(.*)$/); if (mechanical) { const suffix = mechanical[1].replace(/[（(]\s*上層\s*[）)]/g, "上").replace(/[（(]\s*下層\s*[）)]/g, "下").replace(/號$/g, "").replace(/^[、，,：:\s]+/, ""); return `昇機${suffix}`; } const horizontalOrRampMechanical = value.match(/(平移|坡道)[／/]機械\s*(.*)$/); if (horizontalOrRampMechanical) { const suffix = horizontalOrRampMechanical[2].replace(/號$/g, "").replace(/^[、，,：:\s]+/, ""); return `${horizontalOrRampMechanical[1] === "平移" ? "平機" : "坡機"}${suffix}`; } const parts = value.split(/[／/]/).map(part => part.trim()).filter(Boolean); const number = (parts[parts.length - 1] || "").replace(/號$/, ""); if (value.includes("昇降") && value.includes("平面")) return `昇平${number}`; if (value.includes("坡道") && value.includes("平面")) return `坡平${number}`; return value; };
 const floorShort = (value = "") => {
   if (!value) return "";
@@ -1594,7 +1606,9 @@ export default function Home() {
     const alignedLabel = (label: string, x: number, y: number, pt = 15) => { const chars = Array.from(label); chars.forEach((char, index) => draw(char, x + (chars.length === 1 ? .34 : index * (.68 / (chars.length - 1))), y, .22, .4, pt)); };
     const field = (label: string, value: string, x: number, y: number, w: number, valuePt = 19, labelPt = 15, lineOffset = .39) => { alignedLabel(label, x, y, labelPt); draw("：", x + .88, y, .2, .36, 15); draw(value, x + 1.08, y - .04, w - 1.08, .44, valuePt); line(x + 1.08, y + lineOffset, w - 1.13); };
     context.fillStyle = "#fff"; context.fillRect(0, 0, 1000, 750);
-    draw("案名", .05, .16, .72, .55, 14); draw(record.caseName || "", .78, .08, 5.23, .72, (land ? 28 : 25) - 2);
+    draw("案名", .05, .16, .72, .55, 14);
+    const previewCaseNameLines = splitPptCaseName(record.caseName || "");
+    previewCaseNameLines.forEach((lineText, index) => draw(lineText, .78, previewCaseNameLines.length > 1 ? .03 + index * .36 : .08, 5.23, previewCaseNameLines.length > 1 ? .36 : .72, land ? 29 : 27));
     draw("地址", 6.08, .16, .68, .55, 14); draw(record.address || "", 6.78, .08, 3.12, .72, 17, { wrap: true }); line(0, .84, 10);
     context.fillStyle = "#fce9d9"; context.fillRect(0, px(.87), px(2.756), px(land ? .94 : .787));
     draw("開發", .06, land ? 1.14 : 1.07, .58, .35, 13, { bold: true }); draw(developerFullNameText(record.developer) || "", .66, land ? 1.08 : 1, 2.09, .52, 17, { bold: true, color: "#0000ff" });
@@ -2008,7 +2022,8 @@ export default function Home() {
       const pptAge = ageOf(record).match(/\d+年屋/)?.[0] || ageOf(record);
       const leftW = 6.05, rightX = 6.05;
       slide.addText("案名", { x: .05, y: .16, w: .72, h: .55, fontFace: font, fontSize: 16, color: "000000", align: "center", valign: "mid", margin: 0, breakLine: false });
-      slide.addText(record.caseName || "", { x: .78, y: .08, w: 5.23, h: .72, fontFace: font, fontSize: land ? 28 : 25, color: "000000", align: "center", valign: "mid", margin: 0, fit: "shrink", breakLine: false });
+      const pptCaseNameLines = splitPptCaseName(record.caseName || "");
+      slide.addText(pptCaseNameLines.join("\n"), { x: .78, y: pptCaseNameLines.length > 1 ? .03 : .08, w: 5.23, h: pptCaseNameLines.length > 1 ? .80 : .72, fontFace: font, fontSize: land ? 31 : 29, color: "000000", align: "center", valign: "mid", margin: 0, fit: "shrink", breakLine: false });
       slide.addText("地址", { x: 6.08, y: .16, w: .68, h: .55, fontFace: font, fontSize: 16, color: "000000", align: "center", valign: "mid", margin: 0, breakLine: false });
       slide.addText(record.address || "", { x: 6.78, y: .08, w: 3.12, h: .72, fontFace: font, fontSize: 19, color: "000000", align: "center", valign: "mid", margin: 0, fit: "shrink", breakLine: false });
       slide.addShape(pptx.ShapeType.line, { x: 0, y: .84, w: 10, h: 0, line: { color: frameColor, width: 1 } });
@@ -2698,7 +2713,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V343</small></h1></div>
+<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V344</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingIntakeReminderRecords.length > 0 && <button className="new-case-reminder-header-button" onClick={() => { setNewCaseReminder({ ...pendingIntakeReminderRecords[0] }); setNewCaseReminderBatchIds(pendingIntakeReminderRecords.map(record => record.id)); }}>新進案件提醒 {pendingIntakeReminderRecords.length}</button>}{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
