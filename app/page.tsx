@@ -1362,7 +1362,7 @@ export default function Home() {
   const latestModifiedAt = [latestRecordModifiedAt, latestDraftModifiedAt, tourModifiedAt].filter(Boolean).reduce((latest, candidate) => !latest || new Date(candidate).getTime() > new Date(latest).getTime() ? candidate : latest, "");
   const localCloudChangesPending = Boolean(latestModifiedAt && (!cloudLastUploadAt || Date.parse(latestModifiedAt) > Date.parse(cloudLastUploadAt)));
   const cloudUpdateAvailable = Boolean(cloudRemoteUpdateAt && (!cloudLastUploadAt || Date.parse(cloudRemoteUpdateAt) > Date.parse(cloudLastUploadAt) + 500));
-  const cloudUploadStatus = !cloudSession?.accessToken ? "未登入" : cloudUploadState === "failed" ? "上傳失敗" : cloudUploadState === "uploading" || localCloudChangesPending ? "上傳中" : "上傳完成";
+  const cloudUploadStatus = !cloudSession?.accessToken ? "未登入" : cloudUploadState === "failed" ? "上傳失敗" : cloudUploadState === "uploading" ? "上傳中" : localCloudChangesPending ? "待同步" : "上傳完成";
   const showingFollowUpRecords = active.filter(record => record.showingFollowUp === "暫停帶看／等待業務回覆");
   useEffect(() => {
     const dueToday = showingFollowUpRecords.filter(record => normalizeDateInput(record.showingFollowUpDueDate || "") === today());
@@ -2171,6 +2171,8 @@ export default function Home() {
     if (!cloudSession?.accessToken) { if (!quiet) flash("請先登入雲端帳號"); return false; }
     if (!settings.supabaseUrl || !settings.supabaseKey) { if (!quiet) flash("請先填入 Supabase Publishable key"); return false; }
     if (cloudPushInFlightRef.current) return cloudPushInFlightRef.current;
+    let pushTimedOut = false;
+    let pushTimeout: number | null = null;
     const pushTask = (async () => {
       cloudLocalPendingRef.current = true;
       localStorage.setItem(CLOUD_LOCAL_PENDING_KEY, "1");
@@ -2203,6 +2205,7 @@ export default function Home() {
           const reason = (await res.text()).replace(/\s+/g, " ").slice(0, 180);
           throw new Error(reason || `雲端回應 ${res.status}`);
         }
+        if (pushTimedOut) return false;
         cloudLocalPendingRef.current = false;
         localStorage.removeItem(CLOUD_LOCAL_PENDING_KEY);
         setCloudLastUploadAt(uploadedAt);
@@ -2212,6 +2215,7 @@ export default function Home() {
         if (!quiet) flash("雲端同步完成");
         return true;
       } catch (error) {
+        if (pushTimedOut) return false;
         const reason = error instanceof Error && error.message ? error.message : "網路或雲端設定異常";
         setCloudUploadState("failed");
         setCloudUploadError(reason);
@@ -2219,9 +2223,24 @@ export default function Home() {
         return false;
       }
     })();
-    cloudPushInFlightRef.current = pushTask;
-    try { return await pushTask; }
-    finally { cloudPushInFlightRef.current = null; }
+    const timeoutTask = new Promise<boolean>(resolve => {
+      pushTimeout = window.setTimeout(() => {
+        pushTimedOut = true;
+        cloudLocalPendingRef.current = false;
+        localStorage.removeItem(CLOUD_LOCAL_PENDING_KEY);
+        setCloudUploadState("failed");
+        setCloudUploadError("雲端同步逾時，請確認網路後按「立即重試上傳」");
+        if (!quiet) flash("雲端同步逾時，請重新上傳");
+        resolve(false);
+      }, 35000);
+    });
+    const guardedTask = Promise.race([pushTask, timeoutTask]);
+    cloudPushInFlightRef.current = guardedTask;
+    try { return await guardedTask; }
+    finally {
+      if (pushTimeout) window.clearTimeout(pushTimeout);
+      if (cloudPushInFlightRef.current === guardedTask) cloudPushInFlightRef.current = null;
+    }
   };
   const supabasePull = async (automatic = false, quiet = false) => {
     if (!cloudSession?.accessToken) return flash("請先登入雲端帳號");
@@ -2742,7 +2761,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V349</small></h1></div>
+<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V350</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingIntakeReminderRecords.length > 0 && <button className="new-case-reminder-header-button" onClick={() => { setNewCaseReminder({ ...pendingIntakeReminderRecords[0] }); setNewCaseReminderBatchIds(pendingIntakeReminderRecords.map(record => record.id)); }}>新進案件提醒 {pendingIntakeReminderRecords.length}</button>}{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
