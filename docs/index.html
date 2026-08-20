@@ -1916,6 +1916,9 @@ html,body{max-width:100%;overflow-x:hidden}
 
 /* 成交後續提醒：完成後顯示可點選的純文字，不保留按鈕框線。 */
 .deal-completion-table button.archive-cleanup-done{min-width:0!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;color:#28725b!important;font-size:13px!important;font-weight:800!important;box-shadow:none!important;cursor:pointer!important}.deal-completion-table button.archive-cleanup-done:hover{text-decoration:underline!important;background:transparent!important;color:#14543e!important}
+
+/* 旁5原因使用與物件本一致的米色底框。 */
+.record-edit-grid>.edit-bookLocationReason{background:#f5f2eb!important;border-color:#e1d9c8!important}
 </style>
 </head>
 <body>
@@ -45355,7 +45358,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V342" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V343" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -51053,7 +51056,10 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
           const websiteKeys = ["platform591", "yes319", "houseinfor", "windowAd", "led", "homeWeb", "price5168", "goldExposure"];
           const expiryKeys = ["platform591Expiry", "price5168Expiry", "goldExposureExpiry"];
           if (o === "\u65C15") setRecord({ ...record, bookLocationType: o, ...Object.fromEntries(websiteKeys.map((key) => [key, "\u65C15"])), ...Object.fromEntries(expiryKeys.map((key) => [key, ""])) });
-          else setRecord({ ...record, bookLocationType: o, ...Object.fromEntries(websiteKeys.filter((key) => record[key] === "\u65C15").map((key) => [key, ""])) });
+          else {
+            if (String(record.bookLocationReason || "").trim() && !confirm("\u65C15\u539F\u56E0\u5DF2\u6709\u586B\u5BEB\u5167\u5BB9\uFF0C\u78BA\u5B9A\u6539\u70BA\u67B6\u4E0A\uFF1F")) return;
+            setRecord({ ...record, bookLocationType: o, ...Object.fromEntries(websiteKeys.filter((key) => record[key] === "\u65C15").map((key) => [key, ""])) });
+          }
         }, children: o }, o)) })
       ] })
     ] });

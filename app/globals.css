@@ -1909,3 +1909,6 @@ html,body{max-width:100%;overflow-x:hidden}
 
 /* 成交後續提醒：完成後顯示可點選的純文字，不保留按鈕框線。 */
 .deal-completion-table button.archive-cleanup-done{min-width:0!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;color:#28725b!important;font-size:13px!important;font-weight:800!important;box-shadow:none!important;cursor:pointer!important}.deal-completion-table button.archive-cleanup-done:hover{text-decoration:underline!important;background:transparent!important;color:#14543e!important}
+
+/* 旁5原因使用與物件本一致的米色底框。 */
+.record-edit-grid>.edit-bookLocationReason{background:#f5f2eb!important;border-color:#e1d9c8!important}
