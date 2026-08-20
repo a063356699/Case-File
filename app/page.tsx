@@ -1603,9 +1603,28 @@ export default function Home() {
     }
     const notesY = land ? 6.4 : 6.28; alignedLabel("備註", .08, notesY); draw("：", .96, notesY, .2, .36, 15); draw(displayNoteSegments(record.notes).join("；"), 1.16, notesY, 4.61, .72, 14, { align: "left", wrap: true });
     line(0, 7.18, 6.05); draw(`進案報件日期：${displayRocDate(record.reportDate) || ""}`, .05, 7.22, 2.8, .24, 9, { align: "left" }); draw(`物件編號：${record.propertyNo || ""}`, 3.1, 7.22, 2.9, .24, 9);
-    overlay.append(close, slide); overlay.addEventListener("mousedown", event => { if (event.target === overlay) setPptPreviewRecord(null); }); document.body.append(overlay);
+    const actions = document.createElement("div"); actions.className = "ppt-slide-preview-actions";
+    const locked = Boolean(pptConfirmedSnapshots[record.id]);
+    const lock = document.createElement("button"); lock.type = "button"; lock.className = locked ? "confirmed" : "primary";
+    lock.textContent = locked ? "已確認／解除" : "確認並鎖定";
+    lock.title = locked ? "點選可解除本週 PPT 鎖定" : "確認後會同步到產生 POWERPOINT 的本週確認狀態";
+    lock.addEventListener("click", () => {
+      if (locked) {
+        setPptConfirmedSnapshots(previous => { const next = { ...previous }; delete next[record.id]; return next; });
+        flash("已解除本週 PPT 確認鎖定");
+        return;
+      }
+      // 未屬於本週自動進案的案件，也要寫入同一週 PPT 的列表，日後可繼續調整順序與下載。
+      setPptExtraIds(previous => previous.includes(record.id) ? previous : [...previous, record.id]);
+      setPptConfirmedSnapshots(previous => ({ ...previous, [record.id]: { ...record, photos: [...(record.photos || [])] } }));
+      flash("已確認並鎖定，已同步到產生 POWERPOINT");
+    });
+    const openPicker = document.createElement("button"); openPicker.type = "button"; openPicker.className = "outline"; openPicker.textContent = "開啟產生 PPT";
+    openPicker.addEventListener("click", () => { setPptPreviewRecord(null); setPptPickerOpen(true); });
+    actions.append(lock, openPicker);
+    overlay.append(close, actions, slide); overlay.addEventListener("mousedown", event => { if (event.target === overlay) setPptPreviewRecord(null); }); document.body.append(overlay);
     return () => overlay.remove();
-  }, [pptPreviewRecord]);
+  }, [pptPreviewRecord, pptConfirmedSnapshots, pptWeekStart]);
   const removeFromPptWeek = (record: RecordItem) => {
     if (pptAdHocRecords.some(item => item.id === record.id)) {
       setPptAdHocRecords(previous => previous.filter(item => item.id !== record.id));
@@ -2508,6 +2527,13 @@ export default function Home() {
     selectIntakeDraft(draft.id);
     flash(linked ? "已開啟原本的進案草稿；修改會同步總表" : "已建立連結進案草稿；修改會同步總表");
   };
+  const openRecordPptPreview = (record: RecordItem) => {
+    // 進案草稿內的 PPT 預覽，也要使用該案件進案所屬的同一週確認清單。
+    // 如案件不是當週自動帶入，確認時會一併保留在該週的「本週進案」列表。
+    const weekStart = pptWeekOf(normalizeDateInput(record.reportDate || "") || today()).start;
+    setPptWeekStart(weekStart);
+    setPptPreviewRecord(pptConfirmedSnapshots[record.id] || record);
+  };
   const markIntakeDraftPrintedForSales = (id: string) => {
     const target = intakeDrafts.find(draft => draft.id === id);
     if (!target) return;
@@ -2624,7 +2650,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V334</small></h1></div>
+<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V335</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingIntakeReminderRecords.length > 0 && <button className="new-case-reminder-header-button" onClick={() => { setNewCaseReminder({ ...pendingIntakeReminderRecords[0] }); setNewCaseReminderBatchIds(pendingIntakeReminderRecords.map(record => record.id)); }}>新進案件提醒 {pendingIntakeReminderRecords.length}</button>}{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -2679,7 +2705,7 @@ export default function Home() {
     {restoreChoiceRecord && <div className="modal-backdrop"><div className="modal restore-choice-modal"><div className="modal-head"><div><span>恢復封存物件</span><h2>{restoreChoiceRecord.caseName || "未命名案件"}</h2></div><button className="close" onClick={() => setRestoreChoiceRecord(null)}>×</button></div><div className="restore-choice-body"><p>請選擇這次恢復的原因：</p><button className="primary" onClick={() => restoreRecord(restoreChoiceRecord, true)}><b>重新上架</b><span>記錄今天日期，顯示重新上架紅字並列入每日動態</span></button><button onClick={() => restoreRecord(restoreChoiceRecord, false)}><b>恢復委託中物件</b><span>只恢復到委託中，不標示重新上架</span></button></div>
 <div className="modal-foot"><button onClick={() => setRestoreChoiceRecord(null)}>取消</button></div></div></div>}
     {editing && <div className="modal-backdrop" onMouseDown={e => e.target === e.currentTarget && requestCloseEditing()}><div className="modal record-edit-modal"><div className="modal-head"><div className="record-modal-title"><span>{editing._intakeDraftId ? "編輯進案草稿" : records.some(r => r.id === editing.id) ? "編輯案件" : "建立新物件"}</span><h2><b>{editing.propertyNo || "尚無編號"}</b><em>{editing.caseName || "尚未命名"}</em></h2><small>{editing.address || "尚未填寫地址"}</small><p>開發業務：{developerFullNameText(editing.developer) || "尚未填寫"}</p>{editing.archived && <i className="record-archive-title-note">{displayRocDate(editing.archived)} {editing.status || "下架"}</i>}</div>
-<div className="modal-head-actions">{records.some(record => record.id === editing.id) && !editing.archived && (editing.status || "委託中") === "委託中" && <><button className="record-print-button" type="button" onClick={() => openRecordIntakeDraft(editing)}>進案草稿</button><button className={`record-print-button color${editing.colorSheetIssue ? " has-issue" : ""}`} type="button" onClick={() => { const attention = colorSheetAttention(editing.attentionNotes || "", editing.additionNotes || ""); setPrintEditor({ kind: "color", data: { ...editing, notes: attention, attentionNotes: attention, photos: [...(editing.photos || [])] } }); }}>{editing.colorSheetIssue ? "彩色表 Excel ●" : "彩色表 Excel"}</button><button className="record-print-button cover" type="button" onClick={() => printRecordDocument(editing, "cover")}>列印新進封面</button></>}<button className="close" type="button" onClick={requestCloseEditing}>×</button></div></div>
+<div className="modal-head-actions">{records.some(record => record.id === editing.id) && !editing.archived && (editing.status || "委託中") === "委託中" && <><button className="record-print-button" type="button" onClick={() => openRecordIntakeDraft(editing)}>進案草稿</button><button className="record-print-button ppt" type="button" onClick={() => openRecordPptPreview(editing)}>PPT</button><button className={`record-print-button color${editing.colorSheetIssue ? " has-issue" : ""}`} type="button" onClick={() => { const attention = colorSheetAttention(editing.attentionNotes || "", editing.additionNotes || ""); setPrintEditor({ kind: "color", data: { ...editing, notes: attention, attentionNotes: attention, photos: [...(editing.photos || [])] } }); }}>{editing.colorSheetIssue ? "彩色表 Excel ●" : "彩色表 Excel"}</button><button className="record-print-button cover" type="button" onClick={() => printRecordDocument(editing, "cover")}>列印新進封面</button></>}<button className="close" type="button" onClick={requestCloseEditing}>×</button></div></div>
 <div className="form-grid record-edit-grid">{recordEditOrder.filter(key => key !== "area").map(key => {
   if (["feature2", "feature3", "feature4"].includes(key)) return null;
   if (key === "feature1") return <div className="edit-cell edit-features" key="features">{["feature1", "feature2", "feature3", "feature4"].map((featureKey, index) => <div className="editing-feature-row" key={featureKey}><Field fieldKey={featureKey} label={labels[featureKey]} record={editing} records={records} setRecord={updateEditingRecord}/>{index === 0 && <button type="button" className="copy-features-button" onClick={copyEditingFeatures}>複製特色1～4</button>}</div>)}</div>;
