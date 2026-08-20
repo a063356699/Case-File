@@ -454,6 +454,22 @@ const floorPptDisplay = (value = "") => {
   const totalTop = total.split("~").pop() || total;
   return totalTop ? `在${current}樓/共${totalTop}樓` : `在${current}樓`;
 };
+// PPT 的樓層欄保留權狀與現況兩個來源，讓圖面可各自標示。
+const floorPptParts = (floor = "", titleFloor = "", currentFloor = "") => {
+  const digits: Record<string, string> = { "一": "1", "壹": "1", "二": "2", "貳": "2", "兩": "2", "三": "3", "參": "3", "四": "4", "肆": "4", "五": "5", "伍": "5", "六": "6", "陸": "6", "七": "7", "柒": "7", "八": "8", "捌": "8", "九": "9", "玖": "9" };
+  const normalize = (value = "") => Array.from(String(value || "")).map(char => {
+    const code = char.charCodeAt(0);
+    return code >= 0xff10 && code <= 0xff19 ? String(code - 0xff10) : (digits[char] || char);
+  }).join("").replace(/[～〜－—–]/g, "~").replace(/\s+/g, "").trim();
+  const source = normalize(floor);
+  const pieces = source.split(/[／/\n]/).filter(Boolean);
+  const titleSource = normalize(titleFloor) || pieces.find(part => part.includes("共")) || "";
+  const currentSource = normalize(currentFloor) || pieces.find(part => part.includes("現況") || part.includes("在")) || "";
+  const range = (text: string) => text.match(/B?\d+(?:~\d+)?/i)?.[0] || "";
+  const titleRange = range(titleSource);
+  const currentRange = range(currentSource);
+  return { title: titleRange ? `共${titleRange}樓` : (titleSource || "—"), current: currentRange ? `在${currentRange}樓` : (currentSource || "—") };
+};
 const contractShort = (value = "") => value.includes("一般") ? "一般約" : value.includes("專") ? "專約" : value;
 const layoutFull = (value = "", type = "") => {
   const raw = String(value || "").trim();
@@ -1605,6 +1621,7 @@ export default function Home() {
     };
     const alignedLabel = (label: string, x: number, y: number, pt = 15) => { const chars = Array.from(label); chars.forEach((char, index) => draw(char, x + (chars.length === 1 ? .34 : index * (.68 / (chars.length - 1))), y, .22, .4, pt)); };
     const field = (label: string, value: string, x: number, y: number, w: number, valuePt = 19, labelPt = 15, lineOffset = .39) => { alignedLabel(label, x, y, labelPt); draw("：", x + .88, y, .2, .36, 15); draw(value, x + 1.08, y - .04, w - 1.08, .44, valuePt); line(x + 1.08, y + lineOffset, w - 1.13); };
+    const floorField = (x: number, y: number, w: number) => { const floors = floorPptParts(record.floor, record.titleFloor, record.currentFloor); alignedLabel("樓層", x, y, 15); draw("：", x + .88, y, .2, .36, 15); const valueX = x + 1.08, valueW = w - 1.08, colW = valueW / 2; draw("權狀", valueX, y - .10, colW, .18, 8.5); draw(floors.title, valueX, y + .09, colW, .24, 15); draw("現況", valueX + colW, y - .10, colW, .18, 8.5); draw(floors.current, valueX + colW, y + .09, colW, .24, 15); line(valueX, y + .39, valueW - .05); };
     context.fillStyle = "#fff"; context.fillRect(0, 0, 1000, 750);
     draw("案名", .05, .16, .72, .55, 14);
     const previewCaseNameLines = splitPptCaseName(record.caseName || "");
@@ -1619,8 +1636,8 @@ export default function Home() {
       field("面寬", num(record.frontage) ? `${num(record.frontage)}米` : clean(record.frontage), .08, 4.26, 2.85, 23, 18, .58); field("深度", num(record.depth) ? `${num(record.depth)}米` : clean(record.depth), 3.02, 4.26, 2.82, 23, 18, .58);
       field("建蔽容積", [record.coverage, record.far].filter(Boolean).join("／"), .08, 5.33, 2.85, 18, 12, .58); field("使用分區", record.zoning, 3.02, 5.33, 2.82, 20, 18, .58);
     } else {
-      const entries: [string,string,string,string,number][] = [["總地坪",landPing ? `${landPing}坪` : "","總建坪",num(record.buildingPing) ? `${num(record.buildingPing)}坪` : "",1.8],["室內坪",num(record.indoorPing) ? `${num(record.indoorPing)}坪` : "","格局",record.layout || "",2.36],["面寬",num(record.frontage) ? `${num(record.frontage)}米` : clean(record.frontage),"深度",num(record.depth) ? `${num(record.depth)}米` : clean(record.depth),2.92],["臨路",num(record.road) ? `${num(record.road)}米` : clean(record.road),"樓層",floorPptDisplay(record.floor),3.48],["朝向",record.direction || "","車位",parkingShort(record.parking),4.04],["管理費",previewManagementFee(record.managementFee),"社區名稱",draftValue("大樓名稱") || record.communityName || "",4.6],["建築完成日期",previewCompletionDate(draftValue("建築完成日期") || record.completionDate || record.builtYear || ""),"屋齡",ageOf(record),5.16],["現況",record.currentState || "","鑰匙",record.key || "",5.72]];
-      entries.forEach(([leftLabel,leftValue,rightLabel,rightValue,y]) => { field(leftLabel,leftValue,.08,y,2.85); field(rightLabel,rightValue,3.02,y,2.82,rightLabel === "車位" ? 15.5 : rightLabel === "社區名稱" || rightLabel === "建築完成日期" ? 16 : 19); });
+      const entries: [string,string,string,string,number][] = [["總地坪",landPing ? `${landPing}坪` : "","總建坪",num(record.buildingPing) ? `${num(record.buildingPing)}坪` : "",1.8],["室內坪",num(record.indoorPing) ? `${num(record.indoorPing)}坪` : "","格局",record.layout || "",2.36],["面寬",num(record.frontage) ? `${num(record.frontage)}米` : clean(record.frontage),"深度",num(record.depth) ? `${num(record.depth)}米` : clean(record.depth),2.92],["臨路",num(record.road) ? `${num(record.road)}米` : clean(record.road),"", "",3.48],["朝向",record.direction || "","車位",parkingShort(record.parking),4.04],["管理費",previewManagementFee(record.managementFee),"社區名稱",draftValue("大樓名稱") || record.communityName || "",4.6],["建築完成日期",previewCompletionDate(draftValue("建築完成日期") || record.completionDate || record.builtYear || ""),"屋齡",ageOf(record),5.16],["現況",record.currentState || "","鑰匙",record.key || "",5.72]];
+      entries.forEach(([leftLabel,leftValue,rightLabel,rightValue,y]) => { field(leftLabel,leftValue,.08,y,2.85); if (y === 3.48) floorField(3.02, y, 2.82); else field(rightLabel,rightValue,3.02,y,2.82,rightLabel === "車位" ? 15.5 : rightLabel === "社區名稱" || rightLabel === "建築完成日期" ? 16 : 19); });
     }
     const notesY = land ? 6.4 : 6.28; alignedLabel("備註", .08, notesY); draw("：", .96, notesY, .2, .36, 15); draw(displayNoteSegments(record.notes).join("；"), 1.16, notesY, 4.61, .72, 14, { align: "left", wrap: true });
     line(0, 7.18, 6.05); draw(`進案報件日期：${displayRocDate(record.reportDate) || ""}`, .05, 7.22, 2.8, .24, 9, { align: "left" }); draw(`物件編號：${record.propertyNo || ""}`, 3.1, 7.22, 2.9, .24, 9);
@@ -2009,6 +2026,7 @@ export default function Home() {
       slide.addText(safeRuns.length ? safeRuns : [{ text: " ", options: { fontFace: font, fontSize: 12 } }], { x: x + 1.08, y: y - .04, w: w - 1.08, h: .44, fontFace: font, fontSize: 21, color: "000000", margin: 0, align: "center", fit: "shrink", breakLine: false });
       slide.addShape(pptx.ShapeType.line, { x: x + 1.08, y: y + .39, w: w - 1.13, h: 0, line: { color: "555555", width: .7 } });
     };
+    const addPptFloorLabel = (slide: any, record: RecordItem, x: number, y: number, w: number) => { const floors = floorPptParts(record.floor, record.titleFloor, record.currentFloor); addAlignedLabel(slide, "樓層", x, y); slide.addText("：", { x: x + .88, y, w: .2, h: .36, fontFace: font, fontSize: 17, color: "000000", margin: 0 }); const valueX = x + 1.08, valueW = w - 1.08, colW = valueW / 2; slide.addText("權狀", { x: valueX, y: y - .10, w: colW, h: .18, fontFace: font, fontSize: 9, color: "000000", align: "center", margin: 0, breakLine: false }); slide.addText(floors.title, { x: valueX, y: y + .09, w: colW, h: .24, fontFace: font, fontSize: 16, color: "000000", align: "center", margin: 0, fit: "shrink", breakLine: false }); slide.addText("現況", { x: valueX + colW, y: y - .10, w: colW, h: .18, fontFace: font, fontSize: 9, color: "000000", align: "center", margin: 0, breakLine: false }); slide.addText(floors.current, { x: valueX + colW, y: y + .09, w: colW, h: .24, fontFace: font, fontSize: 16, color: "000000", align: "center", margin: 0, fit: "shrink", breakLine: false }); slide.addShape(pptx.ShapeType.line, { x: valueX, y: y + .39, w: valueW - .05, h: 0, line: { color: "555555", width: .7 } }); };
     for (const record of selected) {
       const slide = pptx.addSlide(); slide.background = { color: "FFFFFF" };
       const land = typeShort(record.type) === "土地" || /^(LG|LA)/i.test(record.propertyNo || "");
@@ -2048,7 +2066,7 @@ export default function Home() {
         addLabel(slide, "總地坪", landPing ? `${landPing}坪` : "", .08, 1.8, 2.85, "0000FF"); addLabel(slide, "總建坪", num(record.buildingPing) ? `${num(record.buildingPing)}坪` : "", 3.02, 1.8, 2.82, "0000FF");
         addLabel(slide, "室內坪", num(record.indoorPing) ? `${num(record.indoorPing)}坪` : "", .08, 2.36, 2.85, "0000FF"); addRichLabel(slide, "格局", Array.from(record.layout || "").map(char => ({ text: char, options: { fontFace: font, fontSize: /[房廳衛浴陽台]/.test(char) ? 13 : 21 } })), 3.02, 2.36, 2.82);
         addLabel(slide, "面寬", num(record.frontage) ? `${num(record.frontage)}米` : clean(record.frontage), .08, 2.92, 2.85); addLabel(slide, "深度", num(record.depth) ? `${num(record.depth)}米` : clean(record.depth), 3.02, 2.92, 2.82);
-        addLabel(slide, "臨路", num(record.road) ? `${num(record.road)}米` : clean(record.road), .08, 3.48, 2.85); addRichLabel(slide, "樓層", Array.from(floorPptDisplay(record.floor)).map(char => ({ text: char, options: { fontFace: font, fontSize: /[\u4e00-\u9fff]/.test(char) ? 12 : 21 } })), 3.02, 3.48, 2.82);
+        addLabel(slide, "臨路", num(record.road) ? `${num(record.road)}米` : clean(record.road), .08, 3.48, 2.85); addPptFloorLabel(slide, record, 3.02, 3.48, 2.82);
         addLabel(slide, "朝向", record.direction, .08, 4.04, 2.85); addLabel(slide, "車位", parkingShort(record.parking), 3.02, 4.04, 2.82, "000000", 17.5);
         addRichLabel(slide, "管理費", pptManagementFeeRuns(record.managementFee), .08, 4.6, 2.85); addLabel(slide, "社區名稱", draftValue("大樓名稱") || record.communityName, 3.02, 4.6, 2.82, "000000", 18);
         const completionForPpt = draftValue("建築完成日期") || record.completionDate || record.builtYear;
@@ -2713,7 +2731,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V345</small></h1></div>
+<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V346</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingIntakeReminderRecords.length > 0 && <button className="new-case-reminder-header-button" onClick={() => { setNewCaseReminder({ ...pendingIntakeReminderRecords[0] }); setNewCaseReminderBatchIds(pendingIntakeReminderRecords.map(record => record.id)); }}>新進案件提醒 {pendingIntakeReminderRecords.length}</button>}{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>

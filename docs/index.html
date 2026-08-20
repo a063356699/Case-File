@@ -42323,6 +42323,21 @@ ${String(ex)}`);
     const totalTop = total.split("~").pop() || total;
     return totalTop ? `\u5728${current}\u6A13/\u5171${totalTop}\u6A13` : `\u5728${current}\u6A13`;
   };
+  var floorPptParts = (floor = "", titleFloor = "", currentFloor = "") => {
+    const digits = { "\u4E00": "1", "\u58F9": "1", "\u4E8C": "2", "\u8CB3": "2", "\u5169": "2", "\u4E09": "3", "\u53C3": "3", "\u56DB": "4", "\u8086": "4", "\u4E94": "5", "\u4F0D": "5", "\u516D": "6", "\u9678": "6", "\u4E03": "7", "\u67D2": "7", "\u516B": "8", "\u634C": "8", "\u4E5D": "9", "\u7396": "9" };
+    const normalize = (value = "") => Array.from(String(value || "")).map((char) => {
+      const code = char.charCodeAt(0);
+      return code >= 65296 && code <= 65305 ? String(code - 65296) : digits[char] || char;
+    }).join("").replace(/[～〜－—–]/g, "~").replace(/\s+/g, "").trim();
+    const source = normalize(floor);
+    const pieces = source.split(/[／/\n]/).filter(Boolean);
+    const titleSource = normalize(titleFloor) || pieces.find((part) => part.includes("\u5171")) || "";
+    const currentSource = normalize(currentFloor) || pieces.find((part) => part.includes("\u73FE\u6CC1") || part.includes("\u5728")) || "";
+    const range = (text) => text.match(/B?\d+(?:~\d+)?/i)?.[0] || "";
+    const titleRange = range(titleSource);
+    const currentRange = range(currentSource);
+    return { title: titleRange ? `\u5171${titleRange}\u6A13` : titleSource || "\u2014", current: currentRange ? `\u5728${currentRange}\u6A13` : currentSource || "\u2014" };
+  };
   var contractShort = (value = "") => value.includes("\u4E00\u822C") ? "\u4E00\u822C\u7D04" : value.includes("\u5C08") ? "\u5C08\u7D04" : value;
   var layoutFull = (value = "", type = "") => {
     const raw = String(value || "").trim();
@@ -43843,6 +43858,17 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
         draw(value, x + 1.08, y - 0.04, w - 1.08, 0.44, valuePt);
         line(x + 1.08, y + lineOffset, w - 1.13);
       };
+      const floorField = (x, y, w) => {
+        const floors = floorPptParts(record.floor, record.titleFloor, record.currentFloor);
+        alignedLabel("\u6A13\u5C64", x, y, 15);
+        draw("\uFF1A", x + 0.88, y, 0.2, 0.36, 15);
+        const valueX = x + 1.08, valueW = w - 1.08, colW = valueW / 2;
+        draw("\u6B0A\u72C0", valueX, y - 0.1, colW, 0.18, 8.5);
+        draw(floors.title, valueX, y + 0.09, colW, 0.24, 15);
+        draw("\u73FE\u6CC1", valueX + colW, y - 0.1, colW, 0.18, 8.5);
+        draw(floors.current, valueX + colW, y + 0.09, colW, 0.24, 15);
+        line(valueX, y + 0.39, valueW - 0.05);
+      };
       context.fillStyle = "#fff";
       context.fillRect(0, 0, 1e3, 750);
       draw("\u6848\u540D", 0.05, 0.16, 0.72, 0.55, 14);
@@ -43870,10 +43896,11 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
         field("\u5EFA\u853D\u5BB9\u7A4D", [record.coverage, record.far].filter(Boolean).join("\uFF0F"), 0.08, 5.33, 2.85, 18, 12, 0.58);
         field("\u4F7F\u7528\u5206\u5340", record.zoning, 3.02, 5.33, 2.82, 20, 18, 0.58);
       } else {
-        const entries = [["\u7E3D\u5730\u576A", landPing ? `${landPing}\u576A` : "", "\u7E3D\u5EFA\u576A", num(record.buildingPing) ? `${num(record.buildingPing)}\u576A` : "", 1.8], ["\u5BA4\u5167\u576A", num(record.indoorPing) ? `${num(record.indoorPing)}\u576A` : "", "\u683C\u5C40", record.layout || "", 2.36], ["\u9762\u5BEC", num(record.frontage) ? `${num(record.frontage)}\u7C73` : clean(record.frontage), "\u6DF1\u5EA6", num(record.depth) ? `${num(record.depth)}\u7C73` : clean(record.depth), 2.92], ["\u81E8\u8DEF", num(record.road) ? `${num(record.road)}\u7C73` : clean(record.road), "\u6A13\u5C64", floorPptDisplay(record.floor), 3.48], ["\u671D\u5411", record.direction || "", "\u8ECA\u4F4D", parkingShort(record.parking), 4.04], ["\u7BA1\u7406\u8CBB", previewManagementFee(record.managementFee), "\u793E\u5340\u540D\u7A31", draftValue("\u5927\u6A13\u540D\u7A31") || record.communityName || "", 4.6], ["\u5EFA\u7BC9\u5B8C\u6210\u65E5\u671F", previewCompletionDate(draftValue("\u5EFA\u7BC9\u5B8C\u6210\u65E5\u671F") || record.completionDate || record.builtYear || ""), "\u5C4B\u9F61", ageOf(record), 5.16], ["\u73FE\u6CC1", record.currentState || "", "\u9470\u5319", record.key || "", 5.72]];
+        const entries = [["\u7E3D\u5730\u576A", landPing ? `${landPing}\u576A` : "", "\u7E3D\u5EFA\u576A", num(record.buildingPing) ? `${num(record.buildingPing)}\u576A` : "", 1.8], ["\u5BA4\u5167\u576A", num(record.indoorPing) ? `${num(record.indoorPing)}\u576A` : "", "\u683C\u5C40", record.layout || "", 2.36], ["\u9762\u5BEC", num(record.frontage) ? `${num(record.frontage)}\u7C73` : clean(record.frontage), "\u6DF1\u5EA6", num(record.depth) ? `${num(record.depth)}\u7C73` : clean(record.depth), 2.92], ["\u81E8\u8DEF", num(record.road) ? `${num(record.road)}\u7C73` : clean(record.road), "", "", 3.48], ["\u671D\u5411", record.direction || "", "\u8ECA\u4F4D", parkingShort(record.parking), 4.04], ["\u7BA1\u7406\u8CBB", previewManagementFee(record.managementFee), "\u793E\u5340\u540D\u7A31", draftValue("\u5927\u6A13\u540D\u7A31") || record.communityName || "", 4.6], ["\u5EFA\u7BC9\u5B8C\u6210\u65E5\u671F", previewCompletionDate(draftValue("\u5EFA\u7BC9\u5B8C\u6210\u65E5\u671F") || record.completionDate || record.builtYear || ""), "\u5C4B\u9F61", ageOf(record), 5.16], ["\u73FE\u6CC1", record.currentState || "", "\u9470\u5319", record.key || "", 5.72]];
         entries.forEach(([leftLabel, leftValue, rightLabel, rightValue, y]) => {
           field(leftLabel, leftValue, 0.08, y, 2.85);
-          field(rightLabel, rightValue, 3.02, y, 2.82, rightLabel === "\u8ECA\u4F4D" ? 15.5 : rightLabel === "\u793E\u5340\u540D\u7A31" || rightLabel === "\u5EFA\u7BC9\u5B8C\u6210\u65E5\u671F" ? 16 : 19);
+          if (y === 3.48) floorField(3.02, y, 2.82);
+          else field(rightLabel, rightValue, 3.02, y, 2.82, rightLabel === "\u8ECA\u4F4D" ? 15.5 : rightLabel === "\u793E\u5340\u540D\u7A31" || rightLabel === "\u5EFA\u7BC9\u5B8C\u6210\u65E5\u671F" ? 16 : 19);
         });
       }
       const notesY = land ? 6.4 : 6.28;
@@ -44483,6 +44510,17 @@ ${changedLabels}
         slide.addText(safeRuns.length ? safeRuns : [{ text: " ", options: { fontFace: font, fontSize: 12 } }], { x: x + 1.08, y: y - 0.04, w: w - 1.08, h: 0.44, fontFace: font, fontSize: 21, color: "000000", margin: 0, align: "center", fit: "shrink", breakLine: false });
         slide.addShape(pptx.ShapeType.line, { x: x + 1.08, y: y + 0.39, w: w - 1.13, h: 0, line: { color: "555555", width: 0.7 } });
       };
+      const addPptFloorLabel = (slide, record, x, y, w) => {
+        const floors = floorPptParts(record.floor, record.titleFloor, record.currentFloor);
+        addAlignedLabel(slide, "\u6A13\u5C64", x, y);
+        slide.addText("\uFF1A", { x: x + 0.88, y, w: 0.2, h: 0.36, fontFace: font, fontSize: 17, color: "000000", margin: 0 });
+        const valueX = x + 1.08, valueW = w - 1.08, colW = valueW / 2;
+        slide.addText("\u6B0A\u72C0", { x: valueX, y: y - 0.1, w: colW, h: 0.18, fontFace: font, fontSize: 9, color: "000000", align: "center", margin: 0, breakLine: false });
+        slide.addText(floors.title, { x: valueX, y: y + 0.09, w: colW, h: 0.24, fontFace: font, fontSize: 16, color: "000000", align: "center", margin: 0, fit: "shrink", breakLine: false });
+        slide.addText("\u73FE\u6CC1", { x: valueX + colW, y: y - 0.1, w: colW, h: 0.18, fontFace: font, fontSize: 9, color: "000000", align: "center", margin: 0, breakLine: false });
+        slide.addText(floors.current, { x: valueX + colW, y: y + 0.09, w: colW, h: 0.24, fontFace: font, fontSize: 16, color: "000000", align: "center", margin: 0, fit: "shrink", breakLine: false });
+        slide.addShape(pptx.ShapeType.line, { x: valueX, y: y + 0.39, w: valueW - 0.05, h: 0, line: { color: "555555", width: 0.7 } });
+      };
       for (const record of selected) {
         const slide = pptx.addSlide();
         slide.background = { color: "FFFFFF" };
@@ -44530,7 +44568,7 @@ ${changedLabels}
           addLabel(slide, "\u9762\u5BEC", num(record.frontage) ? `${num(record.frontage)}\u7C73` : clean(record.frontage), 0.08, 2.92, 2.85);
           addLabel(slide, "\u6DF1\u5EA6", num(record.depth) ? `${num(record.depth)}\u7C73` : clean(record.depth), 3.02, 2.92, 2.82);
           addLabel(slide, "\u81E8\u8DEF", num(record.road) ? `${num(record.road)}\u7C73` : clean(record.road), 0.08, 3.48, 2.85);
-          addRichLabel(slide, "\u6A13\u5C64", Array.from(floorPptDisplay(record.floor)).map((char) => ({ text: char, options: { fontFace: font, fontSize: /[\u4e00-\u9fff]/.test(char) ? 12 : 21 } })), 3.02, 3.48, 2.82);
+          addPptFloorLabel(slide, record, 3.02, 3.48, 2.82);
           addLabel(slide, "\u671D\u5411", record.direction, 0.08, 4.04, 2.85);
           addLabel(slide, "\u8ECA\u4F4D", parkingShort(record.parking), 3.02, 4.04, 2.82, "000000", 17.5);
           addRichLabel(slide, "\u7BA1\u7406\u8CBB", pptManagementFeeRuns(record.managementFee), 0.08, 4.6, 2.85);
@@ -45376,7 +45414,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V345" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V346" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
