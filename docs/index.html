@@ -871,6 +871,7 @@ button:hover,.file-button:hover{border-color:#9fbad0;box-shadow:0 2px 8px #7895a
 .record-modal-title h2 b{font-size:22px!important;font-weight:800!important;color:var(--ink)!important}
 .record-modal-title h2 em{font-size:22px!important;font-style:normal!important;font-weight:800!important}
 .record-modal-title>small{display:block!important;order:3!important;flex:0 0 100%!important;min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;color:#56645f!important;font-size:16px!important;font-weight:400!important;line-height:1.2!important}
+.record-modal-title>.record-intake-file-name{order:4!important;color:#5b7185!important;font-size:13px!important;font-weight:700!important;margin-top:2px!important}
 .record-modal-title>p{order:2!important;flex:0 0 auto!important;margin:0!important;color:#0066cc!important;font-size:calc(22px - 1pt)!important;font-weight:800!important;white-space:nowrap!important}
 
 /* 彩色表補充資料：固定放在網站編號區塊上方。 */
@@ -45375,7 +45376,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V344" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V345" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -45972,6 +45973,10 @@ ${changedLabels}
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("em", { children: editing.caseName || "\u5C1A\u672A\u547D\u540D" })
             ] }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: editing.address || "\u5C1A\u672A\u586B\u5BEB\u5730\u5740" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { className: "record-intake-file-name", title: `\u6A94\u540D\uFF1A${intakeDraftEditorTitle(recordToIntake(editing))}`, children: [
+              "\u6A94\u540D\uFF1A",
+              intakeDraftEditorTitle(recordToIntake(editing))
+            ] }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { children: [
               "\u958B\u767C\u696D\u52D9\uFF1A",
               developerFullNameText(editing.developer) || "\u5C1A\u672A\u586B\u5BEB"

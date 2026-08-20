@@ -864,6 +864,7 @@ button:hover,.file-button:hover{border-color:#9fbad0;box-shadow:0 2px 8px #7895a
 .record-modal-title h2 b{font-size:22px!important;font-weight:800!important;color:var(--ink)!important}
 .record-modal-title h2 em{font-size:22px!important;font-style:normal!important;font-weight:800!important}
 .record-modal-title>small{display:block!important;order:3!important;flex:0 0 100%!important;min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;color:#56645f!important;font-size:16px!important;font-weight:400!important;line-height:1.2!important}
+.record-modal-title>.record-intake-file-name{order:4!important;color:#5b7185!important;font-size:13px!important;font-weight:700!important;margin-top:2px!important}
 .record-modal-title>p{order:2!important;flex:0 0 auto!important;margin:0!important;color:#0066cc!important;font-size:calc(22px - 1pt)!important;font-weight:800!important;white-space:nowrap!important}
 
 /* 彩色表補充資料：固定放在網站編號區塊上方。 */
