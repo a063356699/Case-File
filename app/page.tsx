@@ -2154,7 +2154,7 @@ export default function Home() {
       const session = await refreshCloudSession();
       if (!session) throw new Error("cloud session expired");
       const url = `${settings.supabaseUrl.replace(/\/$/, "")}/rest/v1/${settings.supabaseTable}?id=eq.${encodeURIComponent(settings.supabaseRecord)}&select=data,updated_at`;
-      const res = await fetch(url, { headers: cloudHeaders(session) }); const rows = await res.json(); const data = rows[0]?.data;
+      const res = await cloudFetchWithTimeout(url, { headers: cloudHeaders(session) }); const rows = await res.json(); const data = rows[0]?.data;
       if (!res.ok || !data?.records) throw new Error();
       // 自動同步絕不覆蓋本機尚未成功上傳的內容，例如剛輸入的照片文字。
       if (automatic && cloudLocalPendingRef.current) return;
@@ -2235,7 +2235,12 @@ export default function Home() {
         setCloudUploadError("");
         if (!quiet) flash(automatic ? "已讀取雲端最新資料" : "雲端資料已合併到本機");
       }
-    } catch { if (!quiet) flash(automatic ? "自動同步失敗，請檢查雲端登入" : "雲端讀取失敗，請檢查登入與設定"); }
+    } catch (error) {
+      const reason = error instanceof Error && error.message ? error.message : "雲端讀取失敗，請檢查登入與設定";
+      setCloudUploadState("failed");
+      setCloudUploadError(reason);
+      if (!quiet) flash(automatic ? `自動同步失敗：${reason}` : `雲端讀取失敗：${reason}`);
+    }
   };
   const supabasePullIfChanged = async () => {
     if (!cloudSession?.accessToken || !settings.supabaseUrl || !settings.supabaseKey || cloudLocalPendingRef.current) return;
@@ -2243,13 +2248,16 @@ export default function Home() {
       const session = await refreshCloudSession();
       if (!session) return;
       const url = `${settings.supabaseUrl.replace(/\/$/, "")}/rest/v1/${settings.supabaseTable}?id=eq.${encodeURIComponent(settings.supabaseRecord)}&select=updated_at`;
-      const response = await fetch(url, { headers: cloudHeaders(session) });
+      const response = await cloudFetchWithTimeout(url, { headers: cloudHeaders(session) });
       const rows = await response.json();
       if (!response.ok || !rows[0]?.updated_at) return;
       const remoteUpdatedAt = String(rows[0].updated_at);
       const knownUpdatedAt = localStorage.getItem(CLOUD_LAST_UPLOAD_KEY) || cloudLastUploadAt || "";
-      if (!knownUpdatedAt || Date.parse(remoteUpdatedAt) > Date.parse(knownUpdatedAt) + 500) setCloudRemoteUpdateAt(remoteUpdatedAt);
-      else setCloudRemoteUpdateAt("");
+      if (!knownUpdatedAt || Date.parse(remoteUpdatedAt) > Date.parse(knownUpdatedAt) + 500) {
+        setCloudRemoteUpdateAt(remoteUpdatedAt);
+        // 另一台電腦已完成上傳時，直接合併最新正式資料；不用等待手動按鈕。
+        void supabasePull(true, true);
+      } else setCloudRemoteUpdateAt("");
     } catch {}
   };
   const supabaseSignIn = async (email: string, password: string, signUp = false) => {
@@ -2309,13 +2317,13 @@ export default function Home() {
     setCloudUploadState("idle");
     void supabasePull(true);
   }, [cloudSession?.accessToken, cloudSession?.email, settings.supabaseUrl, settings.supabaseKey, settings.supabaseTable, settings.supabaseRecord, localCloudChangesPending, internalView, tab]);
-  // 管理模式開啟期間每 45 秒只讀取 updated_at；偵測到新資料只提醒，由使用者決定何時下載完整資料。
+  // 管理模式開啟期間每 15 秒檢查雲端；偵測到另一台電腦的新資料後自動合併。
   useEffect(() => {
     if (internalView || tab === "public" || !cloudSession?.accessToken || !settings.supabaseUrl || !settings.supabaseKey) return;
-    const timer = window.setInterval(() => { void supabasePullIfChanged(); }, 45000);
+    const timer = window.setInterval(() => { void supabasePullIfChanged(); }, 15000);
     return () => window.clearInterval(timer);
   }, [cloudSession?.accessToken, settings.supabaseUrl, settings.supabaseKey, settings.supabaseTable, settings.supabaseRecord, cloudLastUploadAt, internalView, tab]);
-  // 切回此分頁時只檢查雲端時間，不自動下載完整資料。
+  // 切回此分頁時立即檢查並自動合併較新的雲端資料。
   useEffect(() => {
     if (internalView || tab === "public" || !cloudSession?.accessToken || !settings.supabaseUrl || !settings.supabaseKey) return;
     const refreshWhenVisible = () => {
@@ -2616,7 +2624,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V331</small></h1></div>
+<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V332</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingIntakeReminderRecords.length > 0 && <button className="new-case-reminder-header-button" onClick={() => { setNewCaseReminder({ ...pendingIntakeReminderRecords[0] }); setNewCaseReminderBatchIds(pendingIntakeReminderRecords.map(record => record.id)); }}>新進案件提醒 {pendingIntakeReminderRecords.length}</button>}{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
