@@ -58,7 +58,7 @@ const fields = [
   ["frontage", "面寬（米）"], ["depth", "深度（米）"], ["zoning", "使用分區"], ["coverage", "建蔽率（%）"],
   ["far", "容積率（%）"], ["developer", "開發業務"], ["entrustStart", "委託開始"], ["entrustEnd", "委託結束"],
   ["reportDate", "進案報件日期"], ["updateDate", "更新日期"], ["groupViewDate", "團看日期"], ["bookLocationType", "物件本"],
-  ["bookLocationDate", "物件本日期"], ["bookLocationNo", "旁放編號"], ["salesBook", "銷售本"], ["salesBookDate", "銷售本日期"], ["notes", "備註欄"], ["photoInfo", "照片"],
+  ["bookLocationReason", "旁5原因"], ["bookLocationDate", "物件本日期"], ["bookLocationNo", "旁放編號"], ["salesBook", "銷售本"], ["salesBookDate", "銷售本日期"], ["notes", "備註欄"], ["photoInfo", "照片"],
   ["areaPaste", "面積資料貼串"], ["completionDate", "建築完成日期"], ["registryBuildingPing", "總建物坪數"], ["registryIndoorPing", "室內坪數"],
   ["mainBuildingPing", "主建物坪數"], ["auxiliaryBuildingPing", "附屬建物坪數"], ["commonAreaPing", "共同使用坪數"], ["buildingOtherPing", "建物其他坪數"], ["basementPing", "地下室坪數"], ["landSharePing", "土地坪數"],
   ["buildingName", "大樓名稱"], ["unitsPerFloor", "每層戶數"], ["elevatorCount", "電梯數"], ["managementMethod", "管理方式"], ["titleFloor", "權狀樓層"], ["currentFloor", "現況樓別"],
@@ -81,7 +81,7 @@ const recordEditOrder = [
   "developer", "price", "completionDate", "direction",
   "buildingPing", "indoorPing", "landPing", "road", "frontage", "depth", "zoning", "coverage",
   "titleFloor", "currentFloor", "layout", "managementMethod", "managementFee",
-  "photoInfo", "bookLocationType", "bookLocationDate", "salesBook",
+  "photoInfo", "bookLocationType", "bookLocationReason", "bookLocationDate", "salesBook",
   "notes",
   "colorSheetHeader", "areaPaste",
   "landSharePing", "registryBuildingPing", "registryIndoorPing", "buildingOtherPing", "mainBuildingPing",
@@ -1678,6 +1678,7 @@ export default function Home() {
   });
   const saveRecord = (publishDaily = false) => {
     if (!editing) return;
+    if (editing.bookLocationType === "旁5" && !String(editing.bookLocationReason || "").trim()) return flash("請填寫旁5原因後再儲存");
     const normalizedEditing = normalizeRecordPings(clearImportedLandLabels({
       ...editing,
       developer: developerFullNameText(editing.developer || "", settings.personnel) || editing.developer,
@@ -1758,6 +1759,7 @@ export default function Home() {
   };
   const temporarilySaveRecord = () => {
     if (!editing) return;
+    if (editing.bookLocationType === "旁5" && !String(editing.bookLocationReason || "").trim()) return flash("請填寫旁5原因後再暫存");
     const savedAt = new Date().toISOString();
     const next = normalizeRecordPings(clearImportedLandLabels({
       ...editing,
@@ -2696,7 +2698,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V338</small></h1></div>
+<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V339</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingIntakeReminderRecords.length > 0 && <button className="new-case-reminder-header-button" onClick={() => { setNewCaseReminder({ ...pendingIntakeReminderRecords[0] }); setNewCaseReminderBatchIds(pendingIntakeReminderRecords.map(record => record.id)); }}>新進案件提醒 {pendingIntakeReminderRecords.length}</button>}{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -4573,6 +4575,10 @@ function Field({ fieldKey, label, record, records, setRecord }: { fieldKey: stri
   if (["buildingPing", "indoorPing", "landPing", "registryBuildingPing", "registryIndoorPing", "landSharePing"].includes(fieldKey)) { const parsed = record.areaPaste ? parseAreaPaste(record.areaPaste, record) : record; const compared = fieldKey === "buildingPing" ? parsed.registryBuildingPing : fieldKey === "indoorPing" ? parsed.registryIndoorPing : fieldKey === "landPing" ? parsed.landSharePing : fieldKey === "registryBuildingPing" ? record.buildingPing : fieldKey === "registryIndoorPing" ? record.indoorPing : record.landPing; const prefix = ["registryBuildingPing", "registryIndoorPing", "landSharePing"].includes(fieldKey) ? "進案" : "房管"; return <label className="field compared-ping-field"><span><b>{label}</b>{compared && <small>{prefix} {compared} 坪</small>}</span><input inputMode="decimal" value={value} onChange={event => set(event.target.value)}/></label>; }
   if (fieldKey === "price") return <div className="price-pair"><label className="field"><span>開價（萬）</span><input inputMode="decimal" value={record.price || ""} onChange={e => setRecord({ ...record, price: e.target.value, priceModifiedAt: new Date().toISOString() })}/></label><label className="field reduced-price-field"><span>降價/調價(萬){record.reducedPrice && <small>修改：{displayModifiedAt(record.reducedPriceModifiedAt || record.lastModifiedAt)}</small>}</span><input inputMode="decimal" value={record.reducedPrice || ""} onChange={e => setRecord({ ...record, reducedPrice: e.target.value, reducedPriceModifiedAt: e.target.value ? new Date().toISOString() : "" })}/></label></div>;
   if (fieldKey === "bookLocationNo") return null;
+  if (fieldKey === "bookLocationReason") {
+    if (record.bookLocationType !== "旁5") return null;
+    return <label className="field book-location-reason-field"><span>旁5原因 <b className="required-mark">必填</b></span><textarea value={value} onChange={e => set(e.target.value)} rows={2} placeholder="請填寫物件本放在旁5的原因"/></label>;
+  }
   if (fieldKey === "contractType") return <label className="field contract-field"><span>{label}<small>EG 房一、EA 房專、LG 土一、LA 土專、EB 租一、EC 租專、RG 預一、RA 預專</small></span><input value={contractFromNo(record.propertyNo) || value} readOnly placeholder="依物件編號自動判斷"/></label>;
   if (fieldKey === "coverage") { const combinedValue = record.coverageCombined || [record.coverage, record.far].filter(Boolean).join("/"); return <label className="field coverage-combined-field"><span>建蔽率%/容積率%</span><input type="text" inputMode="decimal" value={combinedValue} onChange={event => { const raw = event.target.value.replace(/／/g, "/"); const pairs = raw.split(/[、,，\n]+/).map(value => value.trim()).filter(Boolean).map(value => value.split("/")); const coverage = pairs.map(pair => pair[0] || "").filter(Boolean).join("/"); const far = pairs.map(pair => pair[1] || "").filter(Boolean).join("/"); setRecord({ ...record, coverageCombined: raw, coverage, far }); }} placeholder="例如 60/240；兩組可輸入 60/360、80/320"/></label>; }
   if (["platform591", "price5168", "goldExposure"].includes(fieldKey)) { const expiryKey = `${fieldKey}Expiry`; const siteLabel = fieldKey === "platform591" ? "591" : fieldKey === "price5168" ? "5168" : "黃金曝光"; return websiteInput(fieldKey, siteLabel, expiryKey); }
