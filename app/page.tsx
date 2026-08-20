@@ -892,6 +892,7 @@ export default function Home() {
   const [pptAdHocRecords, setPptAdHocRecords] = useState<RecordItem[]>([]);
   const [pptConfirmedSnapshots, setPptConfirmedSnapshots] = useState<Record<string, RecordItem>>({});
   const [pptPreviewRecord, setPptPreviewRecord] = useState<RecordItem | null>(null);
+  const [pptPreviewWeekStart, setPptPreviewWeekStart] = useState("");
   const [pptShowExtras, setPptShowExtras] = useState(false);
   const [pptExtraIds, setPptExtraIds] = useState<string[]>([]);
   const [pptOrderIds, setPptOrderIds] = useState<string[]>([]);
@@ -1604,27 +1605,25 @@ export default function Home() {
     const notesY = land ? 6.4 : 6.28; alignedLabel("備註", .08, notesY); draw("：", .96, notesY, .2, .36, 15); draw(displayNoteSegments(record.notes).join("；"), 1.16, notesY, 4.61, .72, 14, { align: "left", wrap: true });
     line(0, 7.18, 6.05); draw(`進案報件日期：${displayRocDate(record.reportDate) || ""}`, .05, 7.22, 2.8, .24, 9, { align: "left" }); draw(`物件編號：${record.propertyNo || ""}`, 3.1, 7.22, 2.9, .24, 9);
     const actions = document.createElement("div"); actions.className = "ppt-slide-preview-actions";
-    const locked = Boolean(pptConfirmedSnapshots[record.id]);
+    const previewWeek = pptPreviewWeekStart || pptWeekStart;
+    // 預覽是從案件編輯開啟時，不能使用剛切換週期前的舊畫面狀態；直接讀該週保存的紀錄。
+    let locked = Boolean(pptConfirmedSnapshots[record.id]);
+    try {
+      const weeks = JSON.parse(localStorage.getItem(PPT_WEEK_SELECTIONS_KEY) || "{}");
+      locked = Boolean(weeks?.[previewWeek]?.confirmedSnapshots?.[record.id]);
+    } catch {}
     const lock = document.createElement("button"); lock.type = "button"; lock.className = locked ? "confirmed" : "primary";
     lock.textContent = locked ? "已確認／解除" : "確認並鎖定";
     lock.title = locked ? "點選可解除本週 PPT 鎖定" : "確認後會同步到產生 POWERPOINT 的本週確認狀態";
     lock.addEventListener("click", () => {
-      if (locked) {
-        setPptConfirmedSnapshots(previous => { const next = { ...previous }; delete next[record.id]; return next; });
-        flash("已解除本週 PPT 確認鎖定");
-        return;
-      }
-      // 未屬於本週自動進案的案件，也要寫入同一週 PPT 的列表，日後可繼續調整順序與下載。
-      setPptExtraIds(previous => previous.includes(record.id) ? previous : [...previous, record.id]);
-      setPptConfirmedSnapshots(previous => ({ ...previous, [record.id]: { ...record, photos: [...(record.photos || [])] } }));
-      flash("已確認並鎖定，已同步到產生 POWERPOINT");
+      updatePptPreviewConfirmation(record, previewWeek, !locked);
     });
     const openPicker = document.createElement("button"); openPicker.type = "button"; openPicker.className = "outline"; openPicker.textContent = "開啟產生 PPT";
     openPicker.addEventListener("click", () => { setPptPreviewRecord(null); setPptPickerOpen(true); });
     actions.append(lock, openPicker);
     overlay.append(close, actions, slide); overlay.addEventListener("mousedown", event => { if (event.target === overlay) setPptPreviewRecord(null); }); document.body.append(overlay);
     return () => overlay.remove();
-  }, [pptPreviewRecord, pptConfirmedSnapshots, pptWeekStart]);
+  }, [pptPreviewRecord, pptConfirmedSnapshots, pptWeekStart, pptPreviewWeekStart]);
   const removeFromPptWeek = (record: RecordItem) => {
     if (pptAdHocRecords.some(item => item.id === record.id)) {
       setPptAdHocRecords(previous => previous.filter(item => item.id !== record.id));
@@ -2527,12 +2526,41 @@ export default function Home() {
     selectIntakeDraft(draft.id);
     flash(linked ? "已開啟原本的進案草稿；修改會同步總表" : "已建立連結進案草稿；修改會同步總表");
   };
+  const updatePptPreviewConfirmation = (record: RecordItem, weekStart: string, confirmLock: boolean) => {
+    try {
+      const weeks = JSON.parse(localStorage.getItem(PPT_WEEK_SELECTIONS_KEY) || "{}");
+      const saved = weeks[weekStart] || {};
+      const extraIds = Array.isArray(saved.extraIds) ? [...saved.extraIds] : [];
+      const confirmedSnapshots = saved.confirmedSnapshots && typeof saved.confirmedSnapshots === "object" ? { ...saved.confirmedSnapshots } : {};
+      if (confirmLock) {
+        if (!extraIds.includes(record.id)) extraIds.push(record.id);
+        confirmedSnapshots[record.id] = { ...record, photos: [...(record.photos || [])] };
+      } else {
+        delete confirmedSnapshots[record.id];
+      }
+      weeks[weekStart] = { ...saved, extraIds, orderVersion: PPT_ORDER_RULE_VERSION, confirmedSnapshots };
+      localStorage.setItem(PPT_WEEK_SELECTIONS_KEY, JSON.stringify(weeks));
+      // 已在同一週時立即更新畫面並觸發雲端同步；若是切換週期，週期載入器會讀取上方剛保存的資料。
+      if (pptWeekStart === weekStart) {
+        setPptExtraIds(extraIds);
+        setPptConfirmedSnapshots(confirmedSnapshots);
+      } else {
+        setPptWeekStart(weekStart);
+      }
+      setPptPreviewWeekStart(weekStart);
+      setPptPreviewRecord({ ...record });
+      flash(confirmLock ? "已確認並鎖定，已同步到產生 POWERPOINT" : "已解除本週 PPT 確認鎖定");
+    } catch {
+      flash("PPT 確認紀錄暫時無法保存，請再試一次");
+    }
+  };
   const openRecordPptPreview = (record: RecordItem) => {
     // 進案草稿內的 PPT 預覽，也要使用該案件進案所屬的同一週確認清單。
     // 如案件不是當週自動帶入，確認時會一併保留在該週的「本週進案」列表。
     const weekStart = pptWeekOf(normalizeDateInput(record.reportDate || "") || today()).start;
     setPptWeekStart(weekStart);
-    setPptPreviewRecord(pptConfirmedSnapshots[record.id] || record);
+    setPptPreviewWeekStart(weekStart);
+    setPptPreviewRecord(record);
   };
   const markIntakeDraftPrintedForSales = (id: string) => {
     const target = intakeDrafts.find(draft => draft.id === id);
@@ -2650,7 +2678,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V335</small></h1></div>
+<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V336</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingIntakeReminderRecords.length > 0 && <button className="new-case-reminder-header-button" onClick={() => { setNewCaseReminder({ ...pendingIntakeReminderRecords[0] }); setNewCaseReminderBatchIds(pendingIntakeReminderRecords.map(record => record.id)); }}>新進案件提醒 {pendingIntakeReminderRecords.length}</button>}{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
