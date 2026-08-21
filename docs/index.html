@@ -388,6 +388,12 @@ button:hover,.file-button:hover{border-color:#9fbad0;box-shadow:0 2px 8px #7895a
 .record-edit-modal .record-save-actions{justify-self:end;display:flex;align-items:center;gap:12px}
 .record-save-actions .daily-publish-secondary{border-color:#8eb5d2;background:#eef7fd;color:#285f86;font-weight:700}
 .record-save-actions .save-only-primary{min-width:112px;font-weight:900;box-shadow:0 5px 14px rgba(43,112,158,.25)}
+.daily-publish-picker{position:fixed;z-index:10000;inset:0;display:grid;place-items:center;padding:20px;background:rgba(19,42,61,.42)}
+.daily-publish-picker-panel{width:min(570px,calc(100vw - 40px));border:1px solid #9bc1dc;border-radius:16px;background:#fff;box-shadow:0 18px 44px rgba(15,43,65,.28);padding:22px}
+.daily-publish-picker-panel h2{margin:0;color:#245a83;font-size:22px}.daily-publish-picker-panel p{margin:9px 0 17px;color:#587186;font-size:14px}
+.daily-publish-picker-checks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.daily-publish-picker-checks label{display:flex;align-items:center;gap:8px;border:1px solid #bad4e8;border-radius:10px;padding:11px;background:#f7fbff;color:#245a83;font-weight:800;cursor:pointer}.daily-publish-picker-checks input{width:18px;height:18px;accent-color:#388ac1}
+.daily-publish-picker-foot{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}.daily-publish-picker-foot button{padding:10px 16px;border:1px solid #aac4d5;border-radius:9px;background:#fff;color:#27546f;font-weight:800;cursor:pointer}.daily-publish-picker-foot .primary{border-color:#3584ba;background:#4d9bd0;color:#fff}
+@media(max-width:620px){.daily-publish-picker-checks{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .internal-public-app .monthly-report-pills button.selected{background:#dcefe5!important;border:2px solid #39876b!important;color:#145c43!important;opacity:1!important;font-weight:900!important}
 .internal-public-app .daily-activity.compact .daily-card .table-wrap{display:block!important;width:100%!important;overflow-x:auto!important;overflow-y:visible!important;-webkit-overflow-scrolling:touch!important}
 .internal-public-app .daily-activity.compact .daily-table table{width:max-content!important;min-width:2400px!important;table-layout:auto!important}
@@ -44006,8 +44012,72 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       const edited = /* @__PURE__ */ new Set([...editedFieldKeys(previous), ...changed]);
       return { ...next, _materialEditAt: "1", _editedFields: JSON.stringify([...edited]), lastModifiedAt: (/* @__PURE__ */ new Date()).toISOString() };
     });
-    const saveRecord = (publishDaily = false) => {
+    const beginDailyPublish = () => {
       if (!editing) return;
+      const existing = records.find((record) => record.id === editing.id);
+      if (!existing) {
+        saveRecord(true);
+        return;
+      }
+      const ignored = /* @__PURE__ */ new Set(["id", "lastModifiedAt", "priceModifiedAt", "reducedPriceModifiedAt", "groupViewDate", "_updateHistory", "_dailyAnnotation", "_dailyHighlight"]);
+      const fields2 = [.../* @__PURE__ */ new Set([
+        ...editedFieldKeys(editing),
+        ...Object.keys(editing).filter((key) => !ignored.has(key) && !websiteTrackingKeys.has(key) && trackedValue(existing[key]) !== trackedValue(editing[key]))
+      ])].filter((key) => dailyActivityUpdateKeys.has(key));
+      if (!fields2.length) return flash("\u9019\u6B21\u6C92\u6709\u53EF\u767C\u5E03\u7684\u6B04\u4F4D\uFF1B\u8ACB\u5148\u4FEE\u6539\u8CC7\u6599\u6216\u6309\u66AB\u5B58");
+      const overlay = document.createElement("div");
+      overlay.className = "daily-publish-picker";
+      const panel = document.createElement("div");
+      panel.className = "daily-publish-picker-panel";
+      const title = document.createElement("h2");
+      title.textContent = "\u9078\u64C7\u672C\u6B21\u8981\u767C\u5E03\u7684\u66F4\u65B0\u6B04\u4F4D";
+      const hint = document.createElement("p");
+      hint.textContent = "\u672A\u52FE\u9078\u6B04\u4F4D\u4ECD\u6703\u5132\u5B58\uFF0C\u4F46\u4E0D\u6703\u5217\u5165\u6BCF\u65E5\u7269\u4EF6\u52D5\u614B\u3002";
+      const checks = document.createElement("div");
+      checks.className = "daily-publish-picker-checks";
+      const selected = new Set(fields2);
+      fields2.forEach((field) => {
+        const label = document.createElement("label");
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = true;
+        checkbox.addEventListener("change", () => checkbox.checked ? selected.add(field) : selected.delete(field));
+        const text = document.createElement("span");
+        text.textContent = dailyChangedLabels([field])[0] || labels[field] || field;
+        label.append(checkbox, text);
+        checks.append(label);
+      });
+      const foot = document.createElement("div");
+      foot.className = "daily-publish-picker-foot";
+      const cancel = document.createElement("button");
+      cancel.type = "button";
+      cancel.textContent = "\u53D6\u6D88";
+      const confirmButton = document.createElement("button");
+      confirmButton.type = "button";
+      confirmButton.className = "primary";
+      confirmButton.textContent = "\u5132\u5B58\u4E26\u767C\u5E03";
+      const close = () => overlay.remove();
+      cancel.onclick = close;
+      overlay.addEventListener("click", (event) => {
+        if (event.target === overlay) close();
+      });
+      confirmButton.onclick = () => {
+        if (!selected.size) return flash("\u8ACB\u81F3\u5C11\u52FE\u9078\u4E00\u500B\u8981\u767C\u5E03\u7684\u6B04\u4F4D");
+        const chosen = [...selected];
+        close();
+        saveRecord(true, chosen, true);
+      };
+      foot.append(cancel, confirmButton);
+      panel.append(title, hint, checks, foot);
+      overlay.append(panel);
+      document.body.append(overlay);
+    };
+    const saveRecord = (publishDaily = false, publishedFields, skipConfirm = false) => {
+      if (!editing) return;
+      if (publishDaily && !publishedFields && records.some((record) => record.id === editing.id)) {
+        beginDailyPublish();
+        return;
+      }
       if (editing.bookLocationType === "\u65C15" && !String(editing.bookLocationReason || "").trim()) return flash("\u8ACB\u586B\u5BEB\u65C15\u539F\u56E0\u5F8C\u518D\u5132\u5B58");
       const normalizedEditing = normalizeRecordPings(clearImportedLandLabels({
         ...editing,
@@ -44051,8 +44121,9 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
         caseNameNote: String(prepared.caseNameNote || "").includes(reopenNote) ? prepared.caseNameNote : [prepared.caseNameNote, reopenNote].filter(Boolean).join("\u3000"),
         caseNameNoteModifiedAt: (/* @__PURE__ */ new Date()).toISOString()
       } : prepared;
-      const changedFields = existing ? editedFieldKeys(preparedWithMarker).filter((key) => trackedValue(existing[key]) !== trackedValue(preparedForSave[key])) : [];
-      if (existing && changedFields.length) {
+      const actualChangedFields = existing ? editedFieldKeys(preparedWithMarker).filter((key) => trackedValue(existing[key]) !== trackedValue(preparedForSave[key])) : [];
+      const changedFields = publishDaily && publishedFields ? publishedFields.filter((key) => dailyActivityUpdateKeys.has(key)) : actualChangedFields;
+      if (existing && actualChangedFields.length && !skipConfirm) {
         const changedLabels = changedFields.map((key) => labels[key] || recordEditLabels[key] || key).join("\u3001");
         const action = publishDaily ? "\u5132\u5B58\u4E26\u767C\u5E03\u5230\u6BCF\u65E5\u7269\u4EF6\u52D5\u614B" : "\u50C5\u5132\u5B58\uFF0C\u4E0D\u767C\u5E03\u5230\u6BCF\u65E5\u7269\u4EF6\u52D5\u614B";
         if (!confirm(`\u672C\u6B21\u4FEE\u6539\u6B04\u4F4D\uFF1A
@@ -44061,6 +44132,11 @@ ${changedLabels}
 \u78BA\u5B9A\u8981${action}\u55CE\uFF1F`)) return;
       }
       let next = existing ? autoReopen ? withTrackedUpdate(existing, preparedForSave, today()) : _materialEditAt ? publishDaily ? withTrackedUpdate(existing, preparedForSave, today(), changedFields) : { ...preparedForSave, updateDate: existing.updateDate, lastModifiedAt: (/* @__PURE__ */ new Date()).toISOString(), _updateHistory: existing._updateHistory } : { ...preparedForSave, updateDate: existing.updateDate, lastModifiedAt: existing.lastModifiedAt, _updateHistory: existing._updateHistory } : { ...preparedForSave };
+      if (existing && publishDaily && changedFields.length) {
+        const history = recordUpdateHistory(next);
+        history[today()] = [...new Set(changedFields)];
+        next = { ...next, updateDate: today(), lastModifiedAt: (/* @__PURE__ */ new Date()).toISOString(), _updateHistory: JSON.stringify(history) };
+      }
       if (autoReopen) {
         const history = recordUpdateHistory(next);
         if (history[today()]) history[today()] = history[today()].filter((key) => key !== "caseNameNote" && key !== "caseNameNoteModifiedAt");
@@ -45440,7 +45516,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V350" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V351" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
