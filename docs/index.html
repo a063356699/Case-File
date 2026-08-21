@@ -1917,7 +1917,7 @@ html,body{max-width:100%;overflow-x:hidden}
 @page{size:A4 portrait;margin:0}
 
 /* V353：進案草稿背面固定使用 5mm 邊界；十一段內容平均鋪滿一頁。 */
-.print-document .checklist-page{display:grid!important;grid-template-rows:7mm 16mm 31mm 10mm 48mm 31mm 28mm 9mm 86mm 14mm 7mm!important;width:210mm!important;height:297mm!important;min-height:297mm!important;max-height:297mm!important;padding:5mm!important;box-sizing:border-box!important;overflow:hidden!important;gap:0!important}
+.print-document .checklist-page{display:grid!important;grid-template-rows:7mm 16mm 31mm 10mm 48mm 31mm 28mm 9mm 93mm 14mm 0mm!important;width:210mm!important;height:297mm!important;min-height:297mm!important;max-height:297mm!important;padding:5mm!important;box-sizing:border-box!important;overflow:hidden!important;gap:0!important}
 .print-document .checklist-page>*{min-width:0!important;min-height:0!important;box-sizing:border-box!important;margin:0!important}
 .print-document .checklist-page .check-strip{display:flex!important;align-items:center!important;justify-content:center!important;padding:1mm 2mm!important;font-size:10.5pt!important;line-height:1.1!important;background:#050505!important;color:#fff!important}
 .print-document .checklist-page .check-strip.bottom{display:none!important}
@@ -1947,15 +1947,15 @@ html,body{max-width:100%;overflow-x:hidden}
 .print-document .check-columns .seller-info-columns{display:grid!important;grid-template-columns:1fr 1fr!important;gap:0!important}
 .print-document .check-columns .seller-info-columns>div+div{border-left:1px solid #bbb!important;padding-left:2mm!important}
 .print-document .check-acquire{display:flex!important;align-items:center!important;border-top:1px solid #bbb!important;border-bottom:1px solid #bbb!important;padding:0 2mm!important;font-size:11pt!important;line-height:1.2!important}
-.print-document .check-tail{display:grid!important;grid-template-rows:12mm 46mm 20mm 8mm!important;font-size:10.5pt!important;line-height:1.2!important;padding:0!important;border:0!important}
+.print-document .check-tail{display:grid!important;grid-template-rows:12mm 52mm 21mm 8mm!important;font-size:10.5pt!important;line-height:1.2!important;padding:0!important;border:0!important}
 .print-document .check-tail>p{margin:0!important;padding:1.5mm 2mm!important;border:0!important;overflow:hidden!important}
 .print-document .check-tail>p:first-child{border-bottom:1px solid #bbb!important;font-size:10.5pt!important}
 .print-document .auth-block{padding:1mm 0!important;overflow:hidden!important}
 .print-document .auth-block>b{display:block!important;margin:0 2mm 1mm!important;font-size:11pt!important}
-.print-document .auth-table{display:grid!important;grid-template-columns:1.45fr .8fr .7fr 1.1fr .8fr!important;margin:0 2mm!important;border:1px solid #888!important;font-size:9.5pt!important;text-align:center!important}
-.print-document .auth-table>*{display:flex!important;align-items:center!important;justify-content:center!important;min-height:8mm!important;border-right:1px solid #888!important;border-bottom:1px solid #aaa!important;padding:0 1mm!important;white-space:nowrap!important}
+.print-document .auth-table{display:grid!important;grid-template-columns:1.45fr .8fr .7fr 1.1fr .8fr!important;margin:0 2mm!important;border:1px solid #888!important;font-size:10pt!important;text-align:center!important}
+.print-document .auth-table>*{display:flex!important;align-items:center!important;justify-content:center!important;min-height:10mm!important;border-right:1px solid #888!important;border-bottom:1px solid #aaa!important;padding:0 1mm!important;white-space:nowrap!important}
 .print-document .auth-table>*:nth-child(5n){border-right:0!important}.print-document .auth-table>*:nth-last-child(-n+5){border-bottom:0!important}
-.print-document .auth-table span:nth-child(5n+1){justify-content:flex-start!important;padding-left:2mm!important}
+.print-document .auth-table span:nth-child(5n+1){justify-content:center!important;padding-left:1mm!important}
 .print-document .zoning-block{padding:1mm 2mm!important;border-top:1px solid #bbb!important;overflow:hidden!important}
 .print-document .zoning-block>b{font-size:11pt!important}.print-document .zoning-block p{margin:1.5mm 0!important;font-size:10pt!important;white-space:nowrap!important}
 .print-document .zoning-block p:last-child{padding-left:0!important;font-size:10pt!important}
