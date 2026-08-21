@@ -381,6 +381,12 @@ button:hover,.file-button:hover{border-color:#9fbad0;box-shadow:0 2px 8px #7895a
 .record-edit-modal .record-save-actions{justify-self:end;display:flex;align-items:center;gap:12px}
 .record-save-actions .daily-publish-secondary{border-color:#8eb5d2;background:#eef7fd;color:#285f86;font-weight:700}
 .record-save-actions .save-only-primary{min-width:112px;font-weight:900;box-shadow:0 5px 14px rgba(43,112,158,.25)}
+.daily-publish-picker{position:fixed;z-index:10000;inset:0;display:grid;place-items:center;padding:20px;background:rgba(19,42,61,.42)}
+.daily-publish-picker-panel{width:min(570px,calc(100vw - 40px));border:1px solid #9bc1dc;border-radius:16px;background:#fff;box-shadow:0 18px 44px rgba(15,43,65,.28);padding:22px}
+.daily-publish-picker-panel h2{margin:0;color:#245a83;font-size:22px}.daily-publish-picker-panel p{margin:9px 0 17px;color:#587186;font-size:14px}
+.daily-publish-picker-checks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.daily-publish-picker-checks label{display:flex;align-items:center;gap:8px;border:1px solid #bad4e8;border-radius:10px;padding:11px;background:#f7fbff;color:#245a83;font-weight:800;cursor:pointer}.daily-publish-picker-checks input{width:18px;height:18px;accent-color:#388ac1}
+.daily-publish-picker-foot{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}.daily-publish-picker-foot button{padding:10px 16px;border:1px solid #aac4d5;border-radius:9px;background:#fff;color:#27546f;font-weight:800;cursor:pointer}.daily-publish-picker-foot .primary{border-color:#3584ba;background:#4d9bd0;color:#fff}
+@media(max-width:620px){.daily-publish-picker-checks{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .internal-public-app .monthly-report-pills button.selected{background:#dcefe5!important;border:2px solid #39876b!important;color:#145c43!important;opacity:1!important;font-weight:900!important}
 .internal-public-app .daily-activity.compact .daily-card .table-wrap{display:block!important;width:100%!important;overflow-x:auto!important;overflow-y:visible!important;-webkit-overflow-scrolling:touch!important}
 .internal-public-app .daily-activity.compact .daily-table table{width:max-content!important;min-width:2400px!important;table-layout:auto!important}

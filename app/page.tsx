@@ -1714,8 +1714,44 @@ export default function Home() {
     const edited = new Set([...editedFieldKeys(previous), ...changed]);
     return { ...next, _materialEditAt: "1", _editedFields: JSON.stringify([...edited]), lastModifiedAt: new Date().toISOString() };
   });
-  const saveRecord = (publishDaily = false) => {
+  const beginDailyPublish = () => {
     if (!editing) return;
+    const existing = records.find(record => record.id === editing.id);
+    if (!existing) { saveRecord(true); return; }
+    const ignored = new Set(["id", "lastModifiedAt", "priceModifiedAt", "reducedPriceModifiedAt", "groupViewDate", "_updateHistory", "_dailyAnnotation", "_dailyHighlight"]);
+    const fields = [...new Set([
+      ...editedFieldKeys(editing),
+      ...Object.keys(editing).filter(key => !ignored.has(key) && !websiteTrackingKeys.has(key) && trackedValue(existing[key]) !== trackedValue(editing[key])),
+    ])].filter(key => dailyActivityUpdateKeys.has(key));
+    if (!fields.length) return flash("這次沒有可發布的欄位；請先修改資料或按暫存");
+    const overlay = document.createElement("div");
+    overlay.className = "daily-publish-picker";
+    const panel = document.createElement("div");
+    panel.className = "daily-publish-picker-panel";
+    const title = document.createElement("h2"); title.textContent = "選擇本次要發布的更新欄位";
+    const hint = document.createElement("p"); hint.textContent = "未勾選欄位仍會儲存，但不會列入每日物件動態。";
+    const checks = document.createElement("div"); checks.className = "daily-publish-picker-checks";
+    const selected = new Set(fields);
+    fields.forEach(field => {
+      const label = document.createElement("label");
+      const checkbox = document.createElement("input"); checkbox.type = "checkbox"; checkbox.checked = true;
+      checkbox.addEventListener("change", () => checkbox.checked ? selected.add(field) : selected.delete(field));
+      const text = document.createElement("span"); text.textContent = dailyChangedLabels([field])[0] || labels[field] || field;
+      label.append(checkbox, text); checks.append(label);
+    });
+    const foot = document.createElement("div"); foot.className = "daily-publish-picker-foot";
+    const cancel = document.createElement("button"); cancel.type = "button"; cancel.textContent = "取消";
+    const confirmButton = document.createElement("button"); confirmButton.type = "button"; confirmButton.className = "primary"; confirmButton.textContent = "儲存並發布";
+    const close = () => overlay.remove();
+    cancel.onclick = close;
+    overlay.addEventListener("click", event => { if (event.target === overlay) close(); });
+    confirmButton.onclick = () => { if (!selected.size) return flash("請至少勾選一個要發布的欄位"); const chosen = [...selected]; close(); saveRecord(true, chosen, true); };
+    foot.append(cancel, confirmButton); panel.append(title, hint, checks, foot); overlay.append(panel); document.body.append(overlay);
+  };
+  const saveRecord = (publishDaily = false, publishedFields?: string[], skipConfirm = false) => {
+    if (!editing) return;
+    // 按「儲存並發布每日動態」先選擇欄位；真正確認後才帶入 publishedFields 儲存。
+    if (publishDaily && !publishedFields && records.some(record => record.id === editing.id)) { beginDailyPublish(); return; }
     if (editing.bookLocationType === "旁5" && !String(editing.bookLocationReason || "").trim()) return flash("請填寫旁5原因後再儲存");
     const normalizedEditing = normalizeRecordPings(clearImportedLandLabels({
       ...editing,
@@ -1751,8 +1787,9 @@ export default function Home() {
       caseNameNote: String(prepared.caseNameNote || "").includes(reopenNote) ? prepared.caseNameNote : [prepared.caseNameNote, reopenNote].filter(Boolean).join("　"),
       caseNameNoteModifiedAt: new Date().toISOString(),
     } : prepared;
-    const changedFields = existing ? editedFieldKeys(preparedWithMarker).filter(key => trackedValue(existing[key]) !== trackedValue(preparedForSave[key])) : [];
-    if (existing && changedFields.length) {
+    const actualChangedFields = existing ? editedFieldKeys(preparedWithMarker).filter(key => trackedValue(existing[key]) !== trackedValue(preparedForSave[key])) : [];
+    const changedFields = publishDaily && publishedFields ? publishedFields.filter(key => dailyActivityUpdateKeys.has(key)) : actualChangedFields;
+    if (existing && actualChangedFields.length && !skipConfirm) {
       const changedLabels = changedFields.map(key => labels[key] || recordEditLabels[key] || key).join("、");
       const action = publishDaily ? "儲存並發布到每日物件動態" : "僅儲存，不發布到每日物件動態";
       if (!confirm(`本次修改欄位：\n${changedLabels}\n\n確定要${action}嗎？`)) return;
@@ -1766,6 +1803,12 @@ export default function Home() {
             : { ...preparedForSave, updateDate: existing.updateDate, lastModifiedAt: new Date().toISOString(), _updateHistory: existing._updateHistory })
           : { ...preparedForSave, updateDate: existing.updateDate, lastModifiedAt: existing.lastModifiedAt, _updateHistory: existing._updateHistory })
       : { ...preparedForSave };
+    // 暫存後再發布時，欄位值已先寫入案件；因此在此直接保留使用者勾選的發布項目。
+    if (existing && publishDaily && changedFields.length) {
+      const history = recordUpdateHistory(next);
+      history[today()] = [...new Set(changedFields)];
+      next = { ...next, updateDate: today(), lastModifiedAt: new Date().toISOString(), _updateHistory: JSON.stringify(history) };
+    }
     // 重新上架本身在每日動態只顯示「月/日重新上架」，不另列為「更新：案名」。
     if (autoReopen) {
       const history = recordUpdateHistory(next);
@@ -2761,7 +2804,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V350</small></h1></div>
+<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V351</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingIntakeReminderRecords.length > 0 && <button className="new-case-reminder-header-button" onClick={() => { setNewCaseReminder({ ...pendingIntakeReminderRecords[0] }); setNewCaseReminderBatchIds(pendingIntakeReminderRecords.map(record => record.id)); }}>新進案件提醒 {pendingIntakeReminderRecords.length}</button>}{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
