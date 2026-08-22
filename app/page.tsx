@@ -759,7 +759,7 @@ const directionShort = (value = "") => {
   return parsed.map(part => `${part.label || "朝向"}朝${part.facing}`).join("／");
 };
 
-const displayNoteSegments = (value = "") => String(value || "").split(/[；;]/).map(part => part.trim()).filter(part => part && !/^(?:0|無)$/.test(part)).map(part => part.includes("開發%") && !/^中人[:：]/.test(part) ? `中人:${part}` : part);
+const displayNoteSegments = (value = "") => String(value || "").split(/[；;]/).map(part => part.trim()).filter(part => part && !/^(?:0|無|中人\s*[:：]\s*無)$/.test(part)).map(part => part.includes("開發%") && !/^中人[:：]/.test(part) ? `中人:${part}` : part);
 const websiteCellDisplay = (record: RecordItem, key: string) => {
   const raw = String(record[key] || "").trim();
   const down = record[`${key}DownDate`] ? `${displayRocDate(record[`${key}DownDate`])}下架` : "";
@@ -2804,7 +2804,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V353</small></h1></div>
+<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V354</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingIntakeReminderRecords.length > 0 && <button className="new-case-reminder-header-button" onClick={() => { setNewCaseReminder({ ...pendingIntakeReminderRecords[0] }); setNewCaseReminderBatchIds(pendingIntakeReminderRecords.map(record => record.id)); }}>新進案件提醒 {pendingIntakeReminderRecords.length}</button>}{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -4186,7 +4186,7 @@ function ChecklistPageV2({ val }: { val: (...keys: string[]) => string }) {
       <div className="check-entrust-period"><b>4.</b>　{(() => { const period = intakeEntrustPeriod(val("委託開始 日期", "委託開始"), val("委託結束 日期", "委託結束")); return period ? <>委託開始:{period.start}　~委託結束:{period.end}　<small>(共{period.months}個月)</small></> : <>委託開始:________　~委託結束:________　<small>(共____個月)</small></>; })()}</div>
     </div>
     <div className="registry-block">
-      <div className="registry-table"><b>5.</b><div className="registry-label">請寫地號共__________筆</div><div className="registry-cases">{[1,2,3,4,5,6,7,8,9].map(n=><div key={n}><small>({n})</small><span>□紙本已附</span><span>□已調請印</span><span>□協助調閱</span></div>)}</div></div>
+      <div className="registry-table"><b>5.</b><div className="registry-label"><span>請寫地號</span><span>共__________筆</span></div><div className="registry-cases">{[1,2,3,4,5,6,7,8,9].map(n=><div key={n}><small>({n})</small><span>□紙本已附</span><span>□已調請印</span><span>□協助調閱</span></div>)}</div></div>
       <div className="registry-table building"><b>6.</b><div className="registry-label">請寫建號共__________筆</div><div className="registry-cases">{[1,2,3,4,5].map(n=><div key={n}><small>({n})</small><span>□紙本已附</span><span>□已調請印</span><span>□協助調閱</span></div>)}</div></div>
     </div>
     <div className="check-lines">
@@ -4331,7 +4331,7 @@ function CellContent({ record: r, column: k }: { record: RecordItem; column: str
     return <>{`${fee}/月`}</>;
   }
   if (k === "notes") {
-    const internalNoteText = String(r.notes || "").trim();
+    const internalNoteText = displayNoteSegments(r.notes || "").join("；");
     return <>{internalNoteText || "—"}</>;
   }
   return <>{cellValue(r, k) || "—"}</>;

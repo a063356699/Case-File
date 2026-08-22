@@ -1909,7 +1909,7 @@ html,body{max-width:100%;overflow-x:hidden}
 /* 只讓進案草稿留下上方規定的 5mm；不可再被其他列印頁的 @page 邊界覆蓋。 */
 @page{size:A4 portrait;margin:0}
 
-/* V353：進案草稿背面固定使用 5mm 邊界；十一段內容平均鋪滿一頁。 */
+/* V354：進案草稿背面固定使用 5mm 邊界；十一段內容平均鋪滿一頁。 */
 .print-document .checklist-page{display:grid!important;grid-template-rows:7mm 16mm 31mm 10mm 48mm 31mm 28mm 9mm 93mm 14mm 0mm!important;width:210mm!important;height:297mm!important;min-height:297mm!important;max-height:297mm!important;padding:5mm!important;box-sizing:border-box!important;overflow:hidden!important;gap:0!important}
 .print-document .checklist-page>*{min-width:0!important;min-height:0!important;box-sizing:border-box!important;margin:0!important}
 .print-document .checklist-page .check-strip{display:flex!important;align-items:center!important;justify-content:center!important;padding:1mm 2mm!important;font-size:10.5pt!important;line-height:1.1!important;background:#050505!important;color:#fff!important}
@@ -1923,9 +1923,9 @@ html,body{max-width:100%;overflow-x:hidden}
 .print-document .registry-block{display:grid!important;grid-template-rows:1fr 1fr!important;gap:1.5mm!important;padding:1mm 0!important}
 .print-document .registry-table{display:grid!important;grid-template-columns:7mm 32mm 1fr!important;border:1px solid #777!important;font-size:7.5pt!important;line-height:1!important;overflow:hidden!important}
 .print-document .registry-table> b{display:flex!important;align-items:flex-start!important;justify-content:center!important;padding-top:2mm!important;border-right:1px solid #777!important;font-size:10pt!important}
-.print-document .registry-label{display:flex!important;align-items:flex-start!important;justify-content:center!important;padding-top:1mm!important;border-right:1px solid #777!important;font-size:8.5pt!important;font-weight:700!important}
-.print-document .registry-cases{display:grid!important;grid-template-columns:repeat(9,1fr)!important}
-.print-document .registry-table.building .registry-cases{grid-template-columns:repeat(5,1fr)!important}
+.print-document .registry-label{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:flex-start!important;gap:1mm!important;padding-top:1mm!important;border-right:1px solid #777!important;font-size:8.5pt!important;font-weight:700!important;white-space:nowrap!important}
+.print-document .registry-cases{display:grid!important;grid-template-columns:repeat(9,minmax(0,1fr))!important;width:100%!important;min-width:0!important}
+.print-document .registry-table.building .registry-cases{grid-template-columns:repeat(5,minmax(0,1fr))!important}
 .print-document .registry-cases>div{display:grid!important;grid-template-rows:5mm 1fr 1fr 1fr!important;border-right:1px solid #999!important;min-width:0!important}
 .print-document .registry-cases>div:last-child{border-right:0!important}
 .print-document .registry-cases small{display:block!important;padding:1px 2px!important;font-size:6.5pt!important;text-align:left!important}
