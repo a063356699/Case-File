@@ -284,6 +284,8 @@ button:hover,.file-button:hover{border-color:#9fbad0;box-shadow:0 2px 8px #7895a
 /* 國小至公園：資料較長時保留完整文字並在欄位內換行，不使用省略號。 */
 .excel-print .print-right>.print-right-row.print-right-row-wrap{flex:0 0 auto!important;min-height:8.7mm!important;align-items:start!important;padding:1mm 0!important}
 .excel-print .print-right-row.print-right-row-wrap>span{white-space:normal!important;overflow:visible!important;text-overflow:clip!important;overflow-wrap:anywhere!important;line-height:1.28!important}
+.excel-print .print-right-row.print-right-row-document{align-items:start!important;padding:.5mm 0!important}
+.excel-print .print-right-row.print-right-row-document>span{white-space:normal!important;overflow:visible!important;text-overflow:clip!important;overflow-wrap:anywhere!important;line-height:1.22!important}
 
 /* P2 依房屋／土地 PDF 的八個區塊高度鋪滿整張 A4 */
 .print-document .checklist-page{display:grid!important;grid-template-rows:7mm 12mm 27mm 97mm 56mm 57mm 18mm 7mm!important;height:297mm!important;min-height:297mm!important;max-height:297mm!important;padding:8mm 9mm!important;box-sizing:border-box!important;overflow:hidden!important}
@@ -45649,7 +45651,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V358" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V359" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -49104,11 +49106,11 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PrintRightRow, { label: "\u5E02\u5834", value: val("\u5E02\u5834/\u8CFC\u7269") }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PrintRightRow, { label: "\u516C\u5712", value: val("\u516C\u5712\u7DA0\u5730") }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("hr", {}),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PrintRightRow, { label: "\u683C\u5C40\u5716", value: val("\u9032\u6848\u6587\u4EF6 [\u683C\u5C40\u5716]") }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PrintRightRow, { label: "\u73FE\u8A62\u8ABF", value: val("\u9032\u6848\u6587\u4EF6 [\u73FE\u8A62\u8ABF]") }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PrintRightRow, { label: "\u667A\u80FD\u7167\u7247", value: val("\u9032\u6848\u6587\u4EF6 [\u7269\u4EF6\u7167\u7247 \u4E0A\u50B3\u7CFB\u7D71]") }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PrintRightRow, { label: "\u667A\u80FD\u4E3B\u7D04", value: val("\u9032\u6848\u6587\u4EF6 [\u4E3B\u7D04 \u5951\u7D04\u62CD\u7167 \u4E0A\u50B3\u7CFB\u7D71]") }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PrintRightRow, { label: "\u667A\u80FD\u5951\u8B8A", value: val("\u9032\u6848\u6587\u4EF6 [\u5951\u8B8A \u7167\u7247\u4E0A\u50B3\u7CFB\u7D71]") }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PrintRightRow, { label: "\u683C\u5C40\u5716", value: printIntakeFileStatus(val("\u9032\u6848\u6587\u4EF6 [\u683C\u5C40\u5716]")) }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PrintRightRow, { label: "\u73FE\u8A62\u8ABF", value: printIntakeFileStatus(val("\u9032\u6848\u6587\u4EF6 [\u73FE\u8A62\u8ABF]")) }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PrintRightRow, { label: "\u667A\u80FD\u7167\u7247", value: printIntakeFileStatus(val("\u9032\u6848\u6587\u4EF6 [\u7269\u4EF6\u7167\u7247 \u4E0A\u50B3\u7CFB\u7D71]")) }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PrintRightRow, { label: "\u667A\u80FD\u4E3B\u7D04", value: printIntakeFileStatus(val("\u9032\u6848\u6587\u4EF6 [\u4E3B\u7D04 \u5951\u7D04\u62CD\u7167 \u4E0A\u50B3\u7CFB\u7D71]")) }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PrintRightRow, { label: "\u667A\u80FD\u5951\u8B8A", value: printIntakeFileStatus(val("\u9032\u6848\u6587\u4EF6 [\u5951\u8B8A \u7167\u7247\u4E0A\u50B3\u7CFB\u7D71]")) }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "attention", children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u5E36\u770B\u6CE8\u610F\u4E8B\u9805\uFF1A" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
@@ -49140,9 +49142,11 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "preview-print-row", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "pill-button primary", onClick: () => window.print(), children: "\u5217\u5370" }) })
     ] });
   }
+  var printIntakeFileStatus = (value = "") => String(value || "").replace(/[（(].*$/s, "").trim();
   function PrintRightRow({ label, value }) {
-    const canWrap = ["\u570B\u5C0F", "\u570B\u4E2D", "\u9AD8\u4E2D", "\u5927\u5C08", "\u5E02\u5834", "\u516C\u5712"].includes(label);
-    return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { className: `print-right-row${canWrap ? " print-right-row-wrap" : ""}`, children: [
+    const schoolRow = ["\u570B\u5C0F", "\u570B\u4E2D", "\u9AD8\u4E2D", "\u5927\u5C08", "\u5E02\u5834", "\u516C\u5712"].includes(label);
+    const documentRow = ["\u683C\u5C40\u5716", "\u73FE\u8A62\u8ABF", "\u667A\u80FD\u7167\u7247", "\u667A\u80FD\u4E3B\u7D04", "\u667A\u80FD\u5951\u8B8A"].includes(label);
+    return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { className: `print-right-row${schoolRow ? " print-right-row-wrap" : ""}${documentRow ? " print-right-row-document" : ""}`, children: [
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("b", { children: [
         label,
         "\uFF1A"
