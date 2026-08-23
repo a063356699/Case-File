@@ -722,7 +722,7 @@ const defaultIntakeHeaders = [
 function parseIntakes(text: string): IntakeData[] {
   const rows = parseTsv(text).filter(row => row.some(cell => cell.trim()));
   if (!rows.length) return [];
-  const hasHeaders = rows[0].some(cell => cell.includes("時間戳記") || cell.includes("表單填寫人") || cell.includes("委託主約編號"));
+  const hasHeaders = rows[0].some(cell => cell.includes("時間戳記") || cell.includes("表單填寫人") || cell.includes("填寫人") || cell.includes("委託主約編號"));
   const headers = hasHeaders ? rows[0] : defaultIntakeHeaders;
   const dataRows = hasHeaders ? rows.slice(1) : rows;
   return dataRows.filter(data => data.some(cell => cell.trim())).map(data => {
@@ -734,12 +734,28 @@ function parseIntakes(text: string): IntakeData[] {
   });
 }
 
+const normalizeIntakeHeader = (value = "") => String(value || "")
+  .normalize("NFKC")
+  .replace(/[（(【\[]/g, "")
+  .replace(/[）)】\]]/g, "")
+  .replace(/[：:]/g, "")
+  .replace(/[／\\]/g, "/")
+  .replace(/[＿_~～*＊\s]+/g, "")
+  .replace(/[，,。.]/g, "")
+  .toLowerCase();
+
 function intakeValue(values: Record<string, string>, ...needles: string[]) {
-  for (const needle of needles) { const found = Object.entries(values).find(([key, value]) => key.includes(needle) && value); if (found) return found[1]; }
+  for (const needle of needles) {
+    const normalizedNeedle = normalizeIntakeHeader(needle);
+    const entries = Object.entries(values).filter(([, value]) => value);
+    const found = entries.find(([key]) => normalizeIntakeHeader(key) === normalizedNeedle)
+      || entries.find(([key]) => normalizeIntakeHeader(key).includes(normalizedNeedle));
+    if (found) return found[1];
+  }
   return "";
 }
 
-function intakeAll(values: Record<string, string>, needle: string) { return Object.entries(values).filter(([key, value]) => key.includes(needle) && value).map(([, value]) => value); }
+function intakeAll(values: Record<string, string>, needle: string) { const normalizedNeedle = normalizeIntakeHeader(needle); return Object.entries(values).filter(([key, value]) => normalizeIntakeHeader(key).includes(normalizedNeedle) && value).map(([, value]) => value); }
 
 const directionFacing = (value = "") => {
   const text = String(value || "").trim();
@@ -800,8 +816,10 @@ function intakeToRecord(intake: IntakeData, existing?: RecordItem): RecordItem {
   const parkingOwnership = /無車位/.test(parking) ? "無車位" : /停自有地|自有地/.test(parking) ? "停自有地" : /車位另租/.test(parking) ? "車位另租" : /抽籤/.test(parking) ? "抽籤決定" : /固定/.test(parking) ? "固定車位" : "";
   const parkingType = /先到先停/.test(parking) ? "先到先停" : /排隊/.test(parking) ? "排隊等候" : /停自有地|自有地/.test(parking) ? "停自有地" : /車位另租/.test(parking) ? "車位另租" : /抽籤/.test(parking) ? "抽籤決定" : /固定/.test(parking) ? "固定車位" : "";
   const parkingMethod = parking.match(/坡道[／/]平面|坡道[／/]機械|昇降[／/]平面|昇降[／/]機械|庭院|平移[／/]機械/)?.[0] || "";
-  const elementarySchool = intakeValue(v, "鄰近國小"); const juniorHighSchool = intakeValue(v, "鄰近國中"); const seniorHighSchool = intakeValue(v, "鄰近高中"); const collegeSchool = intakeValue(v, "鄰近大專");
-  return { ...blankRecord(), ...(existing || {}), propertyNo: no, contractType: contractFromNo(no), type: intakeValue(v, "物件型態"), status: existing?.status || "委託中", area: intakeValue(v, "物件(完整)地址").replace(/^.*?[市縣]/, "").slice(0, 3), caseName: intakeValue(v, "案名"), address: intakeValue(v, "物件(完整)地址"), price: intakeValue(v, "契約開價"), direction: intakeValue(v, "朝向 [房屋朝]", "朝向 [大門朝]", "朝向 [土地朝]"), completionDate: completion, builtYear: completion ? String(Number(completion.split(/[./]/)[0])) : "", titleFloor: intakeValue(v, "權狀層數"), currentFloor: intakeValue(v, "透天請寫"), floor: [intakeValue(v, "權狀層數"), intakeValue(v, "透天請寫")].filter(Boolean).join("／"), layout, indoorPing: intakeValue(v, "室內坪"), buildingPing: intakeValue(v, "總建坪"), landPing: intakeValue(v, "地坪"), parking, parkingOwnership, parkingType, parkingMethod, parkingNo: intakeValue(v, "車位編號"), buildingName: intakeValue(v, "大樓名稱"), elevatorCount: intakeValue(v, "電梯數"), unitsPerFloor: intakeValue(v, "每層戶數"), managementMethod: intakeValue(v, "警衛管理"), market: intakeValue(v, "市場/購物"), park: intakeValue(v, "公園綠地"), elementarySchool, juniorHighSchool, seniorHighSchool, collegeSchool, school: [elementarySchool, juniorHighSchool, seniorHighSchool, collegeSchool].filter(Boolean).join("／") || existing?.school || "", feature1: intakeValue(v, "特色說明1"), feature2: intakeValue(v, "特色說明2"), feature3: intakeValue(v, "特色說明3"), feature4: intakeValue(v, "特色說明4"), attentionNotes: [intakeValue(v, "增建說明"), intakeValue(v, "注意事項")].filter(Boolean).join("；"), managementFee: intakeValue(v, "管理費"), key: intakeValue(v, "鑰匙位置"), currentState: intakeValue(v, "(物件)現況"), road: intakeValue(v, "臨路"), frontage: intakeValue(v, "面寬"), depth: intakeValue(v, "深度"), zoning: intakeValue(v, "使用分區"), coverage: coverageFar[0] || "", far: coverageFar[1] || "", developer: intakeValue(v, "開發１/開發２"), entrustStart: normalizeDateInput(intakeValue(v, "委託開始")), entrustEnd: normalizeDateInput(intakeValue(v, "委託結束")), reportDate: existing?.reportDate || today(), updateDate: today(), groupViewDate: existing?.groupViewDate || intake.groupViewDate || "", notes, photoInfo: existing?.photoInfo || "" };
+  const elementarySchool = intakeValue(v, "鄰近國小", "國小"); const juniorHighSchool = intakeValue(v, "鄰近國中", "國中"); const seniorHighSchool = intakeValue(v, "鄰近高中", "高中"); const collegeSchool = intakeValue(v, "鄰近大專", "大專");
+  const address = intakeValue(v, "物件(完整)地址", "物件完整地址");
+  const currentFloor = intakeValue(v, "透天請寫", "現況樓層");
+  return { ...blankRecord(), ...(existing || {}), propertyNo: no, contractType: contractFromNo(no), type: intakeValue(v, "物件型態"), status: existing?.status || "委託中", area: address.replace(/^.*?[市縣]/, "").slice(0, 3), caseName: intakeValue(v, "案名"), address, price: intakeValue(v, "契約開價"), direction: intakeValue(v, "朝向 [房屋朝]", "朝向 [大門朝]", "朝向 [土地朝]"), completionDate: completion, builtYear: completion ? String(Number(completion.split(/[./]/)[0])) : "", titleFloor: intakeValue(v, "權狀層數"), currentFloor, floor: [intakeValue(v, "權狀層數"), currentFloor].filter(Boolean).join("／"), layout, indoorPing: intakeValue(v, "室內坪"), buildingPing: intakeValue(v, "總建坪"), landPing: intakeValue(v, "地坪"), parking, parkingOwnership, parkingType, parkingMethod, parkingNo: intakeValue(v, "車位編號"), buildingName: intakeValue(v, "大樓名稱"), elevatorCount: intakeValue(v, "電梯數"), unitsPerFloor: intakeValue(v, "每層戶數"), managementMethod: intakeValue(v, "警衛管理"), market: intakeValue(v, "市場/購物", "市場"), park: intakeValue(v, "公園綠地", "公園"), elementarySchool, juniorHighSchool, seniorHighSchool, collegeSchool, school: [elementarySchool, juniorHighSchool, seniorHighSchool, collegeSchool].filter(Boolean).join("／") || existing?.school || "", feature1: intakeValue(v, "特色說明1"), feature2: intakeValue(v, "特色說明2"), feature3: intakeValue(v, "特色說明3"), feature4: intakeValue(v, "特色說明4"), attentionNotes: [intakeValue(v, "增建說明", "坪數說明"), intakeValue(v, "注意事項")].filter(Boolean).join("；"), managementFee: intakeValue(v, "管理費"), key: intakeValue(v, "鑰匙位置"), currentState: intakeValue(v, "(物件)現況", "現況"), road: intakeValue(v, "臨路"), frontage: intakeValue(v, "面寬"), depth: intakeValue(v, "深度"), zoning: intakeValue(v, "使用分區"), coverage: coverageFar[0] || "", far: coverageFar[1] || "", developer: intakeValue(v, "開發１/開發２"), entrustStart: normalizeDateInput(intakeValue(v, "委託開始")), entrustEnd: normalizeDateInput(intakeValue(v, "委託結束")), reportDate: existing?.reportDate || today(), updateDate: today(), groupViewDate: existing?.groupViewDate || intake.groupViewDate || "", notes, photoInfo: existing?.photoInfo || "" };
 }
 
 function recordToIntake(record: RecordItem): IntakeData {
@@ -2804,7 +2822,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V355</small></h1></div>
+<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V356</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingIntakeReminderRecords.length > 0 && <button className="new-case-reminder-header-button" onClick={() => { setNewCaseReminder({ ...pendingIntakeReminderRecords[0] }); setNewCaseReminderBatchIds(pendingIntakeReminderRecords.map(record => record.id)); }}>新進案件提醒 {pendingIntakeReminderRecords.length}</button>}{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
