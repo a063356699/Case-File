@@ -275,7 +275,7 @@ button:hover,.file-button:hover{border-color:#9fbad0;box-shadow:0 2px 8px #7895a
 .excel-print .print-right>.attention{flex:0 0 28mm!important;height:28mm!important;min-height:28mm!important;max-height:28mm!important;margin:1mm 0 0!important;box-sizing:border-box!important;overflow:hidden!important}
 
 /* 國小至公園：資料較長時保留完整文字並在欄位內換行，不使用省略號。 */
-.excel-print .print-right>.print-right-row.print-right-row-wrap{flex:0 0 auto!important;min-height:7.5mm!important;align-items:start!important;padding:1mm 0!important}
+.excel-print .print-right>.print-right-row.print-right-row-wrap{flex:0 0 auto!important;min-height:8.7mm!important;align-items:start!important;padding:1mm 0!important}
 .excel-print .print-right-row.print-right-row-wrap>span{white-space:normal!important;overflow:visible!important;text-overflow:clip!important;overflow-wrap:anywhere!important;line-height:1.28!important}
 
 /* P2 依房屋／土地 PDF 的八個區塊高度鋪滿整張 A4 */
