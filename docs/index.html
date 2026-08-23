@@ -1916,53 +1916,132 @@ html,body{max-width:100%;overflow-x:hidden}
 /* 只讓進案草稿留下上方規定的 5mm；不可再被其他列印頁的 @page 邊界覆蓋。 */
 @page{size:A4 portrait;margin:0}
 
-/* V353：進案草稿背面固定使用 5mm 邊界；十一段內容平均鋪滿一頁。 */
-.print-document .checklist-page{display:grid!important;grid-template-rows:7mm 16mm 31mm 10mm 48mm 31mm 28mm 9mm 93mm 14mm 0mm!important;width:210mm!important;height:297mm!important;min-height:297mm!important;max-height:297mm!important;padding:5mm!important;box-sizing:border-box!important;overflow:hidden!important;gap:0!important}
+/* V354：進案草稿背面固定使用 5mm 邊界；十一段內容平均鋪滿一頁。 */
+.print-document .checklist-page{display:grid!important;grid-template-rows:7mm 10mm 23mm 8mm 48mm 20mm 38mm 9mm 16mm 86mm 15mm 7mm!important;width:210mm!important;height:297mm!important;min-height:297mm!important;max-height:297mm!important;padding:5mm!important;box-sizing:border-box!important;overflow:hidden!important;gap:0!important}
+.print-document .checklist-page .check-price,.print-document .checklist-page .registry-block,.print-document .checklist-page .check-lines,.print-document .checklist-page .check-columns,.print-document .checklist-page .check-acquire,.print-document .checklist-page .deed-lines,.print-document .checklist-page .check-tail{font-family:Arial,"Microsoft JhengHei",sans-serif!important}
 .print-document .checklist-page>*{min-width:0!important;min-height:0!important;box-sizing:border-box!important;margin:0!important}
 .print-document .checklist-page .check-strip{display:flex!important;align-items:center!important;justify-content:center!important;padding:1mm 2mm!important;font-size:10.5pt!important;line-height:1.1!important;background:#050505!important;color:#fff!important}
-.print-document .checklist-page .check-strip.bottom{display:none!important}
-.print-document .checklist-page>h1{display:flex!important;align-items:center!important;justify-content:center!important;margin:0!important;font-size:30pt!important;line-height:1!important;color:#000!important;white-space:nowrap!important}
+.print-document .checklist-page .check-strip.bottom{display:flex!important;align-items:center!important;justify-content:center!important}
+.print-document .checklist-page>h1{display:flex!important;align-items:flex-end!important;justify-content:center!important;margin:0!important;padding:0!important;font-size:30pt!important;line-height:1!important;color:#000!important;white-space:nowrap!important}
 .print-document .check-price{display:grid!important;grid-template-columns:1fr 1fr!important;border-bottom:1px solid #d7d7d7!important}
-.print-document .check-price>div{font-size:11.5pt!important;line-height:1.55!important;padding:1mm 3mm!important;justify-content:space-evenly!important}
-.print-document .check-middle{display:grid!important;grid-template-columns:1fr 1fr!important;align-items:center!important;border-bottom:1px solid #c9c9c9!important;font-size:11.5pt!important;line-height:1.2!important;padding:0 3mm!important}
-.print-document .check-middle .check-entrust-period{color:#0000ff!important;font-weight:700!important;white-space:nowrap!important}
+.print-document .check-price>div{font-size:11.5pt!important;line-height:1.75!important;padding:1mm 3mm!important;justify-content:space-evenly!important}
+.print-document .check-middle{display:grid!important;grid-template-columns:1fr 1fr!important;align-items:center!important;border-bottom:1px solid #c9c9c9!important;font-size:11.5pt!important;line-height:1.4!important;padding:0 3mm!important}
+.print-document .check-middle .check-entrust-period{display:flex!important;align-items:center!important;gap:0!important;padding-left:3mm!important;color:#0000ff!important;font-weight:700!important;white-space:nowrap!important}
+.print-document .check-middle .check-entrust-period small{margin-left:2mm!important}
 .print-document .check-middle small{font-size:8.5pt!important;font-weight:400!important}
 .print-document .registry-block{display:grid!important;grid-template-rows:1fr 1fr!important;gap:1.5mm!important;padding:1mm 0!important}
-.print-document .registry-table{display:grid!important;grid-template-columns:7mm 32mm 1fr!important;border:1px solid #777!important;font-size:7.5pt!important;line-height:1!important;overflow:hidden!important}
-.print-document .registry-table> b{display:flex!important;align-items:flex-start!important;justify-content:center!important;padding-top:2mm!important;border-right:1px solid #777!important;font-size:10pt!important}
-.print-document .registry-label{display:flex!important;align-items:flex-start!important;justify-content:center!important;padding-top:1mm!important;border-right:1px solid #777!important;font-size:8.5pt!important;font-weight:700!important}
-.print-document .registry-cases{display:grid!important;grid-template-columns:repeat(9,1fr)!important}
-.print-document .registry-table.building .registry-cases{grid-template-columns:repeat(5,1fr)!important}
+.print-document .registry-table{display:grid!important;grid-template-columns:7mm 9mm minmax(0,1fr)!important;border:1px solid #777!important;font-size:7.5pt!important;line-height:1!important;overflow:hidden!important}
+.print-document .registry-table> b{display:grid!important;grid-template-rows:repeat(3,minmax(0,1fr))!important;align-items:center!important;justify-items:center!important;height:100%!important;padding:0!important;border-right:1px solid #777!important;font-size:10pt!important;line-height:1!important;box-sizing:border-box!important}
+.print-document .registry-table> b>span:first-child{justify-self:center!important;align-self:center!important;padding:0!important}
+.print-document .registry-table> b>span:not(:first-child){font-size:11pt!important}
+.print-document .registry-label{display:flex!important;flex-direction:column!important;align-items:stretch!important;justify-content:center!important;padding:0!important;border-right:1px solid #777!important;font-size:8.5pt!important;font-weight:700!important;white-space:nowrap!important}
+.print-document .registry-label-title{display:block!important;width:100%!important;text-align:center!important;font-size:11pt!important;line-height:1.05!important}
+.print-document .registry-count{display:grid!important;grid-template-rows:repeat(3,minmax(0,1fr))!important;align-items:center!important;justify-items:center!important;width:100%!important;height:100%!important;padding:0!important;font-size:9pt!important;line-height:1!important;box-sizing:border-box!important}
+.print-document .registry-count>i{display:block!important;width:100%!important;height:100%!important;border:0!important}
+.print-document .registry-cases{display:grid!important;grid-template-columns:repeat(9,minmax(0,1fr))!important;width:100%!important;min-width:0!important}
+.print-document .registry-table.building .registry-cases{grid-template-columns:repeat(5,minmax(0,1fr))!important}
+.print-document .registry-table.building .registry-cases small{font-family:inherit!important;font-size:6.5pt!important;font-weight:400!important}
+.print-document .registry-table.building .registry-cases span{font-family:inherit!important;font-size:8.5pt!important;font-weight:400!important}
+.print-document .registry-table.building .registry-checkbox{font-size:12pt!important;font-weight:400!important}
 .print-document .registry-cases>div{display:grid!important;grid-template-rows:5mm 1fr 1fr 1fr!important;border-right:1px solid #999!important;min-width:0!important}
 .print-document .registry-cases>div:last-child{border-right:0!important}
 .print-document .registry-cases small{display:block!important;padding:1px 2px!important;font-size:6.5pt!important;text-align:left!important}
 .print-document .registry-cases span{display:flex!important;align-items:center!important;justify-content:center!important;border-top:1px solid #bbb!important;white-space:nowrap!important;font-size:7.5pt!important}
-.print-document .check-lines{font-size:10.5pt!important;line-height:1.35!important;padding:0!important}
-.print-document .check-lines p{margin:0!important;padding:1.25mm 2mm!important;border-bottom:1px solid #d2d2d2!important;white-space:nowrap!important}
-.print-document .check-columns{display:grid!important;grid-template-columns:1fr 1fr!important;font-size:10pt!important;line-height:1.25!important;border:0!important}
+.print-document .registry-checkbox{display:inline-block!important;margin-right:.35mm!important;font-size:12pt!important;line-height:.75!important;font-weight:400!important}
+.print-document .check-lines{display:grid!important;grid-template-rows:repeat(3,minmax(0,1fr))!important;font-size:11pt!important;font-weight:400!important;line-height:1.3!important;padding:0!important;overflow:hidden!important}
+.print-document .check-lines p{position:relative!important;z-index:0!important;display:flex!important;align-items:center!important;min-height:0!important;margin:0!important;padding:0 2mm!important;border-bottom:1px solid #bfbfbf!important;white-space:nowrap!important;font-size:11pt!important;line-height:1.3!important}
+.print-document .check-lines p b{font-size:11pt!important;line-height:1.3!important}
+.print-document .check-lines p:nth-child(3) b,.print-document .check-lines p:nth-child(4) b{font-weight:700!important}
+.print-document .check-columns{display:grid!important;grid-template-columns:1fr 1fr!important;font-size:10pt!important;line-height:1.35!important;border:0!important}
 .print-document .check-columns>div{padding:1.5mm 2mm!important;border:0!important}
 .print-document .check-columns>div+div{border-left:1px solid #bbb!important}
-.print-document .check-columns .column-heading{font-size:10.5pt!important;margin:0 0 1mm!important;white-space:nowrap!important}
+.print-document .check-columns .column-heading{font-size:10.5pt!important;margin:0!important;white-space:nowrap!important}
 .print-document .check-columns p{margin:1.4mm 0!important;border:0!important}
+.print-document .contract-price-value{display:inline-block!important;min-width:10mm!important;padding:0 .5mm!important;border-bottom:1px solid #333!important;text-align:center!important;line-height:1.05!important}
+.print-document .check-columns>div>p:nth-child(2),.print-document .check-columns .seller-info-columns>div>p:first-child{margin-top:0!important}
+.print-document .checklist-page>.check-columns>div{position:relative!important;display:flex!important;flex-direction:column!important;justify-content:flex-start!important;gap:1.4mm!important;padding:1mm 2mm!important}
+.print-document .checklist-page>.check-columns .column-heading{position:static!important;inset:auto!important;display:flex!important;flex:0 0 auto!important;width:auto!important;height:auto!important;min-height:0!important;margin:0!important;padding:0!important;align-items:center!important}
+.print-document .checklist-page .seller-info-columns{flex:0 0 auto!important;min-height:0!important}
+.print-document .checklist-page .seller-info-columns>div{display:flex!important;flex-direction:column!important;justify-content:flex-start!important;gap:1.4mm!important;height:auto!important;min-height:0!important}
+.print-document .checklist-page>.check-columns>div:first-child{display:grid!important;grid-template-rows:auto repeat(4,minmax(0,1fr))!important;gap:0!important}
+.print-document .checklist-page>.check-columns>div:last-child{display:grid!important;grid-template-rows:auto minmax(0,1fr)!important;gap:0!important}
+.print-document .checklist-page>.check-columns>div:first-child>p:not(.column-heading){display:flex!important;align-items:center!important;margin:0!important}
+.print-document .checklist-page .seller-info-columns{display:grid!important;grid-template-columns:50% 50%!important;gap:0!important;align-items:stretch!important;width:100%!important;height:100%!important;min-height:0!important}
+.print-document .checklist-page .seller-info-columns>div{display:grid!important;grid-template-rows:repeat(5,minmax(0,1fr))!important;gap:0!important;height:100%!important}
+.print-document .checklist-page .seller-info-columns p{display:flex!important;align-items:center!important;margin:0!important;font-size:11pt!important;font-weight:400!important;line-height:1.25!important}
+.print-document .checklist-page>.check-columns>div:first-child>p:not(.column-heading){font-size:11pt!important;font-weight:400!important;line-height:1.25!important}
 .print-document .check-columns .seller-info-columns{display:grid!important;grid-template-columns:1fr 1fr!important;gap:0!important}
-.print-document .check-columns .seller-info-columns>div+div{border-left:1px solid #bbb!important;padding-left:2mm!important}
-.print-document .check-acquire{display:flex!important;align-items:center!important;border-top:1px solid #bbb!important;border-bottom:1px solid #bbb!important;padding:0 2mm!important;font-size:11pt!important;line-height:1.2!important}
-.print-document .check-tail{display:grid!important;grid-template-rows:12mm 52mm 21mm 8mm!important;font-size:10.5pt!important;line-height:1.2!important;padding:0!important;border:0!important}
+.print-document .check-columns .seller-info-columns>div+div{box-sizing:border-box!important;margin-left:6mm!important;border-left:1px solid #bbb!important;padding-left:2mm!important}
+.print-document .check-acquire{display:flex!important;align-items:center!important;border-top:1px solid #bbb!important;border-bottom:1px solid #bbb!important;padding:0 2mm!important;font-size:11pt!important;line-height:1.4!important}
+.print-document .deed-lines{display:grid!important;grid-template-rows:repeat(2,minmax(0,1fr))!important;font-size:11pt!important;line-height:1.3!important;overflow:hidden!important}
+.print-document .line-print-icon{display:inline-flex!important;align-items:center!important;justify-content:center!important;width:6mm!important;height:4.5mm!important;margin:0 .8mm!important;border-radius:50%!important;background:#06c755!important;color:#fff!important;font-size:5.8pt!important;font-weight:900!important;line-height:1!important;vertical-align:middle!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+.print-document .deed-choice-mark{display:none!important}
+.print-document .deed-choice-mark:not(:first-of-type){display:inline-block!important;width:auto!important;height:auto!important;margin:0 1.4mm!important;padding:0!important;font-size:0!important;line-height:1!important;vertical-align:middle!important}
+.print-document .deed-choice-mark:not(:first-of-type)::before{content:"│"!important;color:#666!important;font-size:10pt!important;font-weight:400!important}
+.print-document .deed-lines p{display:flex!important;align-items:center!important;min-height:0!important;margin:0!important;padding:0 2mm!important;border-bottom:1px solid #d2d2d2!important;white-space:nowrap!important;font-weight:400!important}
+.print-document .deed-lines p b{font-size:11pt!important;line-height:1.3!important}
+.print-document .check-tail{display:grid!important;grid-template-rows:11mm 47mm 20mm 8mm!important;font-size:10.5pt!important;line-height:1.4!important;padding:0!important;border:0!important}
+.print-document .check-tail>p:first-child>.section-number,.print-document .check-tail>p:first-child>b{font-size:11pt!important;line-height:1.2!important}
+.print-document .checklist-page>.check-tail{display:grid!important;flex:none!important;grid-template-rows:11mm 47mm 20mm 8mm!important;min-height:0!important;overflow:hidden!important}
+.print-document .checklist-page>.check-tail>p{flex:none!important}
 .print-document .check-tail>p{margin:0!important;padding:1.5mm 2mm!important;border:0!important;overflow:hidden!important}
-.print-document .check-tail>p:first-child{border-bottom:1px solid #bbb!important;font-size:10.5pt!important}
+.print-document .check-tail>p:first-child{border-bottom:1px solid #bbb!important;font-size:10.5pt!important;line-height:1.2!important;padding:.5mm 2mm!important}
 .print-document .auth-block{padding:1mm 0!important;overflow:hidden!important}
 .print-document .auth-block>b{display:block!important;margin:0 2mm 1mm!important;font-size:11pt!important}
-.print-document .auth-table{display:grid!important;grid-template-columns:1.45fr .8fr .7fr 1.1fr .8fr!important;margin:0 2mm!important;border:1px solid #888!important;font-size:10pt!important;text-align:center!important}
+.print-document .auth-table{display:grid!important;grid-template-columns:48fr 23fr 23fr 20fr 54fr 28fr!important;width:calc(100% - 4mm)!important;margin:0 2mm!important;border:1px solid #888!important;box-sizing:border-box!important;overflow:hidden!important;font-size:9.5pt!important;text-align:center!important}
+.print-document .auth-table>*{box-sizing:border-box!important;min-width:0!important;max-width:100%!important}
 .print-document .auth-table>*{display:flex!important;align-items:center!important;justify-content:center!important;min-height:10mm!important;border-right:1px solid #888!important;border-bottom:1px solid #aaa!important;padding:0 1mm!important;white-space:nowrap!important}
-.print-document .auth-table>*:nth-child(5n){border-right:0!important}.print-document .auth-table>*:nth-last-child(-n+5){border-bottom:0!important}
-.print-document .auth-table span:nth-child(5n+1){justify-content:center!important;padding-left:1mm!important}
-.print-document .zoning-block{padding:1mm 2mm!important;border-top:1px solid #bbb!important;overflow:hidden!important}
-.print-document .zoning-block>b{font-size:11pt!important}.print-document .zoning-block p{margin:1.5mm 0!important;font-size:10pt!important;white-space:nowrap!important}
+.print-document .auth-table>strong{min-height:6mm!important}
+.print-document .auth-table>strong:first-child{justify-content:center!important;text-align:center!important;padding-left:0!important}
+.print-document .auth-table>strong:nth-child(2){flex-direction:row!important;align-items:center!important;justify-content:center!important;gap:0!important;line-height:1!important;text-align:center!important;padding-left:0!important}
+.print-document .auth-table>*:nth-child(6n){border-right:0!important}.print-document .auth-table>*:nth-last-child(-n+6){border-bottom:0!important}
+.print-document .auth-table span:nth-child(6n+1){display:flex!important;align-items:flex-end!important;justify-content:flex-start!important;padding:0 1mm 1mm 1.5mm!important;text-align:left!important;font-size:0!important}
+.print-document .auth-table span:nth-child(6n+1)::before{content:"賣方："!important;flex:0 0 auto!important;font-size:10pt!important;line-height:1!important;white-space:nowrap!important}
+.print-document .auth-table span:nth-child(6n+1)::after{content:""!important;flex:1 1 auto!important;min-width:0!important;margin-left:.8mm!important;border-bottom:1px solid #555!important;transform:translateY(-.3mm)!important}
+.print-document .auth-table .authorization-copies{display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:center!important;gap:1.5mm!important;text-align:left!important}
+.print-document .auth-table .authorization-copies i{font-style:normal!important;white-space:nowrap!important}
+.print-document .zoning-block{display:grid!important;grid-template-rows:repeat(3,minmax(0,1fr))!important;padding:0 2mm!important;border-top:1px solid #bbb!important;overflow:hidden!important}
+.print-document .zoning-heading{display:flex!important;align-items:center!important;gap:2mm!important;min-height:0!important;margin:0!important;white-space:nowrap!important}
+.print-document .zoning-heading>b{font-size:11pt!important;white-space:nowrap!important}
+.print-document .zoning-heading>span{font-size:10pt!important;font-weight:400!important;white-space:nowrap!important}
+.print-document .section-number{display:inline!important;background:transparent!important;color:#111!important;padding:0!important;border:0!important;border-radius:0!important;box-shadow:none!important;font-weight:700!important}
+.print-document .zoning-block>b{display:flex!important;align-items:center!important;min-height:0!important;margin:0!important;white-space:nowrap!important}
+.print-document .zoning-block p{display:grid!important;grid-template-columns:10mm minmax(0,1fr)!important;align-items:center!important;min-height:0!important;margin:0!important;padding:0!important;white-space:nowrap!important;line-height:1.3!important}
+.print-document .zoning-block p>span:first-child{display:block!important;width:10mm!important;text-align:center!important}
+.print-document .zoning-block p>span:last-child{display:block!important;text-align:left!important}
+.print-document .zoning-block>b{font-size:11pt!important}.print-document .zoning-block p{font-size:10pt!important}
 .print-document .zoning-block p:last-child{padding-left:0!important;font-size:10pt!important}
-.print-document .other-files{display:flex!important;align-items:center!important;font-size:11pt!important;padding:0 2mm!important;border-top:1px solid #bbb!important;white-space:nowrap!important}
-.print-document .signature-box{display:grid!important;grid-template-columns:48% 52%!important;align-items:stretch!important;border:0!important;padding:0!important;font-size:11pt!important}
-.print-document .signature-box>span{display:flex!important;align-items:center!important;justify-content:flex-end!important;padding-right:3mm!important}.print-document .signature-box>i{display:block!important;margin:1mm 0!important;border:2px dashed #456!important}
-@media print{.print-document .checklist-page{padding:5mm!important;margin:0!important;page-break-after:always!important}.print-document .checklist-page .check-strip.bottom{display:none!important}}
+.print-document .other-files{display:flex!important;align-items:center!important;font-size:0!important;padding:0 2mm!important;border-top:1px solid #bbb!important;border-bottom:0!important;white-space:nowrap!important}
+.print-document .check-tail p.other-files{border-bottom:0!important}
+.print-document .other-files>.section-number,.print-document .other-files>b{font-size:11pt!important}
+.print-document .other-files>b{border:0!important;border-bottom:0!important;text-decoration:none!important;box-shadow:none!important}
+.print-document .other-files::after{content:none!important;display:none!important}
+.print-document .other-files>.other-files-line{display:block!important;flex:1 1 auto!important;min-width:0!important;height:0!important;margin-left:1mm!important;border:0!important;border-bottom:1px solid #333!important;transform:translateY(1.2mm)!important}
+.print-document .check-price>div>b,
+.print-document .check-middle>div:first-child>b,
+.print-document .check-lines>p:nth-child(1)>b,
+.print-document .check-lines>p:nth-child(2)>b,
+.print-document .zoning-block>b{display:inline-block!important;color:#111!important}
+.print-document .check-price>div>b,
+.print-document .check-middle>div:first-child>b,
+.print-document .check-lines>p:nth-child(1)>b,
+.print-document .check-lines>p:nth-child(2)>b,
+.print-document .zoning-block>b{background:transparent!important;padding:0!important;border-radius:0!important;box-shadow:none!important}
+.print-document .check-acquire>b{background:transparent!important;padding:0!important;border-radius:0!important;box-shadow:none!important}
+.print-document .check-acquire .acquire-highlight{display:inline-block!important;background:#d9d9d9!important;padding:.45mm 1.2mm!important;border-radius:1mm!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+.print-document .auth-block>b{background:transparent!important;padding:0!important;border-radius:0!important;box-shadow:none!important}
+.print-document .auth-block>b{display:flex!important;align-items:center!important;width:calc(100% - 4mm)!important;margin-left:2mm!important;margin-right:2mm!important;box-sizing:border-box!important;white-space:nowrap!important;transform:translateY(.9mm)!important}
+.print-document .auth-block>b::after{content:"，產權說明："!important;display:block!important;flex:1 1 auto!important;min-width:55mm!important;margin-left:1mm!important;background-image:linear-gradient(#333,#333)!important;background-position:right bottom .25mm!important;background-size:85% 1px!important;background-repeat:no-repeat!important;font-weight:700!important}
+.print-document .auth-block .ownership-highlight{display:inline-block!important;background:#d9d9d9!important;padding:.45mm 1.2mm!important;border-radius:1mm!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+.print-document .auth-block .ownership-highlight{margin-right:1mm!important}
+.print-document .zoning-block .zoning-highlight{display:inline-block!important;background:#d9d9d9!important;padding:.45mm 1.2mm!important;border-radius:1mm!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+.print-document .check-price>div>b,.print-document .check-middle>div:first-child>b,.print-document .check-lines>p:nth-child(1)>b,.print-document .check-lines>p:nth-child(2)>b{background:transparent!important;padding:0!important;border-radius:0!important;box-shadow:none!important}
+.print-document .label-highlight{display:inline-block!important;background:#d9d9d9!important;padding:.45mm 1.2mm!important;border-radius:1mm!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+.print-document .check-price .label-highlight{float:none!important;display:inline!important;background:transparent!important;color:inherit!important;border:0!important;padding:0!important;border-radius:0!important;box-shadow:none!important}
+.print-document .check-lines .label-highlight{padding:.12mm 1.2mm!important;border-radius:.7mm!important}
+.print-document .signature-box{display:grid!important;grid-template-columns:42% 58%!important;align-items:stretch!important;border:0!important;padding:0!important;font-size:11pt!important}
+.print-document .signature-box>span{display:flex!important;align-items:center!important;justify-content:flex-end!important;padding-right:3mm!important}.print-document .signature-box>i{display:block!important;margin:.5mm 0!important;border:2px dashed #456!important}
+@media print{.print-document .checklist-page{padding:5mm!important;margin:0!important;page-break-after:always!important}.print-document .checklist-page .check-strip.bottom{display:flex!important;align-items:center!important;justify-content:center!important}}
 .leader-detail-row.combined .leader-monthly-detail-cell{vertical-align:top;background:#fff9ef}.leader-detail-row.combined .leader-stock-detail-cell{vertical-align:top;background:#f0fafb}.leader-detail-row.combined>td:empty{background:#fff}.leader-detail-row.combined .leader-case-list>div{grid-template-columns:minmax(150px,1fr) minmax(180px,1.25fr) auto}@media(max-width:900px){.leader-detail-row.combined .leader-case-list>div{grid-template-columns:1fr auto}.leader-detail-row.combined .leader-case-list small{grid-column:1 / -1}}
 .all-groups-overview{display:grid;gap:18px;margin-top:14px}.all-group-section{--group-block:#557a6e;padding:0 12px 12px;border:2px solid var(--group-block);border-radius:18px;background:color-mix(in srgb,var(--group-block) 9%,#fff);overflow:hidden}.all-group-section.group-a{--group-block:#e35c39}.all-group-section.group-b{--group-block:#396ee8}.all-group-section.group-c{--group-block:#2a9b52}.all-group-section.group-d{--group-block:#8152ef}.all-group-section>h3{margin:0 -12px 10px;padding:12px 18px;background:color-mix(in srgb,var(--group-block) 18%,#fff);color:var(--group-block);font-size:22px}.all-group-section>.leader-team-overview{margin:0;padding:10px;border:0;background:transparent;box-shadow:none}.all-group-section>.leader-team-overview .leader-team-summary>div{background:color-mix(in srgb,var(--group-block) 10%,#fff)}.all-group-section>.leader-team-overview .leader-team-summary b,.all-group-section>.leader-team-overview .leader-sort-button b{color:var(--group-block)}@media(max-width:760px){.all-groups-overview{gap:12px}.all-group-section{padding:0 6px 8px}.all-group-section>h3{margin:0 -6px 8px;padding:9px 12px;font-size:19px}}
 .compact-groups-overview{margin-top:12px}.compact-groups-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}.compact-group-filters,.compact-expand-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.compact-group-filters button,.compact-expand-actions button{min-width:72px;padding:8px 14px;border:1px solid #b6c9dc;border-radius:10px;background:#fff;color:#244761;font-weight:900}.compact-group-filters button.selected{background:#244f88;color:#fff}.compact-group-filters button.group-a{border-color:#e3a087}.compact-group-filters button.group-b{border-color:#91afe9}.compact-group-filters button.group-c{border-color:#8ec69d}.compact-group-filters button.group-d{border-color:#b49ae8}.compact-expand-actions button.monthly{border-color:#df9c60;color:#9a531a}.compact-expand-actions button.stock{border-color:#72aeb7;color:#23636c}.compact-groups-table-wrap{overflow-x:auto;border:1px solid #ccd9e2;border-radius:12px;background:#fff}.compact-groups-table-wrap table{width:100%;min-width:760px;border-collapse:collapse;table-layout:fixed}.compact-groups-table-wrap th,.compact-groups-table-wrap td{padding:9px 10px;border:1px solid #d7e0e6;text-align:center}.compact-groups-table-wrap th{background:#f1f6f9;color:#28465c}.compact-groups-table-wrap th button{border:0;background:transparent;color:inherit;font:inherit;font-weight:900;cursor:pointer}.compact-groups-table-wrap th button b{color:#376da2}.compact-group-heading td{padding:9px 16px!important;text-align:left!important;font-size:17px}.compact-group-heading.group-a td{background:#fff0e8;color:#d65b31}.compact-group-heading.group-b td{background:#eaf2ff;color:#326bd1}.compact-group-heading.group-c td{background:#eaf7ed;color:#27854a}.compact-group-heading.group-d td{background:#f2edff;color:#7548d5}.compact-person-row td:first-child{font-weight:900;color:#29455a}.compact-count{min-width:64px;padding:5px 13px;border-radius:999px;background:#fff;font-size:15px;font-weight:900}.compact-count.monthly{border:1px solid #e1a160;color:#a35a17}.compact-count.stock{border:1px solid #69aab4;color:#236873}.compact-count:disabled{border-color:#d5ddda;color:#98a39e;background:#f6f7f7}.compact-detail-row>td{vertical-align:top;padding:10px}.compact-detail-row>td:empty{background:#fff}.compact-detail-row .monthly-detail{background:#fff9ef}.compact-detail-row .stock-detail{background:#f0fafb}.compact-detail-row h4{margin:0 0 8px;color:#254f43;font-size:15px}.compact-case-list{display:grid;gap:6px;text-align:left}.compact-case-list>div{display:grid;grid-template-columns:minmax(140px,1fr) minmax(180px,1.3fr) auto;gap:8px;align-items:center;padding:7px 9px;border:1px solid #dce4e1;border-radius:8px;background:#fff}.compact-case-list b{color:#29465b}.compact-case-list span{color:#687771;font-size:13px}.compact-case-list strong{white-space:nowrap;color:#356cf0}@media(max-width:760px){.compact-groups-toolbar{align-items:flex-start;flex-direction:column}.compact-group-filters,.compact-expand-actions{width:100%}.compact-group-filters button,.compact-expand-actions button{flex:1;padding:7px 8px}.compact-case-list>div{grid-template-columns:1fr auto}.compact-case-list span{grid-column:1 / -1}}
@@ -42771,7 +42850,7 @@ ${String(ex)}`);
     if (new Set(parsed.map((part) => part.facing)).size === 1) return parsed[0].facing;
     return parsed.map((part) => `${part.label || "\u671D\u5411"}\u671D${part.facing}`).join("\uFF0F");
   };
-  var displayNoteSegments = (value = "") => String(value || "").split(/[；;]/).map((part) => part.trim()).filter((part) => part && !/^(?:0|無)$/.test(part)).map((part) => part.includes("\u958B\u767C%") && !/^中人[:：]/.test(part) ? `\u4E2D\u4EBA:${part}` : part);
+  var displayNoteSegments = (value = "") => String(value || "").split(/[；;]/).map((part) => part.trim()).filter((part) => part && !/^(?:0|無|中人\s*[:：]\s*無)$/.test(part)).map((part) => part.includes("\u958B\u767C%") && !/^中人[:：]/.test(part) ? `\u4E2D\u4EBA:${part}` : part);
   var websiteCellDisplay = (record, key) => {
     const raw = String(record[key] || "").trim();
     const down = record[`${key}DownDate`] ? `${displayRocDate(record[`${key}DownDate`])}\u4E0B\u67B6` : "";
@@ -45564,7 +45643,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V353" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V355" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -49086,7 +49165,10 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "check-price", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "1.\u3000\u5E95\u50F9\uFF1A" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("b", { children: [
+              "1.\u3000",
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "label-highlight", children: "\u5E95\u50F9\uFF1A" })
+            ] }),
             "\u5BEB\u5728\u59D4\u8A17\u4E3B\u7D04 P.2 \u7279\u7D04____________\u842C"
           ] }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "choice-lines", children: [
@@ -49099,7 +49181,10 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "2.\u3000%\u6578\uFF1A" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("b", { children: [
+              "2.\u3000",
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "label-highlight", children: "%\u6578\uFF1A" })
+            ] }),
             "\u5BEB\u5728\u59D4\u8A17\u4E3B\u7D04\u7B2C\u4E00\u9762______%"
           ] }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "choice-lines", children: [
@@ -49113,27 +49198,28 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       ] }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "check-middle", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "3.\u3000\u4E2D\u4EBA" }),
-          "\u3000\u25A1\u7121\uFF0C\u25A1\u6709\u4ECB\u7D39\u4EBA\uFF1A____________\u5143"
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("b", { children: [
+            "3.\u3000",
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "label-highlight", children: "\u4E2D\u4EBA" })
+          ] }),
+          "\u3000\u2610\u7121\uFF0C\u2610\u6709\u4ECB\u7D39\u4EBA\uFF1A____________\u5143"
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "check-entrust-period", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "4." }),
-          "\u3000",
           (() => {
             const period = intakeEntrustPeriod(val("\u59D4\u8A17\u958B\u59CB \u65E5\u671F", "\u59D4\u8A17\u958B\u59CB"), val("\u59D4\u8A17\u7D50\u675F \u65E5\u671F", "\u59D4\u8A17\u7D50\u675F"));
             return period ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
               "\u59D4\u8A17\u958B\u59CB:",
               period.start,
-              "\u3000~\u59D4\u8A17\u7D50\u675F:",
+              "~\u59D4\u8A17\u7D50\u675F:",
               period.end,
-              "\u3000",
               /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { children: [
                 "(\u5171",
                 period.months,
                 "\u500B\u6708)"
               ] })
             ] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
-              "\u59D4\u8A17\u958B\u59CB:________\u3000~\u59D4\u8A17\u7D50\u675F:________\u3000",
+              "\u59D4\u8A17\u958B\u59CB:________~\u59D4\u8A17\u7D50\u675F:________",
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "(\u5171____\u500B\u6708)" })
             ] });
           })()
@@ -49141,132 +49227,223 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       ] }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "registry-block", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "registry-table", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "5." }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "registry-label", children: "\u8ACB\u5BEB\u5730\u865F\u5171__________\u7B46" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("b", { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "5." }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u5730" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u865F" })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "registry-label", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "registry-count", children: [
+            "\u5171",
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("i", { "aria-hidden": "true" }),
+            "\u7B46"
+          ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "registry-cases", children: [1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { children: [
-              "(",
               n,
-              ")"
+              "."
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u25A1\u7D19\u672C\u5DF2\u9644" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u25A1\u5DF2\u8ABF\u8ACB\u5370" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u25A1\u5354\u52A9\u8ABF\u95B1" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { className: "registry-checkbox", children: "\u2610" }),
+              "\u7D19\u672C\u5DF2\u9644"
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { className: "registry-checkbox", children: "\u2610" }),
+              "\u5DF2\u8ABF\u8ACB\u5370"
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { className: "registry-checkbox", children: "\u2610" }),
+              "\u5354\u52A9\u8ABF\u95B1"
+            ] })
           ] }, n)) })
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "registry-table building", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "6." }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "registry-label", children: "\u8ACB\u5BEB\u5EFA\u865F\u5171__________\u7B46" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("b", { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "6." }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u5EFA" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u865F" })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "registry-label", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "registry-count", children: [
+            "\u5171",
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("i", { "aria-hidden": "true" }),
+            "\u7B46"
+          ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "registry-cases", children: [1, 2, 3, 4, 5].map((n) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { children: [
-              "(",
               n,
-              ")"
+              "."
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u25A1\u7D19\u672C\u5DF2\u9644" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u25A1\u5DF2\u8ABF\u8ACB\u5370" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u25A1\u5354\u52A9\u8ABF\u95B1" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { className: "registry-checkbox", children: "\u2610" }),
+              "\u7D19\u672C\u5DF2\u9644"
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { className: "registry-checkbox", children: "\u2610" }),
+              "\u5DF2\u8ABF\u8ACB\u5370"
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { className: "registry-checkbox", children: "\u2610" }),
+              "\u5354\u52A9\u8ABF\u95B1"
+            ] })
           ] }, n)) })
         ] })
       ] }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "check-lines", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "7.\u3000\u5730\u7C4D\u5716" }),
-          "\u3000\u25A1\u5927\u6A13\uFF1A\u7121\u9808\u8ABF\u3000\u2502\u3000\u623F\u5C4B\uFF0F\u571F\u5730\uFF08\u25A1\u7D19\u672C\u5DF2\u9644\u4EF6\u3000\u25A1\u66FE\u7D93\u8ABF\u95B1\u8ACB\u5217\u5370\u3000\u25A1\u8ACB\u5354\u52A9\u8ABF\u95B1\uFF09"
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("b", { children: [
+            "7.\u3000",
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "label-highlight", children: "\u5730\u7C4D\u5716" })
+          ] }),
+          "\u3000\u2610\u5927\u6A13\uFF1A\u7121\u9808\u8ABF\u3000\u2502\u3000\u623F\u5C4B\uFF0F\u571F\u5730\uFF08\u2610\u7D19\u672C\u5DF2\u9644\u4EF6\u3000\u2610\u66FE\u7D93\u8ABF\u95B1\u8ACB\u5217\u5370\u3000\u2610\u8ACB\u5354\u52A9\u8ABF\u95B1\uFF09"
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "8.\u3000\u6210\u679C\u5716" }),
-          "\u3000\u25A1\u571F\u5730\uFF1A\u7121\u9808\u8ABF\u3000\u2502\u3000\u6709\u5EFA\u865F\uFF08\u25A1\u7D19\u672C\u5DF2\u9644\u4EF6\u3000\u25A1\u66FE\u7D93\u8ABF\u95B1\u8ACB\u5217\u5370\u3000\u25A1\u8ACB\u5354\u52A9\u8ABF\u95B1\uFF09"
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("b", { children: [
+            "8.\u3000",
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "label-highlight", children: "\u6210\u679C\u5716" })
+          ] }),
+          "\u3000\u2610\u571F\u5730\uFF1A\u7121\u9808\u8ABF\u3000\u2502\u3000\u6709\u5EFA\u865F\uFF08\u2610\u7D19\u672C\u5DF2\u9644\u4EF6\u3000\u2610\u66FE\u7D93\u8ABF\u95B1\u8ACB\u5217\u5370\u3000\u2610\u8ACB\u5354\u52A9\u8ABF\u95B1\uFF09"
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "9.\u3000\u6AA2\u67E5\u25A1" }),
-          " \u59D4\u8A17\u4EBA\uFF08\u8CE3\u65B9\uFF09\uFF0D",
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u8AAA\u660E\u66F8 \u662F\u5426\u5DF2\u7C3D\u540D" }),
-          "\u3000\u3000",
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "10.\u3000\u6AA2\u67E5\u25A1" }),
-          " \u59D4\u8A17\u4EBA\uFF08\u8CE3\u65B9\uFF09\uFF0D",
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u500B\u8CC7\u6CD5 \u662F\u5426\u5DF2\u7C3D\u540D" })
-        ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "11.\u3000\u5EFA\u7269\u6B0A\u72C0" }),
-          "\u5171____\u5F35\u3000\u25A1\u5DF2\u9644\u7D19\u672C\u3000\u25C6\u5DF2\u50B3_____LINE \u8ACB\u5217\u5370\u3000\u25C6\u25A1\u7121\u6B0A\u72C0\u5207\u7D50"
-        ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "12.\u3000\u571F\u5730\u6B0A\u72C0" }),
-          "\u5171____\u5F35\u3000\u25A1\u5DF2\u9644\u7D19\u672C\u3000\u25C6\u5DF2\u50B3_____LINE \u8ACB\u5217\u5370\u3000\u25C6\u25A1\u7121\u6B0A\u72C0\u5207\u7D50"
-        ] })
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "9. \u2610\u8AAA\u660E\u66F8\u7C3D\u540DOK\u3001\u2610\u500B\u8CC7\u6CD5\u7C3D\u540DOK\uFF1A\u6AA2\u67E5\u59D4\u8A17\u4EBA(\u8CE3\u65B9)-\u662F\u5426\u5DF2\u7C3D\u540D" })
       ] }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "check-columns", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { className: "column-heading", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "13. \u59D4\u8A17\u5951\u7D04\uFF1A" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "section-number", children: "10. " }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u59D4\u8A17\u5951\u7D04\uFF1A" }),
             "\u6AA2\u67E5\u662F\u5426\u6709\u586B\u5BEB"
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "\u25A1 (1).\u3000\u59D4\u8A17\u65E5\u671F" }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "\u25A1 (2).\u3000\u5EE3\u544A\u958B\u50F9" }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "\u25A1 (3).\u3000\u627F\u8FA6\u4EBA\u958B\u767C\u7C3D\u540D" }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "\u25A1 (4).\u3000\u5951\u7D04\u73FE\u6CC1\u52FE\u9078" })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "\u2610 (1).\u3000\u59D4\u8A17\u65E5\u671F" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { children: [
+            "\u2610 (2).\u3000",
+            (() => {
+              const price = String(val("\u5951\u7D04\u958B\u50F9", "\u7E3D\u50F9") || "").replace(/\s*萬(?:元)?\s*/g, "").trim() || "______";
+              const contractNo = String(val("\u59D4\u8A17\u4E3B\u7D04\u7DE8\u865F", "\u59D4\u8A17\u4E3B\u7D04\u7DE8\u865F:", "\u7269\u4EF6\u7DE8\u865F") || "").trim() || "__________";
+              return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+                "\u5EE3\u544A\u958B\u50F9",
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "contract-price-value", children: price }),
+                "\u842C\u6709\u7B26\u5408\u5951\u7D04",
+                contractNo,
+                "\u7C3D\u8A02"
+              ] });
+            })()
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "\u2610 (3).\u3000\u627F\u8FA6\u4EBA\u958B\u767C\u7C3D\u540D" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "\u2610 (4).\u3000\u5951\u7D04\u73FE\u6CC1\u52FE\u9078" })
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { className: "column-heading", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "15. \u8CE3\u65B9\u8CC7\u8A0A\uFF1A" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "section-number", children: "11. " }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u8CE3\u65B9\u8CC7\u8A0A\uFF1A" }),
             "\u6AA2\u67E5\u662F\u5426\u6709\u586B\u5BEB"
           ] }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "seller-info-columns", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "\u25A1 (1).\u3000\u59D4\u8A17\u4EBA\u7C3D\u540D" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "\u25A1 (2).\u3000\u8CE3\u65B9 ID" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "\u25A1 (3).\u3000\u8CE3\u65B9\u751F\u65E5" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "\u25A1 (4).\u3000\u8CE3\u65B9\u5730\u5740" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "\u25A1 (5).\u3000\u8CE3\u65B9\u96FB\u8A71" })
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "\u2610 (1).\u3000\u59D4\u8A17\u4EBA\u7C3D\u540D" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "\u2610 (2).\u3000\u8CE3\u65B9 ID" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "\u2610 (3).\u3000\u8CE3\u65B9\u751F\u65E5" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "\u2610 (4).\u3000\u8CE3\u65B9\u5730\u5740" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "\u2610 (5).\u3000\u8CE3\u65B9\u96FB\u8A71" })
             ] }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "\u25A1 (1).\u3000\u4EE3\u7406\u4EBA\u7C3D\u540D" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "\u25A1 (2).\u3000\u4EE3\u7406\u4EBA ID" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "\u25A1 (3).\u3000\u4EE3\u7406\u4EBA\u751F\u65E5" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "\u25A1 (4).\u3000\u4EE3\u7406\u4EBA\u5730\u5740" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "\u25A1 (5).\u3000\u4EE3\u7406\u4EBA\u96FB\u8A71" })
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "\u2610 (1).\u3000\u4EE3\u7406\u4EBA\u7C3D\u540D" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "\u2610 (2).\u3000\u4EE3\u7406\u4EBA ID" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "\u2610 (3).\u3000\u4EE3\u7406\u4EBA\u751F\u65E5" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "\u2610 (4).\u3000\u4EE3\u7406\u4EBA\u5730\u5740" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "\u2610 (5).\u3000\u4EE3\u7406\u4EBA\u96FB\u8A71" })
             ] })
           ] })
         ] })
       ] }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "check-acquire", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "14. \u662F\u5426\u4E00\u5E74\u5167\u53D6\u5F97\uFF1A" }),
-        "\u25A1\u662F\u3000\u25A1\u5426\u3000\u3000\u53D6\u5F97\u5E74\u4EFD\uFF1A______\u5E74"
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("b", { children: [
+          "12. \u662F\u5426",
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "acquire-highlight", children: "\u4E00\u5E74\u5167" }),
+          "\u53D6\u5F97\uFF1A"
+        ] }),
+        "\u2610\u662F\u3000\u2610\u5426\u3000\u3000\u53D6\u5F97\u5E74\u4EFD\uFF1A______\u5E74"
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "deed-lines", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "13. \u5EFA\u7269\u6B0A\u72C0" }),
+          "\u5171________\u5F35\u3000",
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "deed-choice-mark", children: "A" }),
+          "\u2610\u5DF2\u9644\u7D19\u672C\u3000",
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "deed-choice-mark", children: "B" }),
+          "\u2610\u5DF2",
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "line-print-icon", children: "LINE" }),
+          "\u52A9\u7406\uFF0C\u8ACB\u627E\u5C0D\u8A71\u7D00\u9304\u5217\u5370\u3000",
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "deed-choice-mark", children: "C" }),
+          "\u2610\u7121\u6B0A\u72C0\u5207\u7D50"
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "14. \u571F\u5730\u6B0A\u72C0" }),
+          "\u5171________\u5F35\u3000",
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "deed-choice-mark", children: "A" }),
+          "\u2610\u5DF2\u9644\u7D19\u672C\u3000",
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "deed-choice-mark", children: "B" }),
+          "\u2610\u5DF2",
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "line-print-icon", children: "LINE" }),
+          "\u52A9\u7406\uFF0C\u8ACB\u627E\u5C0D\u8A71\u7D00\u9304\u5217\u5370\u3000",
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "deed-choice-mark", children: "C" }),
+          "\u2610\u7121\u6B0A\u72C0\u5207\u7D50"
+        ] })
       ] }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "check-tail", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "16. \u5951\u8B8A\uFF1A" }),
-          "\u3000\u25A1\u9032\u6848\u300C\u7121\u300D\u5951\u8B8A",
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "section-number", children: "15. " }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u5951\u8B8A\uFF1A" }),
+          "\u3000\u2610\u9032\u6848\u300C\u7121\u300D\u5951\u8B8A",
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("br", {}),
-          "\u3000\u3000\u3000\u3000\u3000\u3000\u25A1\u9032\u6848\u3010\u6709\u3011\u5951\u8B8A\uFF08\u5951\u8B8A\u7DE8\u865F\uFF1A__________________\uFF0D\u6AA2\u67E5\u5951\u8B8A\u4E0A\u25A1\u627F\u8FA6\u4EBA\u958B\u767C\u7C3D\u540D\u3000\u25A1\u59D4\u8A17\u4EBA\u8CE3\u65B9\u7C3D\u540D\uFF09"
+          "\u3000\u3000\u3000\u3000\u3000\u3000\u2610\u9032\u6848\u3010\u6709\u3011\u5951\u8B8A\uFF08\u5951\u8B8A\u7DE8\u865F\uFF1A____________\uFF0D\u6AA2\u67E5\u5951\u8B8A\u4E0A\u2610\u627F\u8FA6\u4EBA\u958B\u767C\u7C3D\u540D\u3000\u2610\u59D4\u8A17\u4EBA\u8CE3\u65B9\u7C3D\u540D\uFF09"
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", { className: "auth-block", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "17. \u6388\u6B0A\u66F8\u3000\u4EE5\u4E0B\u5171_________\u5F35" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("b", { children: [
+            "16. ",
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "ownership-highlight", children: "\u8CE3\u65B9\u7522\u6B0A" }),
+            "\u5171_________\u4EBA"
+          ] }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "auth-table", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "\u8CE3\u65B9\u5171____\u4EBA" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "\u6240\u6709\u6B0A\u4EBA" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { className: "rights-heading", children: "\u6B0A\u5229\u7BC4\u570D" }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "\u672C\u4EBA\u89AA\u7C3D" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "\u9700\u4EE3\u7406" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "\u6388\u6B0A\u66F8(\u5F71/\u6B63)" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "\u4EE3\u7406\u4EBA" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "\u6388\u6B0A\u66F8" }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "\u6388\u6B0A\u66F8\u5F8C\u88DC" }),
             [1, 2, 3].map((n) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u8CE3\u65B9:________________" }, "a" + n),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u25A1\u672C\u4EBA\u89AA\u7C3D" }, "b" + n),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u25A1\u4EE3\u7406\u4EBA" }, "c" + n),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u25A1\u6B63\u672C/\u25A1\u5F71\u672C" }, "d" + n),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u25A1\u5F8C\u88DC" }, "e" + n)
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u8CE3\u65B9\uFF1A____________________" }, "a" + n),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u3000" }, "b" + n),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u2610\u672C\u4EBA\u89AA\u7C3D" }, "c" + n),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u2610\u4EE3\u7406\u4EBA" }, "d" + n),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "authorization-copies", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("i", { children: "\u2610\u6B63\u672C_______\u5F35" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("i", { children: "\u2610\u5F71\u672C_______\u5F35" })
+              ] }, "e" + n),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u2610\u6388\u6B0A\u66F8\u5F8C\u88DC" }, "f" + n)
             ] }))
           ] })
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", { className: "zoning-block", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "18. \u571F\u5730\u4F7F\u7528\u5206\u5340\uFF1A" }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "(1)\u3000\u25A1\u672C\u4EF6\u623F\u5C4B\u4E0D\u9700\u5206\u5340" }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "(2)\u3000\u90FD\u5167\u571F\u5730\uFF1A\u25A1\u9032\u6848\u5DF2\u9644\u3000\u25A1\u66FE\u7D93\u7533\u8ACB\u8ACB\u5217\u5370\u3000\u25A1\u8ACB\u5354\u52A9\u7533\u8ACB" }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "(3)\u3000\u90FD\u5916\u571F\u5730\uFF1A\u4F7F \u7528 \u5206 \u5340 \uFF1A_____________________\uFF0C\u4F7F\u7528\u5730\u985E\u5225\uFF1A_____________________\u3002" })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "zoning-heading", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "section-number", children: "17. " }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("b", { children: [
+              "\u571F\u5730",
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "zoning-highlight", children: "\u4F7F\u7528\u5206\u5340" }),
+              "\uFF1A"
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "(1)\u3000\u2610\u672C\u4EF6\u662F\u623F\u5C4B\u4E0D\u9700\u5206\u5340" })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "(2)" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u90FD\u5167\u571F\u5730\uFF1A\u2610\u9032\u6848\u5DF2\u9644\u3000\u2610\u66FE\u7D93\u7533\u8ACB\u8ACB\u5217\u5370\u3000\u2610\u8ACB\u5354\u52A9\u7533\u8ACB\u65E5\u671F________\u3002" })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "(3)" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u90FD\u5916\u571F\u5730\uFF1A\u4F7F \u7528 \u5206 \u5340 \uFF1A________________________\uFF0C\u4F7F\u7528\u5730\u985E\u5225\uFF1A________________________\u3002" })
+          ] })
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { className: "other-files", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "19. \u9032\u6848\u5176\u4ED6\u6587\u4EF6\uFF1A" }),
-          "____________________________________________________________"
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "section-number", children: "18. " }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u9032\u6848\u5176\u4ED6\u6587\u4EF6\uFF1A" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("i", { className: "other-files-line", "aria-hidden": "true" })
         ] })
       ] }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "signature-box", children: [
@@ -49776,7 +49953,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: `${fee}/\u6708` });
     }
     if (k === "notes") {
-      const internalNoteText = String(r.notes || "").trim();
+      const internalNoteText = displayNoteSegments(r.notes || "").join("\uFF1B");
       return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: internalNoteText || "\u2014" });
     }
     return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: cellValue(r, k) || "\u2014" });

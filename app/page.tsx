@@ -759,7 +759,7 @@ const directionShort = (value = "") => {
   return parsed.map(part => `${part.label || "朝向"}朝${part.facing}`).join("／");
 };
 
-const displayNoteSegments = (value = "") => String(value || "").split(/[；;]/).map(part => part.trim()).filter(part => part && !/^(?:0|無)$/.test(part)).map(part => part.includes("開發%") && !/^中人[:：]/.test(part) ? `中人:${part}` : part);
+const displayNoteSegments = (value = "") => String(value || "").split(/[；;]/).map(part => part.trim()).filter(part => part && !/^(?:0|無|中人\s*[:：]\s*無)$/.test(part)).map(part => part.includes("開發%") && !/^中人[:：]/.test(part) ? `中人:${part}` : part);
 const websiteCellDisplay = (record: RecordItem, key: string) => {
   const raw = String(record[key] || "").trim();
   const down = record[`${key}DownDate`] ? `${displayRocDate(record[`${key}DownDate`])}下架` : "";
@@ -2804,7 +2804,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V353</small></h1></div>
+<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V355</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingIntakeReminderRecords.length > 0 && <button className="new-case-reminder-header-button" onClick={() => { setNewCaseReminder({ ...pendingIntakeReminderRecords[0] }); setNewCaseReminderBatchIds(pendingIntakeReminderRecords.map(record => record.id)); }}>新進案件提醒 {pendingIntakeReminderRecords.length}</button>}{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -4178,27 +4178,26 @@ function ChecklistPageV2({ val }: { val: (...keys: string[]) => string }) {
     <div className="check-strip">案名：{val("案名")}　　標的物：{val("物件(完整)地址")}</div>
     <h1>請開發業務填寫檢查以下資訊</h1>
     <div className="check-price">
-      <div><p><b>1.　底價：</b>寫在委託主約 P.2 特約____________萬</p><div className="choice-lines"><div><p className="price-indent">寫在契變____________萬</p><p className="price-indent">賣方口頭____________萬</p></div><span>擇一</span></div></div>
-      <div><p><b>2.　%數：</b>寫在委託主約第一面______%</p><div className="choice-lines"><div><p className="price-indent">寫在契變______%</p><p className="price-indent">賣方口頭______%</p></div><span>擇一</span></div></div>
+      <div><p><b>1.　<span className="label-highlight">底價：</span></b>寫在委託主約 P.2 特約____________萬</p><div className="choice-lines"><div><p className="price-indent">寫在契變____________萬</p><p className="price-indent">賣方口頭____________萬</p></div><span>擇一</span></div></div>
+      <div><p><b>2.　<span className="label-highlight">%數：</span></b>寫在委託主約第一面______%</p><div className="choice-lines"><div><p className="price-indent">寫在契變______%</p><p className="price-indent">賣方口頭______%</p></div><span>擇一</span></div></div>
     </div>
     <div className="check-middle">
-      <div><b>3.　中人</b>　□無，□有介紹人：____________元</div>
-      <div className="check-entrust-period"><b>4.</b>　{(() => { const period = intakeEntrustPeriod(val("委託開始 日期", "委託開始"), val("委託結束 日期", "委託結束")); return period ? <>委託開始:{period.start}　~委託結束:{period.end}　<small>(共{period.months}個月)</small></> : <>委託開始:________　~委託結束:________　<small>(共____個月)</small></>; })()}</div>
+      <div><b>3.　<span className="label-highlight">中人</span></b>　☐無，☐有介紹人：____________元</div>
+      <div className="check-entrust-period"><b>4.</b>{(() => { const period = intakeEntrustPeriod(val("委託開始 日期", "委託開始"), val("委託結束 日期", "委託結束")); return period ? <>委託開始:{period.start}~委託結束:{period.end}<small>(共{period.months}個月)</small></> : <>委託開始:________~委託結束:________<small>(共____個月)</small></>; })()}</div>
     </div>
     <div className="registry-block">
-      <div className="registry-table"><b>5.</b><div className="registry-label">請寫地號共__________筆</div><div className="registry-cases">{[1,2,3,4,5,6,7,8,9].map(n=><div key={n}><small>({n})</small><span>□紙本已附</span><span>□已調請印</span><span>□協助調閱</span></div>)}</div></div>
-      <div className="registry-table building"><b>6.</b><div className="registry-label">請寫建號共__________筆</div><div className="registry-cases">{[1,2,3,4,5].map(n=><div key={n}><small>({n})</small><span>□紙本已附</span><span>□已調請印</span><span>□協助調閱</span></div>)}</div></div>
+      <div className="registry-table"><b><span>5.</span><span>地</span><span>號</span></b><div className="registry-label"><span className="registry-count">共<i aria-hidden="true"/>筆</span></div><div className="registry-cases">{[1,2,3,4,5,6,7,8,9].map(n=><div key={n}><small>{n}.</small><span><strong className="registry-checkbox">☐</strong>紙本已附</span><span><strong className="registry-checkbox">☐</strong>已調請印</span><span><strong className="registry-checkbox">☐</strong>協助調閱</span></div>)}</div></div>
+      <div className="registry-table building"><b><span>6.</span><span>建</span><span>號</span></b><div className="registry-label"><span className="registry-count">共<i aria-hidden="true"/>筆</span></div><div className="registry-cases">{[1,2,3,4,5].map(n=><div key={n}><small>{n}.</small><span><strong className="registry-checkbox">☐</strong>紙本已附</span><span><strong className="registry-checkbox">☐</strong>已調請印</span><span><strong className="registry-checkbox">☐</strong>協助調閱</span></div>)}</div></div>
     </div>
     <div className="check-lines">
-      <p><b>7.　地籍圖</b>　□大樓：無須調　│　房屋／土地（□紙本已附件　□曾經調閱請列印　□請協助調閱）</p>
-      <p><b>8.　成果圖</b>　□土地：無須調　│　有建號（□紙本已附件　□曾經調閱請列印　□請協助調閱）</p>
-      <p><b>9.　檢查□</b> 委託人（賣方）－<b>說明書 是否已簽名</b>　　<b>10.　檢查□</b> 委託人（賣方）－<b>個資法 是否已簽名</b></p>
-      <p><b>11.　建物權狀</b>共____張　□已附紙本　◆已傳_____LINE 請列印　◆□無權狀切結</p>
-      <p><b>12.　土地權狀</b>共____張　□已附紙本　◆已傳_____LINE 請列印　◆□無權狀切結</p>
+      <p><b>7.　<span className="label-highlight">地籍圖</span></b>　☐大樓：無須調　│　房屋／土地（☐紙本已附件　☐曾經調閱請列印　☐請協助調閱）</p>
+      <p><b>8.　<span className="label-highlight">成果圖</span></b>　☐土地：無須調　│　有建號（☐紙本已附件　☐曾經調閱請列印　☐請協助調閱）</p>
+      <p>9. ☐說明書簽名OK、☐個資法簽名OK：檢查委託人(賣方)-是否已簽名</p>
     </div>
-    <div className="check-columns"><div><p className="column-heading"><b>13. 委託契約：</b>檢查是否有填寫</p><p>□ (1).　委託日期</p><p>□ (2).　廣告開價</p><p>□ (3).　承辦人開發簽名</p><p>□ (4).　契約現況勾選</p></div><div><p className="column-heading"><b>15. 賣方資訊：</b>檢查是否有填寫</p><div className="seller-info-columns"><div><p>□ (1).　委託人簽名</p><p>□ (2).　賣方 ID</p><p>□ (3).　賣方生日</p><p>□ (4).　賣方地址</p><p>□ (5).　賣方電話</p></div><div><p>□ (1).　代理人簽名</p><p>□ (2).　代理人 ID</p><p>□ (3).　代理人生日</p><p>□ (4).　代理人地址</p><p>□ (5).　代理人電話</p></div></div></div></div>
-    <div className="check-acquire"><b>14. 是否一年內取得：</b>□是　□否　　取得年份：______年</div>
-    <div className="check-tail"><p><b>16. 契變：</b>　□進案「無」契變<br/>　　　　　　□進案【有】契變（契變編號：__________________－檢查契變上□承辦人開發簽名　□委託人賣方簽名）</p><section className="auth-block"><b>17. 授權書　以下共_________張</b><div className="auth-table"><strong>賣方共____人</strong><strong>本人親簽</strong><strong>需代理</strong><strong>授權書(影/正)</strong><strong>授權書後補</strong>{[1,2,3].map(n=><><span key={'a'+n}>賣方:________________</span><span key={'b'+n}>□本人親簽</span><span key={'c'+n}>□代理人</span><span key={'d'+n}>□正本/□影本</span><span key={'e'+n}>□後補</span></>)}</div></section><section className="zoning-block"><b>18. 土地使用分區：</b><p>(1)　□本件房屋不需分區</p><p>(2)　都內土地：□進案已附　□曾經申請請列印　□請協助申請</p><p>(3)　都外土地：使 用 分 區 ：_____________________，使用地類別：_____________________。</p></section><p className="other-files"><b>19. 進案其他文件：</b>____________________________________________________________</p></div>
+    <div className="check-columns"><div><p className="column-heading"><span className="section-number">10. </span><b>委託契約：</b>檢查是否有填寫</p><p>☐ (1).　委託日期</p><p>☐ (2).　{(() => { const price = String(val("契約開價", "總價") || "").replace(/\s*萬(?:元)?\s*/g, "").trim() || "______"; const contractNo = String(val("委託主約編號", "委託主約編號:", "物件編號") || "").trim() || "__________"; return <>廣告開價<span className="contract-price-value">{price}</span>萬有符合契約{contractNo}簽訂</>; })()}</p><p>☐ (3).　承辦人開發簽名</p><p>☐ (4).　契約現況勾選</p></div><div><p className="column-heading"><span className="section-number">11. </span><b>賣方資訊：</b>檢查是否有填寫</p><div className="seller-info-columns"><div><p>☐ (1).　委託人簽名</p><p>☐ (2).　賣方 ID</p><p>☐ (3).　賣方生日</p><p>☐ (4).　賣方地址</p><p>☐ (5).　賣方電話</p></div><div><p>☐ (1).　代理人簽名</p><p>☐ (2).　代理人 ID</p><p>☐ (3).　代理人生日</p><p>☐ (4).　代理人地址</p><p>☐ (5).　代理人電話</p></div></div></div></div>
+    <div className="check-acquire"><b>12. 是否<span className="acquire-highlight">一年內</span>取得：</b>☐是　☐否　　取得年份：______年</div>
+    <div className="deed-lines"><p><b>13. 建物權狀</b>共________張　<span className="deed-choice-mark">A</span>☐已附紙本　<span className="deed-choice-mark">B</span>☐已<span className="line-print-icon">LINE</span>助理，請找對話紀錄列印　<span className="deed-choice-mark">C</span>☐無權狀切結</p><p><b>14. 土地權狀</b>共________張　<span className="deed-choice-mark">A</span>☐已附紙本　<span className="deed-choice-mark">B</span>☐已<span className="line-print-icon">LINE</span>助理，請找對話紀錄列印　<span className="deed-choice-mark">C</span>☐無權狀切結</p></div>
+    <div className="check-tail"><p><span className="section-number">15. </span><b>契變：</b>　☐進案「無」契變<br/>　　　　　　☐進案【有】契變（契變編號：____________－檢查契變上☐承辦人開發簽名　☐委託人賣方簽名）</p><section className="auth-block"><b>16. <span className="ownership-highlight">賣方產權</span>共_________人</b><div className="auth-table"><strong>所有權人</strong><strong className="rights-heading">權利範圍</strong><strong>本人親簽</strong><strong>代理人</strong><strong>授權書</strong><strong>授權書後補</strong>{[1,2,3].map(n=><><span key={'a'+n}>賣方：____________________</span><span key={'b'+n}>　</span><span key={'c'+n}>☐本人親簽</span><span key={'d'+n}>☐代理人</span><span key={'e'+n} className="authorization-copies"><i>☐正本_______張</i><i>☐影本_______張</i></span><span key={'f'+n}>☐授權書後補</span></>)}</div></section><section className="zoning-block"><div className="zoning-heading"><span className="section-number">17. </span><b>土地<span className="zoning-highlight">使用分區</span>：</b><span>(1)　☐本件是房屋不需分區</span></div><p><span>(2)</span><span>都內土地：☐進案已附　☐曾經申請請列印　☐請協助申請日期________。</span></p><p><span>(3)</span><span>都外土地：使 用 分 區 ：________________________，使用地類別：________________________。</span></p></section><p className="other-files"><span className="section-number">18. </span><b>進案其他文件：</b><i className="other-files-line" aria-hidden="true"/></p></div>
     <div className="signature-box"><span>以上檢查資訊，填寫人簽名：</span><i aria-hidden="true"/></div>
     <div className="check-strip bottom">案名：{val("案名")}　　標的物：{val("物件(完整)地址")}</div>
   </article>;
@@ -4331,7 +4330,7 @@ function CellContent({ record: r, column: k }: { record: RecordItem; column: str
     return <>{`${fee}/月`}</>;
   }
   if (k === "notes") {
-    const internalNoteText = String(r.notes || "").trim();
+    const internalNoteText = displayNoteSegments(r.notes || "").join("；");
     return <>{internalNoteText || "—"}</>;
   }
   return <>{cellValue(r, k) || "—"}</>;
