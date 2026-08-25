@@ -775,7 +775,10 @@ const directionShort = (value = "") => {
   return parsed.map(part => `${part.label || "朝向"}朝${part.facing}`).join("／");
 };
 
-const displayNoteSegments = (value = "") => String(value || "").split(/[；;]/).map(part => part.trim()).filter(part => part && !/^(?:0|無|中人\s*[:：]\s*無)$/.test(part)).map(part => part.includes("開發%") && !/^中人[:：]/.test(part) ? `中人:${part}` : part);
+const displayNoteSegments = (value = "") => String(value || "").split(/[；;]/).map(part => part.trim()).filter(part => {
+  const normalized = part.replace(/\s+/g, "");
+  return normalized && !/^(?:0|無|-|中人[:：]?(?:無|0|-)?$)/.test(normalized);
+}).map(part => part.includes("開發%") && !/^中人\s*[:：]/.test(part) ? `中人:${part}` : part);
 const websiteCellDisplay = (record: RecordItem, key: string) => {
   const raw = String(record[key] || "").trim();
   const down = record[`${key}DownDate`] ? `${displayRocDate(record[`${key}DownDate`])}下架` : "";
@@ -811,7 +814,8 @@ function intakeToRecord(intake: IntakeData, existing?: RecordItem): RecordItem {
   const coverageFar = intakeValue(v, "建蔽率/容積率").split(/[／/]/);
   const completion = intakeValue(v, "建築完成日期");
   const middleman = intakeValue(v, "中人");
-  const notes = [intakeValue(v, "增建說明"), middleman ? `中人:${middleman}` : "", intakeValue(v, "注意事項")].filter(Boolean).join("；");
+  const hasMiddleman = !/^(?:\s|無|0|-)*$/.test(middleman);
+  const notes = [intakeValue(v, "增建說明"), hasMiddleman ? `中人:${middleman}` : "", intakeValue(v, "注意事項")].filter(Boolean).join("；");
   const parking = [intakeValue(v, "車位"), ...intakeAll(v, "車位型態"), intakeValue(v, "車位編號")].filter(Boolean).join("／");
   const parkingOwnership = /無車位/.test(parking) ? "無車位" : /停自有地|自有地/.test(parking) ? "停自有地" : /車位另租/.test(parking) ? "車位另租" : /抽籤/.test(parking) ? "抽籤決定" : /固定/.test(parking) ? "固定車位" : "";
   const parkingType = /先到先停/.test(parking) ? "先到先停" : /排隊/.test(parking) ? "排隊等候" : /停自有地|自有地/.test(parking) ? "停自有地" : /車位另租/.test(parking) ? "車位另租" : /抽籤/.test(parking) ? "抽籤決定" : /固定/.test(parking) ? "固定車位" : "";
@@ -1780,8 +1784,7 @@ export default function Home() {
     const keyNumber = String(editing.key || "").match(/公司\s*[#＃]?\s*(\d+)/)?.[1];
     const allowedKeyNumbers = new Set([1, 2, 3, 5, 6, 7, 8, 17, 18, 19, 20, 21, 22, 23, 24, 33, 34, 35, 36, 37, 38, 39, 49, 50, 51, 52, 53, 55, 56, 65, 66, 67, 68, 69, 70, 71, 72, 81, 82, 83, 85, 86, 87, 88]);
     if (keyNumber && !allowedKeyNumbers.has(Number(keyNumber))) { alert(`鑰匙編號公司#${keyNumber}不在鑰匙總表的有效標號內，請重新輸入。`); return; }
-    const duplicatedKey = keyNumber ? records.find(record => record.id !== editing.id && String(record.key || "").match(/公司\s*[#＃]?\s*(\d+)/)?.[1] === keyNumber) : undefined;
-    if (duplicatedKey) { alert(`鑰匙編號公司#${keyNumber}已由「${duplicatedKey.caseName || duplicatedKey.propertyNo}」使用，請確認後再儲存。`); return; }
+    // 同一把鑰匙可同時對應售件、租件或同址多筆案件；僅以物件 id／編號辨識案件，不阻擋儲存。
     if (normalizedEditing._intakeDraftId) {
       setIntakeDrafts(previous => previous.map(draft => draft.id === normalizedEditing._intakeDraftId ? { ...draft, values: syncRecordToDraftValues(draft, normalizedEditing), propertyKind: normalizedEditing.type.includes("土地") ? "純土地" : "房屋" } : draft));
       setTourItems(previous => previous.map(item => item.data._intakeDraftId === normalizedEditing._intakeDraftId ? { ...item, data: { ...item.data, ...normalizedEditing, reportDate: "", status: "尚未進案", _notEntered: "1" } } : item));
@@ -2822,7 +2825,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V361</small></h1></div>
+<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V362</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingIntakeReminderRecords.length > 0 && <button className="new-case-reminder-header-button" onClick={() => { setNewCaseReminder({ ...pendingIntakeReminderRecords[0] }); setNewCaseReminderBatchIds(pendingIntakeReminderRecords.map(record => record.id)); }}>新進案件提醒 {pendingIntakeReminderRecords.length}</button>}{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -4005,7 +4008,7 @@ function DailyActivity({ records, compact = false, onEdit }: { records: RecordIt
   const nextDate = addDaysIso(selectedDate, 1);
   const rocDay = displayRocDate(selectedDate);
   const updateRecords = records.filter(record => !record.archived && !isExpired(record) && record.status === "委託中" && (dailyUpdateFields(record, selectedDate).length > 0 || dateOnly(record._restoredAt) === selectedDate)).map(record => { const changed = dailyUpdateFields(record, selectedDate); const restored = dateOnly(record._restoredAt) === selectedDate; const showingPause = /^\d{1,3}\/\d{1,2}暫停帶看$/.test(String(record.caseNameNote || "").trim()); return { ...record, caseNameNote: showingPause ? "" : (changed.length ? `更新：${dailyChangedLabels(changed).join("、")}` : ""), _dailyHighlight: JSON.stringify(showingPause ? [] : changed), ...(showingPause ? { _dailyAnnotation: record.caseNameNote, _dailyAnnotationType: "showing-pause" } : {}), ...(restored ? { _dailyAnnotation: `${shortRocMonthDay(selectedDate)}重新上架`, _dailyAnnotationType: "restored" } : {}) }; });
-  const removedRecords = records.filter(record => !!record.archived && dateOnly(record._archiveActionDate || record.archived) === selectedDate).map(record => ({ ...record, _dailyAnnotation: `${displayRocDate(record.archived)}${archiveStatusOf(record)}` }));
+  const removedRecords = records.filter(record => !!record.archived && dateOnly(record._archiveActionDate || record.archived) === selectedDate).map(record => ({ ...record, _dailyAnnotation: `${shortRocMonthDay(record._archiveActionDate || record.archived)}${archiveStatusOf(record)}` }));
   const groups = [
     { key: "added", title: "新增物件", records: records.filter(record => dateOnly(record._dailyAddedAt || record.reportDate) === selectedDate) },
     { key: "updated", title: "更新物件", records: updateRecords },
