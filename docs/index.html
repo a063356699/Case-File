@@ -45650,7 +45650,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V363" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V364" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -48555,7 +48555,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       const showingPause = /^\d{1,3}\/\d{1,2}暫停帶看$/.test(String(record.caseNameNote || "").trim());
       return { ...record, caseNameNote: showingPause ? record.caseNameNote : changed.length ? `\u66F4\u65B0\uFF1A${dailyChangedLabels(changed).join("\u3001")}` : "", _dailyHighlight: JSON.stringify(showingPause ? [] : changed), ...restored ? { _dailyAnnotation: `${shortRocMonthDay(selectedDate)}\u91CD\u65B0\u4E0A\u67B6`, _dailyAnnotationType: "restored" } : {} };
     });
-    const removedRecords = records.filter((record) => !!record.archived && dateOnly(record._archiveActionDate || record.archived) === selectedDate).map((record) => ({ ...record, caseNameNote: "", _dailyHighlight: "[]", _dailyAnnotation: `${shortRocMonthDay(record._archiveActionDate || record.archived)}${archiveStatusOf(record)}` }));
+    const removedRecords = records.filter((record) => !!record.archived && dateOnly(record._archiveActionDate || record.archived) === selectedDate).map((record) => ({ ...record, caseNameNote: `${shortRocMonthDay(record._archiveActionDate || record.archived)}${archiveStatusOf(record)}`, _dailyHighlight: "[]" }));
     const groups = [
       { key: "added", title: "\u65B0\u589E\u7269\u4EF6", records: records.filter((record) => dateOnly(record._dailyAddedAt || record.reportDate) === selectedDate) },
       { key: "updated", title: "\u66F4\u65B0\u7269\u4EF6", records: updateRecords },
