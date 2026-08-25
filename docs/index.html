@@ -42367,7 +42367,12 @@ ${String(ex)}`);
     return matched ? normalizeDateInput(matched[1]) : "";
   };
   var isExpired = (r) => validDate(r.entrustEnd) && !!r.entrustEnd && r.entrustEnd < today();
-  var archiveStatusOf = (r) => String(r._archiveStatus || "").trim() || (r.archived && r.status === "\u59D4\u8A17\u4E2D" && /^(?:EB|EC)/i.test(String(r.propertyNo || "")) ? "\u79DF\u51FA\u4E0B\u67B6" : r.status || "\u59D4\u8A17\u4E2D");
+  var archiveStatusOf = (r) => {
+    const savedStatus = String(r._archiveStatus || "").trim();
+    if (savedStatus) return savedStatus;
+    if (r.archived && r.status === "\u59D4\u8A17\u4E2D") return /^(?:EB|EC)/i.test(String(r.propertyNo || "")) ? "\u79DF\u51FA\u4E0B\u67B6" : "\u552E\u51FA\u4E0B\u67B6";
+    return r.status || "\u59D4\u8A17\u4E2D";
+  };
   var displayStatus = (r) => isExpired(r) && !r.archived && r.status === "\u59D4\u8A17\u4E2D" ? "\u5230\u671F\u4E0B\u67B6" : archiveStatusOf(r);
   var ageOf = (r) => {
     const completionYear = String(r.completionDate || "").match(/\d{2,4}/)?.[0] || "";
@@ -45650,7 +45655,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V364" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V365" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
