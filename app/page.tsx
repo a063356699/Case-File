@@ -722,7 +722,7 @@ const defaultIntakeHeaders = [
 function parseIntakes(text: string): IntakeData[] {
   const rows = parseTsv(text).filter(row => row.some(cell => cell.trim()));
   if (!rows.length) return [];
-  const hasHeaders = rows[0].some(cell => cell.includes("時間戳記") || cell.includes("表單填寫人") || cell.includes("委託主約編號"));
+  const hasHeaders = rows[0].some(cell => cell.includes("時間戳記") || cell.includes("表單填寫人") || cell.includes("填寫人") || cell.includes("委託主約編號"));
   const headers = hasHeaders ? rows[0] : defaultIntakeHeaders;
   const dataRows = hasHeaders ? rows.slice(1) : rows;
   return dataRows.filter(data => data.some(cell => cell.trim())).map(data => {
@@ -734,12 +734,28 @@ function parseIntakes(text: string): IntakeData[] {
   });
 }
 
+const normalizeIntakeHeader = (value = "") => String(value || "")
+  .normalize("NFKC")
+  .replace(/[（(【\[]/g, "")
+  .replace(/[）)】\]]/g, "")
+  .replace(/[：:]/g, "")
+  .replace(/[／\\]/g, "/")
+  .replace(/[＿_~～*＊\s]+/g, "")
+  .replace(/[，,。.]/g, "")
+  .toLowerCase();
+
 function intakeValue(values: Record<string, string>, ...needles: string[]) {
-  for (const needle of needles) { const found = Object.entries(values).find(([key, value]) => key.includes(needle) && value); if (found) return found[1]; }
+  for (const needle of needles) {
+    const normalizedNeedle = normalizeIntakeHeader(needle);
+    const entries = Object.entries(values).filter(([, value]) => value);
+    const found = entries.find(([key]) => normalizeIntakeHeader(key) === normalizedNeedle)
+      || entries.find(([key]) => normalizeIntakeHeader(key).includes(normalizedNeedle));
+    if (found) return found[1];
+  }
   return "";
 }
 
-function intakeAll(values: Record<string, string>, needle: string) { return Object.entries(values).filter(([key, value]) => key.includes(needle) && value).map(([, value]) => value); }
+function intakeAll(values: Record<string, string>, needle: string) { const normalizedNeedle = normalizeIntakeHeader(needle); return Object.entries(values).filter(([key, value]) => normalizeIntakeHeader(key).includes(normalizedNeedle) && value).map(([, value]) => value); }
 
 const directionFacing = (value = "") => {
   const text = String(value || "").trim();
@@ -759,7 +775,10 @@ const directionShort = (value = "") => {
   return parsed.map(part => `${part.label || "朝向"}朝${part.facing}`).join("／");
 };
 
-const displayNoteSegments = (value = "") => String(value || "").split(/[；;]/).map(part => part.trim()).filter(part => part && !/^(?:0|無)$/.test(part)).map(part => part.includes("開發%") && !/^中人[:：]/.test(part) ? `中人:${part}` : part);
+const displayNoteSegments = (value = "") => String(value || "").split(/[；;]/).map(part => part.trim()).filter(part => {
+  const normalized = part.replace(/\s+/g, "");
+  return normalized && !/^(?:0|無|-|中人[:：]?(?:無|0|-)?$)/.test(normalized);
+}).map(part => part.includes("開發%") && !/^中人\s*[:：]/.test(part) ? `中人:${part}` : part);
 const websiteCellDisplay = (record: RecordItem, key: string) => {
   const raw = String(record[key] || "").trim();
   const down = record[`${key}DownDate`] ? `${displayRocDate(record[`${key}DownDate`])}下架` : "";
@@ -795,13 +814,16 @@ function intakeToRecord(intake: IntakeData, existing?: RecordItem): RecordItem {
   const coverageFar = intakeValue(v, "建蔽率/容積率").split(/[／/]/);
   const completion = intakeValue(v, "建築完成日期");
   const middleman = intakeValue(v, "中人");
-  const notes = [intakeValue(v, "增建說明"), middleman ? `中人:${middleman}` : "", intakeValue(v, "注意事項")].filter(Boolean).join("；");
+  const hasMiddleman = !/^(?:\s|無|0|-)*$/.test(middleman);
+  const notes = [intakeValue(v, "增建說明"), hasMiddleman ? `中人:${middleman}` : "", intakeValue(v, "注意事項")].filter(Boolean).join("；");
   const parking = [intakeValue(v, "車位"), ...intakeAll(v, "車位型態"), intakeValue(v, "車位編號")].filter(Boolean).join("／");
   const parkingOwnership = /無車位/.test(parking) ? "無車位" : /停自有地|自有地/.test(parking) ? "停自有地" : /車位另租/.test(parking) ? "車位另租" : /抽籤/.test(parking) ? "抽籤決定" : /固定/.test(parking) ? "固定車位" : "";
   const parkingType = /先到先停/.test(parking) ? "先到先停" : /排隊/.test(parking) ? "排隊等候" : /停自有地|自有地/.test(parking) ? "停自有地" : /車位另租/.test(parking) ? "車位另租" : /抽籤/.test(parking) ? "抽籤決定" : /固定/.test(parking) ? "固定車位" : "";
   const parkingMethod = parking.match(/坡道[／/]平面|坡道[／/]機械|昇降[／/]平面|昇降[／/]機械|庭院|平移[／/]機械/)?.[0] || "";
-  const elementarySchool = intakeValue(v, "鄰近國小"); const juniorHighSchool = intakeValue(v, "鄰近國中"); const seniorHighSchool = intakeValue(v, "鄰近高中"); const collegeSchool = intakeValue(v, "鄰近大專");
-  return { ...blankRecord(), ...(existing || {}), propertyNo: no, contractType: contractFromNo(no), type: intakeValue(v, "物件型態"), status: existing?.status || "委託中", area: intakeValue(v, "物件(完整)地址").replace(/^.*?[市縣]/, "").slice(0, 3), caseName: intakeValue(v, "案名"), address: intakeValue(v, "物件(完整)地址"), price: intakeValue(v, "契約開價"), direction: intakeValue(v, "朝向 [房屋朝]", "朝向 [大門朝]", "朝向 [土地朝]"), completionDate: completion, builtYear: completion ? String(Number(completion.split(/[./]/)[0])) : "", titleFloor: intakeValue(v, "權狀層數"), currentFloor: intakeValue(v, "透天請寫"), floor: [intakeValue(v, "權狀層數"), intakeValue(v, "透天請寫")].filter(Boolean).join("／"), layout, indoorPing: intakeValue(v, "室內坪"), buildingPing: intakeValue(v, "總建坪"), landPing: intakeValue(v, "地坪"), parking, parkingOwnership, parkingType, parkingMethod, parkingNo: intakeValue(v, "車位編號"), buildingName: intakeValue(v, "大樓名稱"), elevatorCount: intakeValue(v, "電梯數"), unitsPerFloor: intakeValue(v, "每層戶數"), managementMethod: intakeValue(v, "警衛管理"), market: intakeValue(v, "市場/購物"), park: intakeValue(v, "公園綠地"), elementarySchool, juniorHighSchool, seniorHighSchool, collegeSchool, school: [elementarySchool, juniorHighSchool, seniorHighSchool, collegeSchool].filter(Boolean).join("／") || existing?.school || "", feature1: intakeValue(v, "特色說明1"), feature2: intakeValue(v, "特色說明2"), feature3: intakeValue(v, "特色說明3"), feature4: intakeValue(v, "特色說明4"), attentionNotes: [intakeValue(v, "增建說明"), intakeValue(v, "注意事項")].filter(Boolean).join("；"), managementFee: intakeValue(v, "管理費"), key: intakeValue(v, "鑰匙位置"), currentState: intakeValue(v, "(物件)現況"), road: intakeValue(v, "臨路"), frontage: intakeValue(v, "面寬"), depth: intakeValue(v, "深度"), zoning: intakeValue(v, "使用分區"), coverage: coverageFar[0] || "", far: coverageFar[1] || "", developer: intakeValue(v, "開發１/開發２"), entrustStart: normalizeDateInput(intakeValue(v, "委託開始")), entrustEnd: normalizeDateInput(intakeValue(v, "委託結束")), reportDate: existing?.reportDate || today(), updateDate: today(), groupViewDate: existing?.groupViewDate || intake.groupViewDate || "", notes, photoInfo: existing?.photoInfo || "" };
+  const elementarySchool = intakeValue(v, "鄰近國小", "國小"); const juniorHighSchool = intakeValue(v, "鄰近國中", "國中"); const seniorHighSchool = intakeValue(v, "鄰近高中", "高中"); const collegeSchool = intakeValue(v, "鄰近大專", "大專");
+  const address = intakeValue(v, "物件(完整)地址", "物件完整地址");
+  const currentFloor = intakeValue(v, "透天請寫", "現況樓層");
+  return { ...blankRecord(), ...(existing || {}), propertyNo: no, contractType: contractFromNo(no), type: intakeValue(v, "物件型態"), status: existing?.status || "委託中", area: address.replace(/^.*?[市縣]/, "").slice(0, 3), caseName: intakeValue(v, "案名"), address, price: intakeValue(v, "契約開價"), direction: intakeValue(v, "朝向 [房屋朝]", "朝向 [大門朝]", "朝向 [土地朝]"), completionDate: completion, builtYear: completion ? String(Number(completion.split(/[./]/)[0])) : "", titleFloor: intakeValue(v, "權狀層數"), currentFloor, floor: [intakeValue(v, "權狀層數"), currentFloor].filter(Boolean).join("／"), layout, indoorPing: intakeValue(v, "室內坪"), buildingPing: intakeValue(v, "總建坪"), landPing: intakeValue(v, "地坪"), parking, parkingOwnership, parkingType, parkingMethod, parkingNo: intakeValue(v, "車位編號"), buildingName: intakeValue(v, "大樓名稱"), elevatorCount: intakeValue(v, "電梯數"), unitsPerFloor: intakeValue(v, "每層戶數"), managementMethod: intakeValue(v, "警衛管理"), market: intakeValue(v, "市場/購物", "市場"), park: intakeValue(v, "公園綠地", "公園"), elementarySchool, juniorHighSchool, seniorHighSchool, collegeSchool, school: [elementarySchool, juniorHighSchool, seniorHighSchool, collegeSchool].filter(Boolean).join("／") || existing?.school || "", feature1: intakeValue(v, "特色說明1"), feature2: intakeValue(v, "特色說明2"), feature3: intakeValue(v, "特色說明3"), feature4: intakeValue(v, "特色說明4"), attentionNotes: [intakeValue(v, "增建說明", "坪數說明"), intakeValue(v, "注意事項")].filter(Boolean).join("；"), managementFee: intakeValue(v, "管理費"), key: intakeValue(v, "鑰匙位置"), currentState: intakeValue(v, "(物件)現況", "現況"), road: intakeValue(v, "臨路"), frontage: intakeValue(v, "面寬"), depth: intakeValue(v, "深度"), zoning: intakeValue(v, "使用分區"), coverage: coverageFar[0] || "", far: coverageFar[1] || "", developer: intakeValue(v, "開發１/開發２"), entrustStart: normalizeDateInput(intakeValue(v, "委託開始")), entrustEnd: normalizeDateInput(intakeValue(v, "委託結束")), reportDate: existing?.reportDate || today(), updateDate: today(), groupViewDate: existing?.groupViewDate || intake.groupViewDate || "", notes, photoInfo: existing?.photoInfo || "" };
 }
 
 function recordToIntake(record: RecordItem): IntakeData {
@@ -1762,8 +1784,7 @@ export default function Home() {
     const keyNumber = String(editing.key || "").match(/公司\s*[#＃]?\s*(\d+)/)?.[1];
     const allowedKeyNumbers = new Set([1, 2, 3, 5, 6, 7, 8, 17, 18, 19, 20, 21, 22, 23, 24, 33, 34, 35, 36, 37, 38, 39, 49, 50, 51, 52, 53, 55, 56, 65, 66, 67, 68, 69, 70, 71, 72, 81, 82, 83, 85, 86, 87, 88]);
     if (keyNumber && !allowedKeyNumbers.has(Number(keyNumber))) { alert(`鑰匙編號公司#${keyNumber}不在鑰匙總表的有效標號內，請重新輸入。`); return; }
-    const duplicatedKey = keyNumber ? records.find(record => record.id !== editing.id && String(record.key || "").match(/公司\s*[#＃]?\s*(\d+)/)?.[1] === keyNumber) : undefined;
-    if (duplicatedKey) { alert(`鑰匙編號公司#${keyNumber}已由「${duplicatedKey.caseName || duplicatedKey.propertyNo}」使用，請確認後再儲存。`); return; }
+    // 同一把鑰匙可同時對應售件、租件或同址多筆案件；僅以物件 id／編號辨識案件，不阻擋儲存。
     if (normalizedEditing._intakeDraftId) {
       setIntakeDrafts(previous => previous.map(draft => draft.id === normalizedEditing._intakeDraftId ? { ...draft, values: syncRecordToDraftValues(draft, normalizedEditing), propertyKind: normalizedEditing.type.includes("土地") ? "純土地" : "房屋" } : draft));
       setTourItems(previous => previous.map(item => item.data._intakeDraftId === normalizedEditing._intakeDraftId ? { ...item, data: { ...item.data, ...normalizedEditing, reportDate: "", status: "尚未進案", _notEntered: "1" } } : item));
@@ -2804,7 +2825,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V352</small></h1></div>
+<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V362</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingIntakeReminderRecords.length > 0 && <button className="new-case-reminder-header-button" onClick={() => { setNewCaseReminder({ ...pendingIntakeReminderRecords[0] }); setNewCaseReminderBatchIds(pendingIntakeReminderRecords.map(record => record.id)); }}>新進案件提醒 {pendingIntakeReminderRecords.length}</button>}{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -3953,8 +3974,9 @@ function printKeySummaryTable(tableHtml: string) {
 }
 
 function KeySummary({ records }: { records: RecordItem[] }) {
-  const byNumber = new Map<number, RecordItem>();
-  records.forEach(record => { const match = String(record.key || "").match(/公司\s*[#＃]?\s*(\d+)/); if (match) byNumber.set(Number(match[1]), record); });
+  // 同一把鑰匙可能同時對應售件、租件或不同案件；不可覆蓋前一筆。
+  const byNumber = new Map<number, RecordItem[]>();
+  records.forEach(record => { const match = String(record.key || "").match(/公司\s*[#＃]?\s*(\d+)/); if (!match) return; const number = Number(match[1]); byNumber.set(number, [...(byNumber.get(number) || []), record]); });
   const twoLineText = (value = "") => { const chars = Array.from(value); const lines = Array.from({ length: Math.ceil(chars.length / 15) }, (_, index) => chars.slice(index * 15, index * 15 + 15).join("")); return <span className="key-two-lines">{lines.slice(0, 2).map((line, index) => <span key={`${line}-${index}`}>{line}</span>)}</span>; };
   const keyCaseText = (value = "") => <span className="key-two-lines key-case-lines">{chunkText(value, 12).map((line, index) => <span key={`${line}-${index}`}>{line}</span>)}</span>;
   const actualDistrict = (record?: RecordItem) => {
@@ -3970,7 +3992,7 @@ function KeySummary({ records }: { records: RecordItem[] }) {
     if (storedFull) return storedFull[1] === "台南" ? `${storedFull[2]}區` : `${storedFull[1]}${storedFull[2]}`;
     return stored;
   };
-  const cells = (number: number) => { const record = byNumber.get(number); const archivedLabel = record?.archived ? `${displayRocDate(record.archived)}${record.status || "已下架"}` : ""; const developers = developerNameLines(record?.developer || ""); return <><td className="key-number">{number}</td><td>{actualDistrict(record)}</td><td className="key-case">{keyCaseText(record?.caseName || "")}{archivedLabel && <small style={{ color: "#d71920", fontSize: "calc(.68em + 1.5pt)", fontWeight: 400, display: "block", whiteSpace: "nowrap" }}>{archivedLabel}</small>}</td><td className="key-address">{twoLineText(record?.address || "")}</td><td><span className="key-two-lines">{developers.map((name, index) => <span key={`${name}-${index}`}>{name}</span>)}</span></td></>; };
+  const cells = (number: number) => { const grouped = byNumber.get(number) || []; const primary = grouped[0]; const sameAddress = grouped.length > 0 && grouped.every(record => String(record.address || "").trim() === String(primary?.address || "").trim()); return <><td className="key-number">{number}</td><td>{sameAddress ? actualDistrict(primary) : <span className="key-two-lines">{grouped.map(record => <span key={record.id}>{actualDistrict(record)}</span>)}</span>}</td><td className="key-case">{grouped.map(record => <span key={record.id} className="key-two-lines key-case-lines"><span>{record.propertyNo || ""}</span>{chunkText(record.caseName || "", 12).map((line, index) => <span key={`${record.id}-${line}-${index}`}>{line}</span>)}{record.archived && <small style={{ color: "#d71920", fontSize: "calc(.68em + 1.5pt)", fontWeight: 400, display: "block", whiteSpace: "nowrap" }}>{`${displayRocDate(record.archived)}${record.status || "已下架"}`}</small>}</span>)}</td><td className="key-address">{sameAddress ? twoLineText(primary?.address || "") : <span className="key-two-lines">{grouped.map(record => <span key={record.id}>{record.address || ""}</span>)}</span>}</td><td><span className="key-two-lines">{grouped.flatMap(record => developerNameLines(record.developer || "")).map((name, index) => <span key={`${name}-${index}`}>{name}</span>)}</span></td></>; };
   const printSummary = () => { const table = document.querySelector(".key-summary-table") as HTMLTableElement | null; if (table) { const copy = table.cloneNode(true) as HTMLTableElement; copy.querySelectorAll("th").forEach(cell => cell.setAttribute("style", "background:#d9d9d9;color:#222")); printKeySummaryTable(copy.outerHTML); } };
   return <section className="content key-summary-page"><div className="list-head"><SectionTitle title="鑰匙總表" subtitle="委託中與封存物件，只要鑰匙欄仍標示公司#編號就會顯示"/><button type="button" className="primary key-print-button" onClick={printSummary}>列印鑰匙總表</button></div><div className="key-summary-wrap"><table className="key-summary-table"><thead><tr><th>編號</th><th>地區</th><th>案名</th><th>地址</th><th>開發</th><th>編號</th><th>地區</th><th>案名</th><th>地址</th><th>開發</th></tr></thead><tbody>{keySummaryLeft.map((leftNumber, index) => <tr key={leftNumber}>{cells(leftNumber)}{cells(keySummaryRight[index])}</tr>)}</tbody></table></div></section>;
 }
@@ -3986,7 +4008,7 @@ function DailyActivity({ records, compact = false, onEdit }: { records: RecordIt
   const nextDate = addDaysIso(selectedDate, 1);
   const rocDay = displayRocDate(selectedDate);
   const updateRecords = records.filter(record => !record.archived && !isExpired(record) && record.status === "委託中" && (dailyUpdateFields(record, selectedDate).length > 0 || dateOnly(record._restoredAt) === selectedDate)).map(record => { const changed = dailyUpdateFields(record, selectedDate); const restored = dateOnly(record._restoredAt) === selectedDate; const showingPause = /^\d{1,3}\/\d{1,2}暫停帶看$/.test(String(record.caseNameNote || "").trim()); return { ...record, caseNameNote: showingPause ? "" : (changed.length ? `更新：${dailyChangedLabels(changed).join("、")}` : ""), _dailyHighlight: JSON.stringify(showingPause ? [] : changed), ...(showingPause ? { _dailyAnnotation: record.caseNameNote, _dailyAnnotationType: "showing-pause" } : {}), ...(restored ? { _dailyAnnotation: `${shortRocMonthDay(selectedDate)}重新上架`, _dailyAnnotationType: "restored" } : {}) }; });
-  const removedRecords = records.filter(record => !!record.archived && dateOnly(record._archiveActionDate || record.archived) === selectedDate).map(record => ({ ...record, _dailyAnnotation: `${displayRocDate(record.archived)}${archiveStatusOf(record)}` }));
+  const removedRecords = records.filter(record => !!record.archived && dateOnly(record._archiveActionDate || record.archived) === selectedDate).map(record => ({ ...record, _dailyAnnotation: `${shortRocMonthDay(record._archiveActionDate || record.archived)}${archiveStatusOf(record)}` }));
   const groups = [
     { key: "added", title: "新增物件", records: records.filter(record => dateOnly(record._dailyAddedAt || record.reportDate) === selectedDate) },
     { key: "updated", title: "更新物件", records: updateRecords },
@@ -4149,7 +4171,7 @@ function PrintableIntake({ draft }: { draft: IntakeData }) {
         </>}
         <PrintSection title="重點說明" className="features-section"><div className="feature-lines">{features.map((feature, i) => <p key={i}><b>{i + 1}.</b><span>{feature}</span></p>)}</div></PrintSection>
       </div><div className="print-right">
-        <PrintRightRow label="物件編號" value={val("委託主約編號")}/><PrintRightRow label="鑰匙位置" value={val("鑰匙位置")}/><PrintRightRow label="物件現況" value={val("(物件)現況")}/><PrintRightRow label="國小" value={val("鄰近國小")}/><PrintRightRow label="國中" value={val("鄰近國中")}/><PrintRightRow label="高中" value={val("鄰近高中")}/><PrintRightRow label="大專" value={val("鄰近大專")}/><PrintRightRow label="市場" value={val("市場/購物")}/><PrintRightRow label="公園" value={val("公園綠地")}/><hr/><PrintRightRow label="物件相片" value={val("當下進案文件 [物件相片]")}/>{draft.propertyKind === "房屋" && <PrintRightRow label="格局圖" value={val("進案文件 [格局圖]")}/>}<PrintRightRow label="現詢調" value={val("進案文件 [現詢調]")}/><PrintRightRow label="智能照片" value={val("進案文件 [物件照片 上傳系統]")}/>{draft.propertyKind === "房屋" && <><PrintRightRow label="智能主約" value={val("進案文件 [主約 契約拍照 上傳系統]")}/><PrintRightRow label="智能契變" value={val("進案文件 [契變 照片上傳系統]")}/></>}<div className="attention"><b>帶看注意事項：</b><span>中人：{val("中人(介紹費)")}</span><p>{val("注意事項")}</p></div>
+        <PrintRightRow label="物件編號" value={val("委託主約編號")}/><PrintRightRow label="鑰匙位置" value={val("鑰匙位置")}/><PrintRightRow label="物件現況" value={val("(物件)現況")}/><PrintRightRow label="國小" value={val("鄰近國小")}/><PrintRightRow label="國中" value={val("鄰近國中")}/><PrintRightRow label="高中" value={val("鄰近高中")}/><PrintRightRow label="大專" value={val("鄰近大專")}/><PrintRightRow label="市場" value={val("市場/購物")}/><PrintRightRow label="公園" value={val("公園綠地")}/><hr/><PrintRightRow label="格局圖" value={printIntakeFileStatus(val("進案文件 [格局圖]"))}/><PrintRightRow label="現詢調" value={printIntakeFileStatus(val("進案文件 [現詢調]"))}/><PrintRightRow label="智能照片" value={printIntakeFileStatus(val("進案文件 [物件照片 上傳系統]"))}/><PrintRightRow label="智能主約" value={printIntakeFileStatus(val("進案文件 [主約 契約拍照 上傳系統]"))}/><PrintRightRow label="智能契變" value={printIntakeFileStatus(val("進案文件 [契變 照片上傳系統]"))}/><div className="attention"><b>帶看注意事項：</b><span>中人：{val("中人(介紹費)")}</span><p>{val("注意事項")}</p></div>
       </div></div>
       <footer className="approval-footer excel-approval"><span>店東審核</span><span>開發1／開發2<br/><b>{val("開發１/開發２")}</b></span><span>以上<span className="red-text">資料無誤</span>簽名</span><span>助理收件日期：</span><span>進案序號：</span></footer>
       <small className="legal-note">◎以上資訊如有記載錯誤，一律依地政機關謄本登記簿為準。</small>
@@ -4159,9 +4181,12 @@ function PrintableIntake({ draft }: { draft: IntakeData }) {
   </section>;
 }
 
+const printIntakeFileStatus = (value = "") => String(value || "").replace(/[（(].*$/s, "").trim();
+
 function PrintRightRow({ label, value }: { label: string; value: string }) {
-  const canWrap = ["國小", "國中", "高中", "大專", "市場", "公園"].includes(label);
-  return <p className={`print-right-row${canWrap ? " print-right-row-wrap" : ""}`}><b>{label}：</b><span>{value}</span></p>;
+  const schoolRow = ["國小", "國中", "高中", "大專", "市場", "公園"].includes(label);
+  const documentRow = ["格局圖", "現詢調", "智能照片", "智能主約", "智能契變"].includes(label);
+  return <p className={`print-right-row${schoolRow ? " print-right-row-wrap" : ""}${documentRow ? " print-right-row-document" : ""}`}><b>{label}：</b><span>{value}</span></p>;
 }
 
 function PreviousPrintableIntake({ draft }: { draft: IntakeData }) {
@@ -4178,23 +4203,26 @@ function ChecklistPageV2({ val }: { val: (...keys: string[]) => string }) {
     <div className="check-strip">案名：{val("案名")}　　標的物：{val("物件(完整)地址")}</div>
     <h1>請開發業務填寫檢查以下資訊</h1>
     <div className="check-price">
-      <div><p><b>1.　底價：</b>寫在委託主約 P.2 特約____________萬</p><div className="choice-lines"><div><p className="price-indent">寫在契變____________萬</p><p className="price-indent">賣方口頭____________萬</p></div><span>擇一</span></div></div>
-      <div><p><b>2.　%數：</b>寫在委託主約第一面______%</p><div className="choice-lines"><div><p className="price-indent">寫在契變______%</p><p className="price-indent">賣方口頭______%</p></div><span>擇一</span></div></div>
+      <div><p><b>1.　<span className="label-highlight">底價：</span></b>寫在委託主約 P.2 特約____________萬</p><div className="choice-lines"><div><p className="price-indent">寫在契變____________萬</p><p className="price-indent">賣方口頭____________萬</p></div><span>擇一</span></div></div>
+      <div><p><b>2.　<span className="label-highlight">%數：</span></b>寫在委託主約第一面______%</p><div className="choice-lines"><div><p className="price-indent">寫在契變______%</p><p className="price-indent">賣方口頭______%</p></div><span>擇一</span></div></div>
     </div>
-    <ol className="check-list" start={3}>
-      <li><b>中人</b>　□無，□有介紹人：____________元</li>
-      <li className="check-entrust-period">{(() => { const period = intakeEntrustPeriod(val("委託開始 日期", "委託開始"), val("委託結束 日期", "委託結束")); return period ? <>委託開始:{period.start}　~委託結束:{period.end}　<small>(共{period.months}個月)</small></> : <>委託開始:________　~委託結束:________　<small>(共____個月)</small></>; })()}</li>
-      <li className="note-item"><span><b>地號謄本</b>×_____筆　□紙本已附件　□曾經調閱請列印　□未調閱，請助理協助</span><span className="note-line">備註：____________________________________________________________</span></li>
-      <li className="note-item"><span><b>建號謄本</b>×_____筆　□紙本已附件　□曾經調閱請列印　□未調閱，請助理協助</span><span className="note-line">備註：____________________________________________________________</span></li>
-      <li><b>地籍圖</b>　□大樓：無須調　|　房屋／土地（□紙本已附件　□曾經調閱請列印　□未調閱）</li>
-      <li><b>成果圖</b>　□土地：無須調　|　有建號（□紙本已附件　□曾經調閱請列印　□未調閱）</li>
-      <li>檢查□ 委託人（賣方）- <b>說明書 是否已簽名</b></li>
-      <li>檢查□ 委託人（賣方）- <b>個資法 是否已簽名</b></li>
-      <li><b>建物權狀</b>共____張　□已附紙本　◆已傳_____LINE 請列印　◆賣方沒給開發寫無權狀切結□已附上</li>
-      <li><b>土地權狀</b>共____張　□已附紙本　◆已傳_____LINE 請列印　◆賣方沒給開發寫無權狀切結□已附上</li>
-    </ol>
-    <div className="check-columns"><div><p className="column-heading"><b>13. 委託契約：</b>檢查是否有填寫</p><p>□ (1).　委託日期</p><p>□ (2).　廣告開價</p><p>□ (3).　承辦人開發簽名</p><p>□ (4).　契約現況勾選</p><b>14. 檢查□勾選委託主約 P2：是否一年內取得</b></div><div><p className="column-heading"><b>15. 賣方資訊：</b>檢查是否有填寫</p><div className="seller-info-columns"><div><p>□ (1).　委託人簽名</p><p>□ (2).　賣方 ID</p><p>□ (3).　賣方生日</p><p>□ (4).　賣方地址</p><p>□ (5).　賣方電話</p></div><div><p>□ (1).　代理人簽名</p><p>□ (2).　賣方 ID</p><p>□ (3).　代理人生日</p><p>□ (4).　代理人地址</p><p>□ (5).　代理人電話</p></div></div></div></div>
-    <div className="check-tail"><p><b>16. 契變：</b>　□進案「無」契變<br/>　　　　　　□進案【有】契變（契變編號：______________－檢查契變上□承辦人開發簽名　□委託人賣方簽名）</p><p><b>17. 授權書：</b>(1)出售所有權人共_____人，本件賣方親簽<br/>　　　　　　(2)代理人：進案附上授權書（□正本共_____張／□影本共_____張）。□授權書後補<br/>　　Note：____________________________________________________________</p><p><b>18. 土地使用分區：</b>□本件房屋不需分區<br/>　　　　為都內土地：□進案已附　□曾經申請請列印　□本件為土地請助理申請<br/>　　　　都外土地：使用分區請填寫____________，使用地類別：____________</p><p><b>19. 進案其他文件：</b>____________________________________________________________</p></div>
+    <div className="check-middle">
+      <div><b>3.　<span className="label-highlight">中人</span></b>　☐無，☐有介紹人：____________元</div>
+      <div className="check-entrust-period"><b>4.</b>{(() => { const period = intakeEntrustPeriod(val("委託開始 日期", "委託開始"), val("委託結束 日期", "委託結束")); return period ? <>委託開始:{period.start}~委託結束:{period.end}<small>(共{period.months}個月)</small></> : <>委託開始:________~委託結束:________<small>(共____個月)</small></>; })()}</div>
+    </div>
+    <div className="registry-block">
+      <div className="registry-table"><b><span>5.</span><span>地</span><span>號</span></b><div className="registry-label"><span className="registry-count">共<i aria-hidden="true"/>筆</span></div><div className="registry-cases">{[1,2,3,4,5,6,7,8,9].map(n=><div key={n}><small>{n}.</small><span><strong className="registry-checkbox">☐</strong>紙本已附</span><span><strong className="registry-checkbox">☐</strong>已調請印</span><span><strong className="registry-checkbox">☐</strong>協助調閱</span></div>)}</div></div>
+      <div className="registry-table building"><b><span>6.</span><span>建</span><span>號</span></b><div className="registry-label"><span className="registry-count">共<i aria-hidden="true"/>筆</span></div><div className="registry-cases">{[1,2,3,4,5].map(n=><div key={n}><small>{n}.</small><span><strong className="registry-checkbox">☐</strong>紙本已附</span><span><strong className="registry-checkbox">☐</strong>已調請印</span><span><strong className="registry-checkbox">☐</strong>協助調閱</span></div>)}</div></div>
+    </div>
+    <div className="check-lines">
+      <p><b>7.　<span className="label-highlight">地籍圖</span></b>　☐大樓：無須調　│　房屋／土地（☐紙本已附件　☐曾經調閱請列印　☐請協助調閱）</p>
+      <p><b>8.　<span className="label-highlight">成果圖</span></b>　☐土地：無須調　│　有建號（☐紙本已附件　☐曾經調閱請列印　☐請協助調閱）</p>
+      <p>9. ☐說明書簽名OK、☐個資法簽名OK：檢查委託人(賣方)-是否已簽名</p>
+    </div>
+    <div className="check-columns"><div><p className="column-heading"><span className="section-number">10. </span><b>委託契約：</b>檢查是否有填寫</p><p>☐ (1).　委託日期</p><p>☐ (2).　{(() => { const price = String(val("契約開價", "總價") || "").replace(/\s*萬(?:元)?\s*/g, "").trim() || "______"; const contractNo = String(val("委託主約編號", "委託主約編號:", "物件編號") || "").trim() || "__________"; return <>廣告開價<span className="contract-price-value">{price}</span>萬有符合契約{contractNo}簽訂</>; })()}</p><p>☐ (3).　承辦人開發簽名</p><p>☐ (4).　契約現況勾選</p></div><div><p className="column-heading"><span className="section-number">11. </span><b>賣方資訊：</b>檢查是否有填寫</p><div className="seller-info-columns"><div><p>☐ (1).　委託人簽名</p><p>☐ (2).　賣方 ID</p><p>☐ (3).　賣方生日</p><p>☐ (4).　賣方地址</p><p>☐ (5).　賣方電話</p></div><div><p>☐ (1).　代理人簽名</p><p>☐ (2).　代理人 ID</p><p>☐ (3).　代理人生日</p><p>☐ (4).　代理人地址</p><p>☐ (5).　代理人電話</p></div></div></div></div>
+    <div className="check-acquire"><b>12. 是否<span className="acquire-highlight">一年內</span>取得：</b>☐是　☐否　　取得年份：______年</div>
+    <div className="deed-lines"><p><b>13. 建物權狀</b>共________張　<span className="deed-choice-mark">A</span>☐已附紙本　<span className="deed-choice-mark">B</span>☐已<span className="line-print-icon">LINE</span>助理，請找對話紀錄列印　<span className="deed-choice-mark">C</span>☐無權狀切結</p><p><b>14. 土地權狀</b>共________張　<span className="deed-choice-mark">A</span>☐已附紙本　<span className="deed-choice-mark">B</span>☐已<span className="line-print-icon">LINE</span>助理，請找對話紀錄列印　<span className="deed-choice-mark">C</span>☐無權狀切結</p></div>
+    <div className="check-tail"><p><span className="section-number">15. </span><b>契變：</b>　☐進案「無」契變<br/>　　　　　　☐進案【有】契變（契變編號：____________－檢查契變上☐承辦人開發簽名　☐委託人賣方簽名）</p><section className="auth-block"><b>16. <span className="ownership-highlight">賣方產權</span>共_________人</b><div className="auth-table"><strong>所有權人</strong><strong className="rights-heading">權利範圍</strong><strong>本人親簽</strong><strong>代理人</strong><strong>授權書</strong><strong>授權書後補</strong>{[1,2,3].map(n=><><span key={'a'+n}>賣方：____________________</span><span key={'b'+n}>　</span><span key={'c'+n}>☐本人親簽</span><span key={'d'+n}>☐代理人</span><span key={'e'+n} className="authorization-copies"><i>☐正本_______張</i><i>☐影本_______張</i></span><span key={'f'+n}>☐授權書後補</span></>)}</div></section><section className="zoning-block"><div className="zoning-heading"><span className="section-number">17. </span><b>土地<span className="zoning-highlight">使用分區</span>：</b><span>(1)　☐本件是房屋不需分區</span></div><p><span>(2)</span><span>都內土地：☐進案已附　☐曾經申請請列印　☐請協助申請日期________。</span></p><p><span>(3)</span><span>都外土地：使 用 分 區 ：________________________，使用地類別：________________________。</span></p></section><p className="other-files"><span className="section-number">18. </span><b>進案其他文件：</b><i className="other-files-line" aria-hidden="true"/></p></div>
     <div className="signature-box"><span>以上檢查資訊，填寫人簽名：</span><i aria-hidden="true"/></div>
     <div className="check-strip bottom">案名：{val("案名")}　　標的物：{val("物件(完整)地址")}</div>
   </article>;
@@ -4327,7 +4355,7 @@ function CellContent({ record: r, column: k }: { record: RecordItem; column: str
     return <>{`${fee}/月`}</>;
   }
   if (k === "notes") {
-    const internalNoteText = String(r.notes || "").trim();
+    const internalNoteText = displayNoteSegments(r.notes || "").join("；");
     return <>{internalNoteText || "—"}</>;
   }
   return <>{cellValue(r, k) || "—"}</>;
