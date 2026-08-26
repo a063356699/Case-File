@@ -45658,7 +45658,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V372" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V373" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -48563,7 +48563,8 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       const followUpNote = record.showingFollowUp === "\u66AB\u505C\u5E36\u770B\uFF0F\u7B49\u5F85\u696D\u52D9\u56DE\u8986" ? `${shortRocMonthDay(record.showingFollowUpDate || selectedDate)}\u66AB\u505C\u5E36\u770B` : "";
       const displayCaseNote = String(record.caseNameNote || "").trim() || followUpNote;
       const showingCaseNote = Boolean(displayCaseNote);
-      return { ...record, caseNameNote: showingCaseNote ? displayCaseNote : changed.length ? `\u66F4\u65B0\uFF1A${dailyChangedLabels(changed).join("\u3001")}` : "", _dailyHighlight: JSON.stringify(showingCaseNote ? [] : changed), ...restored ? { _dailyAnnotation: `${shortRocMonthDay(selectedDate)}\u91CD\u65B0\u4E0A\u67B6`, _dailyAnnotationType: "restored" } : {} };
+      const dailyHighlights = showingCaseNote ? changed.filter((key) => key !== "caseName") : changed;
+      return { ...record, caseNameNote: showingCaseNote ? displayCaseNote : changed.length ? `\u66F4\u65B0\uFF1A${dailyChangedLabels(changed).join("\u3001")}` : "", _dailyHighlight: JSON.stringify(dailyHighlights), ...restored ? { _dailyAnnotation: `${shortRocMonthDay(selectedDate)}\u91CD\u65B0\u4E0A\u67B6`, _dailyAnnotationType: "restored" } : {} };
     });
     const removedRecords = records.filter((record) => !!record.archived && dateOnly(record._archiveActionDate || record.archived) === selectedDate).map((record) => ({ ...record, caseNameNote: `${shortRocMonthDay(record._archiveActionDate || record.archived)}${archiveStatusOf(record)}`, _dailyHighlight: "[]" }));
     const groups = [
