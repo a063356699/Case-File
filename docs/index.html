@@ -1509,10 +1509,10 @@ body{background:#f8fbfe!important;color:#405064!important}
 .new-case-reminder-check input{width:19px;height:19px;accent-color:#1f7a5c}
 .new-case-reminder-check:has(input:checked){background:#e3f3eb;border-color:#84bfa4}
 
-/* 重新上架完整紀錄保留在備註；委託中列表僅在案名後方顯示月／日。 */
-.active-lead-table td.col-caseName .case-name-note{display:inline!important;margin:0 0 0 5px!important;color:#d71920!important;font-size:11px!important;font-weight:800!important;white-space:nowrap!important;line-height:1!important}
-.active-lead-table td.col-caseName .case-link{display:inline!important;width:auto!important;max-width:none!important;margin:0!important;text-align:center!important}
+/* 委託中：案名後方備註（例如 8/26重新上架）必須緊接案名，以紅字單行顯示。 */
+.active-lead-table td.col-caseName .case-link{display:inline!important;width:auto!important;max-width:none!important;margin:0!important;text-align:center!important;vertical-align:baseline!important}
 .active-lead-table td.col-caseName .case-link span,.active-lead-table td.col-caseName .case-name-line{display:inline!important;width:auto!important;text-align:center!important}
+.active-lead-table td.col-caseName .case-name-note{display:inline!important;margin:0 0 0 5px!important;color:#f00!important;font-size:11px!important;font-weight:800!important;white-space:nowrap!important;line-height:1!important;vertical-align:baseline!important}
 .intake-feature-title{display:flex!important;align-items:center;justify-content:space-between;gap:8px}.copy-features-button{margin-left:auto;border:1px solid #7aa89a!important;background:#edf7f2!important;color:#17654e!important;border-radius:999px!important;padding:3px 9px!important;font-size:11px!important;line-height:1.2!important;white-space:nowrap}
 .book-location-value b,.book-location-value small{font-weight:800!important}
 .developer-cell-value{min-width:3em}.developer-cell-value>span{white-space:nowrap}
@@ -45658,7 +45658,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V374" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V375" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
