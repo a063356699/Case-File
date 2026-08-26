@@ -537,6 +537,21 @@ const districtFromAddress = (value = "") => {
 const salesBookDateCorrections = new Set(["EG0522899", "EG0522916", "LG0132934", "EG0522910", "EG0522911", "EG0522912", "EG0522915", "EG0522908"]);
 const applySourceLayoutFixes = (records: RecordItem[]) => records.map(record => {
   record = moveRestoredTextToCaseNote(clearImportedLandLabels(clearImportedContractChangePlaceholders(record)));
+  // EA0163401 曾把每日動態的系統提示誤存入「案名後方備註」。
+  // 這個欄位應保留重新上架文字，不能顯示「更新：案名」。
+  if (String(record.propertyNo || "").trim().toUpperCase() === "EA0163401" && /^更新\s*[:：]\s*案名$/.test(String(record.caseNameNote || "").trim())) {
+    const restoredDate = dateOnly(record._restoredAt || record.updateDate || today());
+    const history = recordUpdateHistory(record);
+    if (history[restoredDate]) history[restoredDate] = history[restoredDate].filter(key => key !== "caseName" && key !== "caseNameNote" && key !== "caseNameNoteModifiedAt");
+    record = {
+      ...record,
+      caseNameNote: `${shortRocMonthDay(restoredDate)}重新上架`,
+      caseNameNoteModifiedAt: record.caseNameNoteModifiedAt || new Date().toISOString(),
+      _updateHistory: JSON.stringify(history),
+      _dailyHighlight: "",
+      _dailyHideKey: "",
+    };
+  }
   if (record.archived && record.status === "委託中" && /^(?:EB|EC)/i.test(String(record.propertyNo || ""))) record = { ...record, status: "租出下架" };
   // 已到期下架的案件若委託結束已被改到今天或未來，自動恢復委託中；重新上架不是每日「更新物件」。
   if (record.archived && record.status === "到期下架" && validDate(record.entrustEnd) && !isExpired(record)) {
@@ -1219,7 +1234,10 @@ export default function Home() {
       const saved = localStorage.getItem(STORAGE_KEY);
       let loadedRecords: RecordItem[] = saved ? JSON.parse(saved) : [sample];
       const officialRecords = ((window as any).__PROPERTY_OFFICIAL_RECORDS__ || []) as RecordItem[]; const appRestoreMarker = "property-desk-app-restore-216-v3"; if (officialRecords.length && localStorage.getItem(appRestoreMarker) !== "1") { const keyOf = (record: RecordItem) => String(record.propertyNo || record.id || "").trim(); const merged = new Map(officialRecords.map(record => [keyOf(record), record])); loadedRecords.forEach(record => { const key = keyOf(record); if (!key) return; const base = merged.get(key) || {} as RecordItem; const next = { ...base, ...record }; if (!String(next.bookLocationDate || "").trim() && String(base.bookLocationDate || "").trim()) next.bookLocationDate = base.bookLocationDate; if (!String(next.bookLocationType || "").trim() && String(base.bookLocationType || "").trim()) next.bookLocationType = base.bookLocationType; merged.set(key, next); }); loadedRecords = [...merged.values()]; localStorage.setItem(STORAGE_KEY, JSON.stringify(loadedRecords)); localStorage.setItem(appRestoreMarker, "1"); }
+      const beforeSourceFixes = JSON.stringify(loadedRecords);
       loadedRecords = applySourceLayoutFixes(loadedRecords).map(record => normalizeRecordPings({ ...record, salesBook: record.salesBook || "製作" }));
+      // 來源修正（含舊的「更新：案名」）要立即寫回，避免使用者重新進入編輯時又看到舊值。
+      if (JSON.stringify(loadedRecords) !== beforeSourceFixes) localStorage.setItem(STORAGE_KEY, JSON.stringify(loadedRecords));
       const savedSettings = localStorage.getItem(SETTINGS_KEY); setSettings(s => { const old = savedSettings ? JSON.parse(savedSettings) : {}; const personnel = old.personnel || (old.staffName || old.staffId ? [{ id: newId(), name: old.staffName || "", nationalId: old.staffId || "", status: "在職" }] : []); return { ...s, ...old, supabaseUrl: old.supabaseUrl || CASE_FILE_SUPABASE_URL, supabaseKey: old.supabaseKey || CASE_FILE_SUPABASE_PUBLISHABLE_KEY, supabaseTable: old.supabaseTable === "property_app_state" || !old.supabaseTable ? CASE_FILE_SUPABASE_TABLE : old.supabaseTable, supabaseRecord: old.supabaseRecord || "main", personnel: mergeSuppliedPersonnel(personnel) }; });
       const savedCloudSession = localStorage.getItem(CLOUD_SESSION_KEY); if (savedCloudSession) setCloudSession(JSON.parse(savedCloudSession));
       const savedIntake = localStorage.getItem(INTAKE_KEY); if (savedIntake) { const saved = JSON.parse(savedIntake); const savedDrafts: IntakeData[] = saved.drafts || (saved.parsed ? [{ ...saved.parsed, raw: saved.raw || "" }] : []); const drafts = reconcileIntakeDraftLinks(savedDrafts, loadedRecords); if (!localStorage.getItem(PHOTO_INTAKE_CLEANUP_KEY)) { const legacyPhotoValues = new Map(drafts.filter(draft => draft.linkedRecordId).map(draft => [draft.linkedRecordId!, new Set(Object.entries(draft.values).filter(([key, value]) => value && (key.includes("進案文件") || key.includes("當下進案文件"))).map(([, value]) => value.trim()))])); loadedRecords = loadedRecords.map(record => { const values = legacyPhotoValues.get(record.id); const current = String(record.photoInfo || "").split(/[／/]/).map(value => value.trim()).filter(Boolean); return values && current.length && current.every(value => values.has(value)) ? { ...record, photoInfo: "" } : record; }); localStorage.setItem(PHOTO_INTAKE_CLEANUP_KEY, "1"); } setIntakeDrafts(drafts); setSelectedIntakeId(saved.selectedId || drafts.find(draft => !draft.linkedRecordId)?.id || ""); setIntakeRaw(saved.raw || ""); }

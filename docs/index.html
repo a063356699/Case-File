@@ -42548,6 +42548,19 @@ ${String(ex)}`);
   var salesBookDateCorrections = /* @__PURE__ */ new Set(["EG0522899", "EG0522916", "LG0132934", "EG0522910", "EG0522911", "EG0522912", "EG0522915", "EG0522908"]);
   var applySourceLayoutFixes = (records) => records.map((record) => {
     record = moveRestoredTextToCaseNote(clearImportedLandLabels(clearImportedContractChangePlaceholders(record)));
+    if (String(record.propertyNo || "").trim().toUpperCase() === "EA0163401" && /^更新\s*[:：]\s*案名$/.test(String(record.caseNameNote || "").trim())) {
+      const restoredDate = dateOnly(record._restoredAt || record.updateDate || today());
+      const history = recordUpdateHistory(record);
+      if (history[restoredDate]) history[restoredDate] = history[restoredDate].filter((key) => key !== "caseName" && key !== "caseNameNote" && key !== "caseNameNoteModifiedAt");
+      record = {
+        ...record,
+        caseNameNote: `${shortRocMonthDay(restoredDate)}\u91CD\u65B0\u4E0A\u67B6`,
+        caseNameNoteModifiedAt: record.caseNameNoteModifiedAt || (/* @__PURE__ */ new Date()).toISOString(),
+        _updateHistory: JSON.stringify(history),
+        _dailyHighlight: "",
+        _dailyHideKey: ""
+      };
+    }
     if (record.archived && record.status === "\u59D4\u8A17\u4E2D" && /^(?:EB|EC)/i.test(String(record.propertyNo || ""))) record = { ...record, status: "\u79DF\u51FA\u4E0B\u67B6" };
     if (record.archived && record.status === "\u5230\u671F\u4E0B\u67B6" && validDate(record.entrustEnd) && !isExpired(record)) {
       const history = recordUpdateHistory(record);
@@ -43451,7 +43464,9 @@ ${String(ex)}`);
           localStorage.setItem(STORAGE_KEY, JSON.stringify(loadedRecords));
           localStorage.setItem(appRestoreMarker, "1");
         }
+        const beforeSourceFixes = JSON.stringify(loadedRecords);
         loadedRecords = applySourceLayoutFixes(loadedRecords).map((record) => normalizeRecordPings({ ...record, salesBook: record.salesBook || "\u88FD\u4F5C" }));
+        if (JSON.stringify(loadedRecords) !== beforeSourceFixes) localStorage.setItem(STORAGE_KEY, JSON.stringify(loadedRecords));
         const savedSettings = localStorage.getItem(SETTINGS_KEY);
         setSettings((s) => {
           const old = savedSettings ? JSON.parse(savedSettings) : {};
@@ -48553,14 +48568,14 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       window.addEventListener("hide-daily-item", hide);
       return () => window.removeEventListener("hide-daily-item", hide);
     }, []);
-    const dateOnly = (value = "") => value.slice(0, 10);
+    const dateOnly2 = (value = "") => value.slice(0, 10);
     const adjacentDateLabel = (date) => `${displayRocDate(date)}\uFF08${["\u65E5", "\u4E00", "\u4E8C", "\u4E09", "\u56DB", "\u4E94", "\u516D"][(/* @__PURE__ */ new Date(`${date}T12:00:00`)).getDay()]}\uFF09`;
     const previousDate = addDaysIso(selectedDate, -1);
     const nextDate2 = addDaysIso(selectedDate, 1);
     const rocDay = displayRocDate(selectedDate);
-    const updateRecords = records.filter((record) => !record.archived && !isExpired(record) && record.status === "\u59D4\u8A17\u4E2D" && (dailyUpdateFields(record, selectedDate).length > 0 || dateOnly(record._restoredAt) === selectedDate)).map((record) => {
+    const updateRecords = records.filter((record) => !record.archived && !isExpired(record) && record.status === "\u59D4\u8A17\u4E2D" && (dailyUpdateFields(record, selectedDate).length > 0 || dateOnly2(record._restoredAt) === selectedDate)).map((record) => {
       const changed = dailyUpdateFields(record, selectedDate);
-      const restored = dateOnly(record._restoredAt) === selectedDate;
+      const restored = dateOnly2(record._restoredAt) === selectedDate;
       const followUpNote = record.showingFollowUp === "\u66AB\u505C\u5E36\u770B\uFF0F\u7B49\u5F85\u696D\u52D9\u56DE\u8986" ? `${shortRocMonthDay(record.showingFollowUpDate || selectedDate)}\u66AB\u505C\u5E36\u770B` : "";
       const displayCaseNote = String(record.caseNameNote || "").trim() || followUpNote;
       const showingCaseNote = Boolean(displayCaseNote);
@@ -48568,9 +48583,9 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       const dailyHighlights = showingCaseNote ? [.../* @__PURE__ */ new Set([...changed.filter((key) => key !== "caseName" && key !== "caseNameNote" && key !== "caseNameNoteModifiedAt"), ...isReopenNote && String(record.reducedPrice || "").trim() ? ["reducedPrice"] : []])] : changed;
       return { ...record, caseNameNote: showingCaseNote ? displayCaseNote : changed.length ? `\u66F4\u65B0\uFF1A${dailyChangedLabels(changed).join("\u3001")}` : "", _dailyHighlight: JSON.stringify(dailyHighlights), ...restored ? { _dailyAnnotation: `${shortRocMonthDay(selectedDate)}\u91CD\u65B0\u4E0A\u67B6`, _dailyAnnotationType: "restored" } : {} };
     });
-    const removedRecords = records.filter((record) => !!record.archived && dateOnly(record._archiveActionDate || record.archived) === selectedDate).map((record) => ({ ...record, caseNameNote: `${shortRocMonthDay(record._archiveActionDate || record.archived)}${archiveStatusOf(record)}`, _dailyHighlight: "[]" }));
+    const removedRecords = records.filter((record) => !!record.archived && dateOnly2(record._archiveActionDate || record.archived) === selectedDate).map((record) => ({ ...record, caseNameNote: `${shortRocMonthDay(record._archiveActionDate || record.archived)}${archiveStatusOf(record)}`, _dailyHighlight: "[]" }));
     const groups = [
-      { key: "added", title: "\u65B0\u589E\u7269\u4EF6", records: records.filter((record) => dateOnly(record._dailyAddedAt || record.reportDate) === selectedDate) },
+      { key: "added", title: "\u65B0\u589E\u7269\u4EF6", records: records.filter((record) => dateOnly2(record._dailyAddedAt || record.reportDate) === selectedDate) },
       { key: "updated", title: "\u66F4\u65B0\u7269\u4EF6", records: updateRecords },
       { key: "removed", title: "\u4E0B\u67B6\u7269\u4EF6", records: removedRecords }
     ].map((group) => ({ ...group, records: group.records.filter((record) => !hiddenItems.includes(`${selectedDate}|${group.key}|${record.id}`)).map((record) => compact ? record : { ...record, _dailyHideKey: `${selectedDate}|${group.key}|${record.id}` }) }));
