@@ -1996,7 +1996,8 @@ html,body{max-width:100%;overflow-x:hidden}
 .print-document .auth-table .authorization-copies{display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:center!important;gap:1.5mm!important;text-align:left!important}
 .print-document .auth-table .authorization-copies i{font-style:normal!important;white-space:nowrap!important}
 .print-document .auth-table>strong:nth-child(5){font-size:0!important}
-.print-document .auth-table>strong:nth-child(5)::after{content:"進案已附授權書共_____張";font-size:8pt!important;line-height:1!important;white-space:nowrap!important}
+.print-document .auth-table>strong:nth-child(5){align-items:flex-end!important;padding-bottom:1.2mm!important}
+.print-document .auth-table>strong:nth-child(5)::after{content:"進案已附授權書共_____張";font-size:9.5pt!important;line-height:1!important;white-space:nowrap!important}
 .print-document .zoning-block{display:grid!important;grid-template-rows:repeat(3,minmax(0,1fr))!important;padding:0 2mm!important;border-top:1px solid #bbb!important;overflow:hidden!important}
 .print-document .zoning-heading{display:flex!important;align-items:center!important;gap:2mm!important;min-height:0!important;margin:0!important;white-space:nowrap!important}
 .print-document .zoning-heading>b{font-size:11pt!important;white-space:nowrap!important}
