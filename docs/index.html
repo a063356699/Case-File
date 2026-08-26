@@ -1509,10 +1509,11 @@ body{background:#f8fbfe!important;color:#405064!important}
 .new-case-reminder-check input{width:19px;height:19px;accent-color:#1f7a5c}
 .new-case-reminder-check:has(input:checked){background:#e3f3eb;border-color:#84bfa4}
 
-/* 委託中：案名後方備註（例如 8/26重新上架）必須緊接案名，以紅字單行顯示。 */
-.active-lead-table td.col-caseName .case-link{display:inline!important;width:auto!important;max-width:none!important;margin:0!important;text-align:center!important;vertical-align:baseline!important}
-.active-lead-table td.col-caseName .case-link span,.active-lead-table td.col-caseName .case-name-line{display:inline!important;width:auto!important;text-align:center!important}
-.active-lead-table td.col-caseName .case-name-note{display:inline!important;margin:0 0 0 5px!important;color:#f00!important;font-size:11px!important;font-weight:800!important;white-space:nowrap!important;line-height:1!important;vertical-align:baseline!important}
+/* 委託中：案名後方備註（例如 8/26重新上架）固定顯示在案名正下方，以免被長案名或欄寬吃掉。 */
+.active-lead-table td.col-caseName .active-case-name-cell{display:block!important;width:100%!important;text-align:center!important;line-height:1.28!important}
+.active-lead-table td.col-caseName .active-case-name-cell .case-link{display:block!important;width:100%!important;max-width:none!important;margin:0!important;padding:0!important;text-align:center!important;line-height:1.28!important}
+.active-lead-table td.col-caseName .active-case-name-cell .case-name-line{display:block!important;width:100%!important;text-align:center!important}
+.active-lead-table td.col-caseName .active-case-name-cell .active-case-name-note{display:block!important;width:100%!important;margin:3px 0 0!important;color:#f00!important;font-size:12px!important;font-weight:900!important;white-space:nowrap!important;line-height:1.2!important;text-align:center!important}
 .intake-feature-title{display:flex!important;align-items:center;justify-content:space-between;gap:8px}.copy-features-button{margin-left:auto;border:1px solid #7aa89a!important;background:#edf7f2!important;color:#17654e!important;border-radius:999px!important;padding:3px 9px!important;font-size:11px!important;line-height:1.2!important;white-space:nowrap}
 .book-location-value b,.book-location-value small{font-weight:800!important}
 .developer-cell-value{min-width:3em}.developer-cell-value>span{white-space:nowrap}
@@ -45658,7 +45659,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V375" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V376" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -49657,6 +49658,28 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       records = displayedRecords;
       showAreaGroups = true;
     }
+    const caseNameCell = (r, key) => {
+      const note = String(r.caseNameNote || "").trim();
+      const restoredLabel = r._restoredAt ? shortRocMonthDay(r._restoredAt) : "";
+      const archiveDate = r.archived || (isExpired(r) ? r.entrustEnd : "");
+      const archiveLabel = `${displayRocDate(archiveDate)}${r.archived ? r.status || "\u4E0B\u67B6" : "\u5230\u671F\u4E0B\u67B6"}${r.status === "\u4E0B\u67B6\u6D3D\u958B\u767C" && r.archiveReason ? `:${r.archiveReason}` : ""}`;
+      if (publicMode) return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "public-case-name", children: chunkText(r.caseName || "\u2014", 10).map((line, lineIndex) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: line }, `${line}-${lineIndex}`)) }),
+        note && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "case-name-note", children: note }),
+        dailyMode && r._dailyAnnotation && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "daily-case-annotation", children: r._dailyAnnotation }),
+        expiryAnnotation && daysUntil(r.entrustEnd) >= 0 && daysUntil(r.entrustEnd) <= 30 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { className: "mine-expiry-annotation", children: [
+          "\u63D0\u9192",
+          displayRocDate(r.entrustEnd),
+          "\u5230\u671F"
+        ] })
+      ] });
+      return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: activeLead ? "active-case-name-cell" : "", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "case-link", onClick: () => onEdit(r), children: chunkText(r.caseName || "\u2014", activeLead ? 12 : 15).map((line, lineIndex) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "case-name-line", children: line }, `${line}-${lineIndex}`)) }),
+        note && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "case-name-note active-case-name-note", children: note }),
+        activeLead && restoredLabel && !note.includes("\u91CD\u65B0\u4E0A\u67B6") && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "restore-case-annotation", children: restoredLabel }),
+        archiveMode && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "archive-case-annotation", children: archiveLabel })
+      ] });
+    };
     return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: `table-wrap ${publicMode ? "public-table" : ""} ${dailyMode ? "daily-table" : ""} ${activeLead ? "active-lead-table" : ""}`, onScroll: (event) => publicMode && setPublicScrollLeft(event.currentTarget.scrollLeft), children: [
       publicMode && publicScrollLeft > 80 && hoveredPublicCase && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "public-floating-case-name", style: { left: publicScrollLeft + 8, top: hoveredPublicCaseTop }, children: hoveredPublicCase }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("table", { style: publicMode ? { zoom: zoom / 100 } : void 0, children: [
@@ -49677,11 +49700,6 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
             }
           })();
           const isHighlighted = (key) => highlighted.includes(key) || key === "caseName" && highlighted.includes("caseNameNote") || key === "coverageFar" && (highlighted.includes("coverage") || highlighted.includes("far"));
-          const archiveDate = r.archived || (isExpired(r) ? r.entrustEnd : "");
-          const archiveDateLabel = displayRocDate(archiveDate);
-          const archiveLabel = `${archiveDateLabel}${r.archived ? r.status || "\u4E0B\u67B6" : "\u5230\u671F\u4E0B\u67B6"}${r.status === "\u4E0B\u67B6\u6D3D\u958B\u767C" && r.archiveReason ? `:${r.archiveReason}` : ""}`;
-          const restoredLabel = r._restoredAt ? shortRocMonthDay(r._restoredAt) : "";
-          const expiryDays = daysUntil(r.entrustEnd);
           return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_react.Fragment, { children: [
             showAreaGroups && (recordIndex === 0 || areaGroup(records[recordIndex - 1]) !== areaGroup(r)) && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("tr", { className: "area-group-row", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { colSpan: columns.length + (showPpt ? 2 : 0), children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: areaGroup(r) }) }) }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { onMouseEnter: (event) => {
@@ -49690,21 +49708,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
                 setHoveredPublicCaseTop(event.currentTarget.offsetTop + 6);
               }
             }, onMouseLeave: () => publicMode && setHoveredPublicCase(""), children: [
-              columns.map((k, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { className: `${i < stickyCount ? `sticky sticky-${i}` : ""} col-${k} ${dateKeys.has(k) && k !== "groupViewDate" && !validDate(r[k]) ? "date-error" : ""} ${dailyMode && isHighlighted(k) ? "daily-updated-cell" : ""}`, children: k === "caseName" && publicMode ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "public-case-name", children: chunkText(r.caseName || "\u2014", 10).map((line, lineIndex) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: line }, `${line}-${lineIndex}`)) }),
-                r.caseNameNote && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "case-name-note", children: r.caseNameNote }),
-                dailyMode && r._dailyAnnotation && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "daily-case-annotation", children: r._dailyAnnotation }),
-                expiryAnnotation && expiryDays >= 0 && expiryDays <= 30 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { className: "mine-expiry-annotation", children: [
-                  "\u63D0\u9192",
-                  displayRocDate(r.entrustEnd),
-                  "\u5230\u671F"
-                ] })
-              ] }) : k === "caseName" ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "case-link", onClick: () => onEdit(r), children: chunkText(r.caseName || "\u2014", activeLead ? 12 : 15).map((line, lineIndex) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "case-name-line", children: line }, `${line}-${lineIndex}`)) }),
-                r.caseNameNote && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "case-name-note", children: r.caseNameNote }),
-                activeLead && restoredLabel && !String(r.caseNameNote || "").includes("\u91CD\u65B0\u4E0A\u67B6") && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "restore-case-annotation", children: restoredLabel }),
-                archiveMode && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "archive-case-annotation", children: archiveLabel })
-              ] }) : k === "status" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: `status ${displayStatus(r) === "\u59D4\u8A17\u4E2D" ? "live" : "off"}`, children: displayStatus(r) }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CellContent, { record: r, column: k }) }, k)),
+              columns.map((k, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { className: `${i < stickyCount ? `sticky sticky-${i}` : ""} col-${k} ${dateKeys.has(k) && k !== "groupViewDate" && !validDate(r[k]) ? "date-error" : ""} ${dailyMode && isHighlighted(k) ? "daily-updated-cell" : ""}`, children: k === "caseName" ? caseNameCell(r, k) : k === "status" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: `status ${displayStatus(r) === "\u59D4\u8A17\u4E2D" ? "live" : "off"}`, children: displayStatus(r) }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CellContent, { record: r, column: k }) }, k)),
               showPpt && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { className: "ppt-col", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: pptIncluded(r), onChange: (e) => onPptChange(r, { pptSelected: e.target.checked ? "1" : "0", pptCategory: r.pptCategory || (isCurrentPptWeek(r.reportDate) ? "\u672C\u9031\u9032\u6848" : "\u81E8\u6642\u65B0\u589E") }) }) }),
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { className: "ppt-type-col", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", { value: pptCategory(r), onChange: (e) => onPptChange(r, { pptCategory: e.target.value, pptSelected: "1" }), children: [
