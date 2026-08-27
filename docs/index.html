@@ -42053,8 +42053,8 @@ ${String(ex)}`);
       registryIndoorPing: indoor ? String(Math.round(indoor * 1e3) / 1e3) : record.registryIndoorPing || "",
       completionDate,
       builtYear: completion[1] ? String(Number(completion[1])) : record.builtYear || "",
-      landSharePing: landShare || record.landSharePing || "",
-      landPing: landShare || record.landPing || ""
+      // 房管「土地持分面積」僅供比對，不可覆蓋業務貼串原始的正式地坪。
+      landSharePing: landShare || record.landSharePing || ""
     };
   };
   var suppliedPersonnel = [
@@ -45674,7 +45674,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V376" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V377" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
