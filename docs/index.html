@@ -42374,11 +42374,11 @@ ${String(ex)}`);
   var isCommissioned = (r) => !String(r.archived || "").trim() && (r.status || "\u59D4\u8A17\u4E2D") === "\u59D4\u8A17\u4E2D";
   var isActiveCommission = (r) => isCommissioned(r) && !r.archived && !isExpired(r);
   var archiveStatusOf = (r) => {
+    if (String(r.archived || "").trim() && String(r.archiveReason || "").trim()) return "\u4E0B\u67B6\u6D3D\u958B\u767C";
     const currentStatus = String(r.status || "").trim();
-    if (currentStatus && currentStatus !== "\u59D4\u8A17\u4E2D") return currentStatus;
     const savedStatus = String(r._archiveStatus || "").trim();
     if (savedStatus && savedStatus !== "\u59D4\u8A17\u4E2D") return savedStatus;
-    if (String(r.archived || "").trim() && String(r.archiveReason || "").trim()) return "\u4E0B\u67B6\u6D3D\u958B\u767C";
+    if (currentStatus && currentStatus !== "\u59D4\u8A17\u4E2D") return currentStatus;
     if (savedStatus) return savedStatus;
     return String(r.archived || "").trim() ? "\u4E0B\u67B6" : currentStatus || "\u59D4\u8A17\u4E2D";
   };
@@ -42553,7 +42553,7 @@ ${String(ex)}`);
   var salesBookDateCorrections = /* @__PURE__ */ new Set(["EG0522899", "EG0522916", "LG0132934", "EG0522910", "EG0522911", "EG0522912", "EG0522915", "EG0522908"]);
   var applySourceLayoutFixes = (records) => records.map((record) => {
     record = moveRestoredTextToCaseNote(clearImportedLandLabels(clearImportedContractChangePlaceholders(record)));
-    if (String(record.archived || "").trim() && String(record.archiveReason || "").trim() && String(record.status || "").trim() === "\u59D4\u8A17\u4E2D") {
+    if (String(record.archived || "").trim() && String(record.archiveReason || "").trim()) {
       record = { ...record, status: "\u4E0B\u67B6\u6D3D\u958B\u767C", _archiveStatus: "\u4E0B\u67B6\u6D3D\u958B\u767C" };
     }
     if (String(record.propertyNo || "").trim().toUpperCase() === "EA0163401" && /^更新\s*[:：]\s*案名$/.test(String(record.caseNameNote || "").trim())) {
@@ -45681,7 +45681,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V381" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V382" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
