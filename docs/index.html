@@ -45674,7 +45674,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V377" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V378" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -48509,7 +48509,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { className: "key-case", children: grouped.map((record) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "key-two-lines key-case-lines", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: record.propertyNo || "" }),
           chunkText(record.caseName || "", 12).map((line, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: line }, `${record.id}-${line}-${index}`)),
-          record.archived && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { style: { color: "#d71920", fontSize: "calc(.68em + 1.5pt)", fontWeight: 400, display: "block", whiteSpace: "nowrap" }, children: `${displayRocDate(record.archived)}${record.status || "\u5DF2\u4E0B\u67B6"}` })
+          record.archived && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { style: { color: "#d71920", fontSize: "calc(.68em + 1.5pt)", fontWeight: 400, display: "block", whiteSpace: "nowrap" }, children: `${shortRocMonthDay(record._archiveActionDate || record.archived)}${archiveStatusOf(record)}` })
         ] }, record.id)) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { className: "key-address", children: sameAddress ? twoLineText(primary?.address || "") : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "key-two-lines", children: grouped.map((record) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: record.address || "" }, record.id)) }) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "key-two-lines", children: grouped.flatMap((record) => developerNameLines(record.developer || "")).map((name, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: name }, `${name}-${index}`)) }) })
@@ -48573,7 +48573,12 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     const previousDate = addDaysIso(selectedDate, -1);
     const nextDate2 = addDaysIso(selectedDate, 1);
     const rocDay = displayRocDate(selectedDate);
-    const updateRecords = records.filter((record) => !record.archived && !isExpired(record) && record.status === "\u59D4\u8A17\u4E2D" && (dailyUpdateFields(record, selectedDate).length > 0 || dateOnly2(record._restoredAt) === selectedDate)).map((record) => {
+    const updateRecords = records.filter((record) => {
+      const changed = dailyUpdateFields(record, selectedDate);
+      const restored = dateOnly2(record._restoredAt) === selectedDate;
+      if (record.archived) return changed.length > 0;
+      return !isExpired(record) && record.status === "\u59D4\u8A17\u4E2D" && (changed.length > 0 || restored);
+    }).map((record) => {
       const changed = dailyUpdateFields(record, selectedDate);
       const restored = dateOnly2(record._restoredAt) === selectedDate;
       const followUpNote = record.showingFollowUp === "\u66AB\u505C\u5E36\u770B\uFF0F\u7B49\u5F85\u696D\u52D9\u56DE\u8986" ? `${shortRocMonthDay(record.showingFollowUpDate || selectedDate)}\u66AB\u505C\u5E36\u770B` : "";
