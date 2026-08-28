@@ -370,15 +370,19 @@ const websiteEffectiveDate = (value = "") => {
   return matched ? normalizeDateInput(matched[1]) : "";
 };
 const isExpired = (r: RecordItem) => validDate(r.entrustEnd) && !!r.entrustEnd && r.entrustEnd < today();
-const isCommissioned = (r: RecordItem) => (r.status || "委託中") === "委託中";
+// 已封存的案件即使舊雲端資料仍殘留「委託中」，也不能再被當作委託中。
+const isCommissioned = (r: RecordItem) => !String(r.archived || "").trim() && (r.status || "委託中") === "委託中";
 const isActiveCommission = (r: RecordItem) => isCommissioned(r) && !r.archived && !isExpired(r);
 const archiveStatusOf = (r: RecordItem) => {
-  // 封存後可能保留舊的 _archiveStatus；管理模式當前選定的 status 才是唯一準則。
+  // 封存資料可能來自較早版本：status 會殘留「委託中」，但 archiveReason 與
+  // _archiveStatus 才是已選定的封存原因。封存後須優先以封存資料顯示。
   const currentStatus = String(r.status || "").trim();
   if (currentStatus && currentStatus !== "委託中") return currentStatus;
   const savedStatus = String(r._archiveStatus || "").trim();
+  if (savedStatus && savedStatus !== "委託中") return savedStatus;
+  if (String(r.archived || "").trim() && String(r.archiveReason || "").trim()) return "下架洽開發";
   if (savedStatus) return savedStatus;
-  return currentStatus || "委託中";
+  return String(r.archived || "").trim() ? "下架" : (currentStatus || "委託中");
 };
 const displayStatus = (r: RecordItem) => isExpired(r) && !r.archived && isCommissioned(r) ? "到期下架" : archiveStatusOf(r);
 const ageOf = (r: RecordItem) => {
@@ -541,6 +545,11 @@ const districtFromAddress = (value = "") => {
 const salesBookDateCorrections = new Set(["EG0522899", "EG0522916", "LG0132934", "EG0522910", "EG0522911", "EG0522912", "EG0522915", "EG0522908"]);
 const applySourceLayoutFixes = (records: RecordItem[]) => records.map(record => {
   record = moveRestoredTextToCaseNote(clearImportedLandLabels(clearImportedContractChangePlaceholders(record)));
+  // 舊同步資料有可能已封存、也保留了下架原因，但 status 誤留「委託中」。
+  // 這種情況一律還原為「下架洽開發」，避免前台錯顯示成委託中或售出下架。
+  if (String(record.archived || "").trim() && String(record.archiveReason || "").trim() && String(record.status || "").trim() === "委託中") {
+    record = { ...record, status: "下架洽開發", _archiveStatus: "下架洽開發" };
+  }
   // EA0163401 曾把每日動態的系統提示誤存入「案名後方備註」。
   // 這個欄位應保留重新上架文字，不能顯示「更新：案名」。
   if (String(record.propertyNo || "").trim().toUpperCase() === "EA0163401" && /^更新\s*[:：]\s*案名$/.test(String(record.caseNameNote || "").trim())) {
@@ -2851,7 +2860,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V380</small></h1></div>
+<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V381</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingIntakeReminderRecords.length > 0 && <button className="new-case-reminder-header-button" onClick={() => { setNewCaseReminder({ ...pendingIntakeReminderRecords[0] }); setNewCaseReminderBatchIds(pendingIntakeReminderRecords.map(record => record.id)); }}>新進案件提醒 {pendingIntakeReminderRecords.length}</button>}{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -4318,7 +4327,8 @@ function PropertyTable({ records, columns, publicMode = false, dailyMode = false
     const note = String(r.caseNameNote || "").trim();
     const restoredLabel = r._restoredAt ? shortRocMonthDay(r._restoredAt) : "";
     const archiveDate = r.archived || (isExpired(r) ? r.entrustEnd : "");
-    const archiveLabel = `${displayRocDate(archiveDate)}${r.archived ? (r.status || "下架") : "到期下架"}${r.status === "下架洽開發" && r.archiveReason ? `:${r.archiveReason}` : ""}`;
+    const archiveStatus = r.archived ? archiveStatusOf(r) : "到期下架";
+    const archiveLabel = `${displayRocDate(archiveDate)}${archiveStatus}${archiveStatus === "下架洽開發" && r.archiveReason ? `：${r.archiveReason}` : ""}`;
     if (publicMode) return <><span className="public-case-name">{chunkText(r.caseName || "—", 10).map((line, lineIndex) => <span key={`${line}-${lineIndex}`}>{line}</span>)}</span>{note && <small className="case-name-note">{note}</small>}{dailyMode && r._dailyAnnotation && <small className="daily-case-annotation">{r._dailyAnnotation}</small>}{expiryAnnotation && daysUntil(r.entrustEnd) >= 0 && daysUntil(r.entrustEnd) <= 30 && <small className="mine-expiry-annotation">提醒{displayRocDate(r.entrustEnd)}到期</small>}</>;
     return <span className={activeLead ? "active-case-name-cell" : ""}><button className="case-link" onClick={() => onEdit(r)}>{chunkText(r.caseName || "—", activeLead ? 12 : 15).map((line, lineIndex) => <span className="case-name-line" key={`${line}-${lineIndex}`}>{line}</span>)}</button>{note && <span className="case-name-note active-case-name-note">{note}</span>}{activeLead && restoredLabel && !note.includes("重新上架") && <span className="restore-case-annotation">{restoredLabel}</span>}{archiveMode && <small className="archive-case-annotation">{archiveLabel}</small>}</span>;
   };
