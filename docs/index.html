@@ -45674,7 +45674,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V379" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V380" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -48587,7 +48587,11 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       const dailyHighlights = showingCaseNote ? [.../* @__PURE__ */ new Set([...changed.filter((key) => key !== "caseName" && key !== "caseNameNote" && key !== "caseNameNoteModifiedAt"), ...isReopenNote && String(record.reducedPrice || "").trim() ? ["reducedPrice"] : []])] : changed;
       return { ...record, caseNameNote: showingCaseNote ? displayCaseNote : changed.length ? `\u66F4\u65B0\uFF1A${dailyChangedLabels(changed).join("\u3001")}` : "", _dailyHighlight: JSON.stringify(dailyHighlights), ...restored ? { _dailyAnnotation: `${shortRocMonthDay(selectedDate)}\u91CD\u65B0\u4E0A\u67B6`, _dailyAnnotationType: "restored" } : {} };
     });
-    const removedRecords = records.filter((record) => !!record.archived && dateOnly2(record._archiveActionDate || record.archived) === selectedDate).map((record) => ({ ...record, caseNameNote: `${shortRocMonthDay(record._archiveActionDate || record.archived)}${archiveStatusOf(record)}`, _dailyHighlight: "[]" }));
+    const removedRecords = records.filter((record) => !!record.archived && dateOnly2(record._archiveActionDate || record.archived) === selectedDate).map((record) => {
+      const status = archiveStatusOf(record);
+      const reason = status === "\u4E0B\u67B6\u6D3D\u958B\u767C" ? String(record.archiveReason || "").trim() : "";
+      return { ...record, caseNameNote: `${shortRocMonthDay(record._archiveActionDate || record.archived)}${status}${reason ? `\uFF1A${reason}` : ""}`, _dailyHighlight: "[]" };
+    });
     const groups = [
       { key: "added", title: "\u65B0\u589E\u7269\u4EF6", records: records.filter((record) => dateOnly2(record._dailyAddedAt || record.reportDate) === selectedDate) },
       { key: "updated", title: "\u66F4\u65B0\u7269\u4EF6", records: updateRecords },
