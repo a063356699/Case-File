@@ -45681,7 +45681,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V383" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V384" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -49974,7 +49974,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
           shortDate || "\u2014",
           location2 || ""
         ] }),
-        r.bookDownDate && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { className: "archive-down-note", children: [
+        !isCommissioned(r) && r.bookDownDate && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { className: "archive-down-note", children: [
           displayRocDate(r.bookDownDate),
           "\u4E0B\u67B6"
         ] })
