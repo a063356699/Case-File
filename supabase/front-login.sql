@@ -83,7 +83,7 @@ begin
       'platform591','platform591Expiry','platform591None','yes319','yes319None','houseinfor','houseinforNone',
       'windowAd','windowAdNone','led','ledNone','homeWeb','homeWebNone','price5168','price5168Expiry','price5168None',
       'goldExposure','goldExposureExpiry','goldExposureNone','_updateHistory','lastModifiedAt','caseNameNoteModifiedAt','reducedPriceModifiedAt','_dailyAnnotationType',
-      '_dailyHighlight','_dailyAnnotation','_monthlyReports','_archiveActionDate','_restoredAt','_dailyAddedAt'
+      '_dailyHighlight','_dailyAnnotation','_monthlyReports','_archiveActionDate','_archiveStatus','archiveReason','_restoredAt','_dailyAddedAt'
     ]::text[])
   ) picked;
 
