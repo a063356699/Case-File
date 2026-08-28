@@ -42371,13 +42371,16 @@ ${String(ex)}`);
     return matched ? normalizeDateInput(matched[1]) : "";
   };
   var isExpired = (r) => validDate(r.entrustEnd) && !!r.entrustEnd && r.entrustEnd < today();
+  var isCommissioned = (r) => (r.status || "\u59D4\u8A17\u4E2D") === "\u59D4\u8A17\u4E2D";
+  var isActiveCommission = (r) => isCommissioned(r) && !r.archived && !isExpired(r);
   var archiveStatusOf = (r) => {
+    const currentStatus = String(r.status || "").trim();
+    if (currentStatus && currentStatus !== "\u59D4\u8A17\u4E2D") return currentStatus;
     const savedStatus = String(r._archiveStatus || "").trim();
     if (savedStatus) return savedStatus;
-    if (r.archived && r.status === "\u59D4\u8A17\u4E2D") return /^(?:EB|EC)/i.test(String(r.propertyNo || "")) ? "\u79DF\u51FA\u4E0B\u67B6" : "\u552E\u51FA\u4E0B\u67B6";
-    return r.status || "\u59D4\u8A17\u4E2D";
+    return currentStatus || "\u59D4\u8A17\u4E2D";
   };
-  var displayStatus = (r) => isExpired(r) && !r.archived && r.status === "\u59D4\u8A17\u4E2D" ? "\u5230\u671F\u4E0B\u67B6" : archiveStatusOf(r);
+  var displayStatus = (r) => isExpired(r) && !r.archived && isCommissioned(r) ? "\u5230\u671F\u4E0B\u67B6" : archiveStatusOf(r);
   var ageOf = (r) => {
     const completionYear = String(r.completionDate || "").match(/\d{2,4}/)?.[0] || "";
     const raw = Number(completionYear || r.builtYear);
@@ -42561,7 +42564,6 @@ ${String(ex)}`);
         _dailyHideKey: ""
       };
     }
-    if (record.archived && record.status === "\u59D4\u8A17\u4E2D" && /^(?:EB|EC)/i.test(String(record.propertyNo || ""))) record = { ...record, status: "\u79DF\u51FA\u4E0B\u67B6" };
     if (record.archived && record.status === "\u5230\u671F\u4E0B\u67B6" && validDate(record.entrustEnd) && !isExpired(record)) {
       const history = recordUpdateHistory(record);
       delete history[today()];
@@ -43664,8 +43666,8 @@ ${String(ex)}`);
       });
     }, [storageReady, records, intakeDrafts, tourItems]);
     const recordsForView = (internalView || tab === "public") && publicUnlocked && publicRecords.length ? publicRecords : records;
-    const archived = (0, import_react.useMemo)(() => sortArchivedRecords(recordsForView.filter((r) => r.archived || isExpired(r) || r.status !== "\u59D4\u8A17\u4E2D")), [recordsForView]);
-    const active = (0, import_react.useMemo)(() => recordsForView.filter((r) => !r.archived && !isExpired(r) && (r.status || "\u59D4\u8A17\u4E2D") === "\u59D4\u8A17\u4E2D"), [recordsForView]);
+    const archived = (0, import_react.useMemo)(() => sortArchivedRecords(recordsForView.filter((r) => !isActiveCommission(r))), [recordsForView]);
+    const active = (0, import_react.useMemo)(() => recordsForView.filter(isActiveCommission), [recordsForView]);
     const bookReviewCycleStart = normalizeDateInput(settings.bookReviewCurrentDate || "") || "2026-07-30";
     const bookReviewDueCount = today() >= bookReviewCycleStart ? active.filter((record) => {
       const confirmedDate = normalizeDateInput(record._bookReviewAt || record.bookLocationDate || "");
@@ -43760,7 +43762,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       { label: "5168", date: normalizeDateInput(settings.expiry5168 || ""), leadDays: 1 },
       { label: "\u7D93\u7D00\u4EBA", date: normalizeDateInput(settings.brokerExpiry || ""), leadDays: 30 }
     ].filter((item) => validDate(item.date) && item.date <= addDaysIso(today(), item.leadDays));
-    const expiredUnarchived = (0, import_react.useMemo)(() => records.filter((r) => !r.archived && (r.status || "\u59D4\u8A17\u4E2D") === "\u59D4\u8A17\u4E2D" && isExpired(r)), [records]);
+    const expiredUnarchived = (0, import_react.useMemo)(() => records.filter((r) => isCommissioned(r) && isExpired(r)), [records]);
     (0, import_react.useEffect)(() => {
       if (expiredUnarchived.length) setExpiryReminderOpen(true);
       else setExpiryReminderOpen(false);
@@ -44380,7 +44382,7 @@ ${changedLabels}
     const requestArchive = (record, status) => setArchiveChoice({ record, status, date: status === "\u5230\u671F\u4E0B\u67B6" ? nextDate(record.entrustEnd) : today(), salesPerson: record.salesPerson || "", reason: record.archiveReason || "" });
     const restoreRecord = (r, reopened = true) => {
       const cleanupKeys = ["housingDownDate", "bookDownDate", "salesBookDownDate", ...archiveWebsiteTasks.map(([field]) => `${field}DownDate`)];
-      setRecords((prev) => prev.map((x) => x.id === r.id ? { ...x, status: "\u59D4\u8A17\u4E2D", archived: "", entrustEnd: x.entrustEnd < today() ? "" : x.entrustEnd, ...reopened ? { _restoredAt: today() } : Object.fromEntries(cleanupKeys.map((key) => [key, ""])) } : x));
+      setRecords((prev) => prev.map((x) => x.id === r.id ? { ...x, status: "\u59D4\u8A17\u4E2D", archived: "", _archiveStatus: "", _archiveActionDate: "", archiveReason: "", entrustEnd: x.entrustEnd < today() ? "" : x.entrustEnd, ...reopened ? { _restoredAt: today() } : Object.fromEntries(cleanupKeys.map((key) => [key, ""])) } : x));
       setRestoreChoiceRecord(null);
       flash(reopened ? "\u5DF2\u91CD\u65B0\u4E0A\u67B6" : "\u5DF2\u6062\u5FA9\u59D4\u8A17\u4E2D\u7269\u4EF6");
     };
@@ -45019,7 +45021,7 @@ ${changedLabels}
         const data = rows[0]?.data;
         if (!res.ok || !data?.records) throw new Error();
         if (automatic && cloudLocalPendingRef.current) return;
-        const confirmationRecords = data.records.map((record) => normalizeRecordPings(applySourceLayoutFixes([record])[0])).filter((record) => !record.archived && !isExpired(record) && (record.status || "\u59D4\u8A17\u4E2D") === "\u59D4\u8A17\u4E2D");
+        const confirmationRecords = data.records.map((record) => normalizeRecordPings(applySourceLayoutFixes([record])[0])).filter(isActiveCommission);
         setCloudConfirmationRecords(confirmationRecords);
         if (rows[0]?.updated_at) {
           setCloudLastUploadAt(rows[0].updated_at);
@@ -46723,7 +46725,7 @@ ${changedLabels}
     const [temporaryOpen, setTemporaryOpen] = (0, import_react.useState)(false);
     const [temporaryDraft, setTemporaryDraft] = (0, import_react.useState)(() => blankRecord());
     const [temporaryEditId, setTemporaryEditId] = (0, import_react.useState)("");
-    const unviewed = sortActiveRecords(records.filter((record) => !record.archived && !isExpired(record) && (record.status || "\u59D4\u8A17\u4E2D") === "\u59D4\u8A17\u4E2D" && !record.groupViewDate && !items.some((item) => item.recordId === record.id)));
+    const unviewed = sortActiveRecords(records.filter((record) => isActiveCommission(record) && !record.groupViewDate && !items.some((item) => item.recordId === record.id)));
     const draftCandidates = drafts.filter((draft) => !draft.linkedRecordId && !draft.groupViewDate && !items.some((item) => item.data._intakeDraftId === draft.id)).map((draft) => ({ ...intakeToRecord(draft), id: `draft-${draft.id}`, reportDate: "", status: "\u5C1A\u672A\u9032\u6848", _intakeDraftId: draft.id, _notEntered: "1" }));
     const candidates = [...draftCandidates, ...unviewed];
     const developers = [...new Set(candidates.flatMap((record) => developerNameLines(record.developer || "")))].sort((a, b) => a.localeCompare(b, "zh-TW"));
@@ -48508,7 +48510,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: sameAddress ? actualDistrict(primary) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "key-two-lines", children: grouped.map((record) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: actualDistrict(record) }, record.id)) }) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { className: "key-case", children: grouped.map((record) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: "key-two-lines key-case-lines", children: [
           chunkText(record.caseName || "", 12).map((line, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: line }, `${record.id}-${line}-${index}`)),
-          record.archived && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { style: { color: "#d71920", fontSize: "calc(.68em + 1.5pt)", fontWeight: 400, display: "block", whiteSpace: "nowrap" }, children: `${shortRocMonthDay(record._archiveActionDate || record.archived)}${archiveStatusOf(record)}` })
+          !isCommissioned(record) && record.archived && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { style: { color: "#d71920", fontSize: "calc(.68em + 1.5pt)", fontWeight: 400, display: "block", whiteSpace: "nowrap" }, children: `${shortRocMonthDay(record._archiveActionDate || record.archived)}${archiveStatusOf(record)}${archiveStatusOf(record) === "\u4E0B\u67B6\u6D3D\u958B\u767C" && record.archiveReason ? `\uFF1A${record.archiveReason}` : ""}` })
         ] }, record.id)) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { className: "key-address", children: sameAddress ? twoLineText(primary?.address || "") : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "key-two-lines", children: grouped.map((record) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: record.address || "" }, record.id)) }) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "key-two-lines", children: grouped.flatMap((record) => developerNameLines(record.developer || "")).map((name, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: name }, `${name}-${index}`)) }) })
@@ -48587,7 +48589,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       const dailyHighlights = showingCaseNote ? [.../* @__PURE__ */ new Set([...changed.filter((key) => key !== "caseName" && key !== "caseNameNote" && key !== "caseNameNoteModifiedAt"), ...isReopenNote && String(record.reducedPrice || "").trim() ? ["reducedPrice"] : []])] : changed;
       return { ...record, caseNameNote: showingCaseNote ? displayCaseNote : changed.length ? `\u66F4\u65B0\uFF1A${dailyChangedLabels(changed).join("\u3001")}` : "", _dailyHighlight: JSON.stringify(dailyHighlights), ...restored ? { _dailyAnnotation: `${shortRocMonthDay(selectedDate)}\u91CD\u65B0\u4E0A\u67B6`, _dailyAnnotationType: "restored" } : {} };
     });
-    const removedRecords = records.filter((record) => !!record.archived && dateOnly2(record._archiveActionDate || record.archived) === selectedDate).map((record) => {
+    const removedRecords = records.filter((record) => !isCommissioned(record) && dateOnly2(record._archiveActionDate || record.archived) === selectedDate).map((record) => {
       const status = archiveStatusOf(record);
       const reason = status === "\u4E0B\u67B6\u6D3D\u958B\u767C" ? String(record.archiveReason || "").trim() : "";
       return { ...record, caseNameNote: `${shortRocMonthDay(record._archiveActionDate || record.archived)}${status}${reason ? `\uFF1A${reason}` : ""}`, _dailyHighlight: "[]" };
@@ -50012,7 +50014,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     const reviewCycle = today() >= cycleStart ? `book-${cycleStart}` : "";
     const dueRecords = reviewCycle ? records.filter((record) => {
       const confirmedDate = normalizeDateInput(record._bookReviewAt || record.bookLocationDate || "");
-      return !record.archived && !isExpired(record) && (record.status || "\u59D4\u8A17\u4E2D") === "\u59D4\u8A17\u4E2D" && (!confirmedDate || confirmedDate < cycleStart);
+      return isActiveCommission(record) && (!confirmedDate || confirmedDate < cycleStart);
     }) : [];
     const [reviewOpen, setReviewOpen] = (0, import_react.useState)(false);
     const [reviewVisible, setReviewVisible] = (0, import_react.useState)(true);
@@ -50052,9 +50054,8 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
         reportMobileResult(mobileEventId, false, message);
         return;
       }
-      const archived = !!record.archived || isExpired(record) || (record.status || "\u59D4\u8A17\u4E2D") !== "\u59D4\u8A17\u4E2D";
-      if (archived) {
-        const message = `${record.propertyNo}\u300C${record.caseName || "\u672A\u547D\u540D\u6848\u4EF6"}\u300D\u5DF2${record.status || "\u4E0B\u67B6"}`;
+      if (!isActiveCommission(record)) {
+        const message = `${record.propertyNo}\u300C${record.caseName || "\u672A\u547D\u540D\u6848\u4EF6"}\u300D\u5DF2${displayStatus(record) || "\u4E0B\u67B6"}`;
         scannedSetRef.current.add(record.id);
         setScannerOpen(false);
         setReviewOpen(true);
@@ -50582,7 +50583,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     };
     const numberText = (value) => Number.isInteger(value) ? String(value) : value.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
     const monthlyRecords = records.filter((record) => normalizeDateInput(record.reportDate).slice(0, 7) === today().slice(0, 7));
-    const activeRecords = records.filter((record) => !record.archived && !isExpired(record) && (record.status || "\u59D4\u8A17\u4E2D") === "\u59D4\u8A17\u4E2D");
+    const activeRecords = records.filter(isActiveCommission);
     const visibleGroups = filter === "ALL" ? groups : groups.filter((group) => group.id === filter);
     const rowsFor = (group) => group.members.map((member) => {
       const name = peopleById.get(member.personId)?.name || "";
@@ -50699,7 +50700,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     };
     const numberText = (value) => Number.isInteger(value) ? String(value) : value.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
     const monthlyRecords = records.filter((record) => normalizeDateInput(record.reportDate).slice(0, 7) === today().slice(0, 7));
-    const activeRecords = records.filter((record) => !record.archived && !isExpired(record) && (record.status || "\u59D4\u8A17\u4E2D") === "\u59D4\u8A17\u4E2D");
+    const activeRecords = records.filter(isActiveCommission);
     const rows = group.members.map((member) => {
       const name = peopleById.get(member.personId)?.name || "";
       return { member, name, monthly: monthlyRecords.reduce((sum, record) => sum + weightFor(record, name), 0), stock: activeRecords.reduce((sum, record) => sum + weightFor(record, name), 0) };
@@ -50819,7 +50820,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     };
     const previousMonth = monthAt(-1), currentMonth = monthAt(0);
     const shortMonth = (value) => `${Number(value.split("-")[1])}\u6708`;
-    const activeRecords = records.filter((record) => !record.archived && !isExpired(record) && (record.status || "\u59D4\u8A17\u4E2D") === "\u59D4\u8A17\u4E2D");
+    const activeRecords = records.filter(isActiveCommission);
     const knownNames = people.filter((person) => person.role !== "\u79D8\u66F8").map((person) => String(person.name || "").trim()).filter(Boolean);
     const secretaryNames = people.filter((person) => person.role === "\u79D8\u66F8").map((person) => String(person.name || "").trim()).filter(Boolean);
     const namesFor = (record) => {
@@ -50840,7 +50841,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     const monthlyArchive = records.filter((record) => {
       const archiveDate = normalizeDateInput(record._archiveActionDate || record.archived);
       const reportDate = normalizeDateInput(record.reportDate);
-      return Boolean(record.archived) && ((record.status || "\u59D4\u8A17\u4E2D") !== "\u59D4\u8A17\u4E2D" || Boolean(record._restoredAt)) && monthMatches(reportDate) && monthMatches(archiveDate) && reportDate <= archiveDate;
+      return !isCommissioned(record) && Boolean(record.archived) && monthMatches(reportDate) && monthMatches(archiveDate) && reportDate <= archiveDate;
     });
     const numberText = (value) => Number.isInteger(value) ? String(value) : value.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
     const categoryTotals = (items, name) => {

@@ -370,14 +370,17 @@ const websiteEffectiveDate = (value = "") => {
   return matched ? normalizeDateInput(matched[1]) : "";
 };
 const isExpired = (r: RecordItem) => validDate(r.entrustEnd) && !!r.entrustEnd && r.entrustEnd < today();
-// 舊資料曾有「已封存、但狀態仍是委託中」的租件；統一補正為租出下架，避免每日動態誤顯示委託中。
+const isCommissioned = (r: RecordItem) => (r.status || "委託中") === "委託中";
+const isActiveCommission = (r: RecordItem) => isCommissioned(r) && !r.archived && !isExpired(r);
 const archiveStatusOf = (r: RecordItem) => {
+  // 封存後可能保留舊的 _archiveStatus；管理模式當前選定的 status 才是唯一準則。
+  const currentStatus = String(r.status || "").trim();
+  if (currentStatus && currentStatus !== "委託中") return currentStatus;
   const savedStatus = String(r._archiveStatus || "").trim();
   if (savedStatus) return savedStatus;
-  if (r.archived && r.status === "委託中") return /^(?:EB|EC)/i.test(String(r.propertyNo || "")) ? "租出下架" : "售出下架";
-  return r.status || "委託中";
+  return currentStatus || "委託中";
 };
-const displayStatus = (r: RecordItem) => isExpired(r) && !r.archived && r.status === "委託中" ? "到期下架" : archiveStatusOf(r);
+const displayStatus = (r: RecordItem) => isExpired(r) && !r.archived && isCommissioned(r) ? "到期下架" : archiveStatusOf(r);
 const ageOf = (r: RecordItem) => {
   // 建築完成日期是編輯畫面的來源；舊 builtYear 僅作為沒有日期時的備用。
   const completionYear = String(r.completionDate || "").match(/\d{2,4}/)?.[0] || "";
@@ -553,7 +556,6 @@ const applySourceLayoutFixes = (records: RecordItem[]) => records.map(record => 
       _dailyHideKey: "",
     };
   }
-  if (record.archived && record.status === "委託中" && /^(?:EB|EC)/i.test(String(record.propertyNo || ""))) record = { ...record, status: "租出下架" };
   // 已到期下架的案件若委託結束已被改到今天或未來，自動恢復委託中；重新上架不是每日「更新物件」。
   if (record.archived && record.status === "到期下架" && validDate(record.entrustEnd) && !isExpired(record)) {
     const history = recordUpdateHistory(record);
@@ -1388,8 +1390,8 @@ export default function Home() {
   }, [storageReady, records, intakeDrafts, tourItems]);
 
   const recordsForView = (internalView || tab === "public") && publicUnlocked && publicRecords.length ? publicRecords : records;
-  const archived = useMemo(() => sortArchivedRecords(recordsForView.filter(r => r.archived || isExpired(r) || r.status !== "委託中")), [recordsForView]);
-  const active = useMemo(() => recordsForView.filter(r => !r.archived && !isExpired(r) && (r.status || "委託中") === "委託中"), [recordsForView]);
+  const archived = useMemo(() => sortArchivedRecords(recordsForView.filter(r => !isActiveCommission(r))), [recordsForView]);
+  const active = useMemo(() => recordsForView.filter(isActiveCommission), [recordsForView]);
   const bookReviewCycleStart = normalizeDateInput(settings.bookReviewCurrentDate || "") || "2026-07-30";
   const bookReviewDueCount = today() >= bookReviewCycleStart ? active.filter(record => {
     const confirmedDate = normalizeDateInput(record._bookReviewAt || record.bookLocationDate || "");
@@ -1453,7 +1455,7 @@ export default function Home() {
     { label: "5168", date: normalizeDateInput(settings.expiry5168 || ""), leadDays: 1 },
     { label: "經紀人", date: normalizeDateInput(settings.brokerExpiry || ""), leadDays: 30 },
   ].filter(item => validDate(item.date) && item.date <= addDaysIso(today(), item.leadDays));
-  const expiredUnarchived = useMemo(() => records.filter(r => !r.archived && (r.status || "委託中") === "委託中" && isExpired(r)), [records]);
+  const expiredUnarchived = useMemo(() => records.filter(r => isCommissioned(r) && isExpired(r)), [records]);
   useEffect(() => { if (expiredUnarchived.length) setExpiryReminderOpen(true); else setExpiryReminderOpen(false); }, [expiredUnarchived.map(record => record.id).join("|")]);
   const matchesAdvancedFilter = (r: RecordItem) => {
     const f = advancedFilter;
@@ -1945,7 +1947,7 @@ export default function Home() {
   const requestArchive = (record: RecordItem, status: string) => setArchiveChoice({ record, status, date: status === "到期下架" ? nextDate(record.entrustEnd) : today(), salesPerson: record.salesPerson || "", reason: record.archiveReason || "" });
   const restoreRecord = (r: RecordItem, reopened = true) => {
     const cleanupKeys = ["housingDownDate", "bookDownDate", "salesBookDownDate", ...archiveWebsiteTasks.map(([field]) => `${field}DownDate`)];
-    setRecords(prev => prev.map(x => x.id === r.id ? { ...x, status: "委託中", archived: "", entrustEnd: x.entrustEnd < today() ? "" : x.entrustEnd, ...(reopened ? { _restoredAt: today() } : Object.fromEntries(cleanupKeys.map(key => [key, ""]))) } : x)); setRestoreChoiceRecord(null); flash(reopened ? "已重新上架" : "已恢復委託中物件");
+    setRecords(prev => prev.map(x => x.id === r.id ? { ...x, status: "委託中", archived: "", _archiveStatus: "", _archiveActionDate: "", archiveReason: "", entrustEnd: x.entrustEnd < today() ? "" : x.entrustEnd, ...(reopened ? { _restoredAt: today() } : Object.fromEntries(cleanupKeys.map(key => [key, ""]))) } : x)); setRestoreChoiceRecord(null); flash(reopened ? "已重新上架" : "已恢復委託中物件");
   };
   const removeRecord = (r: RecordItem) => { if (confirm(`確定永久刪除「${r.caseName}」？`)) { setRecords(prev => prev.filter(x => x.id !== r.id)); setIntakeDrafts(prev => prev.filter(draft => draft.linkedRecordId !== r.id)); setEditing(null); } };
   const returnToIntake = (r: RecordItem) => {
@@ -2340,7 +2342,7 @@ export default function Home() {
       if (!res.ok || !data?.records) throw new Error();
       // 自動同步絕不覆蓋本機尚未成功上傳的內容，例如剛輸入的照片文字。
       if (automatic && cloudLocalPendingRef.current) return;
-      const confirmationRecords = (data.records as RecordItem[]).map(record => normalizeRecordPings(applySourceLayoutFixes([record])[0])).filter(record => !record.archived && !isExpired(record) && (record.status || "委託中") === "委託中");
+      const confirmationRecords = (data.records as RecordItem[]).map(record => normalizeRecordPings(applySourceLayoutFixes([record])[0])).filter(isActiveCommission);
       setCloudConfirmationRecords(confirmationRecords);
       if (rows[0]?.updated_at) { setCloudLastUploadAt(rows[0].updated_at); setCloudRemoteUpdateAt(""); localStorage.setItem(CLOUD_LAST_UPLOAD_KEY, rows[0].updated_at); }
       if (automatic || confirm("雲端資料將與本機資料合併，本機已修改但尚未同步的同一筆資料將以雲端版本為準。確定嗎？")) {
@@ -2940,7 +2942,7 @@ function TourPlanner({ records, drafts, items, setItems, history, setHistory, ed
   const [temporaryOpen, setTemporaryOpen] = useState(false);
   const [temporaryDraft, setTemporaryDraft] = useState<RecordItem>(() => blankRecord());
   const [temporaryEditId, setTemporaryEditId] = useState("");
-  const unviewed = sortActiveRecords(records.filter(record => !record.archived && !isExpired(record) && (record.status || "委託中") === "委託中" && !record.groupViewDate && !items.some(item => item.recordId === record.id)));
+  const unviewed = sortActiveRecords(records.filter(record => isActiveCommission(record) && !record.groupViewDate && !items.some(item => item.recordId === record.id)));
   const draftCandidates = drafts.filter(draft => !draft.linkedRecordId && !draft.groupViewDate && !items.some(item => item.data._intakeDraftId === draft.id)).map(draft => ({ ...intakeToRecord(draft), id: `draft-${draft.id}`, reportDate: "", status: "尚未進案", _intakeDraftId: draft.id, _notEntered: "1" }));
   const candidates = [...draftCandidates, ...unviewed];
   const developers = [...new Set(candidates.flatMap(record => developerNameLines(record.developer || "")))].sort((a, b) => a.localeCompare(b, "zh-TW"));
@@ -4016,7 +4018,7 @@ function KeySummary({ records }: { records: RecordItem[] }) {
     if (storedFull) return storedFull[1] === "台南" ? `${storedFull[2]}區` : `${storedFull[1]}${storedFull[2]}`;
     return stored;
   };
-  const cells = (number: number) => { const grouped = byNumber.get(number) || []; const primary = grouped[0]; const sameAddress = grouped.length > 0 && grouped.every(record => String(record.address || "").trim() === String(primary?.address || "").trim()); return <><td className="key-number">{number}</td><td>{sameAddress ? actualDistrict(primary) : <span className="key-two-lines">{grouped.map(record => <span key={record.id}>{actualDistrict(record)}</span>)}</span>}</td><td className="key-case">{grouped.map(record => <span key={record.id} className="key-two-lines key-case-lines">{chunkText(record.caseName || "", 12).map((line, index) => <span key={`${record.id}-${line}-${index}`}>{line}</span>)}{record.archived && <small style={{ color: "#d71920", fontSize: "calc(.68em + 1.5pt)", fontWeight: 400, display: "block", whiteSpace: "nowrap" }}>{`${shortRocMonthDay(record._archiveActionDate || record.archived)}${archiveStatusOf(record)}`}</small>}</span>)}</td><td className="key-address">{sameAddress ? twoLineText(primary?.address || "") : <span className="key-two-lines">{grouped.map(record => <span key={record.id}>{record.address || ""}</span>)}</span>}</td><td><span className="key-two-lines">{grouped.flatMap(record => developerNameLines(record.developer || "")).map((name, index) => <span key={`${name}-${index}`}>{name}</span>)}</span></td></>; };
+  const cells = (number: number) => { const grouped = byNumber.get(number) || []; const primary = grouped[0]; const sameAddress = grouped.length > 0 && grouped.every(record => String(record.address || "").trim() === String(primary?.address || "").trim()); return <><td className="key-number">{number}</td><td>{sameAddress ? actualDistrict(primary) : <span className="key-two-lines">{grouped.map(record => <span key={record.id}>{actualDistrict(record)}</span>)}</span>}</td><td className="key-case">{grouped.map(record => <span key={record.id} className="key-two-lines key-case-lines">{chunkText(record.caseName || "", 12).map((line, index) => <span key={`${record.id}-${line}-${index}`}>{line}</span>)}{!isCommissioned(record) && record.archived && <small style={{ color: "#d71920", fontSize: "calc(.68em + 1.5pt)", fontWeight: 400, display: "block", whiteSpace: "nowrap" }}>{`${shortRocMonthDay(record._archiveActionDate || record.archived)}${archiveStatusOf(record)}${archiveStatusOf(record) === "下架洽開發" && record.archiveReason ? `：${record.archiveReason}` : ""}`}</small>}</span>)}</td><td className="key-address">{sameAddress ? twoLineText(primary?.address || "") : <span className="key-two-lines">{grouped.map(record => <span key={record.id}>{record.address || ""}</span>)}</span>}</td><td><span className="key-two-lines">{grouped.flatMap(record => developerNameLines(record.developer || "")).map((name, index) => <span key={`${name}-${index}`}>{name}</span>)}</span></td></>; };
   const printSummary = () => { const table = document.querySelector(".key-summary-table") as HTMLTableElement | null; if (table) { const copy = table.cloneNode(true) as HTMLTableElement; copy.querySelectorAll("th").forEach(cell => cell.setAttribute("style", "background:#d9d9d9;color:#222")); printKeySummaryTable(copy.outerHTML); } };
   return <section className="content key-summary-page"><div className="list-head"><SectionTitle title="鑰匙總表" subtitle="委託中與封存物件，只要鑰匙欄仍標示公司#編號就會顯示"/><button type="button" className="primary key-print-button" onClick={printSummary}>列印鑰匙總表</button></div><div className="key-summary-wrap"><table className="key-summary-table"><thead><tr><th>編號</th><th>地區</th><th>案名</th><th>地址</th><th>開發</th><th>編號</th><th>地區</th><th>案名</th><th>地址</th><th>開發</th></tr></thead><tbody>{keySummaryLeft.map((leftNumber, index) => <tr key={leftNumber}>{cells(leftNumber)}{cells(keySummaryRight[index])}</tr>)}</tbody></table></div></section>;
 }
@@ -4038,7 +4040,7 @@ function DailyActivity({ records, compact = false, onEdit }: { records: RecordIt
     if (record.archived) return changed.length > 0;
     return !isExpired(record) && record.status === "委託中" && (changed.length > 0 || restored);
   }).map(record => { const changed = dailyUpdateFields(record, selectedDate); const restored = dateOnly(record._restoredAt) === selectedDate; const followUpNote = record.showingFollowUp === "暫停帶看／等待業務回覆" ? `${shortRocMonthDay(record.showingFollowUpDate || selectedDate)}暫停帶看` : ""; const displayCaseNote = String(record.caseNameNote || "").trim() || followUpNote; const showingCaseNote = Boolean(displayCaseNote); const isReopenNote = displayCaseNote.includes(`${shortRocMonthDay(selectedDate)}重新上架`); const dailyHighlights = showingCaseNote ? [...new Set([...changed.filter(key => key !== "caseName" && key !== "caseNameNote" && key !== "caseNameNoteModifiedAt"), ...(isReopenNote && String(record.reducedPrice || "").trim() ? ["reducedPrice"] : [])])] : changed; return { ...record, caseNameNote: showingCaseNote ? displayCaseNote : (changed.length ? `更新：${dailyChangedLabels(changed).join("、")}` : ""), _dailyHighlight: JSON.stringify(dailyHighlights), ...(restored ? { _dailyAnnotation: `${shortRocMonthDay(selectedDate)}重新上架`, _dailyAnnotationType: "restored" } : {}) }; });
-  const removedRecords = records.filter(record => !!record.archived && dateOnly(record._archiveActionDate || record.archived) === selectedDate).map(record => {
+  const removedRecords = records.filter(record => !isCommissioned(record) && dateOnly(record._archiveActionDate || record.archived) === selectedDate).map(record => {
     const status = archiveStatusOf(record);
     const reason = status === "下架洽開發" ? String(record.archiveReason || "").trim() : "";
     return { ...record, caseNameNote: `${shortRocMonthDay(record._archiveActionDate || record.archived)}${status}${reason ? `：${reason}` : ""}`, _dailyHighlight: "[]" };
@@ -4428,12 +4430,12 @@ function PropertyBookReview({ records, settings, openRequest, submit, openRecord
   // 一輪物件本確認只需完成一次；確認日在本次起始日之後（例如 8/10 完成 7/30 這輪）即不再列入。
   const dueRecords = reviewCycle ? records.filter(record => {
     const confirmedDate = normalizeDateInput(record._bookReviewAt || record.bookLocationDate || "");
-    return !record.archived && !isExpired(record) && (record.status || "委託中") === "委託中" && (!confirmedDate || confirmedDate < cycleStart);
+    return isActiveCommission(record) && (!confirmedDate || confirmedDate < cycleStart);
   }) : [];
   const [reviewOpen, setReviewOpen] = useState(false); const [reviewVisible, setReviewVisible] = useState(true); const [values, setValues] = useState<Record<string, string>>({}); const [scannerOpen, setScannerOpen] = useState(false); const [scannedId, setScannedId] = useState(""); const [scannedIds, setScannedIds] = useState<string[]>([]); const [scanMessage, setScanMessage] = useState(""); const [archivedScanRecord, setArchivedScanRecord] = useState<RecordItem | null>(null); const videoRef = useRef<HTMLVideoElement | null>(null); const streamRef = useRef<MediaStream | null>(null); const scannedSetRef = useRef<Set<string>>(new Set());
   useEffect(() => { if (openRequest > 0) { setReviewVisible(true); setReviewOpen(true); } }, [openRequest]);
   const reportMobileResult = (id: number | undefined, ok: boolean, message: string) => { if (!id) return; void fetch("http://localhost:8765/api/mobile-qr-result", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id, ok, message }) }).catch(() => {}); };
-  const locateCode = (raw: string, mobileEventId?: number) => { const clean = String(raw || "").trim(); const record = records.find(item => clean.includes(item.propertyNo) || (item.address && clean.includes(item.address)) || (item.caseName && clean.includes(item.caseName))); if (!record) { const message = `刷到的 QR Code 不在目前物件本：${clean || "未讀到內容"}`; setScanMessage(`警示：${message}`); reportMobileResult(mobileEventId, false, message); alert(`警示：${message}`); return; } if (scannedSetRef.current.has(record.id)) { const message = `${record.propertyNo} 已掃描，請刷下一件`; setScanMessage(message); reportMobileResult(mobileEventId, false, message); return; } const archived = !!record.archived || isExpired(record) || (record.status || "委託中") !== "委託中"; if (archived) { const message = `${record.propertyNo}「${record.caseName || "未命名案件"}」已${record.status || "下架"}`; scannedSetRef.current.add(record.id); setScannerOpen(false); setReviewOpen(true); setArchivedScanRecord(record); setScanMessage(`通知：${message}。`); reportMobileResult(mobileEventId, false, message); return; } scannedSetRef.current.add(record.id); setScannedId(record.id); setScannedIds(previous => [...previous, record.id]); setScanMessage(`委託中物件，完成，下一件：${record.propertyNo}`); reportMobileResult(mobileEventId, true, "委託中物件，完成，下一件"); submit([{ record, status: record.bookLocationType || "架上" }]); };
+  const locateCode = (raw: string, mobileEventId?: number) => { const clean = String(raw || "").trim(); const record = records.find(item => clean.includes(item.propertyNo) || (item.address && clean.includes(item.address)) || (item.caseName && clean.includes(item.caseName))); if (!record) { const message = `刷到的 QR Code 不在目前物件本：${clean || "未讀到內容"}`; setScanMessage(`警示：${message}`); reportMobileResult(mobileEventId, false, message); alert(`警示：${message}`); return; } if (scannedSetRef.current.has(record.id)) { const message = `${record.propertyNo} 已掃描，請刷下一件`; setScanMessage(message); reportMobileResult(mobileEventId, false, message); return; } if (!isActiveCommission(record)) { const message = `${record.propertyNo}「${record.caseName || "未命名案件"}」已${displayStatus(record) || "下架"}`; scannedSetRef.current.add(record.id); setScannerOpen(false); setReviewOpen(true); setArchivedScanRecord(record); setScanMessage(`通知：${message}。`); reportMobileResult(mobileEventId, false, message); return; } scannedSetRef.current.add(record.id); setScannedId(record.id); setScannedIds(previous => [...previous, record.id]); setScanMessage(`委託中物件，完成，下一件：${record.propertyNo}`); reportMobileResult(mobileEventId, true, "委託中物件，完成，下一件"); submit([{ record, status: record.bookLocationType || "架上" }]); };
   const decodeWithJsQR = (source: CanvasImageSource, width: number, height: number) => { const canvas = document.createElement("canvas"); canvas.width = width; canvas.height = height; const context = canvas.getContext("2d", { willReadFrequently: true }); if (!context) return ""; context.drawImage(source, 0, 0, width, height); const image = context.getImageData(0, 0, width, height); return jsQR(image.data, width, height, { inversionAttempts: "attemptBoth" })?.data || ""; };
   const decodeImage = async (file?: File) => { if (!file) return; try { const bitmap = await createImageBitmap(file); const Detector = (window as any).BarcodeDetector; let raw = ""; if (Detector) { const codes = await new Detector({ formats: ["qr_code"] }).detect(bitmap); raw = codes[0]?.rawValue || ""; } if (!raw) raw = decodeWithJsQR(bitmap, bitmap.width, bitmap.height); bitmap.close(); if (!raw) return alert("圖片中沒有辨識到QR Code，請換一張較清楚的照片"); locateCode(raw); } catch { alert("QR Code圖片讀取失敗，請換一張較清楚的照片"); } };
   // 手機掃描頁在區網服務（8765/8766），但總表可從 GitHub Pages 開啟；
@@ -4516,7 +4518,7 @@ function CompactGroupsOverview({ records, settings, groups }: { records: RecordI
   const weightFor = (record: RecordItem, name: string) => { const names = namesFor(record); return names.includes(name) ? 1 / names.length : 0; };
   const numberText = (value: number) => Number.isInteger(value) ? String(value) : value.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
   const monthlyRecords = records.filter(record => normalizeDateInput(record.reportDate).slice(0, 7) === today().slice(0, 7));
-  const activeRecords = records.filter(record => !record.archived && !isExpired(record) && (record.status || "委託中") === "委託中");
+  const activeRecords = records.filter(isActiveCommission);
   const visibleGroups = filter === "ALL" ? groups : groups.filter(group => group.id === filter);
   const rowsFor = (group: InventoryGroup) => group.members.map(member => { const name = peopleById.get(member.personId)?.name || ""; return { member, name, monthly: monthlyRecords.reduce((sum, record) => sum + weightFor(record, name), 0), stock: activeRecords.reduce((sum, record) => sum + weightFor(record, name), 0) }; }).filter(row => row.name).sort((left, right) => { const difference = sort.key === "name" ? left.name.localeCompare(right.name, "zh-TW") : sort.key === "role" ? left.member.role.localeCompare(right.member.role, "zh-TW") || left.name.localeCompare(right.name, "zh-TW") : left[sort.key] - right[sort.key]; return (sort.direction === "asc" ? difference : -difference) || left.name.localeCompare(right.name, "zh-TW"); });
   const visibleRows = visibleGroups.flatMap(rowsFor);
@@ -4546,7 +4548,7 @@ function LegacyLeaderTeamOverview({ records, settings, group }: { records: Recor
   const numberText = (value: number) => Number.isInteger(value) ? String(value) : value.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
   const currentMonth = today().slice(0, 7);
   const monthlyRecords = records.filter(record => normalizeDateInput(record.reportDate).slice(0, 7) === currentMonth);
-  const activeRecords = records.filter(record => !record.archived && !isExpired(record) && (record.status || "委託中") === "委託中");
+  const activeRecords = records.filter(isActiveCommission);
   const rows = group.members.map(member => {
     const person = peopleById.get(member.personId);
     const name = person?.name || "";
@@ -4582,7 +4584,7 @@ function LeaderTeamOverview({ records, settings, group }: { records: RecordItem[
   const weightFor = (record: RecordItem, name: string) => { const names = namesFor(record); return names.includes(name) ? 1 / names.length : 0; };
   const numberText = (value: number) => Number.isInteger(value) ? String(value) : value.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
   const monthlyRecords = records.filter(record => normalizeDateInput(record.reportDate).slice(0, 7) === today().slice(0, 7));
-  const activeRecords = records.filter(record => !record.archived && !isExpired(record) && (record.status || "委託中") === "委託中");
+  const activeRecords = records.filter(isActiveCommission);
   const rows = group.members.map(member => {
     const name = peopleById.get(member.personId)?.name || "";
     return { member, name, monthly: monthlyRecords.reduce((sum, record) => sum + weightFor(record, name), 0), stock: activeRecords.reduce((sum, record) => sum + weightFor(record, name), 0) };
@@ -4629,7 +4631,7 @@ function BusinessInventory({ records, settings, setSettings }: { records: Record
   const monthAt = (offset: number) => { const [year, value] = today().slice(0, 7).split("-").map(Number); const date = new Date(year, value - 1 + offset, 1); return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`; };
   const previousMonth = monthAt(-1), currentMonth = monthAt(0);
   const shortMonth = (value: string) => `${Number(value.split("-")[1])}月`;
-  const activeRecords = records.filter(record => !record.archived && !isExpired(record) && (record.status || "委託中") === "委託中");
+  const activeRecords = records.filter(isActiveCommission);
   const knownNames = people.filter(person => person.role !== "秘書").map(person => String(person.name || "").trim()).filter(Boolean);
   const secretaryNames = people.filter(person => person.role === "秘書").map(person => String(person.name || "").trim()).filter(Boolean);
   const namesFor = (record: RecordItem) => {
@@ -4647,7 +4649,7 @@ function BusinessInventory({ records, settings, setSettings }: { records: Record
   const isLand = (record: RecordItem) => /^L/i.test(String(record.propertyNo || "")) || String(record.type || "").includes("土地");
   const isExclusive = (record: RecordItem) => /^(EA|LA|EC)/i.test(String(record.propertyNo || "")) || String(contractFromNo(record.propertyNo) || record.contractType || "").includes("專約");
   const monthlyEntry = records.filter(record => monthMatches(record.reportDate));
-  const monthlyArchive = records.filter(record => { const archiveDate = normalizeDateInput(record._archiveActionDate || record.archived); const reportDate = normalizeDateInput(record.reportDate); return Boolean(record.archived) && ((record.status || "委託中") !== "委託中" || Boolean(record._restoredAt)) && monthMatches(reportDate) && monthMatches(archiveDate) && reportDate <= archiveDate; });
+  const monthlyArchive = records.filter(record => { const archiveDate = normalizeDateInput(record._archiveActionDate || record.archived); const reportDate = normalizeDateInput(record.reportDate); return !isCommissioned(record) && Boolean(record.archived) && monthMatches(reportDate) && monthMatches(archiveDate) && reportDate <= archiveDate; });
   const numberText = (value: number) => Number.isInteger(value) ? String(value) : value.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
   const categoryTotals = (items: RecordItem[], name: string) => {
     const exclusiveHouse = sum(items.filter(record => !isRentalRecord(record) && isExclusive(record) && !isLand(record)), name);
