@@ -45681,7 +45681,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V384" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V385" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -48378,8 +48378,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     const coverChangeNo = String(record.coverChangeNo || "").trim();
     const hasCoverChange = !!coverChangeNo && !isImportedDashPlaceholder(coverChangeNo);
     const coverNoChange = record.coverNoChange === "\u7121\u5951\u8B8A" && !hasCoverChange;
-    const changeBottomPrice = String(record.coverBottomPrice || "").replace(/\s*萬(?:元)?\s*/g, "").trim();
-    const coverChangePurpose = hasCoverChange && changeBottomPrice ? `\u5E95\u50F9${escapeHtml(changeBottomPrice)}\u842C` : value("coverChangePurpose");
+    const coverChangePurpose = value("coverChangePurpose");
     const coverIsLand = typeShort(record.type) === "\u571F\u5730" || /^(?:LG|LA)/i.test(record.propertyNo || "");
     const coverZoningStatus = record.zoningDocumentStatus || (coverIsLand ? "" : "\u623F\u5C4B\u4E0D\u9700\u8981");
     const coverContractRows = false ? `<table class="contract-grid-v3"><colgroup><col style="width:25mm"><col style="width:11mm"><col style="width:11mm"><col style="width:11mm"><col style="width:58mm"><col></colgroup><tbody>
