@@ -1561,8 +1561,22 @@ body{background:#f8fbfe!important;color:#405064!important}
 .monthly-progress-modal>header{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid #d7e5ec}
 .monthly-progress-modal>header>div{display:flex;flex-direction:column;gap:4px}.monthly-progress-modal>header b{font-size:24px;color:#143f56}.monthly-progress-modal>header span{color:#667b88}
 .monthly-progress-note{margin:16px 20px;padding:11px 14px;border-radius:10px;background:#fff8df;color:#795914;font-weight:700}
-.monthly-progress-list{padding:16px 20px 18px}.monthly-progress-row{display:grid;grid-template-columns:1fr .65fr .65fr .8fr 1.55fr 1.55fr .85fr;align-items:center;gap:10px;padding:13px 12px;border-bottom:1px solid #dce8ee}.monthly-progress-labels{background:#eaf4f8;border-radius:10px 10px 0 0;color:#31576b}.monthly-progress-row em{font-style:normal;font-weight:800}.monthly-progress-row.has-pending em,.monthly-progress-row.has-pending>span:nth-child(4){color:#c83e35;font-weight:900}.monthly-progress-row.is-complete em{color:#16815a}.monthly-progress-modal>footer{display:flex;justify-content:flex-end;padding:0 20px 20px}.monthly-progress-empty{text-align:center;padding:24px;color:#71818b}
+.monthly-progress-list{padding:16px 20px 18px}.monthly-progress-row{display:grid;grid-template-columns:1fr .65fr .65fr .8fr 1.55fr 1.55fr .85fr;align-items:center;gap:10px;padding:13px 12px;border-bottom:1px solid #dce8ee}.monthly-progress-labels{background:#eaf4f8;border-radius:10px 10px 0 0;color:#31576b}.monthly-progress-row em{font-style:normal;font-weight:800}.monthly-progress-row.has-pending em,.monthly-progress-row.has-pending>span:nth-child(4){color:#c83e35;font-weight:900}.monthly-progress-row.is-complete em{color:#16815a}.monthly-progress-modal>footer{display:flex;justify-content:flex-end;gap:10px;padding:0 20px 20px}.monthly-progress-empty{text-align:center;padding:24px;color:#71818b}
 .monthly-progress-labels>button{min-width:0;padding:4px 2px;border:0;background:transparent;color:#31576b;text-align:left;font-weight:900;white-space:normal}.monthly-progress-labels>button:hover,.monthly-progress-labels>button.selected{color:#0b7350;transform:none}.monthly-progress-labels>button small{margin-left:4px;font-size:9px;color:#729087}
+@media print{
+  body.printing-monthly-progress *{visibility:hidden!important}
+  body.printing-monthly-progress .monthly-progress-backdrop,body.printing-monthly-progress .monthly-progress-backdrop *{visibility:visible!important}
+  body.printing-monthly-progress .monthly-progress-backdrop{position:absolute!important;inset:0!important;display:block!important;padding:0!important;background:#fff!important}
+  body.printing-monthly-progress .monthly-progress-modal{position:absolute!important;inset:0!important;width:100%!important;max-width:none!important;max-height:none!important;overflow:visible!important;border-radius:0!important;box-shadow:none!important}
+  body.printing-monthly-progress .monthly-progress-modal>header{padding:7px 10px!important}
+  body.printing-monthly-progress .monthly-progress-modal>header b{font-size:17pt!important}
+  body.printing-monthly-progress .monthly-progress-modal>header span{font-size:8.5pt!important}
+  body.printing-monthly-progress .monthly-progress-modal>header .close,body.printing-monthly-progress .monthly-progress-modal>footer{display:none!important}
+  body.printing-monthly-progress .monthly-progress-list{padding:5px 0 0!important}
+  body.printing-monthly-progress .monthly-progress-row{grid-template-columns:1fr .6fr .6fr .7fr 1.45fr 1.45fr .75fr!important;gap:5px!important;padding:5px 7px!important;font-size:8.5pt!important;break-inside:avoid!important}
+  body.printing-monthly-progress .monthly-progress-labels{display:grid!important;border-radius:0!important}
+  body.printing-monthly-progress .monthly-progress-labels button{font-size:8.5pt!important;padding:0!important}
+}
 @media(max-width:700px){.monthly-progress-row{grid-template-columns:1fr 1fr 1fr}.monthly-progress-labels{display:none}.monthly-progress-row>span:nth-child(2)::before{content:"應確認："}.monthly-progress-row>span:nth-child(3)::before{content:"已完成："}.monthly-progress-row>span:nth-child(4)::before{content:"尚未回報："}.monthly-progress-row>span:nth-child(5),.monthly-progress-row>span:nth-child(6){grid-column:1/-1}.monthly-progress-row>span:nth-child(5)::before{content:"最後進入前台："}.monthly-progress-row>span:nth-child(6)::before{content:"最後回報："}}
 .topbar-row .header-actions .action-ppt{background:#5c9dce!important;border-color:#5c9dce!important;color:#fff!important}
 .topbar-row .header-actions .action-excel{background:#e2f3ea!important;border-color:#9fcdb1!important;color:#20734c!important}
@@ -45681,7 +45695,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V385" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V386" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -50309,6 +50323,20 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       label,
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: sort.key === key ? sort.direction === "asc" ? "\u25B2" : "\u25BC" : "\u2195" })
     ] });
+    const printProgress = () => {
+      const printStyle = document.createElement("style");
+      printStyle.id = "monthly-progress-print-page";
+      printStyle.textContent = "@page{size:A4 landscape;margin:5mm}";
+      document.head.appendChild(printStyle);
+      document.body.classList.add("printing-monthly-progress");
+      const cleanup = () => {
+        document.body.classList.remove("printing-monthly-progress");
+        printStyle.remove();
+      };
+      window.addEventListener("afterprint", cleanup, { once: true });
+      window.print();
+      window.setTimeout(cleanup, 1500);
+    };
     return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "modal-backdrop monthly-progress-backdrop", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", { className: "monthly-progress-modal", children: [
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
@@ -50347,7 +50375,10 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
         ] }, item.person.id)),
         !progress.length && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { className: "monthly-progress-empty", children: "\u5C1A\u672A\u8A2D\u5B9A\u5728\u8077\u696D\u52D9\u4EBA\u54E1\u3002" })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("footer", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "primary", onClick: close, children: "\u95DC\u9589" }) })
+      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("footer", { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", onClick: printProgress, children: "\u5217\u5370" }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "primary", onClick: close, children: "\u95DC\u9589" })
+      ] })
     ] }) });
   }
   function BusinessReportInbox({ records, resolve, archive }) {
