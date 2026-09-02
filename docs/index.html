@@ -1228,6 +1228,7 @@ body{background:#f8fbfe!important;color:#405064!important}
 .active-lead-table th.col-currentState,.active-lead-table td.col-currentState{width:34px!important;min-width:34px!important;max-width:34px!important}
 .active-lead-table th.col-road,.active-lead-table td.col-road,.active-lead-table th.col-frontage,.active-lead-table td.col-frontage,.active-lead-table th.col-depth,.active-lead-table td.col-depth{width:30px!important;min-width:30px!important;max-width:30px!important}
 .active-lead-table th.col-zoning,.active-lead-table td.col-zoning{width:52px!important;min-width:52px!important;max-width:52px!important}
+.active-lead-table td.col-zoning .zoning-lines>span{white-space:nowrap!important}
 .active-lead-table th.col-coverageFar,.active-lead-table td.col-coverageFar{width:54px!important;min-width:54px!important;max-width:54px!important;font-size:10px!important}
 .active-lead-table th.col-developer,.active-lead-table td.col-developer{width:56px!important;min-width:56px!important;max-width:56px!important}
 .active-lead-table th.col-notes,.active-lead-table td.col-notes{width:72px!important;min-width:72px!important;max-width:72px!important;font-size:10px!important}
@@ -45695,7 +45696,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V386" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V387" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -49956,8 +49957,8 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     if (["buildingPing", "landPing"].includes(k)) return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: String(r[k] || "").replace(/\s*坪\s*$/, "").trim() || "\u2014" });
     if (k === "zoning") {
       const chars = Array.from(r.zoning || "");
-      const lines = Array.from({ length: Math.ceil(chars.length / 5) }, (_, index) => chars.slice(index * 5, index * 5 + 5).join(""));
-      return lines.length ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "floor-lines", children: lines.map((line, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: line }, `${line}-${index}`)) }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: "\u2014" });
+      const lines = Array.from({ length: Math.ceil(chars.length / 4) }, (_, index) => chars.slice(index * 4, index * 4 + 4).join(""));
+      return lines.length ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "floor-lines zoning-lines", children: lines.map((line, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: line }, `${line}-${index}`)) }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: "\u2014" });
     }
     if (k === "coverageFar") {
       const pairs = String(r.coverageCombined || "").split(/[、,，\n]+/).map((value) => value.trim()).filter((value) => /^\d+(?:\.\d+)?[\/／]\d+(?:\.\d+)?$/.test(value));
