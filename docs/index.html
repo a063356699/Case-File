@@ -45709,7 +45709,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V395" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V396" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -51638,7 +51638,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     if (dateKeys.has(fieldKey)) return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: `field ${value && !validDate(normalizeDateInput(value)) ? "invalid" : ""}`, children: [
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: label }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", inputMode: "numeric", placeholder: "\u4F8B\u5982 7/24", value: displayRocDate(normalizeDateInput(value)), onChange: (e) => set(normalizeCompleteDateInput(e.target.value)), onBlur: (e) => set(normalizeDateInput(e.target.value)) }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "\u53EF\u8F38\u5165 7/24\uFF0C\u81EA\u52D5\u8F49\u70BA\u6C11\u570B\u65E5\u671F" })
+      fieldKey !== "zoningApplicationDate" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "\u53EF\u8F38\u5165 7/24\uFF0C\u81EA\u52D5\u8F49\u70BA\u6C11\u570B\u65E5\u671F" })
     ] });
     return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "field", children: [
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
