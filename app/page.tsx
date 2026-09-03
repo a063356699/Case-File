@@ -2861,7 +2861,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V392</small></h1></div>
+<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V393</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingIntakeReminderRecords.length > 0 && <button className="new-case-reminder-header-button" onClick={() => { setNewCaseReminder({ ...pendingIntakeReminderRecords[0] }); setNewCaseReminderBatchIds(pendingIntakeReminderRecords.map(record => record.id)); }}>新進案件提醒 {pendingIntakeReminderRecords.length}</button>}{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -3985,7 +3985,7 @@ function printRecordDocument(record: RecordItem, kind: "color" | "cover") {
       <div class="stars">★土地權狀×<span class="form-box">${escapeHtml(record.landTitleCount || "")}</span>張/建物權狀×<span class="form-box">${escapeHtml(record.buildingTitleCount || "")}</span>張/<span class="form-box">${record.titleUndertaking === "有切結" ? "✓" : ""}</span>切結</div>
       <div>◎ 使用分區:如果銷售土地為空白*必申請。</div>
       <div class="sub"><span class="form-box">${coverZoningStatus === "房屋不需要" ? "✓" : ""}</span>此物件為銷售房子不需要</div>
-      <div class="sub">●此物件為銷售都市土地需申請,分區申請日期：<span class="form-box cover-date-box">${escapeHtml(record.zoningApplicationDate ? displayRocDate(record.zoningApplicationDate) : "")}</span></div>
+      <div class="sub">●此物件為銷售都市土地,需申請分區申請日期：<span class="form-box cover-date-box">${escapeHtml(record.zoningApplicationDate ? displayRocDate(record.zoningApplicationDate) : "")}</span></div>
       <div class="sub">●此物件為銷售都市土地,且已附分區證明×<span class="form-box">${escapeHtml(record.zoningCertificateCount || "")}</span>張</div>
       <div class="sub">●此物件為銷售土地，謄本<span class="form-box">${coverZoningStatus === "謄本已標示不用附" ? "✓" : ""}</span>已標示--不用附上使用分區</div>
       <div>◎ ★授權書:眼看「謄本」、「權狀」、「主約」是否一樣</div>
