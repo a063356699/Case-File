@@ -1326,6 +1326,18 @@ export default function Home() {
     localStorage.setItem(cleanupKey, "1");
   }, [records.length]);
   useEffect(() => { if (!internalView && tab !== "public" && records.length) localStorage.setItem(STORAGE_KEY, JSON.stringify(records)); }, [records, internalView, tab]);
+  // 修復舊版從團看草稿按暫存後誤塞入正式 records 的案件。
+  // 具有草稿識別且仍是「尚未進案」者一律退回待處理草稿，並保留團看項目。
+  useEffect(() => {
+    if (!storageReady || !intakeDrafts.length) return;
+    const ghostRecords = records.filter(record => record._intakeDraftId && (record.status === "尚未進案" || record._notEntered === "1"));
+    if (!ghostRecords.length) return;
+    const ghostIds = new Set(ghostRecords.map(record => record.id));
+    const ghostDraftIds = new Set(ghostRecords.map(record => String(record._intakeDraftId || "")).filter(Boolean));
+    setRecords(previous => previous.filter(record => !ghostIds.has(record.id)));
+    setIntakeDrafts(previous => previous.map(draft => ghostDraftIds.has(draft.id) || (draft.linkedRecordId && ghostIds.has(draft.linkedRecordId)) ? { ...draft, linkedRecordId: undefined, enteredAt: undefined } : draft));
+    setTourItems(previous => previous.map(item => ghostDraftIds.has(String(item.data?._intakeDraftId || "")) ? { ...item, recordId: undefined, temporary: true, data: { ...item.data, reportDate: "", status: "尚未進案", _notEntered: "1" } } : item));
+  }, [storageReady, records, intakeDrafts]);
   // 正式進案日與業務交件日分開：進案統計沿用 reportDate，
   // 每日動態則顯示在助理實際按下正式進案的日期。
   useEffect(() => {
@@ -1920,6 +1932,18 @@ export default function Home() {
       completionDate: normalizeDateInput(editing.completionDate || ""),
       lastModifiedAt: savedAt,
     }));
+    // 團看中的進案草稿按「暫存」只能回寫草稿與團看快照；
+    // 未按「文件已收，正式進案」前，絕不可加入 records 或每日新增。
+    if (next._intakeDraftId) {
+      const savedDrafts = intakeDrafts.map(draft => draft.id === next._intakeDraftId ? { ...draft, linkedRecordId: undefined, enteredAt: undefined, values: syncRecordToDraftValues(draft, next), propertyKind: next.type.includes("土地") ? "土地" : "房屋" } : draft);
+      localStorage.setItem(INTAKE_KEY, JSON.stringify({ raw: intakeRaw, drafts: savedDrafts, selectedId: selectedIntakeId }));
+      setIntakeDrafts(savedDrafts);
+      setTourItems(previous => previous.map(item => item.data._intakeDraftId === next._intakeDraftId ? { ...item, recordId: undefined, temporary: true, data: { ...item.data, ...next, reportDate: "", status: "尚未進案", _notEntered: "1" } } : item));
+      editingInitialRef.current = JSON.stringify(next);
+      setEditing(next);
+      flash("草稿已暫存，尚未正式進案");
+      return;
+    }
     // 暫存一律先寫回正式案件資料。過去有連結進案草稿的案件只更新草稿，
     // 畫面切換後便可能重新讀到舊的案件副本而看起來像資料遺失。
     const savedRecords = records.some(record => record.id === next.id)
@@ -1928,15 +1952,8 @@ export default function Home() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(savedRecords));
     setRecords(savedRecords);
 
-    if (next._intakeDraftId) {
-      const savedDrafts = intakeDrafts.map(draft => draft.id === next._intakeDraftId ? { ...draft, values: syncRecordToDraftValues(draft, next), propertyKind: next.type.includes("土地") ? "土地" : "房屋" } : draft);
-      localStorage.setItem(INTAKE_KEY, JSON.stringify({ raw: intakeRaw, drafts: savedDrafts, selectedId: selectedIntakeId }));
-      setIntakeDrafts(savedDrafts);
-      setTourItems(previous => previous.map(item => item.data._intakeDraftId === next._intakeDraftId ? { ...item, data: { ...item.data, ...next } } : item));
-    } else {
-      // 暫存就是立即寫入本機，不必再按「僅儲存」，即使隨後關閉編輯畫面也保留。
-      setIntakeDrafts(previous => previous.map(draft => draft.linkedRecordId === next.id ? { ...draft, values: syncRecordToDraftValues(draft, next) } : draft));
-    }
+    // 暫存就是立即寫入本機，不必再按「僅儲存」，即使隨後關閉編輯畫面也保留。
+    setIntakeDrafts(previous => previous.map(draft => draft.linkedRecordId === next.id ? { ...draft, values: syncRecordToDraftValues(draft, next) } : draft));
     editingInitialRef.current = JSON.stringify(next);
     setEditing(next);
     flash("已儲存，可繼續填寫");
@@ -2944,7 +2961,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V408</small></h1></div>
+<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V409</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingIntakeReminderRecords.length > 0 && <button className="new-case-reminder-header-button" onClick={() => { setNewCaseReminder({ ...pendingIntakeReminderRecords[0] }); setNewCaseReminderBatchIds(pendingIntakeReminderRecords.map(record => record.id)); }}>新進案件提醒 {pendingIntakeReminderRecords.length}</button>}{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>

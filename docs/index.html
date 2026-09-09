@@ -45889,6 +45889,16 @@ ${String(ex)}`);
     }, [records, internalView, tab]);
     (0, import_react.useEffect)(() => {
       if (!storageReady || !intakeDrafts.length) return;
+      const ghostRecords = records.filter((record) => record._intakeDraftId && (record.status === "\u5C1A\u672A\u9032\u6848" || record._notEntered === "1"));
+      if (!ghostRecords.length) return;
+      const ghostIds = new Set(ghostRecords.map((record) => record.id));
+      const ghostDraftIds = new Set(ghostRecords.map((record) => String(record._intakeDraftId || "")).filter(Boolean));
+      setRecords((previous) => previous.filter((record) => !ghostIds.has(record.id)));
+      setIntakeDrafts((previous) => previous.map((draft) => ghostDraftIds.has(draft.id) || draft.linkedRecordId && ghostIds.has(draft.linkedRecordId) ? { ...draft, linkedRecordId: void 0, enteredAt: void 0 } : draft));
+      setTourItems((previous) => previous.map((item) => ghostDraftIds.has(String(item.data?._intakeDraftId || "")) ? { ...item, recordId: void 0, temporary: true, data: { ...item.data, reportDate: "", status: "\u5C1A\u672A\u9032\u6848", _notEntered: "1" } } : item));
+    }, [storageReady, records, intakeDrafts]);
+    (0, import_react.useEffect)(() => {
+      if (!storageReady || !intakeDrafts.length) return;
       const enteredAtByRecord = new Map(intakeDrafts.filter((draft) => draft.linkedRecordId && draft.enteredAt).map((draft) => [draft.linkedRecordId, draft.enteredAt]));
       setRecords((previous) => {
         let changed = false;
@@ -46652,17 +46662,20 @@ ${changedLabels}
         completionDate: normalizeDateInput(editing.completionDate || ""),
         lastModifiedAt: savedAt
       }));
+      if (next._intakeDraftId) {
+        const savedDrafts = intakeDrafts.map((draft) => draft.id === next._intakeDraftId ? { ...draft, linkedRecordId: void 0, enteredAt: void 0, values: syncRecordToDraftValues(draft, next), propertyKind: next.type.includes("\u571F\u5730") ? "\u571F\u5730" : "\u623F\u5C4B" } : draft);
+        localStorage.setItem(INTAKE_KEY, JSON.stringify({ raw: intakeRaw, drafts: savedDrafts, selectedId: selectedIntakeId }));
+        setIntakeDrafts(savedDrafts);
+        setTourItems((previous) => previous.map((item) => item.data._intakeDraftId === next._intakeDraftId ? { ...item, recordId: void 0, temporary: true, data: { ...item.data, ...next, reportDate: "", status: "\u5C1A\u672A\u9032\u6848", _notEntered: "1" } } : item));
+        editingInitialRef.current = JSON.stringify(next);
+        setEditing(next);
+        flash("\u8349\u7A3F\u5DF2\u66AB\u5B58\uFF0C\u5C1A\u672A\u6B63\u5F0F\u9032\u6848");
+        return;
+      }
       const savedRecords = records.some((record) => record.id === next.id) ? records.map((record) => record.id === next.id ? { ...record, ...next } : record) : [next, ...records];
       localStorage.setItem(STORAGE_KEY, JSON.stringify(savedRecords));
       setRecords(savedRecords);
-      if (next._intakeDraftId) {
-        const savedDrafts = intakeDrafts.map((draft) => draft.id === next._intakeDraftId ? { ...draft, values: syncRecordToDraftValues(draft, next), propertyKind: next.type.includes("\u571F\u5730") ? "\u571F\u5730" : "\u623F\u5C4B" } : draft);
-        localStorage.setItem(INTAKE_KEY, JSON.stringify({ raw: intakeRaw, drafts: savedDrafts, selectedId: selectedIntakeId }));
-        setIntakeDrafts(savedDrafts);
-        setTourItems((previous) => previous.map((item) => item.data._intakeDraftId === next._intakeDraftId ? { ...item, data: { ...item.data, ...next } } : item));
-      } else {
-        setIntakeDrafts((previous) => previous.map((draft) => draft.linkedRecordId === next.id ? { ...draft, values: syncRecordToDraftValues(draft, next) } : draft));
-      }
+      setIntakeDrafts((previous) => previous.map((draft) => draft.linkedRecordId === next.id ? { ...draft, values: syncRecordToDraftValues(draft, next) } : draft));
       editingInitialRef.current = JSON.stringify(next);
       setEditing(next);
       flash("\u5DF2\u5132\u5B58\uFF0C\u53EF\u7E7C\u7E8C\u586B\u5BEB");
@@ -48057,7 +48070,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V408" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V409" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
