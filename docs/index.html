@@ -45889,9 +45889,15 @@ ${String(ex)}`);
     }, [records, internalView, tab]);
     (0, import_react.useEffect)(() => {
       if (!storageReady || !intakeDrafts.length) return;
+      const targetedRepairKey = "property-desk-tour-draft-targeted-repair-v412";
+      const targetedRepairPending = localStorage.getItem(targetedRepairKey) !== "1";
       const knownTourDraftGhosts = /* @__PURE__ */ new Set(["EG0540838", "EG0540827"]);
-      const knownGhostDrafts = intakeDrafts.filter((draft) => knownTourDraftGhosts.has(intakeValue(draft.values, "\u59D4\u8A17\u4E3B\u7D04\u7DE8\u865F").trim()));
-      const ghostRecords = records.filter((record) => knownTourDraftGhosts.has(String(record.propertyNo || "").trim()) || record._intakeDraftId && (record.status === "\u5C1A\u672A\u9032\u6848" || record._notEntered === "1"));
+      const knownGhostDrafts = targetedRepairPending ? intakeDrafts.filter((draft) => knownTourDraftGhosts.has(intakeValue(draft.values, "\u59D4\u8A17\u4E3B\u7D04\u7DE8\u865F").trim())) : [];
+      const ghostRecords = records.filter((record) => targetedRepairPending && knownTourDraftGhosts.has(String(record.propertyNo || "").trim()) || record._intakeDraftId && (record.status === "\u5C1A\u672A\u9032\u6848" || record._notEntered === "1"));
+      if (targetedRepairPending && knownGhostDrafts.length && !ghostRecords.length && !knownGhostDrafts.some((draft) => draft.linkedRecordId || draft.enteredAt)) {
+        localStorage.setItem(targetedRepairKey, "1");
+        return;
+      }
       if (!ghostRecords.length && !knownGhostDrafts.some((draft) => draft.linkedRecordId || draft.enteredAt)) return;
       const ghostIds = new Set(ghostRecords.map((record) => record.id));
       const ghostDraftIds = new Set(ghostRecords.map((record) => String(record._intakeDraftId || "")).filter(Boolean));
@@ -45905,6 +45911,7 @@ ${String(ex)}`);
       });
       const allGhostDraftIds = /* @__PURE__ */ new Set([...ghostDraftIds, ...knownGhostDrafts.map((draft) => draft.id)]);
       setTourItems((previous) => previous.map((item) => allGhostDraftIds.has(String(item.data?._intakeDraftId || "")) || knownTourDraftGhosts.has(String(item.data?.propertyNo || "").trim()) ? { ...item, recordId: void 0, temporary: true, data: { ...item.data, reportDate: "", status: "\u5C1A\u672A\u9032\u6848", _notEntered: "1" } } : item));
+      if (targetedRepairPending && (knownGhostDrafts.length || ghostRecords.some((record) => knownTourDraftGhosts.has(String(record.propertyNo || "").trim())))) localStorage.setItem(targetedRepairKey, "1");
     }, [storageReady, records, intakeDrafts]);
     (0, import_react.useEffect)(() => {
       if (!storageReady || !intakeDrafts.length) return;
@@ -48079,7 +48086,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V411" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V412" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
