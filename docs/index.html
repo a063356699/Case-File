@@ -47163,9 +47163,15 @@ ${changedLabels}
         if (!quiet) flash("\u8ACB\u5148\u586B\u5165 Supabase Publishable key");
         return false;
       }
-      if (quiet && Date.now() < cloudRetryAfterRef.current) return false;
+      if (quiet && Date.now() < cloudRetryAfterRef.current) {
+        setCloudUploadState("failed");
+        setCloudUploadError("\u96F2\u7AEF\u66AB\u6642\u5FD9\u788C\uFF0C\u5DF2\u505C\u6B62\u81EA\u52D5\u91CD\u8A66\uFF1B\u7A0D\u5F8C\u6703\u518D\u540C\u6B65");
+        return false;
+      }
       if (cloudPushInFlightRef.current) return cloudPushInFlightRef.current;
       if (!acquireCloudUploadLease()) {
+        setCloudUploadState("idle");
+        setCloudUploadError("\u53E6\u4E00\u500B\u7E3D\u8868\u5206\u9801\u6B63\u5728\u540C\u6B65\uFF1B\u5B8C\u6210\u5F8C\u6703\u8B80\u53D6\u6700\u65B0\u8CC7\u6599");
         if (!quiet) flash("\u53E6\u4E00\u500B\u7E3D\u8868\u5206\u9801\u6B63\u5728\u540C\u6B65\uFF0C\u8ACB\u7A0D\u5F8C\u518D\u8A66");
         return false;
       }
@@ -47432,8 +47438,6 @@ ${changedLabels}
       }
       cloudLocalPendingRef.current = true;
       localStorage.setItem(CLOUD_LOCAL_PENDING_KEY, "1");
-      setCloudUploadState("uploading");
-      setCloudUploadError("");
       if (cloudSyncTimerRef.current) window.clearTimeout(cloudSyncTimerRef.current);
       cloudSyncTimerRef.current = window.setTimeout(() => {
         void supabasePush(true);
@@ -47925,7 +47929,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V401" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V402" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
