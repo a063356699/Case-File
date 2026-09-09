@@ -791,6 +791,10 @@ function intakeValue(values: Record<string, string>, ...needles: string[]) {
   return "";
 }
 
+// Google 表單欄名曾出現全形數字、半形數字及「開發業務／人員資料」等版本。
+// 進案時統一從這些欄名找人員，避免案件其他資料已進來但開發人員空白。
+const intakeDeveloperValue = (values: Record<string, string>) => intakeValue(values, "開發１/開發２", "開發1/開發2", "開發業務", "人員資料");
+
 function intakeAll(values: Record<string, string>, needle: string) { const normalizedNeedle = normalizeIntakeHeader(needle); return Object.entries(values).filter(([key, value]) => normalizeIntakeHeader(key).includes(normalizedNeedle) && value).map(([, value]) => value); }
 
 const directionFacing = (value = "") => {
@@ -859,7 +863,7 @@ function intakeToRecord(intake: IntakeData, existing?: RecordItem): RecordItem {
   const elementarySchool = intakeValue(v, "鄰近國小", "國小"); const juniorHighSchool = intakeValue(v, "鄰近國中", "國中"); const seniorHighSchool = intakeValue(v, "鄰近高中", "高中"); const collegeSchool = intakeValue(v, "鄰近大專", "大專");
   const address = intakeValue(v, "物件(完整)地址", "物件完整地址");
   const currentFloor = intakeValue(v, "透天請寫", "現況樓層");
-  return { ...blankRecord(), ...(existing || {}), propertyNo: no, contractType: contractFromNo(no), type: intakeValue(v, "物件型態"), status: existing?.status || "委託中", area: address.replace(/^.*?[市縣]/, "").slice(0, 3), caseName: intakeValue(v, "案名"), address, price: intakeValue(v, "契約開價"), direction: intakeValue(v, "朝向 [房屋朝]", "朝向 [大門朝]", "朝向 [土地朝]"), completionDate: completion, builtYear: completion ? String(Number(completion.split(/[./]/)[0])) : "", titleFloor: intakeValue(v, "權狀層數"), currentFloor, floor: [intakeValue(v, "權狀層數"), currentFloor].filter(Boolean).join("／"), layout, indoorPing: intakeValue(v, "室內坪"), buildingPing: intakeValue(v, "總建坪"), landPing: intakeValue(v, "地坪"), parking, parkingOwnership, parkingType, parkingMethod, parkingNo: intakeValue(v, "車位編號"), buildingName: intakeValue(v, "大樓名稱"), elevatorCount: intakeValue(v, "電梯數"), unitsPerFloor: intakeValue(v, "每層戶數"), managementMethod: intakeValue(v, "警衛管理"), market: intakeValue(v, "市場/購物", "市場"), park: intakeValue(v, "公園綠地", "公園"), elementarySchool, juniorHighSchool, seniorHighSchool, collegeSchool, school: [elementarySchool, juniorHighSchool, seniorHighSchool, collegeSchool].filter(Boolean).join("／") || existing?.school || "", feature1: intakeValue(v, "特色說明1"), feature2: intakeValue(v, "特色說明2"), feature3: intakeValue(v, "特色說明3"), feature4: intakeValue(v, "特色說明4"), attentionNotes: [intakeValue(v, "增建說明", "坪數說明"), intakeValue(v, "注意事項")].filter(Boolean).join("；"), managementFee: intakeValue(v, "管理費"), key: intakeValue(v, "鑰匙位置"), currentState: intakeValue(v, "(物件)現況", "現況"), road: intakeValue(v, "臨路"), frontage: intakeValue(v, "面寬"), depth: intakeValue(v, "深度"), zoning: intakeValue(v, "使用分區"), coverage: coverageFar[0] || "", far: coverageFar[1] || "", developer: intakeValue(v, "開發１/開發２"), entrustStart: normalizeDateInput(intakeValue(v, "委託開始")), entrustEnd: normalizeDateInput(intakeValue(v, "委託結束")), reportDate: existing?.reportDate || today(), updateDate: today(), groupViewDate: existing?.groupViewDate || intake.groupViewDate || "", notes, photoInfo: existing?.photoInfo || "" };
+  return { ...blankRecord(), ...(existing || {}), propertyNo: no, contractType: contractFromNo(no), type: intakeValue(v, "物件型態"), status: existing?.status || "委託中", area: address.replace(/^.*?[市縣]/, "").slice(0, 3), caseName: intakeValue(v, "案名"), address, price: intakeValue(v, "契約開價"), direction: intakeValue(v, "朝向 [房屋朝]", "朝向 [大門朝]", "朝向 [土地朝]"), completionDate: completion, builtYear: completion ? String(Number(completion.split(/[./]/)[0])) : "", titleFloor: intakeValue(v, "權狀層數"), currentFloor, floor: [intakeValue(v, "權狀層數"), currentFloor].filter(Boolean).join("／"), layout, indoorPing: intakeValue(v, "室內坪"), buildingPing: intakeValue(v, "總建坪"), landPing: intakeValue(v, "地坪"), parking, parkingOwnership, parkingType, parkingMethod, parkingNo: intakeValue(v, "車位編號"), buildingName: intakeValue(v, "大樓名稱"), elevatorCount: intakeValue(v, "電梯數"), unitsPerFloor: intakeValue(v, "每層戶數"), managementMethod: intakeValue(v, "警衛管理"), market: intakeValue(v, "市場/購物", "市場"), park: intakeValue(v, "公園綠地", "公園"), elementarySchool, juniorHighSchool, seniorHighSchool, collegeSchool, school: [elementarySchool, juniorHighSchool, seniorHighSchool, collegeSchool].filter(Boolean).join("／") || existing?.school || "", feature1: intakeValue(v, "特色說明1"), feature2: intakeValue(v, "特色說明2"), feature3: intakeValue(v, "特色說明3"), feature4: intakeValue(v, "特色說明4"), attentionNotes: [intakeValue(v, "增建說明", "坪數說明"), intakeValue(v, "注意事項")].filter(Boolean).join("；"), managementFee: intakeValue(v, "管理費"), key: intakeValue(v, "鑰匙位置"), currentState: intakeValue(v, "(物件)現況", "現況"), road: intakeValue(v, "臨路"), frontage: intakeValue(v, "面寬"), depth: intakeValue(v, "深度"), zoning: intakeValue(v, "使用分區"), coverage: coverageFar[0] || "", far: coverageFar[1] || "", developer: intakeDeveloperValue(v), entrustStart: normalizeDateInput(intakeValue(v, "委託開始")), entrustEnd: normalizeDateInput(intakeValue(v, "委託結束")), reportDate: existing?.reportDate || today(), updateDate: today(), groupViewDate: existing?.groupViewDate || intake.groupViewDate || "", notes, photoInfo: existing?.photoInfo || "" };
 }
 
 function recordToIntake(record: RecordItem): IntakeData {
@@ -1116,12 +1120,16 @@ export default function Home() {
   const editingInitialIdRef = useRef("");
   const personnelNameSignature = settings.personnel.map(person => `${person.id}:${person.name}:${person.status}`).join("|");
   const developerNormalizationSignature = records.map(record => `${record.id}:${record.developer || ""}`).join("|");
-  const draftDeveloperSignature = intakeDrafts.map(draft => `${draft.id}:${intakeValue(draft.values, "開發１/開發２")}`).join("|");
+  const draftDeveloperSignature = intakeDrafts.map(draft => `${draft.id}:${intakeDeveloperValue(draft.values)}`).join("|");
 
   useEffect(() => {
     const usablePeople = settings.personnel.filter(person => String(person.name || "").trim());
+    const draftByRecord = new Map(intakeDrafts.filter(draft => draft.linkedRecordId).map(draft => [draft.linkedRecordId!, draft]));
+    const draftByPropertyNo = new Map(intakeDrafts.map(draft => [intakeValue(draft.values, "委託主約編號").trim(), draft]).filter(([propertyNo]) => !!propertyNo));
     setRecords(previous => { let changed = false; const next = previous.map(record => {
-      const developer = developerFullNameText(record.developer || "", usablePeople);
+      const linkedDraft = draftByRecord.get(record.id) || draftByPropertyNo.get(String(record.propertyNo || "").trim());
+      const sourceDeveloper = record.developer || (linkedDraft ? intakeDeveloperValue(linkedDraft.values) : "");
+      const developer = developerFullNameText(sourceDeveloper, usablePeople);
       if (developer && developer !== record.developer) { changed = true; return { ...record, developer }; }
       return record;
     }); return changed ? next : previous; });
@@ -2924,7 +2932,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V405</small></h1></div>
+<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V406</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingIntakeReminderRecords.length > 0 && <button className="new-case-reminder-header-button" onClick={() => { setNewCaseReminder({ ...pendingIntakeReminderRecords[0] }); setNewCaseReminderBatchIds(pendingIntakeReminderRecords.map(record => record.id)); }}>新進案件提醒 {pendingIntakeReminderRecords.length}</button>}{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
