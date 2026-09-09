@@ -43878,6 +43878,7 @@ ${String(ex)}`);
   var CLOUD_SESSION_KEY = "property-desk-supabase-session-v1";
   var CLOUD_LAST_UPLOAD_KEY = "property-desk-supabase-last-upload-v1";
   var CLOUD_LOCAL_PENDING_KEY = "property-desk-supabase-local-pending-v1";
+  var CLOUD_UPLOAD_LEASE_KEY = "property-desk-supabase-upload-lease-v1";
   var CASE_FILE_SUPABASE_URL = "https://oiywtmjbasoonfuxemtr.supabase.co";
   var CASE_FILE_SUPABASE_TABLE = "case_file_state";
   var newCaseReminderCompletionKeys = ["housingListingCompleted", "newBookCompleted", "wangReviewCompleted"];
@@ -45482,6 +45483,9 @@ ${String(ex)}`);
     const cloudSkipNextPushRef = (0, import_react.useRef)(false);
     const cloudLocalPendingRef = (0, import_react.useRef)(false);
     const cloudFocusPullAtRef = (0, import_react.useRef)(0);
+    const cloudRetryAfterRef = (0, import_react.useRef)(0);
+    const cloudLastUploadedFingerprintRef = (0, import_react.useRef)("");
+    const cloudTabIdRef = (0, import_react.useRef)(`tab-${Date.now()}-${Math.random().toString(36).slice(2)}`);
     const editingInitialRef = (0, import_react.useRef)("");
     const editingInitialIdRef = (0, import_react.useRef)("");
     const personnelNameSignature = settings.personnel.map((person) => `${person.id}:${person.name}:${person.status}`).join("|");
@@ -47061,7 +47065,7 @@ ${changedLabels}
     const cloudData = () => ({
       records: records.map(({ photos, ...record }) => record),
       settings: { personnel: settings.personnel, inventoryGroups: settings.inventoryGroups, bookReviewCurrentDate: settings.bookReviewCurrentDate, bookReviewNextDate: settings.bookReviewNextDate, expiry591: settings.expiry591, expiry5168: settings.expiry5168, brokerExpiry: settings.brokerExpiry },
-      intake: { raw: intakeRaw, drafts: intakeDrafts, selectedId: selectedIntakeId },
+      intake: { raw: intakeRaw, drafts: intakeDrafts },
       tour: { date: tourDate, title: tourTitle, items: tourItems, modifiedAt: tourModifiedAt, history: tourHistory },
       pptWeeks: (() => {
         try {
@@ -47083,6 +47087,33 @@ ${changedLabels}
         }
       })()
     });
+    const cloudPayloadFingerprint = (value) => {
+      let hash = 2166136261;
+      for (let index = 0; index < value.length; index += 1) {
+        hash ^= value.charCodeAt(index);
+        hash = Math.imul(hash, 16777619);
+      }
+      return `${value.length}:${(hash >>> 0).toString(16)}`;
+    };
+    const acquireCloudUploadLease = () => {
+      const now = Date.now();
+      try {
+        const current = JSON.parse(localStorage.getItem(CLOUD_UPLOAD_LEASE_KEY) || "null");
+        if (current?.owner && current.owner !== cloudTabIdRef.current && Number(current.expiresAt || 0) > now) return false;
+        localStorage.setItem(CLOUD_UPLOAD_LEASE_KEY, JSON.stringify({ owner: cloudTabIdRef.current, expiresAt: now + 45e3 }));
+        const confirmed = JSON.parse(localStorage.getItem(CLOUD_UPLOAD_LEASE_KEY) || "null");
+        return confirmed?.owner === cloudTabIdRef.current;
+      } catch {
+        return true;
+      }
+    };
+    const releaseCloudUploadLease = () => {
+      try {
+        const current = JSON.parse(localStorage.getItem(CLOUD_UPLOAD_LEASE_KEY) || "null");
+        if (current?.owner === cloudTabIdRef.current) localStorage.removeItem(CLOUD_UPLOAD_LEASE_KEY);
+      } catch {
+      }
+    };
     const cloudFetchWithTimeout = async (input, init, timeoutMs = 25e3) => {
       const controller = new AbortController();
       const timer = window.setTimeout(() => controller.abort(), timeoutMs);
@@ -47132,7 +47163,12 @@ ${changedLabels}
         if (!quiet) flash("\u8ACB\u5148\u586B\u5165 Supabase Publishable key");
         return false;
       }
+      if (quiet && Date.now() < cloudRetryAfterRef.current) return false;
       if (cloudPushInFlightRef.current) return cloudPushInFlightRef.current;
+      if (!acquireCloudUploadLease()) {
+        if (!quiet) flash("\u53E6\u4E00\u500B\u7E3D\u8868\u5206\u9801\u6B63\u5728\u540C\u6B65\uFF0C\u8ACB\u7A0D\u5F8C\u518D\u8A66");
+        return false;
+      }
       let pushTimedOut = false;
       let pushTimeout = null;
       const pushTask = (async () => {
@@ -47153,8 +47189,16 @@ ${changedLabels}
             setCloudRemoteUpdateAt(remoteUpdatedAt);
             throw new Error("\u96F2\u7AEF\u6709\u8F03\u65B0\u8CC7\u6599\uFF0C\u8ACB\u5148\u6309\u300C\u96F2\u7AEF\u6709\u65B0\u8CC7\u6599\uFF0D\u8B80\u53D6\u300D\u5F8C\u518D\u7E7C\u7E8C\u4FEE\u6539");
           }
+          const cloudContent = JSON.stringify(cloudData());
+          const fingerprint = cloudPayloadFingerprint(cloudContent);
+          if (fingerprint === cloudLastUploadedFingerprintRef.current) {
+            cloudLocalPendingRef.current = false;
+            localStorage.removeItem(CLOUD_LOCAL_PENDING_KEY);
+            setCloudUploadState("complete");
+            return true;
+          }
           const uploadedAt = (/* @__PURE__ */ new Date()).toISOString();
-          const payload = JSON.stringify({ id: settings.supabaseRecord, data: cloudData(), updated_at: uploadedAt });
+          const payload = `{"id":${JSON.stringify(settings.supabaseRecord)},"data":${cloudContent},"updated_at":${JSON.stringify(uploadedAt)}}`;
           let res = await cloudFetchWithTimeout(url, { method: "POST", headers: { ...cloudHeaders(session), Prefer: "resolution=merge-duplicates,return=minimal" }, body: payload });
           if (res.status === 401) {
             session = await refreshCloudSession(true);
@@ -47171,12 +47215,15 @@ ${changedLabels}
           setCloudLastUploadAt(uploadedAt);
           setCloudRemoteUpdateAt("");
           localStorage.setItem(CLOUD_LAST_UPLOAD_KEY, uploadedAt);
+          cloudLastUploadedFingerprintRef.current = fingerprint;
+          cloudRetryAfterRef.current = 0;
           setCloudUploadState("complete");
           if (!quiet) flash("\u96F2\u7AEF\u540C\u6B65\u5B8C\u6210");
           return true;
         } catch (error) {
           if (pushTimedOut) return false;
           const reason = error instanceof Error && error.message ? error.message : "\u7DB2\u8DEF\u6216\u96F2\u7AEF\u8A2D\u5B9A\u7570\u5E38";
+          cloudRetryAfterRef.current = Date.now() + 6e4;
           setCloudUploadState("failed");
           setCloudUploadError(reason);
           if (!quiet) flash(`\u96F2\u7AEF\u540C\u6B65\u5931\u6557\uFF1A${reason}`);
@@ -47188,6 +47235,7 @@ ${changedLabels}
           pushTimedOut = true;
           cloudLocalPendingRef.current = false;
           localStorage.removeItem(CLOUD_LOCAL_PENDING_KEY);
+          cloudRetryAfterRef.current = Date.now() + 6e4;
           setCloudUploadState("failed");
           setCloudUploadError("\u96F2\u7AEF\u540C\u6B65\u903E\u6642\uFF0C\u8ACB\u78BA\u8A8D\u7DB2\u8DEF\u5F8C\u6309\u300C\u7ACB\u5373\u91CD\u8A66\u4E0A\u50B3\u300D");
           if (!quiet) flash("\u96F2\u7AEF\u540C\u6B65\u903E\u6642\uFF0C\u8ACB\u91CD\u65B0\u4E0A\u50B3");
@@ -47201,6 +47249,7 @@ ${changedLabels}
       } finally {
         if (pushTimeout) window.clearTimeout(pushTimeout);
         if (cloudPushInFlightRef.current === guardedTask) cloudPushInFlightRef.current = null;
+        releaseCloudUploadLease();
       }
     };
     const supabasePull = async (automatic = false, quiet = false) => {
@@ -47359,21 +47408,28 @@ ${changedLabels}
       } catch {
       }
     };
-    const cloudSnapshot = JSON.stringify({ records, personnel: settings.personnel, inventoryGroups: settings.inventoryGroups, expiry591: settings.expiry591, expiry5168: settings.expiry5168, brokerExpiry: settings.brokerExpiry, intakeRaw, intakeDrafts, selectedIntakeId, tourDate, tourTitle, tourItems, tourModifiedAt, tourHistory, pptWeekStart, pptExtraIds, pptOrderIds, pptAdHocRecords, pptConfirmedSnapshots });
+    const cloudSnapshot = JSON.stringify({ records, personnel: settings.personnel, inventoryGroups: settings.inventoryGroups, bookReviewCurrentDate: settings.bookReviewCurrentDate, bookReviewNextDate: settings.bookReviewNextDate, expiry591: settings.expiry591, expiry5168: settings.expiry5168, brokerExpiry: settings.brokerExpiry, intakeRaw, intakeDrafts, tourDate, tourTitle, tourItems, tourModifiedAt, tourHistory, pptExtraIds, pptOrderIds, pptAdHocRecords, pptConfirmedSnapshots });
     (0, import_react.useEffect)(() => {
       if (internalView || tab === "public" || !storageReady) return;
       if (cloudSkipNextPushRef.current) {
         cloudSkipNextPushRef.current = false;
         cloudSyncBaselineRef.current = cloudSnapshot;
+        cloudLastUploadedFingerprintRef.current = cloudPayloadFingerprint(JSON.stringify(cloudData()));
         return;
       }
       if (!cloudSyncBaselineRef.current) {
         cloudSyncBaselineRef.current = cloudSnapshot;
+        cloudLastUploadedFingerprintRef.current = cloudPayloadFingerprint(JSON.stringify(cloudData()));
         return;
       }
       if (cloudSyncBaselineRef.current === cloudSnapshot) return;
       cloudSyncBaselineRef.current = cloudSnapshot;
       if (!cloudSession?.accessToken || !settings.supabaseKey) return;
+      if (Date.now() < cloudRetryAfterRef.current) {
+        setCloudUploadState("failed");
+        setCloudUploadError("\u96F2\u7AEF\u66AB\u6642\u5FD9\u788C\uFF0C\u5DF2\u505C\u6B62\u81EA\u52D5\u91CD\u8A66\uFF1B\u53EF\u7A0D\u5F8C\u5230\u8A2D\u5B9A\u624B\u52D5\u91CD\u8A66");
+        return;
+      }
       cloudLocalPendingRef.current = true;
       localStorage.setItem(CLOUD_LOCAL_PENDING_KEY, "1");
       setCloudUploadState("uploading");
@@ -47404,7 +47460,7 @@ ${changedLabels}
       if (internalView || tab === "public" || !cloudSession?.accessToken || !settings.supabaseUrl || !settings.supabaseKey) return;
       const timer = window.setInterval(() => {
         void supabasePullIfChanged();
-      }, 15e3);
+      }, 6e4);
       return () => window.clearInterval(timer);
     }, [cloudSession?.accessToken, settings.supabaseUrl, settings.supabaseKey, settings.supabaseTable, settings.supabaseRecord, cloudLastUploadAt, internalView, tab]);
     (0, import_react.useEffect)(() => {
@@ -47412,7 +47468,7 @@ ${changedLabels}
       const refreshWhenVisible = () => {
         if (document.visibilityState === "hidden") return;
         const now = Date.now();
-        if (now - cloudFocusPullAtRef.current < 2500) return;
+        if (now - cloudFocusPullAtRef.current < 3e4) return;
         cloudFocusPullAtRef.current = now;
         void supabasePullIfChanged();
       };
@@ -47869,7 +47925,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V400" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V401" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
