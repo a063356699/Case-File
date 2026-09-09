@@ -47581,9 +47581,10 @@ ${changedLabels}
     }, [cloudSession?.accessToken, cloudSession?.email, settings.supabaseUrl, settings.supabaseKey, settings.supabaseTable, settings.supabaseRecord, localCloudChangesPending, internalView, tab]);
     (0, import_react.useEffect)(() => {
       if (internalView || tab === "public" || !cloudSession?.accessToken || !settings.supabaseUrl || !settings.supabaseKey) return;
+      void supabasePullIfChanged();
       const timer = window.setInterval(() => {
         void supabasePullIfChanged();
-      }, 6e4);
+      }, 15e3);
       return () => window.clearInterval(timer);
     }, [cloudSession?.accessToken, settings.supabaseUrl, settings.supabaseKey, settings.supabaseTable, settings.supabaseRecord, cloudLastUploadAt, internalView, tab]);
     (0, import_react.useEffect)(() => {
@@ -47591,7 +47592,7 @@ ${changedLabels}
       const refreshWhenVisible = () => {
         if (document.visibilityState === "hidden") return;
         const now = Date.now();
-        if (now - cloudFocusPullAtRef.current < 3e4) return;
+        if (now - cloudFocusPullAtRef.current < 2500) return;
         cloudFocusPullAtRef.current = now;
         void supabasePullIfChanged();
       };
@@ -48048,7 +48049,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V406" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V407" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -49662,7 +49663,12 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
   async function downloadColorWorkbook(record, personnel = []) {
     const spreadsheetNs = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
     const isLand = typeShort(record.type) === "\u571F\u5730" || /^(?:LG|LA)/i.test(record.propertyNo || "");
-    const locationMap = await createColorWorkbookMap(record);
+    let locationMap = null;
+    try {
+      locationMap = await createColorWorkbookMap(record);
+    } catch (error) {
+      console.warn("\u5F69\u8272\u8868\u4F4D\u7F6E\u5716\u672A\u7522\u751F\uFF0CExcel \u4ECD\u7E7C\u7E8C\u4E0B\u8F09\uFF1A", error);
+    }
     const qrPayload = colorWorkbookQrPayload(record.propertyNo);
     const qrDataUrl = await createColorWorkbookQr(qrPayload);
     const qrImage = new Image();
@@ -49683,7 +49689,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     const parser = new DOMParser();
     const serializer = new XMLSerializer();
     await placeColorWorkbookQr(zip, pngDataUrlBytes(qrDataUrl), parser, serializer);
-    await placeColorWorkbookMap(zip, locationMap.png, isLand, parser, serializer);
+    if (locationMap) await placeColorWorkbookMap(zip, locationMap.png, isLand, parser, serializer);
     const sheetPath = "xl/worksheets/sheet1.xml";
     const sheetXml = await zip.file(sheetPath)?.async("string");
     if (!sheetXml) throw new Error("Excel \u7BC4\u672C\u7F3A\u5C11\u8CC7\u6599\u5DE5\u4F5C\u8868");
