@@ -4,6 +4,7 @@ import { ChangeEvent, Dispatch, Fragment, SetStateAction, useEffect, useMemo, us
 import PptxGenJS from "pptxgenjs";
 import JSZip from "jszip";
 import jsQR from "./jsQR.cjs";
+import { colorWorkbookQrPayload, createColorWorkbookQr, placeColorWorkbookQr, pngDataUrlBytes } from "./colorWorkbookQr";
 import colorWorkbookTemplateUrl from "./assets/彩色表範本.xlsm?url";
 import { sourceBalconyFixes } from "./source-balcony-fixes";
 
@@ -2861,7 +2862,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V399</small></h1></div>
+<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V400</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingIntakeReminderRecords.length > 0 && <button className="new-case-reminder-header-button" onClick={() => { setNewCaseReminder({ ...pendingIntakeReminderRecords[0] }); setNewCaseReminderBatchIds(pendingIntakeReminderRecords.map(record => record.id)); }}>新進案件提醒 {pendingIntakeReminderRecords.length}</button>}{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -3148,11 +3149,26 @@ const keySummaryRight = [49, 50, 51, 52, 53, 55, 56, 65, 66, 67, 68, 69, 70, 71,
 
 async function downloadColorWorkbook(record: RecordItem, personnel: Person[] = []) {
   const spreadsheetNs = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
+  const qrPayload = colorWorkbookQrPayload(record.propertyNo);
+  const qrDataUrl = await createColorWorkbookQr(qrPayload);
+  const qrImage = new Image();
+  qrImage.src = qrDataUrl;
+  await qrImage.decode();
+  const qrCanvas = document.createElement("canvas");
+  qrCanvas.width = qrImage.naturalWidth;
+  qrCanvas.height = qrImage.naturalHeight;
+  const qrContext = qrCanvas.getContext("2d", { willReadFrequently: true });
+  if (!qrContext) throw new Error("QR Code 驗證失敗：無法建立解碼畫布。");
+  qrContext.drawImage(qrImage, 0, 0);
+  const qrPixels = qrContext.getImageData(0, 0, qrCanvas.width, qrCanvas.height);
+  const decodedQrPayload = jsQR(qrPixels.data, qrCanvas.width, qrCanvas.height, { inversionAttempts: "attemptBoth" })?.data || "";
+  if (decodedQrPayload !== qrPayload) throw new Error(`QR Code 解碼驗證失敗：預期「${qrPayload}」，實際「${decodedQrPayload || "無法辨識"}」，未下載 Excel。`);
   const response = await fetch(colorWorkbookTemplateUrl);
   if (!response.ok) throw new Error("無法讀取彩色表 Excel 範本");
   const zip = await JSZip.loadAsync(await response.arrayBuffer());
   const parser = new DOMParser();
   const serializer = new XMLSerializer();
+  await placeColorWorkbookQr(zip, pngDataUrlBytes(qrDataUrl), parser, serializer);
   const sheetPath = "xl/worksheets/sheet1.xml"; // 回應：範本內所有彩色表的資料來源
   const sheetXml = await zip.file(sheetPath)?.async("string");
   if (!sheetXml) throw new Error("Excel 範本缺少資料工作表");
