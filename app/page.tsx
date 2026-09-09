@@ -31,6 +31,7 @@ const MISSING_REMINDER_DATE_KEY = "property-desk-missing-reminder-date-v1";
 const CLOUD_SESSION_KEY = "property-desk-supabase-session-v1";
 const CLOUD_LAST_UPLOAD_KEY = "property-desk-supabase-last-upload-v1";
 const CLOUD_LOCAL_PENDING_KEY = "property-desk-supabase-local-pending-v1";
+const CLOUD_UPLOAD_LEASE_KEY = "property-desk-supabase-upload-lease-v1";
 const CASE_FILE_SUPABASE_URL = "https://oiywtmjbasoonfuxemtr.supabase.co";
 const CASE_FILE_SUPABASE_TABLE = "case_file_state";
 const newCaseReminderCompletionKeys = ["housingListingCompleted", "newBookCompleted", "wangReviewCompleted"] as const;
@@ -1107,6 +1108,9 @@ export default function Home() {
   // 本機剛儲存、尚未寫入雲端時，不允許自動拉回舊雲端資料蓋掉內容。
   const cloudLocalPendingRef = useRef(false);
   const cloudFocusPullAtRef = useRef(0);
+  const cloudRetryAfterRef = useRef(0);
+  const cloudLastUploadedFingerprintRef = useRef("");
+  const cloudTabIdRef = useRef(`tab-${Date.now()}-${Math.random().toString(36).slice(2)}`);
   const editingInitialRef = useRef("");
   const editingInitialIdRef = useRef("");
   const personnelNameSignature = settings.personnel.map(person => `${person.id}:${person.name}:${person.status}`).join("|");
@@ -2212,7 +2216,7 @@ export default function Home() {
   const cloudData = () => ({
     records: records.map(({ photos, ...record }) => record),
     settings: { personnel: settings.personnel, inventoryGroups: settings.inventoryGroups, bookReviewCurrentDate: settings.bookReviewCurrentDate, bookReviewNextDate: settings.bookReviewNextDate, expiry591: settings.expiry591, expiry5168: settings.expiry5168, brokerExpiry: settings.brokerExpiry },
-    intake: { raw: intakeRaw, drafts: intakeDrafts, selectedId: selectedIntakeId },
+    intake: { raw: intakeRaw, drafts: intakeDrafts },
     tour: { date: tourDate, title: tourTitle, items: tourItems, modifiedAt: tourModifiedAt, history: tourHistory },
     pptWeeks: (() => {
       try {
@@ -2232,6 +2236,30 @@ export default function Home() {
       } catch { return {}; }
     })(),
   });
+  const cloudPayloadFingerprint = (value: string) => {
+    let hash = 2166136261;
+    for (let index = 0; index < value.length; index += 1) {
+      hash ^= value.charCodeAt(index);
+      hash = Math.imul(hash, 16777619);
+    }
+    return `${value.length}:${(hash >>> 0).toString(16)}`;
+  };
+  const acquireCloudUploadLease = () => {
+    const now = Date.now();
+    try {
+      const current = JSON.parse(localStorage.getItem(CLOUD_UPLOAD_LEASE_KEY) || "null") as { owner?: string; expiresAt?: number } | null;
+      if (current?.owner && current.owner !== cloudTabIdRef.current && Number(current.expiresAt || 0) > now) return false;
+      localStorage.setItem(CLOUD_UPLOAD_LEASE_KEY, JSON.stringify({ owner: cloudTabIdRef.current, expiresAt: now + 45000 }));
+      const confirmed = JSON.parse(localStorage.getItem(CLOUD_UPLOAD_LEASE_KEY) || "null") as { owner?: string } | null;
+      return confirmed?.owner === cloudTabIdRef.current;
+    } catch { return true; }
+  };
+  const releaseCloudUploadLease = () => {
+    try {
+      const current = JSON.parse(localStorage.getItem(CLOUD_UPLOAD_LEASE_KEY) || "null") as { owner?: string } | null;
+      if (current?.owner === cloudTabIdRef.current) localStorage.removeItem(CLOUD_UPLOAD_LEASE_KEY);
+    } catch {}
+  };
   const cloudFetchWithTimeout = async (input: RequestInfo | URL, init?: RequestInit, timeoutMs = 25000) => {
     const controller = new AbortController();
     const timer = window.setTimeout(() => controller.abort(), timeoutMs);
@@ -2271,7 +2299,12 @@ export default function Home() {
   const supabasePush = async (quiet = false) => {
     if (!cloudSession?.accessToken) { if (!quiet) flash("請先登入雲端帳號"); return false; }
     if (!settings.supabaseUrl || !settings.supabaseKey) { if (!quiet) flash("請先填入 Supabase Publishable key"); return false; }
+    if (quiet && Date.now() < cloudRetryAfterRef.current) return false;
     if (cloudPushInFlightRef.current) return cloudPushInFlightRef.current;
+    if (!acquireCloudUploadLease()) {
+      if (!quiet) flash("另一個總表分頁正在同步，請稍後再試");
+      return false;
+    }
     let pushTimedOut = false;
     let pushTimeout: number | null = null;
     const pushTask = (async () => {
@@ -2293,8 +2326,16 @@ export default function Home() {
           setCloudRemoteUpdateAt(remoteUpdatedAt);
           throw new Error("雲端有較新資料，請先按「雲端有新資料－讀取」後再繼續修改");
         }
+        const cloudContent = JSON.stringify(cloudData());
+        const fingerprint = cloudPayloadFingerprint(cloudContent);
+        if (fingerprint === cloudLastUploadedFingerprintRef.current) {
+          cloudLocalPendingRef.current = false;
+          localStorage.removeItem(CLOUD_LOCAL_PENDING_KEY);
+          setCloudUploadState("complete");
+          return true;
+        }
         const uploadedAt = new Date().toISOString();
-        const payload = JSON.stringify({ id: settings.supabaseRecord, data: cloudData(), updated_at: uploadedAt });
+        const payload = `{"id":${JSON.stringify(settings.supabaseRecord)},"data":${cloudContent},"updated_at":${JSON.stringify(uploadedAt)}}`;
         let res = await cloudFetchWithTimeout(url, { method: "POST", headers: { ...cloudHeaders(session), Prefer: "resolution=merge-duplicates,return=minimal" }, body: payload });
         // Access token 剛失效時只重新整理一次後重送，避免資料停留在「上傳中」。
         if (res.status === 401) {
@@ -2312,12 +2353,15 @@ export default function Home() {
         setCloudLastUploadAt(uploadedAt);
         setCloudRemoteUpdateAt("");
         localStorage.setItem(CLOUD_LAST_UPLOAD_KEY, uploadedAt);
+        cloudLastUploadedFingerprintRef.current = fingerprint;
+        cloudRetryAfterRef.current = 0;
         setCloudUploadState("complete");
         if (!quiet) flash("雲端同步完成");
         return true;
       } catch (error) {
         if (pushTimedOut) return false;
         const reason = error instanceof Error && error.message ? error.message : "網路或雲端設定異常";
+        cloudRetryAfterRef.current = Date.now() + 60000;
         setCloudUploadState("failed");
         setCloudUploadError(reason);
         if (!quiet) flash(`雲端同步失敗：${reason}`);
@@ -2329,6 +2373,7 @@ export default function Home() {
         pushTimedOut = true;
         cloudLocalPendingRef.current = false;
         localStorage.removeItem(CLOUD_LOCAL_PENDING_KEY);
+        cloudRetryAfterRef.current = Date.now() + 60000;
         setCloudUploadState("failed");
         setCloudUploadError("雲端同步逾時，請確認網路後按「立即重試上傳」");
         if (!quiet) flash("雲端同步逾時，請重新上傳");
@@ -2341,6 +2386,7 @@ export default function Home() {
     finally {
       if (pushTimeout) window.clearTimeout(pushTimeout);
       if (cloudPushInFlightRef.current === guardedTask) cloudPushInFlightRef.current = null;
+      releaseCloudUploadLease();
     }
   };
   const supabasePull = async (automatic = false, quiet = false) => {
@@ -2480,18 +2526,29 @@ export default function Home() {
       if (response.ok && Array.isArray(rows)) setFrontLastLogins(Object.fromEntries(rows.map((row: { person_id: string; last_entered_at: string }) => [row.person_id, row.last_entered_at])));
     } catch {}
   };
-  const cloudSnapshot = JSON.stringify({ records, personnel: settings.personnel, inventoryGroups: settings.inventoryGroups, expiry591: settings.expiry591, expiry5168: settings.expiry5168, brokerExpiry: settings.brokerExpiry, intakeRaw, intakeDrafts, selectedIntakeId, tourDate, tourTitle, tourItems, tourModifiedAt, tourHistory, pptWeekStart, pptExtraIds, pptOrderIds, pptAdHocRecords, pptConfirmedSnapshots });
+  // 僅正式資料內容可觸發上傳；目前選到哪筆草稿、切到哪一週等畫面狀態不算資料修改。
+  const cloudSnapshot = JSON.stringify({ records, personnel: settings.personnel, inventoryGroups: settings.inventoryGroups, bookReviewCurrentDate: settings.bookReviewCurrentDate, bookReviewNextDate: settings.bookReviewNextDate, expiry591: settings.expiry591, expiry5168: settings.expiry5168, brokerExpiry: settings.brokerExpiry, intakeRaw, intakeDrafts, tourDate, tourTitle, tourItems, tourModifiedAt, tourHistory, pptExtraIds, pptOrderIds, pptAdHocRecords, pptConfirmedSnapshots });
   useEffect(() => {
     if (internalView || tab === "public" || !storageReady) return;
     if (cloudSkipNextPushRef.current) {
       cloudSkipNextPushRef.current = false;
       cloudSyncBaselineRef.current = cloudSnapshot;
+      cloudLastUploadedFingerprintRef.current = cloudPayloadFingerprint(JSON.stringify(cloudData()));
       return;
     }
-    if (!cloudSyncBaselineRef.current) { cloudSyncBaselineRef.current = cloudSnapshot; return; }
+    if (!cloudSyncBaselineRef.current) {
+      cloudSyncBaselineRef.current = cloudSnapshot;
+      cloudLastUploadedFingerprintRef.current = cloudPayloadFingerprint(JSON.stringify(cloudData()));
+      return;
+    }
     if (cloudSyncBaselineRef.current === cloudSnapshot) return;
     cloudSyncBaselineRef.current = cloudSnapshot;
     if (!cloudSession?.accessToken || !settings.supabaseKey) return;
+    if (Date.now() < cloudRetryAfterRef.current) {
+      setCloudUploadState("failed");
+      setCloudUploadError("雲端暫時忙碌，已停止自動重試；可稍後到設定手動重試");
+      return;
+    }
     cloudLocalPendingRef.current = true;
     localStorage.setItem(CLOUD_LOCAL_PENDING_KEY, "1");
     setCloudUploadState("uploading");
@@ -2512,10 +2569,10 @@ export default function Home() {
     setCloudUploadState("idle");
     void supabasePull(true);
   }, [cloudSession?.accessToken, cloudSession?.email, settings.supabaseUrl, settings.supabaseKey, settings.supabaseTable, settings.supabaseRecord, localCloudChangesPending, internalView, tab]);
-  // 管理模式開啟期間每 15 秒檢查雲端；偵測到另一台電腦的新資料後自動合併。
+  // 管理模式開啟期間每 60 秒檢查雲端；偵測到另一台電腦的新資料後自動合併。
   useEffect(() => {
     if (internalView || tab === "public" || !cloudSession?.accessToken || !settings.supabaseUrl || !settings.supabaseKey) return;
-    const timer = window.setInterval(() => { void supabasePullIfChanged(); }, 15000);
+    const timer = window.setInterval(() => { void supabasePullIfChanged(); }, 60000);
     return () => window.clearInterval(timer);
   }, [cloudSession?.accessToken, settings.supabaseUrl, settings.supabaseKey, settings.supabaseTable, settings.supabaseRecord, cloudLastUploadAt, internalView, tab]);
   // 切回此分頁時立即檢查並自動合併較新的雲端資料。
@@ -2524,7 +2581,7 @@ export default function Home() {
     const refreshWhenVisible = () => {
       if (document.visibilityState === "hidden") return;
       const now = Date.now();
-      if (now - cloudFocusPullAtRef.current < 2500) return;
+      if (now - cloudFocusPullAtRef.current < 30000) return;
       cloudFocusPullAtRef.current = now;
       void supabasePullIfChanged();
     };
@@ -2862,7 +2919,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V400</small></h1></div>
+<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V401</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingIntakeReminderRecords.length > 0 && <button className="new-case-reminder-header-button" onClick={() => { setNewCaseReminder({ ...pendingIntakeReminderRecords[0] }); setNewCaseReminderBatchIds(pendingIntakeReminderRecords.map(record => record.id)); }}>新進案件提醒 {pendingIntakeReminderRecords.length}</button>}{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
