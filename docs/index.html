@@ -47387,6 +47387,14 @@ ${changedLabels}
         const rows = await res.json();
         const data = rows[0]?.data;
         if (!res.ok || !data?.records) throw new Error();
+        if (automatic && data.intake) {
+          const remoteDrafts = Array.isArray(data.intake.drafts) ? data.intake.drafts : [];
+          if (remoteDrafts.length > 0) {
+            setIntakeDrafts((previous) => reconcileIntakeDraftLinks(mergeIntakeDrafts(previous, remoteDrafts), [...records, ...data.records]));
+            setIntakeRaw((previous) => previous || data.intake.raw || "");
+            setSelectedIntakeId((previous) => previous || data.intake.selectedId || "");
+          }
+        }
         if (automatic && cloudLocalPendingRef.current) return;
         const confirmationRecords = data.records.map((record) => normalizeRecordPings(applySourceLayoutFixes([record])[0])).filter(isActiveCommission);
         setCloudConfirmationRecords(confirmationRecords);
@@ -48049,7 +48057,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V407" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V408" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
