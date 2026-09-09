@@ -1330,12 +1330,19 @@ export default function Home() {
   // 具有草稿識別且仍是「尚未進案」者一律退回待處理草稿，並保留團看項目。
   useEffect(() => {
     if (!storageReady || !intakeDrafts.length) return;
-    const ghostRecords = records.filter(record => record._intakeDraftId && (record.status === "尚未進案" || record._notEntered === "1"));
+    const knownTourDraftGhosts = new Set(["EG0540838", "EG0540827"]);
+    const ghostRecords = records.filter(record => knownTourDraftGhosts.has(String(record.propertyNo || "").trim()) || (record._intakeDraftId && (record.status === "尚未進案" || record._notEntered === "1")));
     if (!ghostRecords.length) return;
     const ghostIds = new Set(ghostRecords.map(record => record.id));
     const ghostDraftIds = new Set(ghostRecords.map(record => String(record._intakeDraftId || "")).filter(Boolean));
+    const ghostPropertyNos = new Set(ghostRecords.map(record => String(record.propertyNo || "").trim()).filter(Boolean));
     setRecords(previous => previous.filter(record => !ghostIds.has(record.id)));
-    setIntakeDrafts(previous => previous.map(draft => ghostDraftIds.has(draft.id) || (draft.linkedRecordId && ghostIds.has(draft.linkedRecordId)) ? { ...draft, linkedRecordId: undefined, enteredAt: undefined } : draft));
+    setIntakeDrafts(previous => {
+      const repaired = previous.map(draft => ghostDraftIds.has(draft.id) || ghostPropertyNos.has(intakeValue(draft.values, "委託主約編號").trim()) || (draft.linkedRecordId && ghostIds.has(draft.linkedRecordId)) ? { ...draft, linkedRecordId: undefined, enteredAt: undefined } : draft);
+      const existingNos = new Set(repaired.map(draft => intakeValue(draft.values, "委託主約編號").trim()));
+      const missing = ghostRecords.filter(record => !existingNos.has(String(record.propertyNo || "").trim())).map(record => ({ ...recordToIntake(record), linkedRecordId: undefined, enteredAt: undefined }));
+      return [...missing, ...repaired];
+    });
     setTourItems(previous => previous.map(item => ghostDraftIds.has(String(item.data?._intakeDraftId || "")) ? { ...item, recordId: undefined, temporary: true, data: { ...item.data, reportDate: "", status: "尚未進案", _notEntered: "1" } } : item));
   }, [storageReady, records, intakeDrafts]);
   // 正式進案日與業務交件日分開：進案統計沿用 reportDate，
@@ -2961,7 +2968,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V409</small></h1></div>
+<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V410</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingIntakeReminderRecords.length > 0 && <button className="new-case-reminder-header-button" onClick={() => { setNewCaseReminder({ ...pendingIntakeReminderRecords[0] }); setNewCaseReminderBatchIds(pendingIntakeReminderRecords.map(record => record.id)); }}>新進案件提醒 {pendingIntakeReminderRecords.length}</button>}{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
