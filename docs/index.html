@@ -48151,7 +48151,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V418" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V419" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -48836,13 +48836,10 @@ ${changedLabels}
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: label }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: printEditor.data[key] || "", onChange: (event) => setPrintEditor({ ...printEditor, data: { ...printEditor.data, [key]: event.target.value } }) })
           ] }, key)),
-          typeShort(printEditor.data.type) === "\u571F\u5730" || /^(?:LG|LA)/i.test(printEditor.data.propertyNo || "") ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "print-editor-land-location", children: [["locationLandCity", "\u571F\u5730\u7E23\u5E02", "\u4F8B\u5982\uFF1A\u53F0\u5357\u5E02"], ["locationLandDistrict", "\u571F\u5730\u884C\u653F\u5340", "\u4F8B\u5982\uFF1A\u5584\u5316\u5340"], ["locationLandSection", "\u571F\u5730\u5730\u6BB5", "\u4F8B\u5982\uFF1A\u80E1\u539D\u6BB5"], ["locationLandNumber", "\u571F\u5730\u5730\u865F", "\u591A\u7B46\u9078\u4E00\u7B46\uFF0C\u4F8B\u5982\uFF1A803"]].map(([key, label, placeholder]) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "field", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: label }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: printEditor.data[key] || "", onChange: (event) => setPrintEditor({ ...printEditor, data: { ...printEditor.data, [key]: event.target.value } }), placeholder })
-          ] }, key)) }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "field print-editor-locationMapInput", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u4F4D\u7F6E\u5716\u5B9A\u4F4D\uFF08\u9078\u586B\uFF09" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: printEditor.data.locationMapInput || "", onChange: (event) => setPrintEditor({ ...printEditor, data: { ...printEditor.data, locationMapInput: event.target.value } }), placeholder: "\u53EF\u8CBC\u5B8C\u6574\u5730\u5740\uFF0C\u6216 22.97354854089914, 120.2238506558218" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "\u7559\u767D\u6703\u4F7F\u7528\u4E0A\u65B9\u5730\u5740\uFF1B\u7D93\u7DEF\u5EA6\u6700\u6E96\u78BA\u3002\u6B64\u6B04\u53EA\u5957\u7528\u672C\u6B21\u4E0B\u8F09\uFF0C\u4E0D\u6703\u4FEE\u6539\u6848\u4EF6\u5730\u5740\u3002" })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "field print-editor-locationMapInput", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: typeShort(printEditor.data.type) === "\u571F\u5730" || /^(?:LG|LA)/i.test(printEditor.data.propertyNo || "") ? "\u571F\u5730\u4F4D\u7F6E\u5EA7\u6A19\uFF08\u9078\u586B\uFF09" : "\u4F4D\u7F6E\u5716\u5B9A\u4F4D\uFF08\u9078\u586B\uFF09" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: printEditor.data.locationMapInput || "", onChange: (event) => setPrintEditor({ ...printEditor, data: { ...printEditor.data, locationMapInput: event.target.value } }), placeholder: typeShort(printEditor.data.type) === "\u571F\u5730" || /^(?:LG|LA)/i.test(printEditor.data.propertyNo || "") ? "\u4F8B\u5982\uFF1A22.97354854089914, 120.2238506558218" : "\u53EF\u8CBC\u5B8C\u6574\u5730\u5740\uFF0C\u6216 22.97354854089914, 120.2238506558218" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: typeShort(printEditor.data.type) === "\u571F\u5730" || /^(?:LG|LA)/i.test(printEditor.data.propertyNo || "") ? "\u8ACB\u8CBC\u4E0A\u7DEF\u5EA6, \u7D93\u5EA6\uFF1B\u591A\u7B46\u5730\u865F\u64C7\u4E00\u7B46\u5373\u53EF\u3002\u6B64\u6B04\u53EA\u5957\u7528\u672C\u6B21\u4E0B\u8F09\u3002" : "\u7559\u767D\u6703\u4F7F\u7528\u4E0A\u65B9\u5730\u5740\uFF1B\u7D93\u7DEF\u5EA6\u6700\u6E96\u78BA\u3002\u6B64\u6B04\u53EA\u5957\u7528\u672C\u6B21\u4E0B\u8F09\uFF0C\u4E0D\u6703\u4FEE\u6539\u6848\u4EF6\u5730\u5740\u3002" })
           ] }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "field print-editor-notes", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u91CD\u9EDE\u8AAA\u660E\u8207\u5099\u8A3B" }),
