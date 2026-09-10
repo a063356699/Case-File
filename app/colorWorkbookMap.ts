@@ -106,7 +106,7 @@ const imageFromBytes = async (bytes: ArrayBuffer, contentType: string) => {
 export async function createColorWorkbookMap(record: MapRecord) {
   // Excel 位置圖採較近的街區視野，讓周邊道路、學校與公園名稱清楚可讀，
   // 並保留足夠範圍辨識位置，不放大到只剩單一街廓。
-  const located = await locateColorWorkbookCase(record), width = 900, height = 680, lonSpan = 0.0085, latSpan = lonSpan * height / width;
+  const located = await locateColorWorkbookCase(record), width = 900, height = 680, lonSpan = 0.0048, latSpan = lonSpan * height / width;
   const bbox = [located.longitude - lonSpan / 2, located.latitude - latSpan / 2, located.longitude + lonSpan / 2, located.latitude + latSpan / 2].join(",");
   const mapUrl = `https://wms.nlsc.gov.tw/wms?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&BBOX=${bbox}&SRS=EPSG:4326&WIDTH=${width}&HEIGHT=${height}&LAYERS=EMAP&STYLES=&FORMAT=image/png&DPI=96&MAP_RESOLUTION=96&FORMAT_OPTIONS=dpi:96&TRANSPARENT=FALSE`;
   const mapResponse = await fetch(mapUrl);

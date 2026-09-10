@@ -43813,7 +43813,7 @@ ${String(ex)}`);
     }
   };
   async function createColorWorkbookMap(record) {
-    const located = await locateColorWorkbookCase(record), width = 900, height = 680, lonSpan = 85e-4, latSpan = lonSpan * height / width;
+    const located = await locateColorWorkbookCase(record), width = 900, height = 680, lonSpan = 48e-4, latSpan = lonSpan * height / width;
     const bbox = [located.longitude - lonSpan / 2, located.latitude - latSpan / 2, located.longitude + lonSpan / 2, located.latitude + latSpan / 2].join(",");
     const mapUrl = `https://wms.nlsc.gov.tw/wms?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&BBOX=${bbox}&SRS=EPSG:4326&WIDTH=${width}&HEIGHT=${height}&LAYERS=EMAP&STYLES=&FORMAT=image/png&DPI=96&MAP_RESOLUTION=96&FORMAT_OPTIONS=dpi:96&TRANSPARENT=FALSE`;
     const mapResponse = await fetch(mapUrl);
@@ -48151,7 +48151,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V419" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V420" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
