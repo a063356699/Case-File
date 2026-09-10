@@ -42,8 +42,9 @@ export async function locateColorWorkbookCase(record: MapRecord): Promise<Locate
   const suppliedCoordinates = coordinatesFromInput(locationInput);
   if (suppliedCoordinates) return { ...suppliedCoordinates, matchedAddress: locationInput, score: 100 };
   if (/^https?:\/\//i.test(locationInput)) throw new Error("位置圖定位短網址無法直接取得座標，請貼上經緯度或完整地址。");
-  const rawAddress = locationInput || String(record.address || "").trim();
   const isLand = /^(?:LG|LA)/i.test(propertyNo) || /土地|建地|農地|地號/.test(String(record.type || ""));
+  const suppliedLandAddress = [record.locationLandCity, record.locationLandDistrict, record.locationLandSection, record.locationLandNumber ? `${record.locationLandNumber}地號` : ""].map(value => String(value || "").trim()).filter(Boolean).join("");
+  const rawAddress = locationInput || (isLand && suppliedLandAddress ? suppliedLandAddress : String(record.address || "").trim());
   if (!rawAddress) throw new Error("無法產生位置圖：案件未填完整地址或地號資料。請先核對案件資料，不會猜測位置。");
   const expected = addressParts(rawAddress);
   const landTarget = isLand ? firstLandTarget(rawAddress) : null;

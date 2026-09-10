@@ -2074,3 +2074,6 @@ html,body{max-width:100%;overflow-x:hidden}
 
 /* V394：新進封面相關欄位固定同一列。 */
 .record-edit-grid>.edit-landTitleCount{grid-column:span 9!important}.record-edit-grid>.edit-buildingTitleCount{grid-column:span 9!important}.record-edit-grid>.edit-titleUndertaking{grid-column:span 12!important}.record-edit-grid>.edit-zoningDocumentStatus{grid-column:span 24!important}.record-edit-grid>.edit-zoningApplicationDate{grid-column:span 14!important}.record-edit-grid>.edit-zoningCertificateCount{grid-column:span 14!important}.record-edit-grid>.edit-authorizationStatus{grid-column:span 18!important}.record-edit-grid>.edit-authorizationCopyCount,.record-edit-grid>.edit-authorizationOriginalCount{grid-column:span 10!important}
+
+/* 彩色表位置圖：房屋可貼定位，土地則分開輸入縣市、行政區、地段與單一地號。 */
+.print-editor-locationMapInput,.print-editor-land-location{grid-column:1/-1}.print-editor-locationMapInput small{display:block;margin-top:5px;color:#6e7d78}.print-editor-land-location{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding:12px;border:1px solid #cddfea;border-radius:10px;background:#f4f9fc}@media(max-width:760px){.print-editor-land-location{grid-template-columns:repeat(2,minmax(0,1fr))}}
