@@ -43714,6 +43714,24 @@ ${String(ex)}`);
     const sectionMatch = normalized.match(/([^區鄉鎮市]{1,12}(?:段|小段))([^段]*?)(\d+(?:-\d+)?)(?:地號|[、/]|$)/);
     return sectionMatch ? { section: sectionMatch[1], number: sectionMatch[3] } : null;
   };
+  var coordinatesFromInput = (value) => {
+    const raw = String(value ?? "").trim();
+    if (!raw) return null;
+    let decoded = raw;
+    try {
+      decoded = decodeURIComponent(raw);
+    } catch {
+    }
+    const pairs = [
+      ...decoded.matchAll(/@(-?\d{1,2}(?:\.\d+)?),\s*(-?\d{2,3}(?:\.\d+)?)/g),
+      ...decoded.matchAll(/(?:^|[?&#=/\s])(-?\d{1,2}(?:\.\d+)?),\s*(-?\d{2,3}(?:\.\d+)?)(?:$|[?&#/\s])/g)
+    ];
+    for (const pair of pairs) {
+      const latitude = Number(pair[1]), longitude = Number(pair[2]);
+      if (latitude >= 20 && latitude <= 27 && longitude >= 118 && longitude <= 123) return { latitude, longitude };
+    }
+    return null;
+  };
   var jsonp = (url, timeoutMs = 15e3) => new Promise((resolve, reject) => {
     const callbackName = `__caseFileMap_${Date.now()}_${Math.random().toString(36).slice(2)}`;
     const script = document.createElement("script");
@@ -43731,7 +43749,12 @@ ${String(ex)}`);
     document.head.appendChild(script);
   });
   async function locateColorWorkbookCase(record) {
-    const propertyNo = String(record.propertyNo || "").trim(), rawAddress = String(record.address || "").trim();
+    const propertyNo = String(record.propertyNo || "").trim();
+    const locationInput = String(record.locationMapInput || "").trim();
+    const suppliedCoordinates = coordinatesFromInput(locationInput);
+    if (suppliedCoordinates) return { ...suppliedCoordinates, matchedAddress: locationInput, score: 100 };
+    if (/^https?:\/\//i.test(locationInput)) throw new Error("\u4F4D\u7F6E\u5716\u5B9A\u4F4D\u77ED\u7DB2\u5740\u7121\u6CD5\u76F4\u63A5\u53D6\u5F97\u5EA7\u6A19\uFF0C\u8ACB\u8CBC\u4E0A\u7D93\u7DEF\u5EA6\u6216\u5B8C\u6574\u5730\u5740\u3002");
+    const rawAddress = locationInput || String(record.address || "").trim();
     const isLand = /^(?:LG|LA)/i.test(propertyNo) || /土地|建地|農地|地號/.test(String(record.type || ""));
     if (!rawAddress) throw new Error("\u7121\u6CD5\u7522\u751F\u4F4D\u7F6E\u5716\uFF1A\u6848\u4EF6\u672A\u586B\u5B8C\u6574\u5730\u5740\u6216\u5730\u865F\u8CC7\u6599\u3002\u8ACB\u5148\u6838\u5C0D\u6848\u4EF6\u8CC7\u6599\uFF0C\u4E0D\u6703\u731C\u6E2C\u4F4D\u7F6E\u3002");
     const expected = addressParts(rawAddress);
@@ -48124,7 +48147,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V414" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V415" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -48809,6 +48832,11 @@ ${changedLabels}
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: label }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: printEditor.data[key] || "", onChange: (event) => setPrintEditor({ ...printEditor, data: { ...printEditor.data, [key]: event.target.value } }) })
           ] }, key)),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "field print-editor-locationMapInput", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u4F4D\u7F6E\u5716\u5B9A\u4F4D\uFF08\u9078\u586B\uFF09" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: printEditor.data.locationMapInput || "", onChange: (event) => setPrintEditor({ ...printEditor, data: { ...printEditor.data, locationMapInput: event.target.value } }), placeholder: "\u53EF\u8CBC\u5B8C\u6574\u5730\u5740\uFF0C\u6216 22.97354854089914, 120.2238506558218" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "\u7559\u767D\u6703\u4F7F\u7528\u4E0A\u65B9\u5730\u5740\uFF1B\u7D93\u7DEF\u5EA6\u6700\u6E96\u78BA\u3002\u6B64\u6B04\u53EA\u5957\u7528\u672C\u6B21\u4E0B\u8F09\uFF0C\u4E0D\u6703\u4FEE\u6539\u6848\u4EF6\u5730\u5740\u3002" })
+          ] }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "field print-editor-notes", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u91CD\u9EDE\u8AAA\u660E\u8207\u5099\u8A3B" }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("textarea", { rows: 5, value: printEditor.data.attentionNotes || "", onChange: (event) => {
@@ -48822,7 +48850,7 @@ ${changedLabels}
           ] })
         ] }) }) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal-foot print-editor-foot", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "print-editor-warning", children: "\u91CD\u9EDE\u8AAA\u660E\u8207\u5099\u8A3B\u53EA\u5957\u7528\u672C\u6B21\u4E0B\u8F09\uFF1B\u7F3A\u4EF6\u7D00\u9304\u53EF\u53E6\u5916\u5132\u5B58\u5230\u6848\u4EF6\u3002" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "print-editor-warning", children: "\u91CD\u9EDE\u8AAA\u660E\u8207\u5099\u8A3B\u3001\u4F4D\u7F6E\u5716\u5B9A\u4F4D\u53EA\u5957\u7528\u672C\u6B21\u4E0B\u8F09\uFF1B\u7F3A\u4EF6\u7D00\u9304\u53EF\u53E6\u5916\u5132\u5B58\u5230\u6848\u4EF6\u3002" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", onClick: () => setPrintEditor(null), children: "\u53D6\u6D88" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", onClick: () => saveColorSheetIssue(printEditor.data), children: "\u5132\u5B58\u7F3A\u4EF6\u7D00\u9304" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "primary", type: "button", disabled: colorWorkbookDownloading, onClick: async () => {

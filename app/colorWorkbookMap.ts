@@ -9,6 +9,21 @@ const firstLandTarget = (value: unknown) => {
   const sectionMatch = normalized.match(/([^區鄉鎮市]{1,12}(?:段|小段))([^段]*?)(\d+(?:-\d+)?)(?:地號|[、/]|$)/);
   return sectionMatch ? { section: sectionMatch[1], number: sectionMatch[3] } : null;
 };
+const coordinatesFromInput = (value: unknown) => {
+  const raw = String(value ?? "").trim();
+  if (!raw) return null;
+  let decoded = raw;
+  try { decoded = decodeURIComponent(raw); } catch {}
+  const pairs = [
+    ...decoded.matchAll(/@(-?\d{1,2}(?:\.\d+)?),\s*(-?\d{2,3}(?:\.\d+)?)/g),
+    ...decoded.matchAll(/(?:^|[?&#=/\s])(-?\d{1,2}(?:\.\d+)?),\s*(-?\d{2,3}(?:\.\d+)?)(?:$|[?&#/\s])/g),
+  ];
+  for (const pair of pairs) {
+    const latitude = Number(pair[1]), longitude = Number(pair[2]);
+    if (latitude >= 20 && latitude <= 27 && longitude >= 118 && longitude <= 123) return { latitude, longitude };
+  }
+  return null;
+};
 
 const jsonp = <T,>(url: string, timeoutMs = 15000) => new Promise<T>((resolve, reject) => {
   const callbackName = `__caseFileMap_${Date.now()}_${Math.random().toString(36).slice(2)}`;
@@ -22,7 +37,12 @@ const jsonp = <T,>(url: string, timeoutMs = 15000) => new Promise<T>((resolve, r
 });
 
 export async function locateColorWorkbookCase(record: MapRecord): Promise<LocatedCase> {
-  const propertyNo = String(record.propertyNo || "").trim(), rawAddress = String(record.address || "").trim();
+  const propertyNo = String(record.propertyNo || "").trim();
+  const locationInput = String(record.locationMapInput || "").trim();
+  const suppliedCoordinates = coordinatesFromInput(locationInput);
+  if (suppliedCoordinates) return { ...suppliedCoordinates, matchedAddress: locationInput, score: 100 };
+  if (/^https?:\/\//i.test(locationInput)) throw new Error("位置圖定位短網址無法直接取得座標，請貼上經緯度或完整地址。");
+  const rawAddress = locationInput || String(record.address || "").trim();
   const isLand = /^(?:LG|LA)/i.test(propertyNo) || /土地|建地|農地|地號/.test(String(record.type || ""));
   if (!rawAddress) throw new Error("無法產生位置圖：案件未填完整地址或地號資料。請先核對案件資料，不會猜測位置。");
   const expected = addressParts(rawAddress);
