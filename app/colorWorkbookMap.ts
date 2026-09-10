@@ -4,6 +4,11 @@ type MapRecord = Record<string, unknown>;
 type LocatedCase = { latitude: number; longitude: number; matchedAddress: string; score: number };
 const normalizeTaiwanText = (value: unknown) => String(value ?? "").trim().replace(/臺/g, "台").replace(/[\s　,，。]/g, "").replace(/之/g, "-");
 const addressParts = (value: unknown) => { const normalized = normalizeTaiwanText(value); return { city: normalized.match(/^(台[^縣市]{1,4}[市縣]|[^縣市]{1,4}[縣市])/)?.[1] || "", district: normalized.match(/(?:縣|市)([^區鄉鎮市]{1,5}[區鄉鎮市])/)?.[1] || "", road: normalized.match(/([^縣市區鄉鎮]{1,12}(?:路|街|大道))/)?.[1] || "", number: normalized.match(/(\d+(?:-\d+)?號)/)?.[1] || "", landSection: normalized.match(/([^區鄉鎮市]{1,12}(?:段|小段))/)?.[1] || "", landNumber: normalized.match(/(\d+(?:[-/]\d+)*(?:地號)?)/)?.[1] || "" }; };
+const firstLandTarget = (value: unknown) => {
+  const normalized = normalizeTaiwanText(value);
+  const sectionMatch = normalized.match(/([^區鄉鎮市]{1,12}(?:段|小段))([^段]*?)(\d+(?:-\d+)?)(?:地號|[、/]|$)/);
+  return sectionMatch ? { section: sectionMatch[1], number: sectionMatch[3] } : null;
+};
 
 const jsonp = <T,>(url: string, timeoutMs = 15000) => new Promise<T>((resolve, reject) => {
   const callbackName = `__caseFileMap_${Date.now()}_${Math.random().toString(36).slice(2)}`;
@@ -20,14 +25,44 @@ export async function locateColorWorkbookCase(record: MapRecord): Promise<Locate
   const propertyNo = String(record.propertyNo || "").trim(), rawAddress = String(record.address || "").trim();
   const isLand = /^(?:LG|LA)/i.test(propertyNo) || /土地|建地|農地|地號/.test(String(record.type || ""));
   if (!rawAddress) throw new Error("無法產生位置圖：案件未填完整地址或地號資料。請先核對案件資料，不會猜測位置。");
-  const query = rawAddress.replace(/(\d+)之(\d+)/g, "$1-$2").replace(/\s+/g, "");
-  const url = `https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?f=json&maxLocations=5&countryCode=TWN&outFields=*&SingleLine=${encodeURIComponent(query)}`;
-  const result = await jsonp<{ candidates?: Array<{ address?: string; score?: number; location?: { x?: number; y?: number } }> }>(url);
   const expected = addressParts(rawAddress);
-  const candidates = (result.candidates || []).map(candidate => ({ latitude: Number(candidate.location?.y), longitude: Number(candidate.location?.x), matchedAddress: String(candidate.address || ""), score: Number(candidate.score || 0) })).filter(candidate => Number.isFinite(candidate.latitude) && Number.isFinite(candidate.longitude));
-  const exact = candidates.find(candidate => { const matched = normalizeTaiwanText(candidate.matchedAddress); return candidate.score >= 95 && (!expected.city || matched.includes(expected.city)) && (!expected.district || matched.includes(expected.district)) && (!expected.road || matched.includes(expected.road)) && (!expected.number || matched.includes(expected.number)) && (!isLand || (!!expected.landSection && !!expected.landNumber && matched.includes(expected.landSection) && matched.includes(expected.landNumber))); });
+  const landTarget = isLand ? firstLandTarget(rawAddress) : null;
+  // 樓層、棟別及括號備註常使地理編碼找不到門牌；依序查完整地址與「縣市＋行政區＋路名＋門牌」。
+  // 每個結果仍須重新核對路名與門牌，不能因縮短查詢字串而採用相似地址。
+  const baseHouseAddress = rawAddress
+    .replace(/[（(][^）)]*(?:未保存|地號|建號|增建)[^）)]*[）)]/g, "")
+    .replace(/(?:地下)?\d+樓(?:之\d+)?(?:[、,，及與]\d+樓(?:之\d+)?)?.*$/g, "")
+    .trim();
+  const structuredHouseAddress = [expected.city, expected.district, expected.road, expected.number].filter(Boolean).join("");
+  // 多地段或多筆地號只取第一個完整的「地段＋地號」定位，避免要求所有地號同時命中。
+  const structuredLandAddress = landTarget ? [expected.city, expected.district, landTarget.section, `${landTarget.number}地號`].filter(Boolean).join("") : "";
+  const querySources = isLand ? [structuredLandAddress, rawAddress] : [rawAddress, baseHouseAddress, structuredHouseAddress];
+  const queries = [...new Set(querySources.map(value => value.replace(/(\d+)之(\d+)/g, "$1-$2").replace(/\s+/g, "")).filter(Boolean))];
+  type ArcCandidate = { address?: string; score?: number; location?: { x?: number; y?: number }; attributes?: Record<string, unknown> };
+  const candidates: Array<LocatedCase & { searchable: string }> = [];
+  for (const query of queries) {
+    const url = `https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?f=json&maxLocations=8&countryCode=TWN&outFields=*&SingleLine=${encodeURIComponent(query)}`;
+    let result: { candidates?: ArcCandidate[] };
+    try { result = await jsonp<{ candidates?: ArcCandidate[] }>(url); }
+    catch { continue; }
+    for (const candidate of result.candidates || []) {
+      const attributes = candidate.attributes || {};
+      const searchable = normalizeTaiwanText([candidate.address, attributes.LongLabel, attributes.ShortLabel, attributes.Match_addr, attributes.City, attributes.District, attributes.Subregion, attributes.Region, attributes.Address].filter(Boolean).join(" "));
+      const located = { latitude: Number(candidate.location?.y), longitude: Number(candidate.location?.x), matchedAddress: String(candidate.address || attributes.LongLabel || ""), score: Number(candidate.score || 0), searchable };
+      if (Number.isFinite(located.latitude) && Number.isFinite(located.longitude)) candidates.push(located);
+    }
+  }
+  const exact = candidates.sort((a, b) => b.score - a.score).find(candidate => {
+    const matched = candidate.searchable;
+    const localityMatches = (!expected.city || matched.includes(expected.city)) && (!expected.district || matched.includes(expected.district));
+    const houseMatches = candidate.score >= 90 && localityMatches && !!expected.road && !!expected.number && matched.includes(expected.road) && matched.includes(expected.number);
+    const targetSection = landTarget?.section || expected.landSection;
+    const targetNumber = landTarget?.number || expected.landNumber.replace(/地號$/, "");
+    const landMatches = candidate.score >= 95 && localityMatches && !!targetSection && !!targetNumber && matched.includes(targetSection) && matched.includes(targetNumber);
+    return isLand ? landMatches : houseMatches;
+  });
   if (!exact) { const reason = isLand ? "土地案件須能逐字核對縣市、行政區、地段／小段與完整地號；目前公開定位結果不足。" : "查詢結果無法同時核對縣市、行政區、路名及門牌。"; throw new Error(`無法產生位置圖：${reason}請補齊或修正資料後再下載，不會採用相似地址。`); }
-  return exact;
+  return { latitude: exact.latitude, longitude: exact.longitude, matchedAddress: exact.matchedAddress, score: exact.score };
 }
 
 const imageFromUrl = (url: string) => new Promise<HTMLImageElement>((resolve, reject) => { const image = new Image(); image.crossOrigin = "anonymous"; image.onload = () => resolve(image); image.onerror = () => reject(new Error("國土測繪中心道路底圖目前無法載入。")); image.src = url; });

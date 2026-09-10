@@ -2978,7 +2978,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V412</small></h1></div>
+<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V413</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingIntakeReminderRecords.length > 0 && <button className="new-case-reminder-header-button" onClick={() => { setNewCaseReminder({ ...pendingIntakeReminderRecords[0] }); setNewCaseReminderBatchIds(pendingIntakeReminderRecords.map(record => record.id)); }}>新進案件提醒 {pendingIntakeReminderRecords.length}</button>}{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -3268,11 +3268,6 @@ const keySummaryRight = [49, 50, 51, 52, 53, 55, 56, 65, 66, 67, 68, 69, 70, 71,
 async function downloadColorWorkbook(record: RecordItem, personnel: Person[] = []) {
   const spreadsheetNs = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
   const isLand = typeShort(record.type) === "土地" || /^(?:LG|LA)/i.test(record.propertyNo || "");
-  // 位置圖是加值內容，不可因定位失敗而阻止彩色表下載。
-  // 找不到精確位置時保留第三個空白框，其餘 Excel 內容照常產生。
-  let locationMap: Awaited<ReturnType<typeof createColorWorkbookMap>> | null = null;
-  try { locationMap = await createColorWorkbookMap(record); }
-  catch (error) { console.warn("彩色表位置圖未產生，Excel 仍繼續下載：", error); }
   const qrPayload = colorWorkbookQrPayload(record.propertyNo);
   const qrDataUrl = await createColorWorkbookQr(qrPayload);
   const qrImage = new Image();
@@ -3293,7 +3288,14 @@ async function downloadColorWorkbook(record: RecordItem, personnel: Person[] = [
   const parser = new DOMParser();
   const serializer = new XMLSerializer();
   await placeColorWorkbookQr(zip, pngDataUrlBytes(qrDataUrl), parser, serializer);
-  if (locationMap) await placeColorWorkbookMap(zip, locationMap.png, isLand, parser, serializer);
+  // 位置圖是加值內容。「查詢、產圖、嵌入範本」任一步驟失敗時，
+  // 一律保留右側第三個空白框並繼續產生 Excel，不可中止整份下載。
+  try {
+    const locationMap = await createColorWorkbookMap(record);
+    await placeColorWorkbookMap(zip, locationMap.png, isLand, parser, serializer);
+  } catch (error) {
+    console.warn("彩色表位置圖未產生或未嵌入，Excel 仍繼續下載：", error);
+  }
   const sheetPath = "xl/worksheets/sheet1.xml"; // 回應：範本內所有彩色表的資料來源
   const sheetXml = await zip.file(sheetPath)?.async("string");
   if (!sheetXml) throw new Error("Excel 範本缺少資料工作表");
