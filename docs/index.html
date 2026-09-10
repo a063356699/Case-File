@@ -45496,6 +45496,24 @@ ${String(ex)}`);
     const [dealCompletionReminderOpen, setDealCompletionReminderOpen] = (0, import_react.useState)(false);
     const [printEditor, setPrintEditor] = (0, import_react.useState)(null);
     const [colorWorkbookDownloading, setColorWorkbookDownloading] = (0, import_react.useState)(false);
+    (0, import_react.useEffect)(() => {
+      const requireSecondLandDownloadClick = (event) => {
+        const target = event.target instanceof Element ? event.target.closest(".print-editor-foot button.primary") : null;
+        if (!target || !printEditor) return;
+        const isLandWorkbook = typeShort(printEditor.data.type) === "\u571F\u5730" || /^(?:LG|LA)/i.test(printEditor.data.propertyNo || "");
+        if (!isLandWorkbook || String(printEditor.data.locationMapInput || "").trim()) return;
+        const field = document.querySelector(".print-editor-locationMapInput");
+        if (field?.classList.contains("missing-coordinate")) return;
+        event.preventDefault();
+        event.stopPropagation();
+        field?.classList.add("missing-coordinate");
+        const input = field?.querySelector("input");
+        input?.setAttribute("aria-invalid", "true");
+        input?.focus();
+      };
+      document.addEventListener("click", requireSecondLandDownloadClick, true);
+      return () => document.removeEventListener("click", requireSecondLandDownloadClick, true);
+    }, [printEditor]);
     const [restoreChoiceRecord, setRestoreChoiceRecord] = (0, import_react.useState)(null);
     const [archiveChoice, setArchiveChoice] = (0, import_react.useState)(null);
     const [publicUnlocked, setPublicUnlocked] = (0, import_react.useState)(false);
@@ -48152,7 +48170,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V422" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V423" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
