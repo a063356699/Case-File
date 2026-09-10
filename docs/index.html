@@ -46811,9 +46811,28 @@ ${changedLabels}
     const requestArchive = (record, status) => setArchiveChoice({ record, status, date: status === "\u5230\u671F\u4E0B\u67B6" ? nextDate(record.entrustEnd) : today(), salesPerson: record.salesPerson || "", reason: record.archiveReason || "" });
     const restoreRecord = (r, reopened = true) => {
       const cleanupKeys = ["housingDownDate", "bookDownDate", "salesBookDownDate", ...archiveWebsiteTasks.map(([field]) => `${field}DownDate`)];
-      setRecords((prev) => prev.map((x) => x.id === r.id ? { ...x, status: "\u59D4\u8A17\u4E2D", archived: "", _archiveStatus: "", _archiveActionDate: "", archiveReason: "", entrustEnd: x.entrustEnd < today() ? "" : x.entrustEnd, ...reopened ? { _restoredAt: today() } : Object.fromEntries(cleanupKeys.map((key) => [key, ""])) } : x));
+      const restorePrice = String(r._restorePrice || "").replace(/\s*萬(?:元)?\s*/g, "").trim();
+      const changedPrice = reopened && restorePrice && restorePrice !== String(r.reducedPrice || "").trim();
+      const modifiedAt = (/* @__PURE__ */ new Date()).toISOString();
+      setRecords((prev) => prev.map((x) => x.id === r.id ? {
+        ...x,
+        status: "\u59D4\u8A17\u4E2D",
+        archived: "",
+        _archiveStatus: "",
+        _archiveActionDate: "",
+        archiveReason: "",
+        entrustEnd: x.entrustEnd < today() ? "" : x.entrustEnd,
+        ...reopened ? {
+          _restoredAt: today(),
+          caseNameNote: `${shortRocMonthDay(today())}\u91CD\u65B0\u4E0A\u67B6`,
+          caseNameNoteModifiedAt: modifiedAt,
+          updateDate: today(),
+          lastModifiedAt: modifiedAt,
+          ...changedPrice ? { reducedPrice: restorePrice, reducedPriceModifiedAt: modifiedAt } : {}
+        } : Object.fromEntries(cleanupKeys.map((key) => [key, ""]))
+      } : x));
       setRestoreChoiceRecord(null);
-      flash(reopened ? "\u5DF2\u91CD\u65B0\u4E0A\u67B6" : "\u5DF2\u6062\u5FA9\u59D4\u8A17\u4E2D\u7269\u4EF6");
+      flash(reopened ? changedPrice ? `\u5DF2\u91CD\u65B0\u4E0A\u67B6\u4E26\u8ABF\u6574\u70BA ${restorePrice} \u842C` : "\u5DF2\u91CD\u65B0\u4E0A\u67B6" : "\u5DF2\u6062\u5FA9\u59D4\u8A17\u4E2D\u7269\u4EF6");
     };
     const removeRecord = (r) => {
       if (confirm(`\u78BA\u5B9A\u6C38\u4E45\u522A\u9664\u300C${r.caseName}\u300D\uFF1F`)) {
@@ -48170,7 +48189,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V423" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V424" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -48747,13 +48766,18 @@ ${changedLabels}
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "restore-choice-body", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "\u8ACB\u9078\u64C7\u9019\u6B21\u6062\u5FA9\u7684\u539F\u56E0\uFF1A" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "field restore-price-field", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u91CD\u65B0\u4E0A\u67B6\u50F9\u683C\uFF08\u842C\uFF09" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { inputMode: "decimal", value: restoreChoiceRecord._restorePrice || "", onChange: (event) => setRestoreChoiceRecord({ ...restoreChoiceRecord, _restorePrice: event.target.value }), placeholder: `\u76EE\u524D ${restoreChoiceRecord.reducedPrice || restoreChoiceRecord.price || "\u672A\u586B"} \u842C\uFF1B\u4E0D\u6539\u50F9\u53EF\u7559\u7A7A` }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "\u586B\u5165\u65B0\u50F9\u683C\u5F8C\uFF0C\u6703\u548C\u91CD\u65B0\u4E0A\u67B6\u4E00\u8D77\u767C\u5E03\u81F3\u300C\u66F4\u65B0\u7269\u4EF6\u300D\u3002" })
+          ] }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { className: "primary", onClick: () => restoreRecord(restoreChoiceRecord, true), children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u91CD\u65B0\u4E0A\u67B6" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u8A18\u9304\u4ECA\u5929\u65E5\u671F\uFF0C\u986F\u793A\u91CD\u65B0\u4E0A\u67B6\u7D05\u5B57\u4E26\u5217\u5165\u6BCF\u65E5\u52D5\u614B" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u91CD\u65B0\u4E0A\u67B6\u4E26\u767C\u5E03\u6BCF\u65E5\u52D5\u614B" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u4E00\u6B21\u986F\u793A\u4ECA\u5929\u91CD\u65B0\u4E0A\u67B6\uFF1B\u6709\u586B\u65B0\u50F9\u683C\u6642\uFF0C\u540C\u6642\u986F\u793A\u7D05\u5B57\u964D\u50F9\uFF0F\u8ABF\u50F9" })
           ] }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { onClick: () => restoreRecord(restoreChoiceRecord, false), children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u6062\u5FA9\u59D4\u8A17\u4E2D\u7269\u4EF6" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u53EA\u6062\u5FA9\u5230\u59D4\u8A17\u4E2D\uFF0C\u4E0D\u6A19\u793A\u91CD\u65B0\u4E0A\u67B6" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u53EA\u6062\u5FA9\u5230\u59D4\u8A17\u4E2D\uFF0C\u4E0D\u6A19\u793A\u91CD\u65B0\u4E0A\u67B6\uFF0C\u4E5F\u4E0D\u5957\u7528\u4E0A\u65B9\u50F9\u683C" })
           ] })
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "modal-foot", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => setRestoreChoiceRecord(null), children: "\u53D6\u6D88" }) })
@@ -51122,7 +51146,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       return { ...record, caseNameNote: `${shortRocMonthDay(record._archiveActionDate || record.archived)}${status}${reason ? `\uFF1A${reason}` : ""}`, _dailyHighlight: "[]" };
     });
     const groups = [
-      { key: "added", title: "\u65B0\u589E\u7269\u4EF6", records: records.filter((record) => dateOnly2(record._dailyAddedAt || record.reportDate) === selectedDate) },
+      { key: "added", title: "\u65B0\u589E\u7269\u4EF6", records: records.filter((record) => dateOnly2(record._dailyAddedAt || record.reportDate) === selectedDate && dateOnly2(record._restoredAt) !== selectedDate) },
       { key: "updated", title: "\u66F4\u65B0\u7269\u4EF6", records: updateRecords },
       { key: "removed", title: "\u4E0B\u67B6\u7269\u4EF6", records: removedRecords }
     ].map((group) => ({ ...group, records: group.records.filter((record) => !hiddenItems.includes(`${selectedDate}|${group.key}|${record.id}`)).map((record) => compact ? record : { ...record, _dailyHideKey: `${selectedDate}|${group.key}|${record.id}` }) }));
