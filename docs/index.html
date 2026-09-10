@@ -43772,18 +43772,28 @@ ${String(ex)}`);
     }
     return { latitude: exact.latitude, longitude: exact.longitude, matchedAddress: exact.matchedAddress, score: exact.score };
   }
-  var imageFromUrl = (url) => new Promise((resolve, reject) => {
-    const image = new Image();
-    image.crossOrigin = "anonymous";
-    image.onload = () => resolve(image);
-    image.onerror = () => reject(new Error("\u570B\u571F\u6E2C\u7E6A\u4E2D\u5FC3\u9053\u8DEF\u5E95\u5716\u76EE\u524D\u7121\u6CD5\u8F09\u5165\u3002"));
-    image.src = url;
-  });
+  var imageFromBytes = async (bytes, contentType) => {
+    const objectUrl = URL.createObjectURL(new Blob([bytes], { type: contentType || "image/png" }));
+    try {
+      return await new Promise((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => resolve(image);
+        image.onerror = () => reject(new Error("\u570B\u571F\u6E2C\u7E6A\u4E2D\u5FC3\u9053\u8DEF\u5E95\u5716\u7121\u6CD5\u8F49\u6210 Excel \u5716\u7247\u3002"));
+        image.src = objectUrl;
+      });
+    } finally {
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 0);
+    }
+  };
   async function createColorWorkbookMap(record) {
     const located = await locateColorWorkbookCase(record), width = 900, height = 680, lonSpan = 0.018, latSpan = lonSpan * height / width;
     const bbox = [located.longitude - lonSpan / 2, located.latitude - latSpan / 2, located.longitude + lonSpan / 2, located.latitude + latSpan / 2].join(",");
     const mapUrl = `https://wms.nlsc.gov.tw/wms?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&BBOX=${bbox}&SRS=EPSG:4326&WIDTH=${width}&HEIGHT=${height}&LAYERS=EMAP&STYLES=&FORMAT=image/png&DPI=96&MAP_RESOLUTION=96&FORMAT_OPTIONS=dpi:96&TRANSPARENT=FALSE`;
-    const mapImage = await imageFromUrl(mapUrl), canvas = document.createElement("canvas");
+    const mapResponse = await fetch(mapUrl);
+    if (!mapResponse.ok) throw new Error(`\u570B\u571F\u6E2C\u7E6A\u4E2D\u5FC3\u9053\u8DEF\u5E95\u5716\u8F09\u5165\u5931\u6557\uFF08${mapResponse.status}\uFF09\u3002`);
+    const contentType = mapResponse.headers.get("content-type") || "";
+    if (!contentType.toLowerCase().includes("image")) throw new Error("\u570B\u571F\u6E2C\u7E6A\u4E2D\u5FC3\u672A\u56DE\u50B3\u6709\u6548\u7684\u9053\u8DEF\u5E95\u5716\u3002");
+    const mapImage = await imageFromBytes(await mapResponse.arrayBuffer(), contentType), canvas = document.createElement("canvas");
     canvas.width = width;
     canvas.height = height;
     const context = canvas.getContext("2d");
@@ -48114,7 +48124,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V413" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V414" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),

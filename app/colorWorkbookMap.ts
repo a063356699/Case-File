@@ -65,13 +65,32 @@ export async function locateColorWorkbookCase(record: MapRecord): Promise<Locate
   return { latitude: exact.latitude, longitude: exact.longitude, matchedAddress: exact.matchedAddress, score: exact.score };
 }
 
-const imageFromUrl = (url: string) => new Promise<HTMLImageElement>((resolve, reject) => { const image = new Image(); image.crossOrigin = "anonymous"; image.onload = () => resolve(image); image.onerror = () => reject(new Error("國土測繪中心道路底圖目前無法載入。")); image.src = url; });
+const imageFromBytes = async (bytes: ArrayBuffer, contentType: string) => {
+  // 先把外部底圖轉成本機 blob URL，再繪製到 canvas。這可避免不同瀏覽器
+  // 對跨網站圖片畫布的限制，導致畫面看得到但輸出 PNG 時被擋下。
+  const objectUrl = URL.createObjectURL(new Blob([bytes], { type: contentType || "image/png" }));
+  try {
+    return await new Promise<HTMLImageElement>((resolve, reject) => {
+      const image = new Image();
+      image.onload = () => resolve(image);
+      image.onerror = () => reject(new Error("國土測繪中心道路底圖無法轉成 Excel 圖片。"));
+      image.src = objectUrl;
+    });
+  } finally {
+    // 圖片完成解碼後才釋放；已解碼內容仍可安全畫入 canvas。
+    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 0);
+  }
+};
 
 export async function createColorWorkbookMap(record: MapRecord) {
   const located = await locateColorWorkbookCase(record), width = 900, height = 680, lonSpan = 0.018, latSpan = lonSpan * height / width;
   const bbox = [located.longitude - lonSpan / 2, located.latitude - latSpan / 2, located.longitude + lonSpan / 2, located.latitude + latSpan / 2].join(",");
   const mapUrl = `https://wms.nlsc.gov.tw/wms?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&BBOX=${bbox}&SRS=EPSG:4326&WIDTH=${width}&HEIGHT=${height}&LAYERS=EMAP&STYLES=&FORMAT=image/png&DPI=96&MAP_RESOLUTION=96&FORMAT_OPTIONS=dpi:96&TRANSPARENT=FALSE`;
-  const mapImage = await imageFromUrl(mapUrl), canvas = document.createElement("canvas"); canvas.width = width; canvas.height = height;
+  const mapResponse = await fetch(mapUrl);
+  if (!mapResponse.ok) throw new Error(`國土測繪中心道路底圖載入失敗（${mapResponse.status}）。`);
+  const contentType = mapResponse.headers.get("content-type") || "";
+  if (!contentType.toLowerCase().includes("image")) throw new Error("國土測繪中心未回傳有效的道路底圖。");
+  const mapImage = await imageFromBytes(await mapResponse.arrayBuffer(), contentType), canvas = document.createElement("canvas"); canvas.width = width; canvas.height = height;
   const context = canvas.getContext("2d"); if (!context) throw new Error("無法建立位置圖畫布。"); context.drawImage(mapImage, 0, 0, width, height);
   const x = width / 2, y = height / 2; context.save(); context.shadowColor = "rgba(0,0,0,.35)"; context.shadowBlur = 7; context.beginPath(); context.arc(x, y - 13, 17, 0, Math.PI * 2); context.moveTo(x - 11, y - 1); context.lineTo(x, y + 24); context.lineTo(x + 11, y - 1); context.closePath(); context.fillStyle = "#e7272d"; context.fill(); context.restore(); context.beginPath(); context.arc(x, y - 13, 6, 0, Math.PI * 2); context.fillStyle = "#fff"; context.fill();
   context.fillStyle = "rgba(255,255,255,.9)"; context.fillRect(0, height - 28, width, 28); context.fillStyle = "#26343b"; context.font = '18px "Microsoft JhengHei", sans-serif'; context.textAlign = "right"; context.textBaseline = "middle"; context.fillText("底圖來源：內政部國土測繪中心 臺灣通用電子地圖", width - 10, height - 14);
