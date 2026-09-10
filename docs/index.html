@@ -2084,6 +2084,7 @@ html,body{max-width:100%;overflow-x:hidden}
 
 /* 彩色表位置圖：房屋可貼定位，土地則分開輸入縣市、行政區、地段與單一地號。 */
 .print-editor-locationMapInput,.print-editor-land-location{grid-column:1/-1}.print-editor-locationMapInput small{display:block;margin-top:5px;color:#6e7d78}.print-editor-land-location{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding:12px;border:1px solid #cddfea;border-radius:10px;background:#f4f9fc}@media(max-width:760px){.print-editor-land-location{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.print-editor-locationMapInput.missing-coordinate>span,.print-editor-locationMapInput.missing-coordinate small{color:#c62828!important}.print-editor-locationMapInput.missing-coordinate input{border-color:#d93025!important;background:#fff1f0!important;box-shadow:0 0 0 3px #d9302520!important}
 </style>
 </head>
 <body>
@@ -48151,7 +48152,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V421" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V422" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -49769,9 +49770,12 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
   var keySummaryRight = [49, 50, 51, 52, 53, 55, 56, 65, 66, 67, 68, 69, 70, 71, 72, 81, 82, 83, 85, 86, 87, 88];
   async function downloadColorWorkbook(record, personnel = []) {
     const isLandWorkbook = typeShort(record.type) === "\u571F\u5730" || /^(?:LG|LA)/i.test(record.propertyNo || "");
-    if (isLandWorkbook && !String(record.locationMapInput || "").trim()) {
-      window.alert("\u5C1A\u672A\u586B\u5BEB\u571F\u5730\u4F4D\u7F6E\u5EA7\u6A19\uFF0CExcel \u5C07\u4E0D\u7522\u751F\u4F4D\u7F6E\u5716\uFF0C\u4F46\u4ECD\u53EF\u7E7C\u7E8C\u4E0B\u8F09\u3002");
-    }
+    const missingLandCoordinate = isLandWorkbook && !String(record.locationMapInput || "").trim();
+    const coordinateField = document.querySelector(".print-editor-locationMapInput");
+    coordinateField?.classList.toggle("missing-coordinate", missingLandCoordinate);
+    const coordinateInput = coordinateField?.querySelector("input");
+    if (coordinateInput) coordinateInput.setAttribute("aria-invalid", missingLandCoordinate ? "true" : "false");
+    if (missingLandCoordinate) coordinateInput?.focus();
     const spreadsheetNs = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
     const isLand = typeShort(record.type) === "\u571F\u5730" || /^(?:LG|LA)/i.test(record.propertyNo || "");
     const qrPayload = colorWorkbookQrPayload(record.propertyNo);
@@ -49795,6 +49799,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     const serializer = new XMLSerializer();
     await placeColorWorkbookQr(zip, pngDataUrlBytes(qrDataUrl), parser, serializer);
     try {
+      if (missingLandCoordinate) throw new Error("\u571F\u5730\u4F4D\u7F6E\u5EA7\u6A19\u672A\u586B\u5BEB\uFF0C\u7565\u904E\u4F4D\u7F6E\u5716\u3002 ");
       const locationMap = await createColorWorkbookMap(record);
       await placeColorWorkbookMap(zip, locationMap.png, isLand, parser, serializer);
     } catch (error) {
