@@ -2085,6 +2085,7 @@ html,body{max-width:100%;overflow-x:hidden}
 /* 彩色表位置圖：房屋可貼定位，土地則分開輸入縣市、行政區、地段與單一地號。 */
 .print-editor-locationMapInput,.print-editor-land-location{grid-column:1/-1}.print-editor-locationMapInput small{display:block;margin-top:5px;color:#6e7d78}.print-editor-land-location{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding:12px;border:1px solid #cddfea;border-radius:10px;background:#f4f9fc}@media(max-width:760px){.print-editor-land-location{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .print-editor-locationMapInput.missing-coordinate>span,.print-editor-locationMapInput.missing-coordinate small{color:#c62828!important}.print-editor-locationMapInput.missing-coordinate input{border-color:#d93025!important;background:#fff1f0!important;box-shadow:0 0 0 3px #d9302520!important}
+.print-editor-locationMapInput.missing-coordinate::after{content:"未填寫地址／座標。請填寫後下載；若仍要下載無位置圖的 Excel，請再按一次「下載 Excel」。";display:block;margin-top:6px;color:#c62828;font-size:13px;font-weight:900;line-height:1.45}
 </style>
 </head>
 <body>
@@ -45497,11 +45498,10 @@ ${String(ex)}`);
     const [printEditor, setPrintEditor] = (0, import_react.useState)(null);
     const [colorWorkbookDownloading, setColorWorkbookDownloading] = (0, import_react.useState)(false);
     (0, import_react.useEffect)(() => {
-      const requireSecondLandDownloadClick = (event) => {
+      const requireSecondDownloadClickWhenLocationIsBlank = (event) => {
         const target = event.target instanceof Element ? event.target.closest(".print-editor-foot button.primary") : null;
         if (!target || !printEditor) return;
-        const isLandWorkbook = typeShort(printEditor.data.type) === "\u571F\u5730" || /^(?:LG|LA)/i.test(printEditor.data.propertyNo || "");
-        if (!isLandWorkbook || String(printEditor.data.locationMapInput || "").trim()) return;
+        if (String(printEditor.data.locationMapInput || "").trim()) return;
         const field = document.querySelector(".print-editor-locationMapInput");
         if (field?.classList.contains("missing-coordinate")) return;
         event.preventDefault();
@@ -45511,8 +45511,8 @@ ${String(ex)}`);
         input?.setAttribute("aria-invalid", "true");
         input?.focus();
       };
-      document.addEventListener("click", requireSecondLandDownloadClick, true);
-      return () => document.removeEventListener("click", requireSecondLandDownloadClick, true);
+      document.addEventListener("click", requireSecondDownloadClickWhenLocationIsBlank, true);
+      return () => document.removeEventListener("click", requireSecondDownloadClickWhenLocationIsBlank, true);
     }, [printEditor]);
     const [restoreChoiceRecord, setRestoreChoiceRecord] = (0, import_react.useState)(null);
     const [archiveChoice, setArchiveChoice] = (0, import_react.useState)(null);
@@ -48189,7 +48189,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V424" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V425" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -52243,7 +52243,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       if (publicMode) return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "public-case-name", children: chunkText(r.caseName || "\u2014", 10).map((line, lineIndex) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: line }, `${line}-${lineIndex}`)) }),
         note && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "case-name-note", children: note }),
-        dailyMode && r._dailyAnnotation && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "daily-case-annotation", children: r._dailyAnnotation }),
+        dailyMode && r._dailyAnnotation && !note.includes(r._dailyAnnotation) && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "daily-case-annotation", children: r._dailyAnnotation }),
         expiryAnnotation && daysUntil(r.entrustEnd) >= 0 && daysUntil(r.entrustEnd) <= 30 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { className: "mine-expiry-annotation", children: [
           "\u63D0\u9192",
           displayRocDate(r.entrustEnd),

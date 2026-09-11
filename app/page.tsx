@@ -961,11 +961,10 @@ export default function Home() {
   const [printEditor, setPrintEditor] = useState<{ kind: "color"; data: RecordItem } | null>(null);
   const [colorWorkbookDownloading, setColorWorkbookDownloading] = useState(false);
   useEffect(() => {
-    const requireSecondLandDownloadClick = (event: MouseEvent) => {
+    const requireSecondDownloadClickWhenLocationIsBlank = (event: MouseEvent) => {
       const target = event.target instanceof Element ? event.target.closest(".print-editor-foot button.primary") : null;
       if (!target || !printEditor) return;
-      const isLandWorkbook = typeShort(printEditor.data.type) === "土地" || /^(?:LG|LA)/i.test(printEditor.data.propertyNo || "");
-      if (!isLandWorkbook || String(printEditor.data.locationMapInput || "").trim()) return;
+      if (String(printEditor.data.locationMapInput || "").trim()) return;
       const field = document.querySelector<HTMLElement>(".print-editor-locationMapInput");
       if (field?.classList.contains("missing-coordinate")) return;
       event.preventDefault();
@@ -975,8 +974,8 @@ export default function Home() {
       input?.setAttribute("aria-invalid", "true");
       input?.focus();
     };
-    document.addEventListener("click", requireSecondLandDownloadClick, true);
-    return () => document.removeEventListener("click", requireSecondLandDownloadClick, true);
+    document.addEventListener("click", requireSecondDownloadClickWhenLocationIsBlank, true);
+    return () => document.removeEventListener("click", requireSecondDownloadClickWhenLocationIsBlank, true);
   }, [printEditor]);
   const [restoreChoiceRecord, setRestoreChoiceRecord] = useState<RecordItem | null>(null);
   const [archiveChoice, setArchiveChoice] = useState<{ record: RecordItem; status: string; date: string; salesPerson: string; reason: string } | null>(null);
@@ -3015,7 +3014,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V424</small></h1></div>
+<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V425</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingIntakeReminderRecords.length > 0 && <button className="new-case-reminder-header-button" onClick={() => { setNewCaseReminder({ ...pendingIntakeReminderRecords[0] }); setNewCaseReminderBatchIds(pendingIntakeReminderRecords.map(record => record.id)); }}>新進案件提醒 {pendingIntakeReminderRecords.length}</button>}{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -4518,7 +4517,7 @@ function PropertyTable({ records, columns, publicMode = false, dailyMode = false
     const archiveDate = r.archived || (isExpired(r) ? r.entrustEnd : "");
     const archiveStatus = r.archived ? archiveStatusOf(r) : "到期下架";
     const archiveLabel = `${displayRocDate(archiveDate)}${archiveStatus}${archiveStatus === "下架洽開發" && r.archiveReason ? `：${r.archiveReason}` : ""}`;
-    if (publicMode) return <><span className="public-case-name">{chunkText(r.caseName || "—", 10).map((line, lineIndex) => <span key={`${line}-${lineIndex}`}>{line}</span>)}</span>{note && <small className="case-name-note">{note}</small>}{dailyMode && r._dailyAnnotation && <small className="daily-case-annotation">{r._dailyAnnotation}</small>}{expiryAnnotation && daysUntil(r.entrustEnd) >= 0 && daysUntil(r.entrustEnd) <= 30 && <small className="mine-expiry-annotation">提醒{displayRocDate(r.entrustEnd)}到期</small>}</>;
+    if (publicMode) return <><span className="public-case-name">{chunkText(r.caseName || "—", 10).map((line, lineIndex) => <span key={`${line}-${lineIndex}`}>{line}</span>)}</span>{note && <small className="case-name-note">{note}</small>}{dailyMode && r._dailyAnnotation && !note.includes(r._dailyAnnotation) && <small className="daily-case-annotation">{r._dailyAnnotation}</small>}{expiryAnnotation && daysUntil(r.entrustEnd) >= 0 && daysUntil(r.entrustEnd) <= 30 && <small className="mine-expiry-annotation">提醒{displayRocDate(r.entrustEnd)}到期</small>}</>;
     return <span className={activeLead ? "active-case-name-cell" : ""}><button className="case-link" onClick={() => onEdit(r)}>{chunkText(r.caseName || "—", activeLead ? 12 : 15).map((line, lineIndex) => <span className="case-name-line" key={`${line}-${lineIndex}`}>{line}</span>)}</button>{note && <span className="case-name-note active-case-name-note">{note}</span>}{activeLead && restoredLabel && !note.includes("重新上架") && <span className="restore-case-annotation">{restoredLabel}</span>}{archiveMode && <small className="archive-case-annotation">{archiveLabel}</small>}</span>;
   };
   return <div className={`table-wrap ${publicMode ? "public-table" : ""} ${dailyMode ? "daily-table" : ""} ${activeLead ? "active-lead-table" : ""}`} onScroll={event => publicMode && setPublicScrollLeft(event.currentTarget.scrollLeft)}>
