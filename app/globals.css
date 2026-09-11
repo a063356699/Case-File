@@ -456,7 +456,7 @@ button:hover,.file-button:hover{border-color:#9fbad0;box-shadow:0 2px 8px #7895a
 .ppt-deferred-row>div b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ppt-deferred-row small{color:var(--muted)}
 .ppt-deferred-row button{padding:6px 12px;border:1px solid #bdc9c4;border-radius:999px;background:#fff;color:#24483f;font-size:12px;font-weight:800;white-space:nowrap}
-.ppt-deferred-row button.selected{border-color:#1f5a4a;background:#1f5a4a;color:#fff}
+.ppt-deferred-row button.next{border-color:#789b90!important;background:#fff!important;color:#24483f!important;-webkit-text-fill-color:#24483f!important;opacity:1!important}.ppt-deferred-row button.selected.next{border-color:#1f5a4a!important;background:#1f5a4a!important;color:#fff!important;-webkit-text-fill-color:#fff!important}
 .ppt-deferred-row button.skip{border-color:#9a6475!important;color:#7b344b!important;-webkit-text-fill-color:#7b344b!important;opacity:1!important}.ppt-deferred-row button.selected.skip{border-color:#8b6572!important;background:#8b6572!important;color:#fff!important;-webkit-text-fill-color:#fff!important}
 .ppt-deferred-toggle{display:flex;width:100%;align-items:center;justify-content:space-between;padding:8px 10px;border:0;background:transparent;color:#b23251;font-size:15px;font-weight:900;text-align:left;cursor:pointer}.ppt-deferred-toggle span{font-size:12px;color:#7b6570}.ppt-deferred-toggle:hover{background:#fff6f8}
 .ppt-image-button{border-color:#8e70b8!important;background:#f4effb!important;color:#5d408d!important;font-weight:900!important}

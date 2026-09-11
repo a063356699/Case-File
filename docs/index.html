@@ -463,7 +463,7 @@ button:hover,.file-button:hover{border-color:#9fbad0;box-shadow:0 2px 8px #7895a
 .ppt-deferred-row>div b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ppt-deferred-row small{color:var(--muted)}
 .ppt-deferred-row button{padding:6px 12px;border:1px solid #bdc9c4;border-radius:999px;background:#fff;color:#24483f;font-size:12px;font-weight:800;white-space:nowrap}
-.ppt-deferred-row button.selected{border-color:#1f5a4a;background:#1f5a4a;color:#fff}
+.ppt-deferred-row button.next{border-color:#789b90!important;background:#fff!important;color:#24483f!important;-webkit-text-fill-color:#24483f!important;opacity:1!important}.ppt-deferred-row button.selected.next{border-color:#1f5a4a!important;background:#1f5a4a!important;color:#fff!important;-webkit-text-fill-color:#fff!important}
 .ppt-deferred-row button.skip{border-color:#9a6475!important;color:#7b344b!important;-webkit-text-fill-color:#7b344b!important;opacity:1!important}.ppt-deferred-row button.selected.skip{border-color:#8b6572!important;background:#8b6572!important;color:#fff!important;-webkit-text-fill-color:#fff!important}
 .ppt-deferred-toggle{display:flex;width:100%;align-items:center;justify-content:space-between;padding:8px 10px;border:0;background:transparent;color:#b23251;font-size:15px;font-weight:900;text-align:left;cursor:pointer}.ppt-deferred-toggle span{font-size:12px;color:#7b6570}.ppt-deferred-toggle:hover{background:#fff6f8}
 .ppt-image-button{border-color:#8e70b8!important;background:#f4effb!important;color:#5d408d!important;font-weight:900!important}
@@ -48196,7 +48196,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V428" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V429" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -49034,7 +49034,7 @@ ${changedLabels}
                     "\u3000\u539F\u9031\u671F\u4FDD\u7559"
                   ] })
                 ] }),
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: choice === "next" ? "selected" : "", onClick: () => decideRemovedPpt(record, "next"), children: "\u4E0B\u6B21\u5831\u544A" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: choice === "next" ? "selected next" : "next", onClick: () => decideRemovedPpt(record, "next"), children: "\u4E0B\u6B21\u5831\u544A" }),
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: choice === "skip" ? "selected skip" : "skip", onClick: () => decideRemovedPpt(record, "skip"), children: "\u78BA\u5B9A\u4E0D\u4E0APPT" })
               ] }, record.id);
             })
