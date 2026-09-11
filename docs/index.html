@@ -464,7 +464,8 @@ button:hover,.file-button:hover{border-color:#9fbad0;box-shadow:0 2px 8px #7895a
 .ppt-deferred-row small{color:var(--muted)}
 .ppt-deferred-row button{padding:6px 12px;border:1px solid #bdc9c4;border-radius:999px;background:#fff;color:#24483f;font-size:12px;font-weight:800;white-space:nowrap}
 .ppt-deferred-row button.selected{border-color:#1f5a4a;background:#1f5a4a;color:#fff}
-.ppt-deferred-row button.skip{border-color:#9a6475;color:#7b344b}.ppt-deferred-row button.selected.skip{border-color:#8b6572;background:#8b6572;color:#fff}
+.ppt-deferred-row button.skip{border-color:#9a6475!important;color:#7b344b!important;-webkit-text-fill-color:#7b344b!important;opacity:1!important}.ppt-deferred-row button.selected.skip{border-color:#8b6572!important;background:#8b6572!important;color:#fff!important;-webkit-text-fill-color:#fff!important}
+.ppt-deferred-toggle{display:flex;width:100%;align-items:center;justify-content:space-between;padding:8px 10px;border:0;background:transparent;color:#b23251;font-size:15px;font-weight:900;text-align:left;cursor:pointer}.ppt-deferred-toggle span{font-size:12px;color:#7b6570}.ppt-deferred-toggle:hover{background:#fff6f8}
 .ppt-image-button{border-color:#8e70b8!important;background:#f4effb!important;color:#5d408d!important;font-weight:900!important}
 .floor-lines{display:flex;flex-direction:column;align-items:center;line-height:1.3;white-space:normal}
 .notes-display {
@@ -45554,6 +45555,7 @@ ${String(ex)}`);
     const [pptCustomEnd, setPptCustomEnd] = (0, import_react.useState)("");
     const [pptCustomMeeting, setPptCustomMeeting] = (0, import_react.useState)("");
     const [pptAssetPairs, setPptAssetPairs] = (0, import_react.useState)([]);
+    const [pptDeferredOpen, setPptDeferredOpen] = (0, import_react.useState)(false);
     const pptWeekLoadedRef = (0, import_react.useRef)("");
     const pptWeekSkipSaveRef = (0, import_react.useRef)(true);
     const pptConfirmationStateKeyRef = (0, import_react.useRef)("");
@@ -45574,6 +45576,9 @@ ${String(ex)}`);
       setPptCustomEnd("");
       setPptCustomMeeting("");
     }, [pptWeekStart]);
+    (0, import_react.useEffect)(() => {
+      if (!pptPickerOpen) setPptDeferredOpen(false);
+    }, [pptPickerOpen]);
     (0, import_react.useEffect)(() => {
       if (!pptPickerOpen) {
         setPptCustomStart("");
@@ -48191,7 +48196,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V427" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V428" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -49004,8 +49009,15 @@ ${changedLabels}
             !weeklyPptRecords.length && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "ppt-empty", children: "\u9019\u500B\u65E5\u671F\u5340\u9593\u76EE\u524D\u6C92\u6709\u9032\u6848\u7269\u4EF6" })
           ] }),
           deferredPptRecords.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "ppt-deferred-list", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { children: "\u672C\u9031\u5DF2\u79FB\u9664\uFF0F\u5F85\u6C7A\u5B9A" }),
-            deferredPptRecords.map((record) => {
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { type: "button", className: "ppt-deferred-toggle", onClick: () => setPptDeferredOpen((value) => !value), children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u672C\u9031\u5DF2\u79FB\u9664\uFF0F\u5F85\u6C7A\u5B9A" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+                deferredPptRecords.length,
+                " \u7B46\u3000",
+                pptDeferredOpen ? "\u25B2 \u6536\u5408" : "\u25BC \u5C55\u958B"
+              ] })
+            ] }),
+            pptDeferredOpen && deferredPptRecords.map((record) => {
               const choice = pptStoredChoices(record._pptWeekChoices)[selectedPptWeek.start] || "";
               return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "ppt-deferred-row", children: [
                 /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
