@@ -2085,7 +2085,7 @@ html,body{max-width:100%;overflow-x:hidden}
 /* 彩色表位置圖：房屋可貼定位，土地則分開輸入縣市、行政區、地段與單一地號。 */
 .print-editor-locationMapInput,.print-editor-land-location{grid-column:1/-1}.print-editor-locationMapInput small{display:block;margin-top:5px;color:#6e7d78}.print-editor-land-location{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding:12px;border:1px solid #cddfea;border-radius:10px;background:#f4f9fc}@media(max-width:760px){.print-editor-land-location{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .print-editor-locationMapInput.missing-coordinate>span,.print-editor-locationMapInput.missing-coordinate small{color:#c62828!important}.print-editor-locationMapInput.missing-coordinate input{border-color:#d93025!important;background:#fff1f0!important;box-shadow:0 0 0 3px #d9302520!important}
-.print-editor-locationMapInput.missing-coordinate::after{content:"未填寫地址／座標。請填寫後下載；若仍要下載無位置圖的 Excel，請再按一次「下載 Excel」。";display:block;margin-top:6px;color:#c62828;font-size:13px;font-weight:900;line-height:1.45}
+.print-editor-locationMapInput.missing-coordinate::after{content:"請輸入正確的位置座標（緯度, 經度），才能下載 Excel。";display:block;margin-top:6px;color:#c62828;font-size:13px;font-weight:900;line-height:1.45}
 </style>
 </head>
 <body>
@@ -43722,19 +43722,10 @@ ${String(ex)}`);
   var coordinatesFromInput = (value) => {
     const raw = String(value ?? "").trim();
     if (!raw) return null;
-    let decoded = raw;
-    try {
-      decoded = decodeURIComponent(raw);
-    } catch {
-    }
-    const pairs = [
-      ...decoded.matchAll(/@(-?\d{1,2}(?:\.\d+)?),\s*(-?\d{2,3}(?:\.\d+)?)/g),
-      ...decoded.matchAll(/(?:^|[?&#=/\s])(-?\d{1,2}(?:\.\d+)?),\s*(-?\d{2,3}(?:\.\d+)?)(?:$|[?&#/\s])/g)
-    ];
-    for (const pair of pairs) {
-      const latitude = Number(pair[1]), longitude = Number(pair[2]);
-      if (latitude >= 20 && latitude <= 27 && longitude >= 118 && longitude <= 123) return { latitude, longitude };
-    }
+    const pair = raw.match(/^(-?\d{1,2}(?:\.\d+)?)[,，]\s*(-?\d{2,3}(?:\.\d+)?)$/);
+    if (!pair) return null;
+    const latitude = Number(pair[1]), longitude = Number(pair[2]);
+    if (latitude >= 20 && latitude <= 27 && longitude >= 118 && longitude <= 123) return { latitude, longitude };
     return null;
   };
   var jsonp = (url, timeoutMs = 15e3) => new Promise((resolve, reject) => {
@@ -45498,12 +45489,22 @@ ${String(ex)}`);
     const [printEditor, setPrintEditor] = (0, import_react.useState)(null);
     const [colorWorkbookDownloading, setColorWorkbookDownloading] = (0, import_react.useState)(false);
     (0, import_react.useEffect)(() => {
-      const requireSecondDownloadClickWhenLocationIsBlank = (event) => {
+      const coordinateField = document.querySelector(".print-editor-locationMapInput");
+      const coordinateInput = coordinateField?.querySelector("input");
+      const coordinateLabel = coordinateField?.querySelector("span");
+      const coordinateHelp = coordinateField?.querySelector("small");
+      if (coordinateLabel) coordinateLabel.textContent = "\u4F4D\u7F6E\u5EA7\u6A19\uFF08\u5FC5\u586B\uFF09";
+      if (coordinateInput) coordinateInput.placeholder = "\u4F8B\u5982\uFF1A22.97354854089914, 120.2238506558218";
+      if (coordinateHelp) coordinateHelp.textContent = "\u8ACB\u8CBC\u4E0A\u300C\u7DEF\u5EA6, \u7D93\u5EA6\u300D\uFF1B\u6C92\u6709\u6B63\u78BA\u5EA7\u6A19\u4E0D\u80FD\u4E0B\u8F09 Excel\u3002\u6B64\u6B04\u53EA\u5957\u7528\u672C\u6B21\u4E0B\u8F09\u3002";
+      const requireValidCoordinatesBeforeDownload = (event) => {
         const target = event.target instanceof Element ? event.target.closest(".print-editor-foot button.primary") : null;
         if (!target || !printEditor) return;
-        if (String(printEditor.data.locationMapInput || "").trim()) return;
         const field = document.querySelector(".print-editor-locationMapInput");
-        if (field?.classList.contains("missing-coordinate")) return;
+        if (coordinatesFromInput(printEditor.data.locationMapInput)) {
+          field?.classList.remove("missing-coordinate");
+          field?.querySelector("input")?.removeAttribute("aria-invalid");
+          return;
+        }
         event.preventDefault();
         event.stopPropagation();
         field?.classList.add("missing-coordinate");
@@ -45511,8 +45512,8 @@ ${String(ex)}`);
         input?.setAttribute("aria-invalid", "true");
         input?.focus();
       };
-      document.addEventListener("click", requireSecondDownloadClickWhenLocationIsBlank, true);
-      return () => document.removeEventListener("click", requireSecondDownloadClickWhenLocationIsBlank, true);
+      document.addEventListener("click", requireValidCoordinatesBeforeDownload, true);
+      return () => document.removeEventListener("click", requireValidCoordinatesBeforeDownload, true);
     }, [printEditor]);
     const [restoreChoiceRecord, setRestoreChoiceRecord] = (0, import_react.useState)(null);
     const [archiveChoice, setArchiveChoice] = (0, import_react.useState)(null);
@@ -46265,8 +46266,9 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
         layout: layoutMatch?.layout
       };
     };
-    const loadPptAssetFolder = (event) => {
-      const files = Array.from(event.target.files || []).filter((file) => /\.(?:gif|jpe?g)$/i.test(file.name));
+    const loadPptAssetFolder = (event, kind) => {
+      const expectedExtension = kind === "gif" ? /\.gif$/i : /\.jpe?g$/i;
+      const files = Array.from(event.target.files || []).filter((file) => expectedExtension.test(file.name));
       const grouped = /* @__PURE__ */ new Map();
       files.forEach((file) => {
         const rawStem = file.name.replace(/\.(?:gif|jpe?g)$/i, "");
@@ -46274,16 +46276,16 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
         const key = normalizePptAssetText(rawStem);
         if (!key) return;
         const pair = grouped.get(key) || { key, label };
-        if (/\.gif$/i.test(file.name)) pair.gif = file;
-        else pair.layout = file;
+        pair[kind] = file;
         grouped.set(key, pair);
       });
-      const pairs = [...grouped.values()];
-      setPptAssetPairs(pairs);
+      setPptAssetPairs((previous) => {
+        const merged = new Map(previous.map((pair) => [pair.key, { ...pair, [kind]: void 0 }]));
+        grouped.forEach((pair, key) => merged.set(key, { ...merged.get(key) || { key, label: pair.label }, ...pair }));
+        return [...merged.values()].filter((pair) => pair.gif || pair.layout);
+      });
       event.target.value = "";
-      const gifCount = pairs.filter((pair) => pair.gif).length;
-      const layoutCount = pairs.filter((pair) => pair.layout).length;
-      flash(`\u5DF2\u8B80\u53D6 ${gifCount} \u500B GIF\u3001${layoutCount} \u5F35 JPG\uFF1B\u5169\u7A2E\u5716\u7247\u6703\u5206\u5225\u6BD4\u5C0D\u6848\u4EF6`);
+      flash(`\u5DF2\u8B80\u53D6 ${files.length} ${kind === "gif" ? "\u500B GIF" : "\u5F35 JPG"}\uFF1B\u53E6\u4E00\u500B\u8CC7\u6599\u593E\u7684\u9078\u64C7\u6703\u4FDD\u7559`);
     };
     const readPptImage = (file) => new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -48189,7 +48191,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V425" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V426" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -49045,10 +49047,15 @@ ${changedLabels}
           ] }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "ppt-add-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "ppt-asset-folder-button", children: [
-              "\u9078\u64C7 GIF\uFF0FJPG \u8CC7\u6599\u593E",
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "file", accept: ".gif,.jpg,.jpeg,image/gif,image/jpeg", multiple: true, ...{ webkitdirectory: "", directory: "" }, onChange: loadPptAssetFolder })
+              "\u9078\u64C7 GIF \u8CC7\u6599\u593E",
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "file", accept: ".gif,image/gif", multiple: true, ...{ webkitdirectory: "", directory: "" }, onChange: (event) => loadPptAssetFolder(event, "gif") })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "ppt-asset-folder-summary", children: pptAssetPairs.length ? `\u5DF2\u8B80\u53D6 ${pptAssetPairs.length} \u7D44\u5716\u7247` : "\u5C1A\u672A\u9078\u64C7\u5716\u7247\u8CC7\u6599\u593E" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "ppt-asset-folder-summary", children: pptAssetPairs.some((pair) => pair.gif) ? `\u5DF2\u8B80\u53D6 ${pptAssetPairs.filter((pair) => pair.gif).length} \u500B GIF` : "\u5C1A\u672A\u9078\u64C7 GIF \u8CC7\u6599\u593E" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "ppt-asset-folder-button", children: [
+              "\u9078\u64C7 JPG \u8CC7\u6599\u593E",
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "file", accept: ".jpg,.jpeg,image/jpeg", multiple: true, ...{ webkitdirectory: "", directory: "" }, onChange: (event) => loadPptAssetFolder(event, "layout") })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "ppt-asset-folder-summary", children: pptAssetPairs.some((pair) => pair.layout) ? `\u5DF2\u8B80\u53D6 ${pptAssetPairs.filter((pair) => pair.layout).length} \u5F35 JPG` : "\u5C1A\u672A\u9078\u64C7 JPG \u8CC7\u6599\u593E" }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: "ppt-extra-toggle", onClick: () => setPptShowExtras((value) => !value), children: "\uFF0B\u52A0\u5165\u7269\u4EF6" }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: "ppt-adhoc-toggle", onClick: () => {
               setPptAdHocDraft({ ...blankRecord(), id: newId(), status: "\u5C1A\u672A\u9032\u6848" });

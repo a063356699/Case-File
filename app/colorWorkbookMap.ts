@@ -9,19 +9,13 @@ const firstLandTarget = (value: unknown) => {
   const sectionMatch = normalized.match(/([^區鄉鎮市]{1,12}(?:段|小段))([^段]*?)(\d+(?:-\d+)?)(?:地號|[、/]|$)/);
   return sectionMatch ? { section: sectionMatch[1], number: sectionMatch[3] } : null;
 };
-const coordinatesFromInput = (value: unknown) => {
+export const coordinatesFromInput = (value: unknown) => {
   const raw = String(value ?? "").trim();
   if (!raw) return null;
-  let decoded = raw;
-  try { decoded = decodeURIComponent(raw); } catch {}
-  const pairs = [
-    ...decoded.matchAll(/@(-?\d{1,2}(?:\.\d+)?),\s*(-?\d{2,3}(?:\.\d+)?)/g),
-    ...decoded.matchAll(/(?:^|[?&#=/\s])(-?\d{1,2}(?:\.\d+)?),\s*(-?\d{2,3}(?:\.\d+)?)(?:$|[?&#/\s])/g),
-  ];
-  for (const pair of pairs) {
-    const latitude = Number(pair[1]), longitude = Number(pair[2]);
-    if (latitude >= 20 && latitude <= 27 && longitude >= 118 && longitude <= 123) return { latitude, longitude };
-  }
+  const pair = raw.match(/^(-?\d{1,2}(?:\.\d+)?)[,，]\s*(-?\d{2,3}(?:\.\d+)?)$/);
+  if (!pair) return null;
+  const latitude = Number(pair[1]), longitude = Number(pair[2]);
+  if (latitude >= 20 && latitude <= 27 && longitude >= 118 && longitude <= 123) return { latitude, longitude };
   return null;
 };
 
