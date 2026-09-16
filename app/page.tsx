@@ -3025,7 +3025,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V434</small></h1></div>
+<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V435</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingIntakeReminderRecords.length > 0 && <button className="new-case-reminder-header-button" onClick={() => { setNewCaseReminder({ ...pendingIntakeReminderRecords[0] }); setNewCaseReminderBatchIds(pendingIntakeReminderRecords.map(record => record.id)); }}>新進案件提醒 {pendingIntakeReminderRecords.length}</button>}{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -4978,6 +4978,32 @@ function BusinessInventory({ records, settings, setSettings }: { records: Record
   </section>;
 }
 
+function DeveloperTextInput({ value, onCommit }: { value: string; onCommit: (value: string) => void }) {
+  const [draft, setDraft] = useState(value);
+  const composing = useRef(false);
+  useEffect(() => { if (!composing.current) setDraft(value); }, [value]);
+  return <input
+    type="text"
+    value={draft}
+    onCompositionStart={() => { composing.current = true; }}
+    onChange={event => {
+      const next = event.currentTarget.value;
+      setDraft(next);
+      if (!composing.current && !event.nativeEvent.isComposing) onCommit(next);
+    }}
+    onCompositionEnd={event => {
+      composing.current = false;
+      const next = event.currentTarget.value;
+      setDraft(next);
+      onCommit(next);
+    }}
+    onBlur={event => {
+      composing.current = false;
+      onCommit(event.currentTarget.value);
+    }}
+  />;
+}
+
 function Field({ fieldKey, label, record, records, setRecord }: { fieldKey: string; label: string; record: RecordItem; records: RecordItem[]; setRecord: (r: RecordItem) => void }) {
   const value = record[fieldKey] || ""; const inputValue = fieldKey === "layout" ? (typeShort(record.type) === "土地" ? "" : layoutFull(value, record.type)) : value; const set = (v: string) => setRecord(fieldKey === "propertyNo" ? { ...record, propertyNo: v, contractType: contractFromNo(v) } : fieldKey === "coverChangeNo" ? { ...record, coverChangeNo: v, coverNoChange: v.trim() ? "" : record.coverNoChange } : { ...record, [fieldKey]: v });
   const websiteInput = (key: string, siteLabel: string, expiryKey = "") => { const noneKey = `${key}None`; const none = record[noneKey] === "1"; const changeValue = (next: string) => { if (key === "windowAd" && next) { if (!/^\d+$/.test(next) || Number(next) < 1 || Number(next) > 15) return alert("櫥窗編號只能輸入 1～15"); const duplicate = records.find(item => item.id !== record.id && String(item.windowAd || "").trim() === next.trim() && item.windowAdNone !== "1"); if (duplicate) return alert(`櫥窗編號 ${next} 已由「${duplicate.caseName || duplicate.propertyNo}」使用`); } const detectedExpiry = expiryKey && !record[expiryKey] ? websiteEffectiveDate(next) : ""; setRecord({ ...record, [key]: next, ...(detectedExpiry ? { [expiryKey]: detectedExpiry } : {}) }); }; return <label className={`field website-field ${none ? "website-none" : ""}`}><span className="website-field-head"><b>{siteLabel}</b><i><input type="checkbox" checked={none} onChange={event => { if (event.target.checked && String(record[key] || "").trim() && !confirm(`${siteLabel}已有內容「${record[key]}」，確定要改成無並清除內容嗎？`)) return; setRecord({ ...record, [noneKey]: event.target.checked ? "1" : "", ...(event.target.checked ? { [key]: "", ...(expiryKey ? { [expiryKey]: "" } : {}) } : {}) }); }}/>無</i></span><input type="text" disabled={none} value={record[key] || ""} onChange={event => changeValue(event.target.value)} placeholder={none ? "不需刊登" : "輸入網站編號或註記"}/>{expiryKey && <><span className="website-expiry-label">{siteLabel}到期日期</span><input type="text" inputMode="numeric" disabled={none} value={displayRocDate(record[expiryKey] || websiteEffectiveDate(record[key] || ""))} onChange={event => setRecord({ ...record, [expiryKey]: event.target.value })} onBlur={event => setRecord({ ...record, [expiryKey]: normalizeDateInput(event.target.value) })} placeholder="例如 115/10/19"/></>}</label>; };
@@ -4993,6 +5019,7 @@ function Field({ fieldKey, label, record, records, setRecord }: { fieldKey: stri
   if (pillChoices[fieldKey]) { const displayedValue = fieldKey === "parkingMethod" && !value && pillChoices.parkingMethod.includes(record.parkingType || "") ? record.parkingType : value; const selectPill = (option: string) => fieldKey === "parkingMethod" ? setRecord({ ...record, parkingMethod: displayedValue === option ? "" : option, parkingType: "" }) : set(displayedValue === option ? "" : option); return <label className={`field cover-pill-field cover-pill-${fieldKey}`}><span>{label}</span><span className="pill-options">{pillChoices[fieldKey].map(option => <button type="button" className={displayedValue === option ? "active" : ""} onClick={() => selectPill(option)} key={option}>{option}</button>)}</span></label>; }
   if (fieldKey === "reducedPrice") return null;
   if (fieldKey === "caseNameNote") return <label className="field case-name-note-field"><span>{label}{record.caseNameNoteModifiedAt && <small>修改:{displayModifiedAt(record.caseNameNoteModifiedAt)}</small>}</span><input type="text" value={value} onChange={event => setRecord({ ...record, caseNameNote: event.target.value, caseNameNoteModifiedAt: new Date().toISOString() })}/></label>;
+  if (fieldKey === "developer") return <label className="field"><span>{label}</span><DeveloperTextInput value={value} onCommit={next => set(next)}/></label>;
   if (fieldKey === "showingFollowUpDueDate") return <label className="field showing-follow-up-date-field"><span>{label}</span><input type="text" inputMode="numeric" value={displayRocDate(value)} onChange={event => setRecord({ ...record, showingFollowUpDueDate: event.target.value, showingFollowUp: event.target.value ? "暫停帶看／等待業務回覆" : "", showingFollowUpDate: event.target.value ? record.showingFollowUpDate || today() : "" })} onBlur={event => { const date = normalizeDateInput(event.target.value); setRecord({ ...record, showingFollowUpDueDate: date, showingFollowUp: date ? "暫停帶看／等待業務回覆" : "", showingFollowUpDate: date ? record.showingFollowUpDate || today() : "" }); }} placeholder="例如 115/8/15"/><small>清空日期即解除追蹤</small></label>;
   if (fieldKey === "completionDate") { const parsed = record.areaPaste ? parseAreaPaste(record.areaPaste, record) : record; const shownDate = value || parsed.completionDate || ""; const yearText = String(shownDate || record.builtYear || "").match(/\d{2,4}/)?.[0] || ""; const yearNumber = Number(yearText); const westernYear = yearNumber ? (yearNumber > 1911 ? yearNumber : yearNumber + 1911) : 0; const age = westernYear ? new Date().getFullYear() - westernYear : NaN; return <label className="field completion-age-field"><span>{label}{Number.isFinite(age) && age >= 0 && <small>約 {age} 年屋</small>}</span><input type="text" inputMode="numeric" value={displayRocDate(shownDate)} onChange={event => set(event.target.value)} onBlur={event => set(normalizeDateInput(event.target.value))} placeholder="例如 074.04.16"/></label>; }
   if (["buildingPing", "indoorPing", "landPing", "registryBuildingPing", "registryIndoorPing", "landSharePing"].includes(fieldKey)) { const parsed = record.areaPaste ? parseAreaPaste(record.areaPaste, record) : record; const compared = fieldKey === "buildingPing" ? parsed.registryBuildingPing : fieldKey === "indoorPing" ? parsed.registryIndoorPing : fieldKey === "landPing" ? parsed.landSharePing : fieldKey === "registryBuildingPing" ? record.buildingPing : fieldKey === "registryIndoorPing" ? record.indoorPing : record.landPing; const prefix = ["registryBuildingPing", "registryIndoorPing", "landSharePing"].includes(fieldKey) ? "進案" : "房管"; return <label className="field compared-ping-field"><span><b>{label}</b>{compared && <small>{prefix} {compared} 坪</small>}</span><input inputMode="decimal" value={value} onChange={event => set(event.target.value)}/></label>; }
