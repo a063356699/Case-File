@@ -1593,19 +1593,20 @@ export default function Home() {
   const normalizePptAssetText = (value = "") => String(value || "").normalize("NFKC").toLowerCase().replace(/\.(?:gif|jpe?g)$/i, "").replace(/^ppt[\s_\-－]*/i, "").replace(/[^\p{L}\p{N}]/gu, "");
   const pptAssetPairForRecord = (record: RecordItem) => {
     const caseName = normalizePptAssetText(record.caseName);
-    const address = normalizePptAssetText(record.address);
-    const developer = normalizePptAssetText(developerFullNameText(record.developer));
-    const area = normalizePptAssetText(record.area);
-    const scored = pptAssetPairs.map(pair => {
-      let score = 0;
-      if (caseName.length >= 4 && pair.key.includes(caseName)) score += 100 + caseName.length;
-      if (address.length >= 4 && (pair.key.includes(address) || address.includes(pair.key))) score += 70;
-      if (developer.length >= 2 && pair.key.includes(developer)) score += 35;
-      if (area.length >= 2 && pair.key.includes(area)) score += 10;
-      return { pair, score };
-    }).filter(item => item.score > 0).sort((a, b) => b.score - a.score);
-    const gifMatch = scored.find(item => item.pair.gif)?.pair;
-    const layoutMatch = scored.find(item => item.pair.layout)?.pair;
+    const propertyNo = normalizePptAssetText(record.propertyNo);
+    const address = String(record.address || "").normalize("NFKC").replace(/臺/g, "台");
+    const addressAfterDistrict = normalizePptAssetText(address.replace(/^.*[區鄉鎮市]/, ""));
+    // 支援「地區-案名-地址-開發人員」檔名，但案名及地址門牌必須同時對應。
+    // 物件編號可單獨作為明確識別；若同類圖有多個候選則留白，不任選一張。
+    const matches = pptAssetPairs.filter(pair =>
+      (caseName.length >= 4 && pair.key === caseName) ||
+      (propertyNo.length >= 6 && pair.key === propertyNo) ||
+      (caseName.length >= 4 && addressAfterDistrict.length >= 6 && pair.key.includes(caseName) && pair.key.includes(addressAfterDistrict))
+    );
+    const gifCandidates = matches.filter(pair => pair.gif);
+    const layoutCandidates = matches.filter(pair => pair.layout);
+    const gifMatch = gifCandidates.length === 1 ? gifCandidates[0] : undefined;
+    const layoutMatch = layoutCandidates.length === 1 ? layoutCandidates[0] : undefined;
     if (!gifMatch && !layoutMatch) return undefined;
     return {
       key: gifMatch?.key || layoutMatch?.key || "",
@@ -3027,7 +3028,7 @@ export default function Home() {
 
   return <main lang="en-GB" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V429</small></h1></div>
+<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V431</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingIntakeReminderRecords.length > 0 && <button className="new-case-reminder-header-button" onClick={() => { setNewCaseReminder({ ...pendingIntakeReminderRecords[0] }); setNewCaseReminderBatchIds(pendingIntakeReminderRecords.map(record => record.id)); }}>新進案件提醒 {pendingIntakeReminderRecords.length}</button>}{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -4303,9 +4304,14 @@ const intakeFieldClass = (key: string) => `field${fullIntakeFields.has(key) ? " 
 
 const intakeDraftEditorTitle = (draft: IntakeData) => {
   const address = intakeValue(draft.values, "物件(完整)地址").trim();
+  const cityMatch = address.replace(/^臺灣省|^台灣省/, "").match(/^([^縣市]{1,8}[縣市])/);
   const withoutCity = address.replace(/^(?:臺灣省|台灣省)?[^縣市]{1,8}[縣市]/, "");
   const areaMatch = withoutCity.match(/^(.{1,8}區|.{1,8}[鄉鎮市])/);
-  const area = areaMatch?.[1] || "未填地區";
+  const city = cityMatch?.[1]?.replace(/臺/g, "台") || "";
+  const district = areaMatch?.[1] || "";
+  const area = city && city !== "台南市" && district
+    ? `${city.replace(/[縣市]$/, "")}${district.replace(/[區鄉鎮市]$/, "")}`
+    : district || "未填地區";
   const shortAddress = (areaMatch ? withoutCity.slice(area.length) : withoutCity).trim() || "未填地址";
   const caseName = intakeValue(draft.values, "案名").trim() || "未命名案件";
   // 草稿檔名的開發姓名直接相連，例如「柯育婷蔡宇育」，不使用頓號。

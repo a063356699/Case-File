@@ -46250,19 +46250,16 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
     const normalizePptAssetText = (value = "") => String(value || "").normalize("NFKC").toLowerCase().replace(/\.(?:gif|jpe?g)$/i, "").replace(/^ppt[\s_\-－]*/i, "").replace(/[^\p{L}\p{N}]/gu, "");
     const pptAssetPairForRecord = (record) => {
       const caseName = normalizePptAssetText(record.caseName);
-      const address = normalizePptAssetText(record.address);
-      const developer = normalizePptAssetText(developerFullNameText(record.developer));
-      const area = normalizePptAssetText(record.area);
-      const scored = pptAssetPairs.map((pair) => {
-        let score = 0;
-        if (caseName.length >= 4 && pair.key.includes(caseName)) score += 100 + caseName.length;
-        if (address.length >= 4 && (pair.key.includes(address) || address.includes(pair.key))) score += 70;
-        if (developer.length >= 2 && pair.key.includes(developer)) score += 35;
-        if (area.length >= 2 && pair.key.includes(area)) score += 10;
-        return { pair, score };
-      }).filter((item) => item.score > 0).sort((a, b) => b.score - a.score);
-      const gifMatch = scored.find((item) => item.pair.gif)?.pair;
-      const layoutMatch = scored.find((item) => item.pair.layout)?.pair;
+      const propertyNo = normalizePptAssetText(record.propertyNo);
+      const address = String(record.address || "").normalize("NFKC").replace(/臺/g, "\u53F0");
+      const addressAfterDistrict = normalizePptAssetText(address.replace(/^.*[區鄉鎮市]/, ""));
+      const matches = pptAssetPairs.filter(
+        (pair) => caseName.length >= 4 && pair.key === caseName || propertyNo.length >= 6 && pair.key === propertyNo || caseName.length >= 4 && addressAfterDistrict.length >= 6 && pair.key.includes(caseName) && pair.key.includes(addressAfterDistrict)
+      );
+      const gifCandidates = matches.filter((pair) => pair.gif);
+      const layoutCandidates = matches.filter((pair) => pair.layout);
+      const gifMatch = gifCandidates.length === 1 ? gifCandidates[0] : void 0;
+      const layoutMatch = layoutCandidates.length === 1 ? layoutCandidates[0] : void 0;
       if (!gifMatch && !layoutMatch) return void 0;
       return {
         key: gifMatch?.key || layoutMatch?.key || "",
@@ -48196,7 +48193,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V429" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V431" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -51278,9 +51275,12 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
   var intakeFieldClass = (key) => `field${fullIntakeFields.has(key) ? " full-field" : key === "\u6848\u540D" ? " case-field" : key === "\u7269\u4EF6(\u5B8C\u6574)\u5730\u5740" ? " address-field" : quarterIntakeFields.has(key) ? " quarter-field" : thirdIntakeFields.has(key) ? " third-field" : houseDetailFields.has(key) ? " house-detail-field" : ""}`;
   var intakeDraftEditorTitle = (draft) => {
     const address = intakeValue(draft.values, "\u7269\u4EF6(\u5B8C\u6574)\u5730\u5740").trim();
+    const cityMatch = address.replace(/^臺灣省|^台灣省/, "").match(/^([^縣市]{1,8}[縣市])/);
     const withoutCity = address.replace(/^(?:臺灣省|台灣省)?[^縣市]{1,8}[縣市]/, "");
     const areaMatch = withoutCity.match(/^(.{1,8}區|.{1,8}[鄉鎮市])/);
-    const area = areaMatch?.[1] || "\u672A\u586B\u5730\u5340";
+    const city = cityMatch?.[1]?.replace(/臺/g, "\u53F0") || "";
+    const district = areaMatch?.[1] || "";
+    const area = city && city !== "\u53F0\u5357\u5E02" && district ? `${city.replace(/[縣市]$/, "")}${district.replace(/[區鄉鎮市]$/, "")}` : district || "\u672A\u586B\u5730\u5340";
     const shortAddress = (areaMatch ? withoutCity.slice(area.length) : withoutCity).trim() || "\u672A\u586B\u5730\u5740";
     const caseName = intakeValue(draft.values, "\u6848\u540D").trim() || "\u672A\u547D\u540D\u6848\u4EF6";
     const developer = (developerFullNameText(intakeValue(draft.values, "\u958B\u767C\uFF11/\u958B\u767C\uFF12").trim()) || "\u672A\u586B\u958B\u767C").replace(/[、，,]/g, "");
