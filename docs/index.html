@@ -45304,7 +45304,7 @@ ${String(ex)}`);
     const values = {
       "\u6642\u9593\u6233\u8A18": (/* @__PURE__ */ new Date()).toLocaleString("zh-TW"),
       "\u8868\u55AE\u586B\u5BEB\u4EBA": "",
-      "\u958B\u767C\uFF11/\u958B\u767C\uFF12": developerFullNameText(record.developer),
+      "\u958B\u767C\uFF11/\u958B\u767C\uFF12": developerStoredText(record.developer),
       "\u59D4\u8A17\u4E3B\u7D04\u7DE8\u865F:": record.propertyNo,
       "\u59D4\u8A17\u958B\u59CB \u65E5\u671F": displayRocDate(record.entrustStart),
       "\u59D4\u8A17\u7D50\u675F \u65E5\u671F": displayRocDate(record.entrustEnd),
@@ -45347,7 +45347,7 @@ ${String(ex)}`);
       const key = Object.keys(values).find((name) => name.includes(needle)) || fallback;
       values[key] = value || "";
     };
-    setValue("\u958B\u767C\uFF11/\u958B\u767C\uFF12", developerFullNameText(record.developer), "\u958B\u767C\uFF11/\u958B\u767C\uFF12");
+    setValue("\u958B\u767C\uFF11/\u958B\u767C\uFF12", developerStoredText(record.developer), "\u958B\u767C\uFF11/\u958B\u767C\uFF12");
     setValue("\u59D4\u8A17\u4E3B\u7D04\u7DE8\u865F", record.propertyNo, "\u59D4\u8A17\u4E3B\u7D04\u7DE8\u865F:");
     setValue("\u59D4\u8A17\u958B\u59CB", displayRocDate(record.entrustStart), "\u59D4\u8A17\u958B\u59CB \u65E5\u671F");
     setValue("\u59D4\u8A17\u7D50\u675F", displayRocDate(record.entrustEnd), "\u59D4\u8A17\u7D50\u675F \u65E5\u671F");
@@ -45693,43 +45693,6 @@ ${String(ex)}`);
     const cloudTabIdRef = (0, import_react.useRef)(`tab-${Date.now()}-${Math.random().toString(36).slice(2)}`);
     const editingInitialRef = (0, import_react.useRef)("");
     const editingInitialIdRef = (0, import_react.useRef)("");
-    const personnelNameSignature = settings.personnel.map((person) => `${person.id}:${person.name}:${person.status}`).join("|");
-    const developerNormalizationSignature = records.map((record) => `${record.id}:${record.developer || ""}`).join("|");
-    const draftDeveloperSignature = intakeDrafts.map((draft) => `${draft.id}:${intakeDeveloperValue(draft.values)}`).join("|");
-    (0, import_react.useEffect)(() => {
-      const usablePeople = settings.personnel.filter((person) => String(person.name || "").trim());
-      const draftByRecord = new Map(intakeDrafts.filter((draft) => draft.linkedRecordId).map((draft) => [draft.linkedRecordId, draft]));
-      const draftByPropertyNo = new Map(intakeDrafts.map((draft) => [intakeValue(draft.values, "\u59D4\u8A17\u4E3B\u7D04\u7DE8\u865F").trim(), draft]).filter(([propertyNo]) => !!propertyNo));
-      setRecords((previous) => {
-        let changed = false;
-        const next = previous.map((record) => {
-          const linkedDraft = draftByRecord.get(record.id) || draftByPropertyNo.get(String(record.propertyNo || "").trim());
-          const sourceDeveloper = record.developer || (linkedDraft ? intakeDeveloperValue(linkedDraft.values) : "");
-          const developer = developerFullNameText(sourceDeveloper, usablePeople);
-          if (developer && developer !== record.developer) {
-            changed = true;
-            return { ...record, developer };
-          }
-          return record;
-        });
-        return changed ? next : previous;
-      });
-      setIntakeDrafts((previous) => {
-        let anyChanged = false;
-        const next = previous.map((draft) => {
-          let changed = false;
-          const values = Object.fromEntries(Object.entries(draft.values).map(([key, value]) => {
-            if (!/開發/.test(key) || !String(value || "").trim()) return [key, value];
-            const fullName = developerFullNameText(String(value), usablePeople);
-            if (fullName && fullName !== value) changed = true;
-            return [key, fullName || value];
-          }));
-          if (changed) anyChanged = true;
-          return changed ? { ...draft, values } : draft;
-        });
-        return anyChanged ? next : previous;
-      });
-    }, [personnelNameSignature, developerNormalizationSignature, draftDeveloperSignature]);
     (0, import_react.useEffect)(() => {
       if (!editing) {
         editingInitialRef.current = "";
@@ -48188,7 +48151,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V438" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V439" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),

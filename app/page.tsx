@@ -868,7 +868,7 @@ function intakeToRecord(intake: IntakeData, existing?: RecordItem): RecordItem {
 
 function recordToIntake(record: RecordItem): IntakeData {
   const values: Record<string, string> = {
-    "時間戳記": new Date().toLocaleString("zh-TW"), "表單填寫人": "", "開發１/開發２": developerFullNameText(record.developer),
+    "時間戳記": new Date().toLocaleString("zh-TW"), "表單填寫人": "", "開發１/開發２": developerStoredText(record.developer),
     "委託主約編號:": record.propertyNo, "委託開始 日期": displayRocDate(record.entrustStart), "委託結束 日期": displayRocDate(record.entrustEnd),
     "案名": record.caseName, "物件(完整)地址": record.address, "(物件)現況": record.currentState, "鑰匙位置": record.key,
     "物件型態": record.type, "契約開價 (萬)": record.price, "總建坪": record.buildingPing, "室內坪=(主建物+附屬建物)": record.indoorPing,
@@ -885,7 +885,7 @@ function recordToIntake(record: RecordItem): IntakeData {
 function syncRecordToDraftValues(draft: IntakeData, record: RecordItem): Record<string, string> {
   const values = { ...draft.values };
   const setValue = (needle: string, value: string, fallback = needle) => { const key = Object.keys(values).find(name => name.includes(needle)) || fallback; values[key] = value || ""; };
-  setValue("開發１/開發２", developerFullNameText(record.developer), "開發１/開發２"); setValue("委託主約編號", record.propertyNo, "委託主約編號:");
+  setValue("開發１/開發２", developerStoredText(record.developer), "開發１/開發２"); setValue("委託主約編號", record.propertyNo, "委託主約編號:");
   setValue("委託開始", displayRocDate(record.entrustStart), "委託開始 日期"); setValue("委託結束", displayRocDate(record.entrustEnd), "委託結束 日期");
   setValue("案名", record.caseName); setValue("物件(完整)地址", record.address); setValue("(物件)現況", record.currentState); setValue("鑰匙位置", record.key);
   setValue("物件型態", record.type); setValue("契約開價", record.price, "契約開價 (萬)"); setValue("朝向", record.direction, "朝向 [房屋朝]"); setValue("總建坪", record.buildingPing); setValue("室內坪", record.indoorPing);
@@ -1147,36 +1147,6 @@ export default function Home() {
   const cloudTabIdRef = useRef(`tab-${Date.now()}-${Math.random().toString(36).slice(2)}`);
   const editingInitialRef = useRef("");
   const editingInitialIdRef = useRef("");
-  const personnelNameSignature = settings.personnel.map(person => `${person.id}:${person.name}:${person.status}`).join("|");
-  const developerNormalizationSignature = records.map(record => `${record.id}:${record.developer || ""}`).join("|");
-  const draftDeveloperSignature = intakeDrafts.map(draft => `${draft.id}:${intakeDeveloperValue(draft.values)}`).join("|");
-
-  useEffect(() => {
-    const usablePeople = settings.personnel.filter(person => String(person.name || "").trim());
-    const draftByRecord = new Map(intakeDrafts.filter(draft => draft.linkedRecordId).map(draft => [draft.linkedRecordId!, draft]));
-    const draftByPropertyNo = new Map(intakeDrafts.map(draft => [intakeValue(draft.values, "委託主約編號").trim(), draft]).filter(([propertyNo]) => !!propertyNo));
-    setRecords(previous => { let changed = false; const next = previous.map(record => {
-      const linkedDraft = draftByRecord.get(record.id) || draftByPropertyNo.get(String(record.propertyNo || "").trim());
-      const sourceDeveloper = record.developer || (linkedDraft ? intakeDeveloperValue(linkedDraft.values) : "");
-      const developer = developerFullNameText(sourceDeveloper, usablePeople);
-      if (developer && developer !== record.developer) { changed = true; return { ...record, developer }; }
-      return record;
-    }); return changed ? next : previous; });
-    setIntakeDrafts(previous => { let anyChanged = false; const next = previous.map(draft => {
-      let changed = false;
-      const values = Object.fromEntries(Object.entries(draft.values).map(([key, value]) => {
-        if (!/開發/.test(key) || !String(value || "").trim()) return [key, value];
-        const fullName = developerFullNameText(String(value), usablePeople);
-        if (fullName && fullName !== value) changed = true;
-        return [key, fullName || value];
-      }));
-      if (changed) anyChanged = true;
-      return changed ? { ...draft, values } : draft;
-    }); return anyChanged ? next : previous; });
-    // 不可在使用者輸入途中整理「開發業務」；未完成的注音或英文字母會被拆段並反覆加入頓號。
-    // 既有資料與草稿可在背景補齊姓名，但目前編輯框一律保留原始輸入。
-  }, [personnelNameSignature, developerNormalizationSignature, draftDeveloperSignature]);
-
   useEffect(() => {
     if (!editing) {
       editingInitialRef.current = "";
@@ -3025,7 +2995,7 @@ export default function Home() {
 
   return <main lang="zh-Hant-TW" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V438</small></h1></div>
+<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V439</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingIntakeReminderRecords.length > 0 && <button className="new-case-reminder-header-button" onClick={() => { setNewCaseReminder({ ...pendingIntakeReminderRecords[0] }); setNewCaseReminderBatchIds(pendingIntakeReminderRecords.map(record => record.id)); }}>新進案件提醒 {pendingIntakeReminderRecords.length}</button>}{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
