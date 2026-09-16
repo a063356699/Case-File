@@ -48193,7 +48193,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V432" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V433" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -51279,7 +51279,8 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     const city = addressParts2?.[1]?.replace(/臺/g, "\u53F0") || "";
     const district = addressParts2?.[2] || "";
     const area = city && city !== "\u53F0\u5357\u5E02" && district ? `${city.replace(/[縣市]$/, "")}${district.replace(/[區鄉鎮市]$/, "")}` : district || "\u672A\u586B\u5730\u5340";
-    const shortAddress = (addressParts2?.[3] || address).trim() || "\u672A\u586B\u5730\u5740";
+    const districtEnd = district ? address.indexOf(district) + district.length : -1;
+    const shortAddress = (districtEnd >= district.length ? address.slice(districtEnd) : addressParts2?.[3] || address).trim() || "\u672A\u586B\u5730\u5740";
     const caseName = intakeValue(draft.values, "\u6848\u540D").trim() || "\u672A\u547D\u540D\u6848\u4EF6";
     const developer = (developerFullNameText(intakeValue(draft.values, "\u958B\u767C\uFF11/\u958B\u767C\uFF12").trim()) || "\u672A\u586B\u958B\u767C").replace(/[、，,]/g, "");
     const fileNamePart = (text) => String(text).replace(/[－–—]/g, "-").replace(/[\\/:*?"<>|／：＊？＂＜＞｜＼]/g, "-").replace(/\u3000/g, " ");
