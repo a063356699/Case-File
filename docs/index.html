@@ -48193,7 +48193,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V431" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V432" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -51275,13 +51275,11 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
   var intakeFieldClass = (key) => `field${fullIntakeFields.has(key) ? " full-field" : key === "\u6848\u540D" ? " case-field" : key === "\u7269\u4EF6(\u5B8C\u6574)\u5730\u5740" ? " address-field" : quarterIntakeFields.has(key) ? " quarter-field" : thirdIntakeFields.has(key) ? " third-field" : houseDetailFields.has(key) ? " house-detail-field" : ""}`;
   var intakeDraftEditorTitle = (draft) => {
     const address = intakeValue(draft.values, "\u7269\u4EF6(\u5B8C\u6574)\u5730\u5740").trim();
-    const cityMatch = address.replace(/^臺灣省|^台灣省/, "").match(/^([^縣市]{1,8}[縣市])/);
-    const withoutCity = address.replace(/^(?:臺灣省|台灣省)?[^縣市]{1,8}[縣市]/, "");
-    const areaMatch = withoutCity.match(/^(.{1,8}區|.{1,8}[鄉鎮市])/);
-    const city = cityMatch?.[1]?.replace(/臺/g, "\u53F0") || "";
-    const district = areaMatch?.[1] || "";
+    const addressParts2 = address.match(/^(?:臺灣省|台灣省)?([^縣市]{1,8}[縣市])(.{1,8}?(?:區|鄉|鎮|市))(.*)$/);
+    const city = addressParts2?.[1]?.replace(/臺/g, "\u53F0") || "";
+    const district = addressParts2?.[2] || "";
     const area = city && city !== "\u53F0\u5357\u5E02" && district ? `${city.replace(/[縣市]$/, "")}${district.replace(/[區鄉鎮市]$/, "")}` : district || "\u672A\u586B\u5730\u5340";
-    const shortAddress = (areaMatch ? withoutCity.slice(area.length) : withoutCity).trim() || "\u672A\u586B\u5730\u5740";
+    const shortAddress = (addressParts2?.[3] || address).trim() || "\u672A\u586B\u5730\u5740";
     const caseName = intakeValue(draft.values, "\u6848\u540D").trim() || "\u672A\u547D\u540D\u6848\u4EF6";
     const developer = (developerFullNameText(intakeValue(draft.values, "\u958B\u767C\uFF11/\u958B\u767C\uFF12").trim()) || "\u672A\u586B\u958B\u767C").replace(/[、，,]/g, "");
     const fileNamePart = (text) => String(text).replace(/[－–—]/g, "-").replace(/[\\/:*?"<>|／：＊？＂＜＞｜＼]/g, "-").replace(/\u3000/g, " ");
