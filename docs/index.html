@@ -893,6 +893,7 @@ button:hover,.file-button:hover{border-color:#9fbad0;box-shadow:0 2px 8px #7895a
 .cover-detail-input{display:flex!important;align-items:center!important;gap:6px!important;margin-top:5px!important;color:#455b52!important}.cover-detail-input>b{font-size:11px!important;white-space:nowrap!important}.cover-detail-input>input{min-width:0!important;height:32px!important;padding:5px 8px!important}.cover-detail-input>i{font-style:normal!important;font-size:12px!important}.authorization-count-fields{display:grid!important;grid-template-columns:auto minmax(38px,1fr) auto auto minmax(38px,1fr) auto!important;align-items:center!important;gap:4px!important}.authorization-count-fields>b,.authorization-count-fields>i{font-size:11px!important;font-style:normal!important;white-space:nowrap!important}.authorization-count-fields>input{min-width:0!important;height:32px!important;padding:5px 6px!important;text-align:center!important}
 .record-edit-grid>.edit-developer,.record-edit-grid>.edit-managementMethod,.record-edit-grid>.edit-managementFee{grid-column:span 40!important}.record-edit-grid>.edit-road,.record-edit-grid>.edit-frontage,.record-edit-grid>.edit-depth,.record-edit-grid>.edit-zoning,.record-edit-grid>.edit-coverage,.record-edit-grid>.edit-photoInfo{grid-column:span 20!important}.record-edit-grid>.edit-parkingOwnership,.record-edit-grid>.edit-parkingType,.record-edit-grid>.edit-parkingMethod,.record-edit-grid>.edit-parkingNo{grid-column:span 30!important}.record-edit-grid>.edit-feature1,.record-edit-grid>.edit-feature2,.record-edit-grid>.edit-feature3,.record-edit-grid>.edit-feature4{grid-column:span 30!important;background:#eef6fb!important;border-color:#cfdfeb!important}.compared-ping-field>span small{font-size:12px!important}.record-edit-grid>.edit-coverBottomPrice{border-radius:10px 0 0 10px!important;margin-right:-12px!important;border-right:0!important}.record-edit-grid>.edit-coverBottomSource{border-radius:0 10px 10px 0!important}.record-edit-grid>.edit-coverBottomPercent{border-radius:10px 0 0 10px!important;margin-right:-12px!important;border-right:0!important}.record-edit-grid>.edit-coverPercentSource{border-radius:0 10px 10px 0!important}.record-edit-grid>.edit-coverChangeNo{grid-column:span 40!important}.record-edit-grid>.edit-coverChangeDate{grid-column:span 30!important}.record-edit-grid>.edit-coverNoChange{grid-column:span 20!important}.record-edit-grid>.edit-coverChangePurpose{grid-column:span 30!important;background:#eef3fa!important;border-color:#cbd7e6!important}.record-edit-grid>.edit-landTitleCount,.record-edit-grid>.edit-buildingTitleCount,.record-edit-grid>.edit-titleUndertaking,.record-edit-grid>.edit-zoningDocumentStatus,.record-edit-grid>.edit-authorizationStatus,.record-edit-grid>.edit-authorizationCopyType{grid-column:span 20!important}.record-edit-grid>.edit-zoningDocumentStatus .pill-options,.record-edit-grid>.edit-authorizationStatus .pill-options,.record-edit-grid>.edit-authorizationCopyType .pill-options{flex-wrap:nowrap!important;overflow-x:auto!important}.record-edit-grid>.edit-zoningDocumentStatus .pill-options button{min-width:max-content!important}
 .compared-ping-field>span>b{font:inherit;white-space:nowrap!important}
+.compared-ping-field.ping-mismatch{background:#fff0f0!important;border-color:#e05252!important;box-shadow:0 0 0 2px rgba(224,82,82,.12)!important}.compared-ping-field.ping-mismatch>span small{color:#c40000!important;font-weight:900!important}.compared-ping-field.ping-mismatch input{border-color:#dc4545!important;background:#fffafa!important}
 .record-edit-grid>.edit-developer{grid-column:span 24!important}.record-edit-grid>.edit-price{grid-column:span 48!important}.record-edit-grid>.edit-completionDate,.record-edit-grid>.edit-direction{grid-column:span 24!important}.record-edit-grid>.edit-buildingPing,.record-edit-grid>.edit-indoorPing,.record-edit-grid>.edit-landPing,.record-edit-grid>.edit-road,.record-edit-grid>.edit-frontage,.record-edit-grid>.edit-depth,.record-edit-grid>.edit-zoning,.record-edit-grid>.edit-coverage{grid-column:span 15!important}.record-edit-grid>.edit-titleFloor,.record-edit-grid>.edit-currentFloor,.record-edit-grid>.edit-layout,.record-edit-grid>.edit-managementMethod,.record-edit-grid>.edit-managementFee{grid-column:span 24!important}.record-edit-grid>.edit-photoInfo,.record-edit-grid>.edit-bookLocationType,.record-edit-grid>.edit-bookLocationReason,.record-edit-grid>.edit-salesBook{grid-column:span 30!important}.book-combined-row{grid-template-columns:minmax(0,.78fr) auto!important;gap:5px!important}.book-combined-row input{min-width:0!important}.book-combined-row .pill-options button{padding:8px 8px!important}.required-mark{color:#d9362b;font-size:12px;margin-left:4px}
 .record-edit-grid>.edit-salesBook .sales-combined-row{grid-template-columns:minmax(0,1fr) minmax(0,.72fr)!important;gap:5px!important}.record-edit-grid>.edit-salesBook .sales-book-options{gap:3px!important}.record-edit-grid>.edit-salesBook .sales-book-options button{min-width:0!important;padding:8px 5px!important;font-size:12px!important}
 .record-edit-grid>.book-row-no-reason{grid-column:span 40!important}
@@ -44419,6 +44420,22 @@ ${String(ex)}`);
       landSharePing: landShare || record.landSharePing || ""
     };
   };
+  var integerPing = (value) => {
+    const number = filterNumber(value);
+    return Number.isFinite(number) ? Math.trunc(number) : null;
+  };
+  var areaPasteDifferences = (raw, parsed, original) => {
+    const text = String(raw || "");
+    const rows = [
+      { label: "\u7E3D\u5EFA\u576A", present: /建物總面積\s*[\d,.]+\s*坪/.test(text), before: original.buildingPing, after: parsed.registryBuildingPing },
+      { label: "\u5BA4\u5167\u576A", present: /(?:主建物|附屬建物)\s*[\d,.]+\s*坪/.test(text), before: original.indoorPing, after: parsed.registryIndoorPing },
+      { label: "\u5730\u576A", present: /土地持分面積\s*[\d,.]+\s*坪/.test(text), before: original.landPing, after: parsed.landSharePing }
+    ];
+    return rows.flatMap((row) => {
+      const before = integerPing(row.before), after = integerPing(row.after);
+      return row.present && before !== null && after !== null && before !== after ? [{ ...row, before, after }] : [];
+    });
+  };
   var suppliedPersonnel = [
     { sequence: "1", name: "\u738B\u555F\u5C71", nationalId: "D120138769", phone: "0986-468-538" },
     { sequence: "2", name: "\u738B\u82E5\u82B8", nationalId: "D222966898", phone: "0973-681-209" },
@@ -48151,7 +48168,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V439" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V440" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -53936,8 +53953,16 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     ] });
     if (fieldKey === "areaPaste") return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "field area-paste-field", children: [
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: label }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("textarea", { rows: 8, value, onChange: (event) => setRecord(parseAreaPaste(event.target.value, record)), placeholder: "\u8CBC\u4E0A\u5EFA\u7269\u9762\u7A4D\u3001\u571F\u5730\u9762\u7A4D\u3001\u5EFA\u7BC9\u5B8C\u6210\u65E5\u8207\u4E3B\u8981\u5EFA\u6750\u6574\u4E32\u6587\u5B57\uFF0C\u7CFB\u7D71\u6703\u81EA\u52D5\u6293\u53D6\u4E0B\u65B9\u6578\u5B57\u3002" }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "\u5DF2\u6293\u53D6\u7684\u5167\u5BB9\u4ECD\u53EF\u5728\u4E0B\u65B9\u500B\u5225\u4FEE\u6539\u3002" })
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("textarea", { rows: 8, value, onPaste: (event) => {
+        const textarea = event.currentTarget;
+        window.setTimeout(() => {
+          const raw = textarea.value;
+          const differences = areaPasteDifferences(raw, parseAreaPaste(raw, record), record);
+          if (differences.length) alert(`\u623F\u7BA1\u9762\u7A4D\u8207\u539F\u672C\u8CC7\u6599\u4E0D\u540C\uFF08\u53EA\u6BD4\u8F03\u6574\u6578\uFF09\uFF1A
+${differences.map((item) => `${item.label}\uFF1A\u539F\u672C ${item.before} \u576A\uFF0F\u623F\u7BA1 ${item.after} \u576A`).join("\n")}`);
+        }, 0);
+      }, onChange: (event) => setRecord(parseAreaPaste(event.target.value, record)), placeholder: "\u8CBC\u4E0A\u5EFA\u7269\u9762\u7A4D\u3001\u571F\u5730\u9762\u7A4D\u3001\u5EFA\u7BC9\u5B8C\u6210\u65E5\u8207\u4E3B\u8981\u5EFA\u6750\u6574\u4E32\u6587\u5B57\uFF0C\u7CFB\u7D71\u6703\u81EA\u52D5\u6293\u53D6\u4E0B\u65B9\u6578\u5B57\u3002" }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "\u5DF2\u6293\u53D6\u7684\u5167\u5BB9\u4ECD\u53EF\u5728\u4E0B\u65B9\u500B\u5225\u4FEE\u6539\uFF1B\u9762\u7A4D\u53EA\u6BD4\u8F03\u6574\u6578\uFF0C\u4E0D\u6BD4\u8F03\u5C0F\u6578\u9EDE\u5F8C\u6578\u5B57\u3002" })
     ] });
     const pillChoices = {
       coverBottomSource: ["\u4E3B\u7D04", "\u5951\u8B8A", "\u53E3\u982D"],
@@ -54016,15 +54041,19 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     if (["buildingPing", "indoorPing", "landPing", "registryBuildingPing", "registryIndoorPing", "landSharePing"].includes(fieldKey)) {
       const parsed = record.areaPaste ? parseAreaPaste(record.areaPaste, record) : record;
       const compared = fieldKey === "buildingPing" ? parsed.registryBuildingPing : fieldKey === "indoorPing" ? parsed.registryIndoorPing : fieldKey === "landPing" ? parsed.landSharePing : fieldKey === "registryBuildingPing" ? record.buildingPing : fieldKey === "registryIndoorPing" ? record.indoorPing : record.landPing;
-      const prefix = ["registryBuildingPing", "registryIndoorPing", "landSharePing"].includes(fieldKey) ? "\u9032\u6848" : "\u623F\u7BA1";
-      return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "field compared-ping-field", children: [
+      const fromHouseManager = ["registryBuildingPing", "registryIndoorPing", "landSharePing"].includes(fieldKey);
+      const currentInteger = integerPing(value), comparedInteger = integerPing(compared);
+      const mismatch = Boolean(record.areaPaste && currentInteger !== null && comparedInteger !== null && currentInteger !== comparedInteger);
+      const prefix = fromHouseManager ? "\u539F\u672C" : "\u623F\u7BA1";
+      return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: `field compared-ping-field${mismatch ? " ping-mismatch" : ""}`, children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: label }),
-          compared && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { children: [
+          mismatch && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { children: [
+            "\u26A0 ",
             prefix,
             " ",
-            compared,
-            " \u576A"
+            comparedInteger,
+            " \u576A\u4E0D\u540C"
           ] })
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { inputMode: "decimal", value, onChange: (event) => set(event.target.value) })
