@@ -48168,7 +48168,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V440" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V441" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -54048,12 +54048,12 @@ ${differences.map((item) => `${item.label}\uFF1A\u539F\u672C ${item.before} \u57
       return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: `field compared-ping-field${mismatch ? " ping-mismatch" : ""}`, children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: label }),
-          mismatch && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { children: [
-            "\u26A0 ",
+          compared && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { children: [
             prefix,
             " ",
-            comparedInteger,
-            " \u576A\u4E0D\u540C"
+            compared,
+            " \u576A",
+            mismatch ? "\u3000\u26A0 \u6574\u6578\u4E0D\u540C" : ""
           ] })
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { inputMode: "decimal", value, onChange: (event) => set(event.target.value) })
