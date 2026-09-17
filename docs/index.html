@@ -43812,12 +43812,34 @@ ${String(ex)}`);
   async function createColorWorkbookMap(record) {
     const located = await locateColorWorkbookCase(record), width = 900, height = 680, lonSpan = 48e-4, latSpan = lonSpan * height / width;
     const bbox = [located.longitude - lonSpan / 2, located.latitude - latSpan / 2, located.longitude + lonSpan / 2, located.latitude + latSpan / 2].join(",");
-    const mapUrl = `https://wms.nlsc.gov.tw/wms?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&BBOX=${bbox}&SRS=EPSG:4326&WIDTH=${width}&HEIGHT=${height}&LAYERS=EMAP&STYLES=&FORMAT=image/png&DPI=96&MAP_RESOLUTION=96&FORMAT_OPTIONS=dpi:96&TRANSPARENT=FALSE`;
-    const mapResponse = await fetch(mapUrl);
-    if (!mapResponse.ok) throw new Error(`\u570B\u571F\u6E2C\u7E6A\u4E2D\u5FC3\u9053\u8DEF\u5E95\u5716\u8F09\u5165\u5931\u6557\uFF08${mapResponse.status}\uFF09\u3002`);
-    const contentType = mapResponse.headers.get("content-type") || "";
-    if (!contentType.toLowerCase().includes("image")) throw new Error("\u570B\u571F\u6E2C\u7E6A\u4E2D\u5FC3\u672A\u56DE\u50B3\u6709\u6548\u7684\u9053\u8DEF\u5E95\u5716\u3002");
-    const mapImage = await imageFromBytes(await mapResponse.arrayBuffer(), contentType), canvas = document.createElement("canvas");
+    const mapUrl = `https://wms.nlsc.gov.tw/wms?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&BBOX=${bbox}&SRS=EPSG:4326&WIDTH=${width}&HEIGHT=${height}&LAYERS=EMAP&STYLES=&FORMAT=image/png&TRANSPARENT=FALSE`;
+    let mapBytes = null, mapContentType = "image/png", lastMapError = "\u570B\u571F\u6E2C\u7E6A\u4E2D\u5FC3\u672A\u56DE\u50B3\u6709\u6548\u7684\u9053\u8DEF\u5E95\u5716";
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      try {
+        const mapResponse = await fetch(`${mapUrl}&_=${Date.now()}-${attempt}`, { cache: "no-store" });
+        if (!mapResponse.ok) {
+          lastMapError = `\u570B\u571F\u6E2C\u7E6A\u4E2D\u5FC3\u9053\u8DEF\u5E95\u5716\u8F09\u5165\u5931\u6557\uFF08${mapResponse.status}\uFF09`;
+          continue;
+        }
+        const contentType = mapResponse.headers.get("content-type") || "";
+        if (!contentType.toLowerCase().includes("image")) {
+          lastMapError = "\u570B\u571F\u6E2C\u7E6A\u4E2D\u5FC3\u672A\u56DE\u50B3\u5716\u7247\u683C\u5F0F\u7684\u9053\u8DEF\u5E95\u5716";
+          continue;
+        }
+        const bytes = await mapResponse.arrayBuffer();
+        if (bytes.byteLength < 1e4) {
+          lastMapError = "\u570B\u571F\u6E2C\u7E6A\u4E2D\u5FC3\u56DE\u50B3\u7A7A\u767D\u9053\u8DEF\u5E95\u5716";
+          continue;
+        }
+        mapBytes = bytes;
+        mapContentType = contentType;
+        break;
+      } catch (error) {
+        lastMapError = error instanceof Error ? error.message : "\u570B\u571F\u6E2C\u7E6A\u4E2D\u5FC3\u9053\u8DEF\u5E95\u5716\u8F09\u5165\u5931\u6557";
+      }
+    }
+    if (!mapBytes) throw new Error(`${lastMapError}\uFF0C\u81EA\u52D5\u91CD\u8A66\u5F8C\u4ECD\u7121\u6CD5\u53D6\u5F97\u5E95\u5716\u3002`);
+    const mapImage = await imageFromBytes(mapBytes, mapContentType), canvas = document.createElement("canvas");
     canvas.width = width;
     canvas.height = height;
     const context = canvas.getContext("2d");
@@ -48371,7 +48393,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V458" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V459" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
