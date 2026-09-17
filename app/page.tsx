@@ -64,14 +64,21 @@ const loadColorFolderHandle = async (key: string) => {
   db.close();
   return handle;
 };
-const filesFromColorFolder = async (root: RememberedDirectoryHandle) => {
+const filesFromColorFolder = async (root: RememberedDirectoryHandle, record: RecordItem, kind: "photo" | "layout") => {
   const files: File[] = [];
-  const visit = async (folder: RememberedDirectoryHandle, prefix: string) => {
+  const compactPath = (value: unknown) => String(value || "").normalize("NFKC").toLowerCase().replace(/[\s　_－—–\-｜|·・,，、。.．\/\\()（）\[\]【】]/g, "");
+  const needles = [record.caseName, record.address].map(compactPath).filter(Boolean);
+  const matches = (path: string) => needles.some(needle => compactPath(path).includes(needle));
+  const visit = async (folder: RememberedDirectoryHandle, prefix: string, matchedParent = false) => {
     for await (const entry of folder.values()) {
-      if (entry.kind === "directory") await visit(entry as RememberedDirectoryHandle, `${prefix}${entry.name}/`);
-      else if (/\.(?:jpe?g|png)$/i.test(entry.name)) {
+      const relativePath = `${prefix}${entry.name}`;
+      const matched = matchedParent || matches(relativePath);
+      if (entry.kind === "directory") {
+        // 照片庫很大，只進入案名或完整地址相符的案件資料夾。
+        if (matched) await visit(entry as RememberedDirectoryHandle, `${relativePath}/`, true);
+      } else if (matched && /\.(?:jpe?g|png)$/i.test(entry.name) && (kind === "layout" || /^1\.(?:jpe?g|png)$/i.test(entry.name))) {
         const file = await (entry as RememberedFileHandle).getFile();
-        Object.defineProperty(file, "webkitRelativePath", { configurable: true, value: `${root.name}/${prefix}${file.name}` });
+        Object.defineProperty(file, "webkitRelativePath", { configurable: true, value: `${root.name}/${relativePath}` });
         files.push(file);
       }
     }
@@ -1032,12 +1039,12 @@ export default function Home() {
   const [colorLayoutFolderStatus, setColorLayoutFolderStatus] = useState("尚未選擇格局圖資料夾");
   const colorPhotoFolderRef = useRef<RememberedDirectoryHandle>();
   const colorLayoutFolderRef = useRef<RememberedDirectoryHandle>();
-  const readRememberedColorFolder = async (handle: RememberedDirectoryHandle, setFiles: Dispatch<SetStateAction<File[]>>, setStatus: Dispatch<SetStateAction<string>>) => {
-    setStatus(`正在讀取 ${handle.name}…`);
-    try { const files = await filesFromColorFolder(handle); setFiles(files); setStatus(`已自動讀取 ${handle.name}（${files.length} 張圖片）`); }
+  const readRememberedColorFolder = async (handle: RememberedDirectoryHandle, record: RecordItem, kind: "photo" | "layout", setFiles: Dispatch<SetStateAction<File[]>>, setStatus: Dispatch<SetStateAction<string>>) => {
+    setStatus(`正在比對 ${handle.name}…`);
+    try { const files = await filesFromColorFolder(handle, record, kind); setFiles(files); setStatus(`已完成 ${handle.name}（找到 ${files.length} 張對應圖片）`); }
     catch (error) { console.error(error); setFiles([]); setStatus(`無法讀取 ${handle.name}，請重新授權或選擇資料夾`); }
   };
-  const chooseRememberedColorFolder = async (key: string, handleRef: { current: RememberedDirectoryHandle | undefined }, setFiles: Dispatch<SetStateAction<File[]>>, setStatus: Dispatch<SetStateAction<string>>) => {
+  const chooseRememberedColorFolder = async (key: "photo" | "layout", record: RecordItem, handleRef: { current: RememberedDirectoryHandle | undefined }, setFiles: Dispatch<SetStateAction<File[]>>, setStatus: Dispatch<SetStateAction<string>>) => {
     try {
       let handle = handleRef.current || await loadColorFolderHandle(key);
       if (handle && await handle.requestPermission({ mode: "read" }) !== "granted") handle = undefined;
@@ -1048,7 +1055,7 @@ export default function Home() {
       }
       handleRef.current = handle;
       await saveColorFolderHandle(key, handle);
-      await readRememberedColorFolder(handle, setFiles, setStatus);
+      await readRememberedColorFolder(handle, record, key, setFiles, setStatus);
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") return;
       console.error(error); setStatus("資料夾授權失效，請重新選擇");
@@ -1060,13 +1067,23 @@ export default function Home() {
         const handle = await loadColorFolderHandle(key);
         if (!handle) return;
         handleRef.current = handle;
-        if (await handle.queryPermission({ mode: "read" }) === "granted") await readRememberedColorFolder(handle, setFiles, setStatus);
+        if (await handle.queryPermission({ mode: "read" }) === "granted") setStatus(`已記住 ${handle.name}，開啟彩色表時自動比對`);
         else setStatus(`已記住 ${handle.name}，Edge 需要重新授權`);
       } catch (error) { console.error(error); }
     };
     void restore("photo", colorPhotoFolderRef, setColorPhotoFiles, setColorPhotoFolderStatus);
     void restore("layout", colorLayoutFolderRef, setColorLayoutFiles, setColorLayoutFolderStatus);
   }, []);
+  useEffect(() => {
+    if (!printEditor) return;
+    const matchSavedFolder = async (kind: "photo" | "layout", handle: RememberedDirectoryHandle | undefined, setFiles: Dispatch<SetStateAction<File[]>>, setStatus: Dispatch<SetStateAction<string>>) => {
+      if (!handle) return;
+      if (await handle.queryPermission({ mode: "read" }) !== "granted") return setStatus(`已記住 ${handle.name}，Edge 需要重新授權`);
+      await readRememberedColorFolder(handle, printEditor.data, kind, setFiles, setStatus);
+    };
+    void matchSavedFolder("photo", colorPhotoFolderRef.current, setColorPhotoFiles, setColorPhotoFolderStatus);
+    void matchSavedFolder("layout", colorLayoutFolderRef.current, setColorLayoutFiles, setColorLayoutFolderStatus);
+  }, [printEditor?.data.id, printEditor?.data.caseName, printEditor?.data.address]);
   useEffect(() => {
     const coordinateField = document.querySelector<HTMLElement>(".print-editor-locationMapInput");
     const coordinateInput = coordinateField?.querySelector<HTMLInputElement>("input");
@@ -3111,7 +3128,7 @@ export default function Home() {
 
   return <main lang="zh-Hant-TW" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V446</small></h1></div>
+<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V447</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingIntakeReminderRecords.length > 0 && <button className="new-case-reminder-header-button" onClick={() => { setNewCaseReminder({ ...pendingIntakeReminderRecords[0] }); setNewCaseReminderBatchIds(pendingIntakeReminderRecords.map(record => record.id)); }}>新進案件提醒 {pendingIntakeReminderRecords.length}</button>}{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -3185,7 +3202,7 @@ export default function Home() {
           <label className="field print-editor-notes"><span>重點說明與備註</span><textarea rows={5} value={printEditor.data.attentionNotes || ""} onChange={event => { const attention = colorSheetAttention(event.target.value, printEditor.data.additionNotes || ""); setPrintEditor({ ...printEditor, data: { ...printEditor.data, notes: attention, attentionNotes: attention } }); }}/></label>
           <label className="field print-editor-issue"><span>彩色表缺件／原因紀錄</span><textarea rows={4} value={printEditor.data.colorSheetIssue || ""} onChange={event => setPrintEditor({ ...printEditor, data: { ...printEditor.data, colorSheetIssue: event.target.value } })} placeholder="例如：缺房管坪數、照片尚未收到，暫時無法製作。"/></label>
         </div></section>
-        <ColorWorkbookAssetPicker record={printEditor.data} photoPath={colorPhotoPath} setPhotoPath={setColorPhotoPath} layoutPath={colorLayoutPath} setLayoutPath={setColorLayoutPath} photoFiles={colorPhotoFiles} layoutFiles={colorLayoutFiles} photoFolderStatus={colorPhotoFolderStatus} layoutFolderStatus={colorLayoutFolderStatus} choosePhotoFolder={() => chooseRememberedColorFolder("photo", colorPhotoFolderRef, setColorPhotoFiles, setColorPhotoFolderStatus)} chooseLayoutFolder={() => chooseRememberedColorFolder("layout", colorLayoutFolderRef, setColorLayoutFiles, setColorLayoutFolderStatus)}/>
+        <ColorWorkbookAssetPicker record={printEditor.data} photoPath={colorPhotoPath} setPhotoPath={setColorPhotoPath} layoutPath={colorLayoutPath} setLayoutPath={setColorLayoutPath} photoFiles={colorPhotoFiles} layoutFiles={colorLayoutFiles} photoFolderStatus={colorPhotoFolderStatus} layoutFolderStatus={colorLayoutFolderStatus} choosePhotoFolder={() => chooseRememberedColorFolder("photo", printEditor.data, colorPhotoFolderRef, setColorPhotoFiles, setColorPhotoFolderStatus)} chooseLayoutFolder={() => chooseRememberedColorFolder("layout", printEditor.data, colorLayoutFolderRef, setColorLayoutFiles, setColorLayoutFolderStatus)}/>
       </div>
       <div className="modal-foot print-editor-foot"><span className="print-editor-warning">重點說明與備註、位置圖定位只套用本次下載；缺件紀錄可另外儲存到案件。</span><button type="button" onClick={() => setPrintEditor(null)}>取消</button><button type="button" onClick={() => saveColorSheetIssue(printEditor.data)}>儲存缺件紀錄</button><button className="primary" type="button" disabled={colorWorkbookDownloading} onClick={async () => {
         const photoMatches = colorWorkbookPhotoMatches(colorPhotoFiles, printEditor.data);
