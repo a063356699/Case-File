@@ -44134,6 +44134,47 @@ ${String(ex)}`);
   var COLOR_LAYOUT_PATH_KEY = "property-desk-color-layout-path-v1";
   var DEFAULT_COLOR_PHOTO_PATH = "\\\\Nas\\\u7269\u4EF6\u7167\u7247-\u539F\u6A94";
   var DEFAULT_COLOR_LAYOUT_PATH = "\\\\nas\\\u2605\u2606\u52A9\u7406\u96FB\u8166\u2606\u2605\\\u756B\u683C\u5C40\u5716\u53EF\u7528\u5C0F\u5716\\\u7269\u4EF6\u683C\u5C40\u5716AI";
+  var COLOR_FOLDER_DB = "property-desk-color-folders-v1";
+  var colorFolderStore = () => new Promise((resolve, reject) => {
+    const request = indexedDB.open(COLOR_FOLDER_DB, 1);
+    request.onupgradeneeded = () => request.result.createObjectStore("folders");
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+  var saveColorFolderHandle = async (key, handle) => {
+    const db = await colorFolderStore();
+    await new Promise((resolve, reject) => {
+      const request = db.transaction("folders", "readwrite").objectStore("folders").put(handle, key);
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
+    db.close();
+  };
+  var loadColorFolderHandle = async (key) => {
+    const db = await colorFolderStore();
+    const handle = await new Promise((resolve, reject) => {
+      const request = db.transaction("folders").objectStore("folders").get(key);
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    db.close();
+    return handle;
+  };
+  var filesFromColorFolder = async (root) => {
+    const files = [];
+    const visit = async (folder, prefix) => {
+      for await (const entry of folder.values()) {
+        if (entry.kind === "directory") await visit(entry, `${prefix}${entry.name}/`);
+        else if (/\.(?:jpe?g|png)$/i.test(entry.name)) {
+          const file = await entry.getFile();
+          Object.defineProperty(file, "webkitRelativePath", { configurable: true, value: `${root.name}/${prefix}${file.name}` });
+          files.push(file);
+        }
+      }
+    };
+    await visit(root, "");
+    return files;
+  };
   var CASE_FILE_SUPABASE_URL = "https://oiywtmjbasoonfuxemtr.supabase.co";
   var CASE_FILE_SUPABASE_TABLE = "case_file_state";
   var newCaseReminderCompletionKeys = ["housingListingCompleted", "newBookCompleted", "wangReviewCompleted"];
@@ -45591,6 +45632,55 @@ ${String(ex)}`);
     const [colorLayoutPath, setColorLayoutPath] = (0, import_react.useState)(() => typeof window === "undefined" ? DEFAULT_COLOR_LAYOUT_PATH : localStorage.getItem(COLOR_LAYOUT_PATH_KEY) || DEFAULT_COLOR_LAYOUT_PATH);
     const [colorPhotoFiles, setColorPhotoFiles] = (0, import_react.useState)([]);
     const [colorLayoutFiles, setColorLayoutFiles] = (0, import_react.useState)([]);
+    const [colorPhotoFolderStatus, setColorPhotoFolderStatus] = (0, import_react.useState)("\u5C1A\u672A\u9078\u64C7\u7167\u7247\u8CC7\u6599\u593E");
+    const [colorLayoutFolderStatus, setColorLayoutFolderStatus] = (0, import_react.useState)("\u5C1A\u672A\u9078\u64C7\u683C\u5C40\u5716\u8CC7\u6599\u593E");
+    const colorPhotoFolderRef = (0, import_react.useRef)();
+    const colorLayoutFolderRef = (0, import_react.useRef)();
+    const readRememberedColorFolder = async (handle, setFiles, setStatus) => {
+      setStatus(`\u6B63\u5728\u8B80\u53D6 ${handle.name}\u2026`);
+      try {
+        const files = await filesFromColorFolder(handle);
+        setFiles(files);
+        setStatus(`\u5DF2\u81EA\u52D5\u8B80\u53D6 ${handle.name}\uFF08${files.length} \u5F35\u5716\u7247\uFF09`);
+      } catch (error) {
+        console.error(error);
+        setFiles([]);
+        setStatus(`\u7121\u6CD5\u8B80\u53D6 ${handle.name}\uFF0C\u8ACB\u91CD\u65B0\u6388\u6B0A\u6216\u9078\u64C7\u8CC7\u6599\u593E`);
+      }
+    };
+    const chooseRememberedColorFolder = async (key, handleRef, setFiles, setStatus) => {
+      try {
+        let handle = handleRef.current || await loadColorFolderHandle(key);
+        if (handle && await handle.requestPermission({ mode: "read" }) !== "granted") handle = void 0;
+        if (!handle) {
+          const picker = window.showDirectoryPicker;
+          if (!picker) return alert("\u6B64\u7248\u672C\u7684\u700F\u89BD\u5668\u4E0D\u652F\u63F4\u8A18\u4F4F\u8CC7\u6599\u593E\uFF0C\u8ACB\u4F7F\u7528\u6700\u65B0\u7248 Edge\u3002 ");
+          handle = await picker({ mode: "read" });
+        }
+        handleRef.current = handle;
+        await saveColorFolderHandle(key, handle);
+        await readRememberedColorFolder(handle, setFiles, setStatus);
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+        console.error(error);
+        setStatus("\u8CC7\u6599\u593E\u6388\u6B0A\u5931\u6548\uFF0C\u8ACB\u91CD\u65B0\u9078\u64C7");
+      }
+    };
+    (0, import_react.useEffect)(() => {
+      const restore = async (key, handleRef, setFiles, setStatus) => {
+        try {
+          const handle = await loadColorFolderHandle(key);
+          if (!handle) return;
+          handleRef.current = handle;
+          if (await handle.queryPermission({ mode: "read" }) === "granted") await readRememberedColorFolder(handle, setFiles, setStatus);
+          else setStatus(`\u5DF2\u8A18\u4F4F ${handle.name}\uFF0CEdge \u9700\u8981\u91CD\u65B0\u6388\u6B0A`);
+        } catch (error) {
+          console.error(error);
+        }
+      };
+      void restore("photo", colorPhotoFolderRef, setColorPhotoFiles, setColorPhotoFolderStatus);
+      void restore("layout", colorLayoutFolderRef, setColorLayoutFiles, setColorLayoutFolderStatus);
+    }, []);
     (0, import_react.useEffect)(() => {
       const coordinateField = document.querySelector(".print-editor-locationMapInput");
       const coordinateInput = coordinateField?.querySelector("input");
@@ -45598,7 +45688,7 @@ ${String(ex)}`);
       const coordinateHelp = coordinateField?.querySelector("small");
       if (coordinateLabel) coordinateLabel.textContent = "\u4F4D\u7F6E\u5EA7\u6A19\uFF08\u5FC5\u586B\uFF09";
       if (coordinateInput) coordinateInput.placeholder = "\u4F8B\u5982\uFF1A22.97354854089914, 120.2238506558218";
-      if (coordinateHelp) coordinateHelp.textContent = "\u8ACB\u8CBC\u4E0A\u300C\u7DEF\u5EA6, \u7D93\u5EA6\u300D\uFF1B\u6C92\u6709\u6B63\u78BA\u5EA7\u6A19\u4E0D\u80FD\u4E0B\u8F09 Excel\u3002\u6B64\u6B04\u53EA\u5957\u7528\u672C\u6B21\u4E0B\u8F09\u3002";
+      if (coordinateHelp) coordinateHelp.textContent = "\u8ACB\u8CBC\u4E0A\u300C\u7DEF\u5EA6, \u7D93\u5EA6\u300D\uFF1B\u6C92\u6709\u6B63\u78BA\u5EA7\u6A19\u4E0D\u80FD\u4E0B\u8F09 Excel\u3002\u5EA7\u6A19\u6703\u4FDD\u5B58\u5728\u6B64\u6848\u4EF6\uFF0C\u4E0B\u6B21\u958B\u555F\u4ECD\u6703\u986F\u793A\u3002";
       const requireValidCoordinatesBeforeDownload = (event) => {
         const target = event.target instanceof Element ? event.target.closest(".print-editor-foot button.primary") : null;
         if (!target || !printEditor) return;
@@ -46852,6 +46942,15 @@ ${changedLabels}
       setRecords((previous) => previous.map((record) => record.id === next.id ? next : record));
       setEditing((previous) => previous?.id === next.id ? { ...previous, colorSheetIssue: next.colorSheetIssue } : previous);
       flash(colorSheetIssue ? "\u5DF2\u5132\u5B58\u5F69\u8272\u8868\u7F3A\u4EF6\u7D00\u9304" : "\u5DF2\u6E05\u9664\u5F69\u8272\u8868\u7F3A\u4EF6\u7D00\u9304");
+    };
+    const saveColorWorkbookLocation = (data) => {
+      const existing = records.find((record) => record.id === data.id);
+      if (!existing) return;
+      const locationMapInput = String(data.locationMapInput || "").trim();
+      if (String(existing.locationMapInput || "").trim() === locationMapInput) return;
+      const savedAt = (/* @__PURE__ */ new Date()).toISOString();
+      setRecords((previous) => previous.map((record) => record.id === data.id ? { ...record, locationMapInput, lastModifiedAt: savedAt } : record));
+      setEditing((previous) => previous?.id === data.id ? { ...previous, locationMapInput, lastModifiedAt: savedAt } : previous);
     };
     const archiveRecord = (r, status = "\u4E0B\u67B6\u6D3D\u958B\u767C", archiveDate = today(), salesPerson = r.salesPerson || "", reason = r.archiveReason || "") => {
       const cleanupKeys = ["housingDownDate", "bookDownDate", "salesBookDownDate", ...archiveWebsiteTasks.map(([field]) => `${field}DownDate`), ...dealCompletionTasks.map(([key]) => key)];
@@ -48253,7 +48352,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V443" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V446" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -48946,8 +49045,8 @@ ${changedLabels}
             ] }, key)),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "field print-editor-locationMapInput", children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: typeShort(printEditor.data.type) === "\u571F\u5730" || /^(?:LG|LA)/i.test(printEditor.data.propertyNo || "") ? "\u571F\u5730\u4F4D\u7F6E\u5EA7\u6A19\uFF08\u9078\u586B\uFF09" : "\u4F4D\u7F6E\u5716\u5B9A\u4F4D\uFF08\u9078\u586B\uFF09" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: printEditor.data.locationMapInput || "", onChange: (event) => setPrintEditor({ ...printEditor, data: { ...printEditor.data, locationMapInput: event.target.value } }), placeholder: typeShort(printEditor.data.type) === "\u571F\u5730" || /^(?:LG|LA)/i.test(printEditor.data.propertyNo || "") ? "\u4F8B\u5982\uFF1A22.97354854089914, 120.2238506558218" : "\u53EF\u8CBC\u5B8C\u6574\u5730\u5740\uFF0C\u6216 22.97354854089914, 120.2238506558218" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: typeShort(printEditor.data.type) === "\u571F\u5730" || /^(?:LG|LA)/i.test(printEditor.data.propertyNo || "") ? "\u8ACB\u8CBC\u4E0A\u7DEF\u5EA6, \u7D93\u5EA6\uFF1B\u591A\u7B46\u5730\u865F\u64C7\u4E00\u7B46\u5373\u53EF\u3002\u6B64\u6B04\u53EA\u5957\u7528\u672C\u6B21\u4E0B\u8F09\u3002" : "\u7559\u767D\u6703\u4F7F\u7528\u4E0A\u65B9\u5730\u5740\uFF1B\u7D93\u7DEF\u5EA6\u6700\u6E96\u78BA\u3002\u6B64\u6B04\u53EA\u5957\u7528\u672C\u6B21\u4E0B\u8F09\uFF0C\u4E0D\u6703\u4FEE\u6539\u6848\u4EF6\u5730\u5740\u3002" })
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: printEditor.data.locationMapInput || "", onChange: (event) => setPrintEditor({ ...printEditor, data: { ...printEditor.data, locationMapInput: event.target.value } }), onBlur: () => saveColorWorkbookLocation(printEditor.data), placeholder: typeShort(printEditor.data.type) === "\u571F\u5730" || /^(?:LG|LA)/i.test(printEditor.data.propertyNo || "") ? "\u4F8B\u5982\uFF1A22.97354854089914, 120.2238506558218" : "\u53EF\u8CBC\u5B8C\u6574\u5730\u5740\uFF0C\u6216 22.97354854089914, 120.2238506558218" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "\u5EA7\u6A19\u6703\u4FDD\u5B58\u5728\u6B64\u6848\u4EF6\uFF0C\u4E0B\u6B21\u958B\u555F\u4ECD\u6703\u986F\u793A\u3002" })
             ] }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "field print-editor-notes", children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u91CD\u9EDE\u8AAA\u660E\u8207\u5099\u8A3B" }),
@@ -48961,7 +49060,7 @@ ${changedLabels}
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("textarea", { rows: 4, value: printEditor.data.colorSheetIssue || "", onChange: (event) => setPrintEditor({ ...printEditor, data: { ...printEditor.data, colorSheetIssue: event.target.value } }), placeholder: "\u4F8B\u5982\uFF1A\u7F3A\u623F\u7BA1\u576A\u6578\u3001\u7167\u7247\u5C1A\u672A\u6536\u5230\uFF0C\u66AB\u6642\u7121\u6CD5\u88FD\u4F5C\u3002" })
             ] })
           ] }) }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ColorWorkbookAssetPicker, { record: printEditor.data, photoPath: colorPhotoPath, setPhotoPath: setColorPhotoPath, layoutPath: colorLayoutPath, setLayoutPath: setColorLayoutPath, photoFiles: colorPhotoFiles, setPhotoFiles: setColorPhotoFiles, layoutFiles: colorLayoutFiles, setLayoutFiles: setColorLayoutFiles })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ColorWorkbookAssetPicker, { record: printEditor.data, photoPath: colorPhotoPath, setPhotoPath: setColorPhotoPath, layoutPath: colorLayoutPath, setLayoutPath: setColorLayoutPath, photoFiles: colorPhotoFiles, layoutFiles: colorLayoutFiles, photoFolderStatus: colorPhotoFolderStatus, layoutFolderStatus: colorLayoutFolderStatus, choosePhotoFolder: () => chooseRememberedColorFolder("photo", colorPhotoFolderRef, setColorPhotoFiles, setColorPhotoFolderStatus), chooseLayoutFolder: () => chooseRememberedColorFolder("layout", colorLayoutFolderRef, setColorLayoutFiles, setColorLayoutFolderStatus) })
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal-foot print-editor-foot", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "print-editor-warning", children: "\u91CD\u9EDE\u8AAA\u660E\u8207\u5099\u8A3B\u3001\u4F4D\u7F6E\u5716\u5B9A\u4F4D\u53EA\u5957\u7528\u672C\u6B21\u4E0B\u8F09\uFF1B\u7F3A\u4EF6\u7D00\u9304\u53EF\u53E6\u5916\u5132\u5B58\u5230\u6848\u4EF6\u3002" }),
@@ -48983,6 +49082,7 @@ ${conflicts.join("\n")}
 
 \u662F\u5426\u78BA\u8A8D\u4E26\u4E0B\u8F09\u5F69\u8272\u8868 Excel\uFF1F`;
             if (!window.confirm(taxMessage)) return;
+            saveColorWorkbookLocation(printEditor.data);
             setColorWorkbookDownloading(true);
             flash("\u6B63\u5728\u5EFA\u7ACB\u5F69\u8272\u8868 Excel\u2026");
             try {
@@ -49896,7 +49996,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
   };
   var keySummaryLeft = [1, 2, 3, 5, 6, 7, 8, 17, 18, 19, 20, 21, 22, 23, 24, 33, 34, 35, 36, 37, 38, 39];
   var keySummaryRight = [49, 50, 51, 52, 53, 55, 56, 65, 66, 67, 68, 69, 70, 71, 72, 81, 82, 83, 85, 86, 87, 88];
-  function ColorWorkbookAssetPicker({ record, photoPath, setPhotoPath, layoutPath, setLayoutPath, photoFiles, setPhotoFiles, layoutFiles, setLayoutFiles }) {
+  function ColorWorkbookAssetPicker({ record, photoPath, setPhotoPath, layoutPath, setLayoutPath, photoFiles, layoutFiles, photoFolderStatus, layoutFolderStatus, choosePhotoFolder, chooseLayoutFolder }) {
     const photoMatches = colorWorkbookPhotoMatches(photoFiles, record);
     const layoutMatches = colorWorkbookLayoutMatches(layoutFiles, record);
     const fileLabel = (file) => String(file.webkitRelativePath || file.name);
@@ -49916,27 +50016,27 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
         matches.slice(0, 5).map((file) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: fileLabel(file) }, fileLabel(file)))
       ] });
     };
-    const chooseFolder = (event, setter) => setter(Array.from(event.target.files || []));
     const updatePath = (key, value, setter) => {
       setter(value);
       localStorage.setItem(key, value);
     };
-    const directoryProps = { webkitdirectory: "", directory: "" };
     return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", { className: "print-editor-section color-workbook-assets", children: [
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { children: "Excel \u5716\u7247\u4F86\u6E90" }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "\u5148\u9078\u64C7\u5C0D\u61C9\u8CC7\u6599\u593E\u3002\u53EA\u6703\u7528\u5B8C\u6574\u6848\u540D\u6216\u5B8C\u6574\u5730\u5740\u6BD4\u5C0D\uFF1B\u885D\u7A81\u3001\u627E\u4E0D\u5230\u6216\u6C92\u6709\u5716\u7247\u6642\u4FDD\u6301\u7A7A\u767D\u3002" }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "\u7B2C\u4E00\u6B21\u9078\u64C7\u5F8C\u6703\u8A18\u4F4F\u8CC7\u6599\u593E\u4E26\u81EA\u52D5\u8B80\u53D6\uFF1B\u53EA\u6709 Edge \u53D6\u6D88\u6388\u6B0A\u6642\u624D\u9700\u91CD\u65B0\u6388\u6B0A\u3002\u53EA\u6703\u7528\u5B8C\u6574\u6848\u540D\u6216\u5B8C\u6574\u5730\u5740\u6BD4\u5C0D\u3002" }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "color-asset-grid", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "field", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "field", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u53F3\u908A\u7B2C\u4E00\u5F35\uFF1A\u7269\u4EF6\u7167\u7247 1" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: photoPath, onChange: (event) => updatePath(COLOR_PHOTO_PATH_KEY, event.target.value, setPhotoPath) }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { className: "folder-picker", type: "file", accept: ".jpg,.jpeg,.png,image/jpeg,image/png", multiple: true, ...directoryProps, onChange: (event) => chooseFolder(event, setPhotoFiles) }),
-          status(photoFiles, photoMatches, "\u5C1A\u672A\u9078\u64C7\u7167\u7247\u8CC7\u6599\u593E")
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "folder-picker", type: "button", onClick: choosePhotoFolder, children: "\u9078\u64C7\uFF0F\u91CD\u65B0\u6388\u6B0A\u7167\u7247\u8CC7\u6599\u593E" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: photoFolderStatus }),
+          status(photoFiles, photoMatches, "\u5C1A\u672A\u8B80\u53D6\u7167\u7247\u8CC7\u6599\u593E")
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "field", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "field", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u53F3\u908A\u7B2C\u4E8C\u5F35\uFF1A\u683C\u5C40\u5716" }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", value: layoutPath, onChange: (event) => updatePath(COLOR_LAYOUT_PATH_KEY, event.target.value, setLayoutPath) }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { className: "folder-picker", type: "file", accept: ".jpg,.jpeg,.png,image/jpeg,image/png", multiple: true, ...directoryProps, onChange: (event) => chooseFolder(event, setLayoutFiles) }),
-          status(layoutFiles, layoutMatches, "\u5C1A\u672A\u9078\u64C7\u683C\u5C40\u5716\u8CC7\u6599\u593E")
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "folder-picker", type: "button", onClick: chooseLayoutFolder, children: "\u9078\u64C7\uFF0F\u91CD\u65B0\u6388\u6B0A\u683C\u5C40\u5716\u8CC7\u6599\u593E" }),
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: layoutFolderStatus }),
+          status(layoutFiles, layoutMatches, "\u5C1A\u672A\u8B80\u53D6\u683C\u5C40\u5716\u8CC7\u6599\u593E")
         ] })
       ] })
     ] });
@@ -51047,10 +51147,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     const blob = await zip.generateAsync({ type: "blob", mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    const filenameArea = String(record.area || areaCategory(record) || "").trim();
-    const filenameAddress = String(record.address || "").replace(/^(?:台|臺)?[^市縣]+[市縣]/, "").replace(/^[^市縣區鄉鎮]+(?:區|鄉|鎮|市)/, "").trim();
-    const filenameParts = [filenameArea, record.caseName, filenameAddress, developerFullNameText(record.developer)].map((value) => String(value || "").trim()).filter(Boolean);
-    link.download = `${(filenameParts.join("-") || record.propertyNo || "\u7269\u4EF6").replace(/[\\/:*?"<>|]/g, "-")}.xlsx`;
+    link.download = `${intakeDraftEditorTitle(recordToIntake(record))}.xlsx`;
     document.body.appendChild(link);
     link.click();
     link.remove();
