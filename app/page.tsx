@@ -38,6 +38,47 @@ const COLOR_PHOTO_PATH_KEY = "property-desk-color-photo-path-v1";
 const COLOR_LAYOUT_PATH_KEY = "property-desk-color-layout-path-v1";
 const DEFAULT_COLOR_PHOTO_PATH = "\\\\Nas\\物件照片-原檔";
 const DEFAULT_COLOR_LAYOUT_PATH = "\\\\nas\\★☆助理電腦☆★\\畫格局圖可用小圖\\物件格局圖AI";
+const COLOR_FOLDER_DB = "property-desk-color-folders-v1";
+type RememberedDirectoryHandle = {
+  kind: "directory";
+  name: string;
+  values: () => AsyncIterableIterator<RememberedDirectoryHandle | RememberedFileHandle>;
+  queryPermission: (options: { mode: "read" }) => Promise<PermissionState>;
+  requestPermission: (options: { mode: "read" }) => Promise<PermissionState>;
+};
+type RememberedFileHandle = { kind: "file"; name: string; getFile: () => Promise<File> };
+const colorFolderStore = () => new Promise<IDBDatabase>((resolve, reject) => {
+  const request = indexedDB.open(COLOR_FOLDER_DB, 1);
+  request.onupgradeneeded = () => request.result.createObjectStore("folders");
+  request.onsuccess = () => resolve(request.result);
+  request.onerror = () => reject(request.error);
+});
+const saveColorFolderHandle = async (key: string, handle: RememberedDirectoryHandle) => {
+  const db = await colorFolderStore();
+  await new Promise<void>((resolve, reject) => { const request = db.transaction("folders", "readwrite").objectStore("folders").put(handle, key); request.onsuccess = () => resolve(); request.onerror = () => reject(request.error); });
+  db.close();
+};
+const loadColorFolderHandle = async (key: string) => {
+  const db = await colorFolderStore();
+  const handle = await new Promise<RememberedDirectoryHandle | undefined>((resolve, reject) => { const request = db.transaction("folders").objectStore("folders").get(key); request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error); });
+  db.close();
+  return handle;
+};
+const filesFromColorFolder = async (root: RememberedDirectoryHandle) => {
+  const files: File[] = [];
+  const visit = async (folder: RememberedDirectoryHandle, prefix: string) => {
+    for await (const entry of folder.values()) {
+      if (entry.kind === "directory") await visit(entry as RememberedDirectoryHandle, `${prefix}${entry.name}/`);
+      else if (/\.(?:jpe?g|png)$/i.test(entry.name)) {
+        const file = await (entry as RememberedFileHandle).getFile();
+        Object.defineProperty(file, "webkitRelativePath", { configurable: true, value: `${root.name}/${prefix}${file.name}` });
+        files.push(file);
+      }
+    }
+  };
+  await visit(root, "");
+  return files;
+};
 const CASE_FILE_SUPABASE_URL = "https://oiywtmjbasoonfuxemtr.supabase.co";
 const CASE_FILE_SUPABASE_TABLE = "case_file_state";
 const newCaseReminderCompletionKeys = ["housingListingCompleted", "newBookCompleted", "wangReviewCompleted"] as const;
@@ -987,6 +1028,45 @@ export default function Home() {
   const [colorLayoutPath, setColorLayoutPath] = useState(() => typeof window === "undefined" ? DEFAULT_COLOR_LAYOUT_PATH : localStorage.getItem(COLOR_LAYOUT_PATH_KEY) || DEFAULT_COLOR_LAYOUT_PATH);
   const [colorPhotoFiles, setColorPhotoFiles] = useState<File[]>([]);
   const [colorLayoutFiles, setColorLayoutFiles] = useState<File[]>([]);
+  const [colorPhotoFolderStatus, setColorPhotoFolderStatus] = useState("尚未選擇照片資料夾");
+  const [colorLayoutFolderStatus, setColorLayoutFolderStatus] = useState("尚未選擇格局圖資料夾");
+  const colorPhotoFolderRef = useRef<RememberedDirectoryHandle>();
+  const colorLayoutFolderRef = useRef<RememberedDirectoryHandle>();
+  const readRememberedColorFolder = async (handle: RememberedDirectoryHandle, setFiles: Dispatch<SetStateAction<File[]>>, setStatus: Dispatch<SetStateAction<string>>) => {
+    setStatus(`正在讀取 ${handle.name}…`);
+    try { const files = await filesFromColorFolder(handle); setFiles(files); setStatus(`已自動讀取 ${handle.name}（${files.length} 張圖片）`); }
+    catch (error) { console.error(error); setFiles([]); setStatus(`無法讀取 ${handle.name}，請重新授權或選擇資料夾`); }
+  };
+  const chooseRememberedColorFolder = async (key: string, handleRef: { current: RememberedDirectoryHandle | undefined }, setFiles: Dispatch<SetStateAction<File[]>>, setStatus: Dispatch<SetStateAction<string>>) => {
+    try {
+      let handle = handleRef.current || await loadColorFolderHandle(key);
+      if (handle && await handle.requestPermission({ mode: "read" }) !== "granted") handle = undefined;
+      if (!handle) {
+        const picker = (window as Window & { showDirectoryPicker?: (options?: { mode?: "read" }) => Promise<RememberedDirectoryHandle> }).showDirectoryPicker;
+        if (!picker) return alert("此版本的瀏覽器不支援記住資料夾，請使用最新版 Edge。 ");
+        handle = await picker({ mode: "read" });
+      }
+      handleRef.current = handle;
+      await saveColorFolderHandle(key, handle);
+      await readRememberedColorFolder(handle, setFiles, setStatus);
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
+      console.error(error); setStatus("資料夾授權失效，請重新選擇");
+    }
+  };
+  useEffect(() => {
+    const restore = async (key: string, handleRef: { current: RememberedDirectoryHandle | undefined }, setFiles: Dispatch<SetStateAction<File[]>>, setStatus: Dispatch<SetStateAction<string>>) => {
+      try {
+        const handle = await loadColorFolderHandle(key);
+        if (!handle) return;
+        handleRef.current = handle;
+        if (await handle.queryPermission({ mode: "read" }) === "granted") await readRememberedColorFolder(handle, setFiles, setStatus);
+        else setStatus(`已記住 ${handle.name}，Edge 需要重新授權`);
+      } catch (error) { console.error(error); }
+    };
+    void restore("photo", colorPhotoFolderRef, setColorPhotoFiles, setColorPhotoFolderStatus);
+    void restore("layout", colorLayoutFolderRef, setColorLayoutFiles, setColorLayoutFolderStatus);
+  }, []);
   useEffect(() => {
     const coordinateField = document.querySelector<HTMLElement>(".print-editor-locationMapInput");
     const coordinateInput = coordinateField?.querySelector<HTMLInputElement>("input");
@@ -3031,7 +3111,7 @@ export default function Home() {
 
   return <main lang="zh-Hant-TW" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V445</small></h1></div>
+<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V446</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingIntakeReminderRecords.length > 0 && <button className="new-case-reminder-header-button" onClick={() => { setNewCaseReminder({ ...pendingIntakeReminderRecords[0] }); setNewCaseReminderBatchIds(pendingIntakeReminderRecords.map(record => record.id)); }}>新進案件提醒 {pendingIntakeReminderRecords.length}</button>}{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -3105,7 +3185,7 @@ export default function Home() {
           <label className="field print-editor-notes"><span>重點說明與備註</span><textarea rows={5} value={printEditor.data.attentionNotes || ""} onChange={event => { const attention = colorSheetAttention(event.target.value, printEditor.data.additionNotes || ""); setPrintEditor({ ...printEditor, data: { ...printEditor.data, notes: attention, attentionNotes: attention } }); }}/></label>
           <label className="field print-editor-issue"><span>彩色表缺件／原因紀錄</span><textarea rows={4} value={printEditor.data.colorSheetIssue || ""} onChange={event => setPrintEditor({ ...printEditor, data: { ...printEditor.data, colorSheetIssue: event.target.value } })} placeholder="例如：缺房管坪數、照片尚未收到，暫時無法製作。"/></label>
         </div></section>
-        <ColorWorkbookAssetPicker record={printEditor.data} photoPath={colorPhotoPath} setPhotoPath={setColorPhotoPath} layoutPath={colorLayoutPath} setLayoutPath={setColorLayoutPath} photoFiles={colorPhotoFiles} setPhotoFiles={setColorPhotoFiles} layoutFiles={colorLayoutFiles} setLayoutFiles={setColorLayoutFiles}/>
+        <ColorWorkbookAssetPicker record={printEditor.data} photoPath={colorPhotoPath} setPhotoPath={setColorPhotoPath} layoutPath={colorLayoutPath} setLayoutPath={setColorLayoutPath} photoFiles={colorPhotoFiles} layoutFiles={colorLayoutFiles} photoFolderStatus={colorPhotoFolderStatus} layoutFolderStatus={colorLayoutFolderStatus} choosePhotoFolder={() => chooseRememberedColorFolder("photo", colorPhotoFolderRef, setColorPhotoFiles, setColorPhotoFolderStatus)} chooseLayoutFolder={() => chooseRememberedColorFolder("layout", colorLayoutFolderRef, setColorLayoutFiles, setColorLayoutFolderStatus)}/>
       </div>
       <div className="modal-foot print-editor-foot"><span className="print-editor-warning">重點說明與備註、位置圖定位只套用本次下載；缺件紀錄可另外儲存到案件。</span><button type="button" onClick={() => setPrintEditor(null)}>取消</button><button type="button" onClick={() => saveColorSheetIssue(printEditor.data)}>儲存缺件紀錄</button><button className="primary" type="button" disabled={colorWorkbookDownloading} onClick={async () => {
         const photoMatches = colorWorkbookPhotoMatches(colorPhotoFiles, printEditor.data);
@@ -3337,16 +3417,18 @@ const mergeIntakeDrafts = (localDrafts: IntakeData[], cloudDrafts: IntakeData[])
 const keySummaryLeft = [1, 2, 3, 5, 6, 7, 8, 17, 18, 19, 20, 21, 22, 23, 24, 33, 34, 35, 36, 37, 38, 39];
 const keySummaryRight = [49, 50, 51, 52, 53, 55, 56, 65, 66, 67, 68, 69, 70, 71, 72, 81, 82, 83, 85, 86, 87, 88];
 
-function ColorWorkbookAssetPicker({ record, photoPath, setPhotoPath, layoutPath, setLayoutPath, photoFiles, setPhotoFiles, layoutFiles, setLayoutFiles }: {
+function ColorWorkbookAssetPicker({ record, photoPath, setPhotoPath, layoutPath, setLayoutPath, photoFiles, layoutFiles, photoFolderStatus, layoutFolderStatus, choosePhotoFolder, chooseLayoutFolder }: {
   record: RecordItem;
   photoPath: string;
   setPhotoPath: Dispatch<SetStateAction<string>>;
   layoutPath: string;
   setLayoutPath: Dispatch<SetStateAction<string>>;
   photoFiles: File[];
-  setPhotoFiles: Dispatch<SetStateAction<File[]>>;
   layoutFiles: File[];
-  setLayoutFiles: Dispatch<SetStateAction<File[]>>;
+  photoFolderStatus: string;
+  layoutFolderStatus: string;
+  choosePhotoFolder: () => void;
+  chooseLayoutFolder: () => void;
 }) {
   const photoMatches = colorWorkbookPhotoMatches(photoFiles, record);
   const layoutMatches = colorWorkbookLayoutMatches(layoutFiles, record);
@@ -3357,15 +3439,13 @@ function ColorWorkbookAssetPicker({ record, photoPath, setPhotoPath, layoutPath,
     if (matches.length === 1) return <small className="asset-status matched">已找到：{fileLabel(matches[0])}</small>;
     return <div className="asset-status conflict"><strong>比對衝突：找到 {matches.length} 筆，Excel 此框保持空白。</strong>{matches.slice(0, 5).map(file => <small key={fileLabel(file)}>{fileLabel(file)}</small>)}</div>;
   };
-  const chooseFolder = (event: ChangeEvent<HTMLInputElement>, setter: Dispatch<SetStateAction<File[]>>) => setter(Array.from(event.target.files || []));
   const updatePath = (key: string, value: string, setter: Dispatch<SetStateAction<string>>) => { setter(value); localStorage.setItem(key, value); };
-  const directoryProps = { webkitdirectory: "", directory: "" } as Record<string, string>;
   return <section className="print-editor-section color-workbook-assets">
     <h3>Excel 圖片來源</h3>
-    <p>先選擇對應資料夾。只會用完整案名或完整地址比對；衝突、找不到或沒有圖片時保持空白。</p>
+    <p>第一次選擇後會記住資料夾並自動讀取；只有 Edge 取消授權時才需重新授權。只會用完整案名或完整地址比對。</p>
     <div className="color-asset-grid">
-      <label className="field"><span>右邊第一張：物件照片 1</span><input type="text" value={photoPath} onChange={event => updatePath(COLOR_PHOTO_PATH_KEY, event.target.value, setPhotoPath)}/><input className="folder-picker" type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png" multiple {...directoryProps} onChange={event => chooseFolder(event, setPhotoFiles)}/>{status(photoFiles, photoMatches, "尚未選擇照片資料夾")}</label>
-      <label className="field"><span>右邊第二張：格局圖</span><input type="text" value={layoutPath} onChange={event => updatePath(COLOR_LAYOUT_PATH_KEY, event.target.value, setLayoutPath)}/><input className="folder-picker" type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png" multiple {...directoryProps} onChange={event => chooseFolder(event, setLayoutFiles)}/>{status(layoutFiles, layoutMatches, "尚未選擇格局圖資料夾")}</label>
+      <div className="field"><span>右邊第一張：物件照片 1</span><input type="text" value={photoPath} onChange={event => updatePath(COLOR_PHOTO_PATH_KEY, event.target.value, setPhotoPath)}/><button className="folder-picker" type="button" onClick={choosePhotoFolder}>選擇／重新授權照片資料夾</button><small>{photoFolderStatus}</small>{status(photoFiles, photoMatches, "尚未讀取照片資料夾")}</div>
+      <div className="field"><span>右邊第二張：格局圖</span><input type="text" value={layoutPath} onChange={event => updatePath(COLOR_LAYOUT_PATH_KEY, event.target.value, setLayoutPath)}/><button className="folder-picker" type="button" onClick={chooseLayoutFolder}>選擇／重新授權格局圖資料夾</button><small>{layoutFolderStatus}</small>{status(layoutFiles, layoutMatches, "尚未讀取格局圖資料夾")}</div>
     </div>
   </section>;
 }
