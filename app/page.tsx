@@ -49,7 +49,7 @@ type RememberedDirectoryHandle = {
 type RememberedFileHandle = { kind: "file"; name: string; getFile: () => Promise<File> };
 type WorkbookSaveHandle = { createWritable: () => Promise<{ write: (data: Blob) => Promise<void>; close: () => Promise<void> }> };
 const chooseColorWorkbookSaveFile = async (record: RecordItem) => {
-  const downloadFileName = `${intakeDraftEditorTitle(recordToIntake(record))}.xlsx`;
+  const downloadFileName = `單機-${intakeDraftEditorTitle(recordToIntake(record))}.xlsx`;
   const picker = (window as Window & { showSaveFilePicker?: (options: { suggestedName: string; types: { description: string; accept: Record<string, string[]> }[] }) => Promise<WorkbookSaveHandle> }).showSaveFilePicker;
   if (!picker) return undefined;
   return picker({ suggestedName: downloadFileName, types: [{ description: "Excel 活頁簿", accept: { "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"] } }] });
@@ -3135,7 +3135,7 @@ export default function Home() {
 
   return <main lang="zh-Hant-TW" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V449</small></h1></div>
+<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V450</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingIntakeReminderRecords.length > 0 && <button className="new-case-reminder-header-button" onClick={() => { setNewCaseReminder({ ...pendingIntakeReminderRecords[0] }); setNewCaseReminderBatchIds(pendingIntakeReminderRecords.map(record => record.id)); }}>新進案件提醒 {pendingIntakeReminderRecords.length}</button>}{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -3478,7 +3478,7 @@ function ColorWorkbookAssetPicker({ record, photoPath, setPhotoPath, layoutPath,
 }
 
 async function downloadColorWorkbook(record: RecordItem, personnel: Person[] = [], photoFile?: File, layoutFile?: File, saveHandle?: WorkbookSaveHandle) {
-  const downloadFileName = `${intakeDraftEditorTitle(recordToIntake(record))}.xlsx`;
+  const downloadFileName = `單機-${intakeDraftEditorTitle(recordToIntake(record))}.xlsx`;
   const isLandWorkbook = typeShort(record.type) === "土地" || /^(?:LG|LA)/i.test(record.propertyNo || "");
   const missingLandCoordinate = isLandWorkbook && !String(record.locationMapInput || "").trim();
   const coordinateField = document.querySelector<HTMLElement>(".print-editor-locationMapInput");
