@@ -3135,7 +3135,7 @@ export default function Home() {
 
   return <main lang="zh-Hant-TW" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V454</small></h1></div>
+<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V455</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingIntakeReminderRecords.length > 0 && <button className="new-case-reminder-header-button" onClick={() => { setNewCaseReminder({ ...pendingIntakeReminderRecords[0] }); setNewCaseReminderBatchIds(pendingIntakeReminderRecords.map(record => record.id)); }}>新進案件提醒 {pendingIntakeReminderRecords.length}</button>}{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -4612,7 +4612,7 @@ const printIntakeFileStatus = (value = "") => String(value || "").replace(/[（(
 function PrintRightRow({ label, value }: { label: string; value: string }) {
   const schoolRow = ["國小", "國中", "高中", "大專", "市場", "公園"].includes(label);
   const documentRow = ["格局圖", "現詢調", "智能照片", "智能主約", "智能契變"].includes(label);
-  return <p className={`print-right-row${schoolRow ? " print-right-row-wrap" : ""}${documentRow ? " print-right-row-document" : ""}`}><b>{label}：</b><span>{value}</span></p>;
+  return <p className={`print-right-row${schoolRow ? " print-right-row-wrap" : ""}${documentRow ? " print-right-row-document" : ""}`}><b>{label}：</b><span>{value}{label === "智能契變" && <em className="no-contract-change-option">☐進案無契變</em>}</span></p>;
 }
 
 function PreviousPrintableIntake({ draft }: { draft: IntakeData }) {
