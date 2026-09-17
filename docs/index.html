@@ -44160,14 +44160,20 @@ ${String(ex)}`);
     db.close();
     return handle;
   };
-  var filesFromColorFolder = async (root) => {
+  var filesFromColorFolder = async (root, record, kind) => {
     const files = [];
-    const visit = async (folder, prefix) => {
+    const compactPath = (value) => String(value || "").normalize("NFKC").toLowerCase().replace(/[\s　_－—–\-｜|·・,，、。.．\/\\()（）\[\]【】]/g, "");
+    const needles = [record.caseName, record.address].map(compactPath).filter(Boolean);
+    const matches = (path) => needles.some((needle) => compactPath(path).includes(needle));
+    const visit = async (folder, prefix, matchedParent = false) => {
       for await (const entry of folder.values()) {
-        if (entry.kind === "directory") await visit(entry, `${prefix}${entry.name}/`);
-        else if (/\.(?:jpe?g|png)$/i.test(entry.name)) {
+        const relativePath = `${prefix}${entry.name}`;
+        const matched = matchedParent || matches(relativePath);
+        if (entry.kind === "directory") {
+          if (matched) await visit(entry, `${relativePath}/`, true);
+        } else if (matched && /\.(?:jpe?g|png)$/i.test(entry.name) && (kind === "layout" || /^1\.(?:jpe?g|png)$/i.test(entry.name))) {
           const file = await entry.getFile();
-          Object.defineProperty(file, "webkitRelativePath", { configurable: true, value: `${root.name}/${prefix}${file.name}` });
+          Object.defineProperty(file, "webkitRelativePath", { configurable: true, value: `${root.name}/${relativePath}` });
           files.push(file);
         }
       }
@@ -45636,19 +45642,19 @@ ${String(ex)}`);
     const [colorLayoutFolderStatus, setColorLayoutFolderStatus] = (0, import_react.useState)("\u5C1A\u672A\u9078\u64C7\u683C\u5C40\u5716\u8CC7\u6599\u593E");
     const colorPhotoFolderRef = (0, import_react.useRef)();
     const colorLayoutFolderRef = (0, import_react.useRef)();
-    const readRememberedColorFolder = async (handle, setFiles, setStatus) => {
-      setStatus(`\u6B63\u5728\u8B80\u53D6 ${handle.name}\u2026`);
+    const readRememberedColorFolder = async (handle, record, kind, setFiles, setStatus) => {
+      setStatus(`\u6B63\u5728\u6BD4\u5C0D ${handle.name}\u2026`);
       try {
-        const files = await filesFromColorFolder(handle);
+        const files = await filesFromColorFolder(handle, record, kind);
         setFiles(files);
-        setStatus(`\u5DF2\u81EA\u52D5\u8B80\u53D6 ${handle.name}\uFF08${files.length} \u5F35\u5716\u7247\uFF09`);
+        setStatus(`\u5DF2\u5B8C\u6210 ${handle.name}\uFF08\u627E\u5230 ${files.length} \u5F35\u5C0D\u61C9\u5716\u7247\uFF09`);
       } catch (error) {
         console.error(error);
         setFiles([]);
         setStatus(`\u7121\u6CD5\u8B80\u53D6 ${handle.name}\uFF0C\u8ACB\u91CD\u65B0\u6388\u6B0A\u6216\u9078\u64C7\u8CC7\u6599\u593E`);
       }
     };
-    const chooseRememberedColorFolder = async (key, handleRef, setFiles, setStatus) => {
+    const chooseRememberedColorFolder = async (key, record, handleRef, setFiles, setStatus) => {
       try {
         let handle = handleRef.current || await loadColorFolderHandle(key);
         if (handle && await handle.requestPermission({ mode: "read" }) !== "granted") handle = void 0;
@@ -45659,7 +45665,7 @@ ${String(ex)}`);
         }
         handleRef.current = handle;
         await saveColorFolderHandle(key, handle);
-        await readRememberedColorFolder(handle, setFiles, setStatus);
+        await readRememberedColorFolder(handle, record, key, setFiles, setStatus);
       } catch (error) {
         if (error instanceof DOMException && error.name === "AbortError") return;
         console.error(error);
@@ -45672,7 +45678,7 @@ ${String(ex)}`);
           const handle = await loadColorFolderHandle(key);
           if (!handle) return;
           handleRef.current = handle;
-          if (await handle.queryPermission({ mode: "read" }) === "granted") await readRememberedColorFolder(handle, setFiles, setStatus);
+          if (await handle.queryPermission({ mode: "read" }) === "granted") setStatus(`\u5DF2\u8A18\u4F4F ${handle.name}\uFF0C\u958B\u555F\u5F69\u8272\u8868\u6642\u81EA\u52D5\u6BD4\u5C0D`);
           else setStatus(`\u5DF2\u8A18\u4F4F ${handle.name}\uFF0CEdge \u9700\u8981\u91CD\u65B0\u6388\u6B0A`);
         } catch (error) {
           console.error(error);
@@ -45681,6 +45687,16 @@ ${String(ex)}`);
       void restore("photo", colorPhotoFolderRef, setColorPhotoFiles, setColorPhotoFolderStatus);
       void restore("layout", colorLayoutFolderRef, setColorLayoutFiles, setColorLayoutFolderStatus);
     }, []);
+    (0, import_react.useEffect)(() => {
+      if (!printEditor) return;
+      const matchSavedFolder = async (kind, handle, setFiles, setStatus) => {
+        if (!handle) return;
+        if (await handle.queryPermission({ mode: "read" }) !== "granted") return setStatus(`\u5DF2\u8A18\u4F4F ${handle.name}\uFF0CEdge \u9700\u8981\u91CD\u65B0\u6388\u6B0A`);
+        await readRememberedColorFolder(handle, printEditor.data, kind, setFiles, setStatus);
+      };
+      void matchSavedFolder("photo", colorPhotoFolderRef.current, setColorPhotoFiles, setColorPhotoFolderStatus);
+      void matchSavedFolder("layout", colorLayoutFolderRef.current, setColorLayoutFiles, setColorLayoutFolderStatus);
+    }, [printEditor?.data.id, printEditor?.data.caseName, printEditor?.data.address]);
     (0, import_react.useEffect)(() => {
       const coordinateField = document.querySelector(".print-editor-locationMapInput");
       const coordinateInput = coordinateField?.querySelector("input");
@@ -48352,7 +48368,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V446" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V447" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -49060,7 +49076,7 @@ ${changedLabels}
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("textarea", { rows: 4, value: printEditor.data.colorSheetIssue || "", onChange: (event) => setPrintEditor({ ...printEditor, data: { ...printEditor.data, colorSheetIssue: event.target.value } }), placeholder: "\u4F8B\u5982\uFF1A\u7F3A\u623F\u7BA1\u576A\u6578\u3001\u7167\u7247\u5C1A\u672A\u6536\u5230\uFF0C\u66AB\u6642\u7121\u6CD5\u88FD\u4F5C\u3002" })
             ] })
           ] }) }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ColorWorkbookAssetPicker, { record: printEditor.data, photoPath: colorPhotoPath, setPhotoPath: setColorPhotoPath, layoutPath: colorLayoutPath, setLayoutPath: setColorLayoutPath, photoFiles: colorPhotoFiles, layoutFiles: colorLayoutFiles, photoFolderStatus: colorPhotoFolderStatus, layoutFolderStatus: colorLayoutFolderStatus, choosePhotoFolder: () => chooseRememberedColorFolder("photo", colorPhotoFolderRef, setColorPhotoFiles, setColorPhotoFolderStatus), chooseLayoutFolder: () => chooseRememberedColorFolder("layout", colorLayoutFolderRef, setColorLayoutFiles, setColorLayoutFolderStatus) })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ColorWorkbookAssetPicker, { record: printEditor.data, photoPath: colorPhotoPath, setPhotoPath: setColorPhotoPath, layoutPath: colorLayoutPath, setLayoutPath: setColorLayoutPath, photoFiles: colorPhotoFiles, layoutFiles: colorLayoutFiles, photoFolderStatus: colorPhotoFolderStatus, layoutFolderStatus: colorLayoutFolderStatus, choosePhotoFolder: () => chooseRememberedColorFolder("photo", printEditor.data, colorPhotoFolderRef, setColorPhotoFiles, setColorPhotoFolderStatus), chooseLayoutFolder: () => chooseRememberedColorFolder("layout", printEditor.data, colorLayoutFolderRef, setColorLayoutFiles, setColorLayoutFolderStatus) })
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal-foot print-editor-foot", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "print-editor-warning", children: "\u91CD\u9EDE\u8AAA\u660E\u8207\u5099\u8A3B\u3001\u4F4D\u7F6E\u5716\u5B9A\u4F4D\u53EA\u5957\u7528\u672C\u6B21\u4E0B\u8F09\uFF1B\u7F3A\u4EF6\u7D00\u9304\u53EF\u53E6\u5916\u5132\u5B58\u5230\u6848\u4EF6\u3002" }),
