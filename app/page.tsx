@@ -1053,13 +1053,10 @@ export default function Home() {
   };
   const chooseRememberedColorFolder = async (key: "photo" | "layout", record: RecordItem, handleRef: { current: RememberedDirectoryHandle | undefined }, setFiles: Dispatch<SetStateAction<File[]>>, setStatus: Dispatch<SetStateAction<string>>) => {
     try {
-      let handle = handleRef.current || await loadColorFolderHandle(key);
-      if (handle && await handle.requestPermission({ mode: "read" }) !== "granted") handle = undefined;
-      if (!handle) {
-        const picker = (window as Window & { showDirectoryPicker?: (options?: { mode?: "read" }) => Promise<RememberedDirectoryHandle> }).showDirectoryPicker;
-        if (!picker) return alert("此版本的瀏覽器不支援記住資料夾，請使用最新版 Edge。 ");
-        handle = await picker({ mode: "read" });
-      }
+      const picker = (window as Window & { showDirectoryPicker?: (options?: { mode?: "read" }) => Promise<RememberedDirectoryHandle> }).showDirectoryPicker;
+      if (!picker) return alert("此版本的瀏覽器不支援記住資料夾，請使用最新版 Edge。 ");
+      // 手動按鈕一定重新開啟選擇視窗；只有自動載入才沿用已記住的資料夾。
+      const handle = await picker.call(window, { mode: "read" });
       handleRef.current = handle;
       await saveColorFolderHandle(key, handle);
       await readRememberedColorFolder(handle, record, key, setFiles, setStatus);
@@ -3135,7 +3132,7 @@ export default function Home() {
 
   return <main lang="zh-Hant-TW" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V457</small></h1></div>
+<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V458</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingIntakeReminderRecords.length > 0 && <button className="new-case-reminder-header-button" onClick={() => { setNewCaseReminder({ ...pendingIntakeReminderRecords[0] }); setNewCaseReminderBatchIds(pendingIntakeReminderRecords.map(record => record.id)); }}>新進案件提醒 {pendingIntakeReminderRecords.length}</button>}{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
