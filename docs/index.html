@@ -861,6 +861,7 @@ button:hover,.file-button:hover{border-color:#9fbad0;box-shadow:0 2px 8px #7895a
 .entrust-period-value>span{color:#111!important;font-weight:400!important;margin:0!important;white-space:nowrap!important}
 .record-archive-title-note{order:2!important;flex:0 0 auto!important;color:#e00000!important;font-size:11px!important;font-style:normal!important;font-weight:400!important;white-space:nowrap!important}
 .record-edit-grid>.edit-bookLocationDate{display:none!important}.record-edit-grid>.edit-bookLocationType,.record-edit-grid>.edit-salesBook,.record-edit-grid>.edit-photoInfo{grid-column:span 40!important}.book-combined-row,.sales-combined-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}.sales-combined-row{grid-template-columns:minmax(0,1fr) minmax(90px,.65fr)}.book-combined-row .pill-options{display:flex;gap:5px;white-space:nowrap}.book-combined-row .pill-options button{padding:8px 11px}.combined-book-field,.combined-sales-field{justify-content:flex-start}
+.book-combined-row .pill-options .book-today-button{background:#fff0bd!important;border-color:#d7a927!important;color:#765500!important;font-weight:900}.book-combined-row .pill-options .book-today-button:hover{background:#ffe494!important}
 .sales-book-options{display:flex!important;gap:6px!important;align-items:center!important;justify-content:center!important;white-space:nowrap!important}.sales-book-options button{flex:1 1 0!important;min-width:58px!important;padding:8px 12px!important;border-radius:999px!important}
 .record-modal-title+.modal-head-actions{display:flex;align-items:center;gap:7px}.record-print-button{padding:7px 11px!important;border-radius:8px!important;font-size:12px!important;font-weight:800!important;white-space:nowrap!important;word-break:keep-all!important;flex:0 0 auto!important}.record-print-button.color{border-color:#168ec1!important;background:#e9f7fd!important;color:#0878a8!important}.record-print-button.issue{border-color:#c98a39!important;background:#fff6e9!important;color:#9a5b10!important}.record-print-button.issue.has-issue{border-color:#bd5147!important;background:#fff0ee!important;color:#ad3f37!important}.record-print-button.cover{border-color:#8371a8!important;background:#f2eef9!important;color:#5f4a88!important}.record-print-button.ppt{border-color:#417cab!important;background:#edf6ff!important;color:#135b91!important}
 .print-editor-backdrop{z-index:110!important}.print-editor-modal{width:min(1180px,96vw)!important}.print-editor-modal .modal-head small{display:block;margin-top:4px;color:#9b443f;font-size:12px}.print-editor-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px;padding:18px 22px;background:#fff}.print-editor-wide{grid-column:span 2}.print-editor-full{grid-column:1/-1}.print-editor-warning{margin-right:auto;color:#a34039;font-size:12px;font-weight:700}@media(max-width:900px){.print-editor-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -48374,7 +48375,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V451" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V452" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -54415,15 +54416,18 @@ ${differences.map((item) => `${item.label}\uFF1A\u539F\u672C ${item.before} \u57
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u7269\u4EF6\u672C" }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "book-combined-row", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", inputMode: "numeric", value: displayRocDate(record.bookLocationDate || ""), onChange: (e) => setRecord({ ...record, bookLocationDate: e.target.value }), onBlur: (e) => setRecord({ ...record, bookLocationDate: normalizeDateInput(e.target.value) }), placeholder: "\u65E5\u671F\uFF0C\u4F8B\u5982 115/7/29" }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "pill-options", children: ["\u67B6\u4E0A", "\u65C15"].map((o) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: value === o ? "selected" : "", onClick: () => {
-          const websiteKeys = ["platform591", "yes319", "houseinfor", "windowAd", "led", "homeWeb", "price5168", "goldExposure"];
-          const expiryKeys = ["platform591Expiry", "price5168Expiry", "goldExposureExpiry"];
-          if (o === "\u65C15") setRecord({ ...record, bookLocationType: o, ...Object.fromEntries(websiteKeys.map((key) => [key, "\u65C15"])), ...Object.fromEntries(expiryKeys.map((key) => [key, ""])) });
-          else {
-            if (String(record.bookLocationReason || "").trim() && !confirm("\u65C15\u539F\u56E0\u5DF2\u6709\u586B\u5BEB\u5167\u5BB9\uFF0C\u78BA\u5B9A\u6539\u70BA\u67B6\u4E0A\uFF1F")) return;
-            setRecord({ ...record, bookLocationType: o, ...Object.fromEntries(websiteKeys.filter((key) => record[key] === "\u65C15").map((key) => [key, ""])) });
-          }
-        }, children: o }, o)) })
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "pill-options", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: "book-today-button", onClick: () => setRecord({ ...record, bookLocationDate: today() }), children: "\u4ECA\u5929" }),
+          ["\u67B6\u4E0A", "\u65C15"].map((o) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: value === o ? "selected" : "", onClick: () => {
+            const websiteKeys = ["platform591", "yes319", "houseinfor", "windowAd", "led", "homeWeb", "price5168", "goldExposure"];
+            const expiryKeys = ["platform591Expiry", "price5168Expiry", "goldExposureExpiry"];
+            if (o === "\u65C15") setRecord({ ...record, bookLocationType: o, ...Object.fromEntries(websiteKeys.map((key) => [key, "\u65C15"])), ...Object.fromEntries(expiryKeys.map((key) => [key, ""])) });
+            else {
+              if (String(record.bookLocationReason || "").trim() && !confirm("\u65C15\u539F\u56E0\u5DF2\u6709\u586B\u5BEB\u5167\u5BB9\uFF0C\u78BA\u5B9A\u6539\u70BA\u67B6\u4E0A\uFF1F")) return;
+              setRecord({ ...record, bookLocationType: o, ...Object.fromEntries(websiteKeys.filter((key) => record[key] === "\u65C15").map((key) => [key, ""])) });
+            }
+          }, children: o }, o))
+        ] })
       ] })
     ] });
     if (fieldKey === "salesBook") {
