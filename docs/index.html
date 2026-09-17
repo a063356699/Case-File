@@ -44136,7 +44136,7 @@ ${String(ex)}`);
   var DEFAULT_COLOR_LAYOUT_PATH = "\\\\nas\\\u2605\u2606\u52A9\u7406\u96FB\u8166\u2606\u2605\\\u756B\u683C\u5C40\u5716\u53EF\u7528\u5C0F\u5716\\\u7269\u4EF6\u683C\u5C40\u5716AI";
   var COLOR_FOLDER_DB = "property-desk-color-folders-v1";
   var chooseColorWorkbookSaveFile = async (record) => {
-    const downloadFileName = `${intakeDraftEditorTitle(recordToIntake(record))}.xlsx`;
+    const downloadFileName = `\u55AE\u6A5F ${intakeDraftEditorTitle(recordToIntake(record))}.xlsx`;
     const picker = window.showSaveFilePicker;
     if (!picker) return void 0;
     return picker({ suggestedName: downloadFileName, types: [{ description: "Excel \u6D3B\u9801\u7C3F", accept: { "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"] } }] });
@@ -48374,7 +48374,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V449" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V451" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -50074,7 +50074,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     ] });
   }
   async function downloadColorWorkbook(record, personnel = [], photoFile, layoutFile, saveHandle) {
-    const downloadFileName = `${intakeDraftEditorTitle(recordToIntake(record))}.xlsx`;
+    const downloadFileName = `\u55AE\u6A5F ${intakeDraftEditorTitle(recordToIntake(record))}.xlsx`;
     const isLandWorkbook = typeShort(record.type) === "\u571F\u5730" || /^(?:LG|LA)/i.test(record.propertyNo || "");
     const missingLandCoordinate = isLandWorkbook && !String(record.locationMapInput || "").trim();
     const coordinateField = document.querySelector(".print-editor-locationMapInput");
