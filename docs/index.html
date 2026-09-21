@@ -45918,6 +45918,7 @@ ${String(ex)}`);
     const cloudSyncTimerRef = (0, import_react.useRef)(null);
     const cloudPushInFlightRef = (0, import_react.useRef)(null);
     const cloudAutoPullRef = (0, import_react.useRef)("");
+    const cloudPullGuardUntilRef = (0, import_react.useRef)(0);
     const cloudSkipNextPushRef = (0, import_react.useRef)(false);
     const cloudLocalPendingRef = (0, import_react.useRef)(false);
     const cloudFocusPullAtRef = (0, import_react.useRef)(0);
@@ -47618,6 +47619,7 @@ ${changedLabels}
         if (!quiet) flash("\u8ACB\u5148\u586B\u5165 Supabase Publishable key");
         return false;
       }
+      if (quiet && Date.now() < cloudPullGuardUntilRef.current) return true;
       if (quiet && Date.now() < cloudRetryAfterRef.current) {
         setCloudUploadState("failed");
         setCloudUploadError("\u96F2\u7AEF\u66AB\u6642\u5FD9\u788C\uFF0C\u5DF2\u505C\u6B62\u81EA\u52D5\u91CD\u8A66\uFF1B\u7A0D\u5F8C\u6703\u518D\u540C\u6B65");
@@ -47715,6 +47717,11 @@ ${changedLabels}
     };
     const supabasePull = async (automatic = false, quiet = false) => {
       if (!cloudSession?.accessToken) return flash("\u8ACB\u5148\u767B\u5165\u96F2\u7AEF\u5E33\u865F");
+      if (cloudSyncTimerRef.current) {
+        window.clearTimeout(cloudSyncTimerRef.current);
+        cloudSyncTimerRef.current = null;
+      }
+      cloudPullGuardUntilRef.current = Date.now() + 1500;
       try {
         const session = await refreshCloudSession();
         if (!session) throw new Error("cloud session expired");
@@ -47741,6 +47748,7 @@ ${changedLabels}
         }
         if (automatic || confirm("\u96F2\u7AEF\u8CC7\u6599\u5C07\u8207\u672C\u6A5F\u8CC7\u6599\u5408\u4F75\uFF0C\u672C\u6A5F\u5DF2\u4FEE\u6539\u4F46\u5C1A\u672A\u540C\u6B65\u7684\u540C\u4E00\u7B46\u8CC7\u6599\u5C07\u4EE5\u96F2\u7AEF\u7248\u672C\u70BA\u6E96\u3002\u78BA\u5B9A\u55CE\uFF1F")) {
           cloudSkipNextPushRef.current = true;
+          cloudPullGuardUntilRef.current = Date.now() + 1500;
           setRecords((prev) => {
             const map = new Map(prev.map((r) => [r.id, r]));
             data.records.forEach((r) => {
@@ -47808,7 +47816,7 @@ ${changedLabels}
           }
           window.setTimeout(() => {
             cloudSkipNextPushRef.current = false;
-          }, 300);
+          }, 1500);
           cloudLocalPendingRef.current = false;
           localStorage.removeItem(CLOUD_LOCAL_PENDING_KEY);
           setCloudUploadState("complete");
@@ -47880,8 +47888,7 @@ ${changedLabels}
     const cloudSnapshot = JSON.stringify({ records, personnel: settings.personnel, inventoryGroups: settings.inventoryGroups, bookReviewCurrentDate: settings.bookReviewCurrentDate, bookReviewNextDate: settings.bookReviewNextDate, expiry591: settings.expiry591, expiry5168: settings.expiry5168, brokerExpiry: settings.brokerExpiry, intakeRaw, intakeDrafts, tourDate, tourTitle, tourItems, tourModifiedAt, tourHistory, pptExtraIds, pptOrderIds, pptAdHocRecords, pptConfirmedSnapshots });
     (0, import_react.useEffect)(() => {
       if (internalView || tab === "public" || !storageReady) return;
-      if (cloudSkipNextPushRef.current) {
-        cloudSkipNextPushRef.current = false;
+      if (cloudSkipNextPushRef.current || Date.now() < cloudPullGuardUntilRef.current) {
         cloudSyncBaselineRef.current = cloudSnapshot;
         cloudLastUploadedFingerprintRef.current = cloudPayloadFingerprint(JSON.stringify(cloudData()));
         return;
@@ -48393,7 +48400,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V459" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V460" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),

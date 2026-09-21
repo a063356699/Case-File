@@ -1265,6 +1265,8 @@ export default function Home() {
   const cloudSyncTimerRef = useRef<number | null>(null);
   const cloudPushInFlightRef = useRef<Promise<boolean> | null>(null);
   const cloudAutoPullRef = useRef("");
+  // 讀取雲端後 React 會分批套用多組 state；在合併完成前，不可把這些變化誤判成新的本機修改。
+  const cloudPullGuardUntilRef = useRef(0);
   // 雲端資料合併後，僅更新本機基準，不可再把合併前的畫面回推覆蓋雲端。
   const cloudSkipNextPushRef = useRef(false);
   // 本機剛儲存、尚未寫入雲端時，不允許自動拉回舊雲端資料蓋掉內容。
@@ -2496,6 +2498,8 @@ export default function Home() {
   const supabasePush = async (quiet = false) => {
     if (!cloudSession?.accessToken) { if (!quiet) flash("請先登入雲端帳號"); return false; }
     if (!settings.supabaseUrl || !settings.supabaseKey) { if (!quiet) flash("請先填入 Supabase Publishable key"); return false; }
+    // 雲端讀取前已排定的自動上傳可能稍後才執行；合併保護期間直接略過，避免成功後又顯示失敗。
+    if (quiet && Date.now() < cloudPullGuardUntilRef.current) return true;
     if (quiet && Date.now() < cloudRetryAfterRef.current) {
       setCloudUploadState("failed");
       setCloudUploadError("雲端暫時忙碌，已停止自動重試；稍後會再同步");
@@ -2594,6 +2598,12 @@ export default function Home() {
   };
   const supabasePull = async (automatic = false, quiet = false) => {
     if (!cloudSession?.accessToken) return flash("請先登入雲端帳號");
+    // 讀取前先取消尚未執行的 6 秒自動上傳，避免舊畫面在合併後回推雲端。
+    if (cloudSyncTimerRef.current) {
+      window.clearTimeout(cloudSyncTimerRef.current);
+      cloudSyncTimerRef.current = null;
+    }
+    cloudPullGuardUntilRef.current = Date.now() + 1500;
     try {
       const session = await refreshCloudSession();
       if (!session) throw new Error("cloud session expired");
@@ -2618,6 +2628,7 @@ export default function Home() {
       if (rows[0]?.updated_at) { setCloudLastUploadAt(rows[0].updated_at); setCloudRemoteUpdateAt(""); localStorage.setItem(CLOUD_LAST_UPLOAD_KEY, rows[0].updated_at); }
       if (automatic || confirm("雲端資料將與本機資料合併，本機已修改但尚未同步的同一筆資料將以雲端版本為準。確定嗎？")) {
         cloudSkipNextPushRef.current = true;
+        cloudPullGuardUntilRef.current = Date.now() + 1500;
         setRecords(prev => {
           const map = new Map(prev.map(r => [r.id, r]));
           data.records.forEach((r: RecordItem) => {
@@ -2683,7 +2694,7 @@ export default function Home() {
           window.setTimeout(() => { void supabasePush(true); }, 0);
         }
         // 若此次雲端內容與本機完全相同，不會觸發 snapshot effect；短暫後解除標記，避免擋到下一次真正儲存。
-        window.setTimeout(() => { cloudSkipNextPushRef.current = false; }, 300);
+        window.setTimeout(() => { cloudSkipNextPushRef.current = false; }, 1500);
         cloudLocalPendingRef.current = false;
         localStorage.removeItem(CLOUD_LOCAL_PENDING_KEY);
         setCloudUploadState("complete");
@@ -2744,8 +2755,7 @@ export default function Home() {
   const cloudSnapshot = JSON.stringify({ records, personnel: settings.personnel, inventoryGroups: settings.inventoryGroups, bookReviewCurrentDate: settings.bookReviewCurrentDate, bookReviewNextDate: settings.bookReviewNextDate, expiry591: settings.expiry591, expiry5168: settings.expiry5168, brokerExpiry: settings.brokerExpiry, intakeRaw, intakeDrafts, tourDate, tourTitle, tourItems, tourModifiedAt, tourHistory, pptExtraIds, pptOrderIds, pptAdHocRecords, pptConfirmedSnapshots });
   useEffect(() => {
     if (internalView || tab === "public" || !storageReady) return;
-    if (cloudSkipNextPushRef.current) {
-      cloudSkipNextPushRef.current = false;
+    if (cloudSkipNextPushRef.current || Date.now() < cloudPullGuardUntilRef.current) {
       cloudSyncBaselineRef.current = cloudSnapshot;
       cloudLastUploadedFingerprintRef.current = cloudPayloadFingerprint(JSON.stringify(cloudData()));
       return;
@@ -3132,7 +3142,7 @@ export default function Home() {
 
   return <main lang="zh-Hant-TW" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-<div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V459</small></h1></div>
+        <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V460</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingIntakeReminderRecords.length > 0 && <button className="new-case-reminder-header-button" onClick={() => { setNewCaseReminder({ ...pendingIntakeReminderRecords[0] }); setNewCaseReminderBatchIds(pendingIntakeReminderRecords.map(record => record.id)); }}>新進案件提醒 {pendingIntakeReminderRecords.length}</button>}{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
