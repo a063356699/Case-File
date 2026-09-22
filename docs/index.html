@@ -48402,7 +48402,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V471" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V472" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -51221,65 +51221,6 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     link.click();
     link.remove();
   }
-  var code39Patterns = {
-    "0": "nnnwwnwnn",
-    "1": "wnnwnnnnw",
-    "2": "nnwwnnnnw",
-    "3": "wnwwnnnnn",
-    "4": "nnnwwnnnw",
-    "5": "wnnwwnnnn",
-    "6": "nnwwwnnnn",
-    "7": "nnnwnnwnw",
-    "8": "wnnwnnwnn",
-    "9": "nnwwnnwnn",
-    A: "wnnnnwnnw",
-    B: "nnwnnwnnw",
-    C: "wnwnnwnnn",
-    D: "nnnnwwnnw",
-    E: "wnnnwwnnn",
-    F: "nnwnwwnnn",
-    G: "nnnnnwwnw",
-    H: "wnnnnwwnn",
-    I: "nnwnnwwnn",
-    J: "nnnnwwwnn",
-    K: "wnnnnnnww",
-    L: "nnwnnnnww",
-    M: "wnwnnnnwn",
-    N: "nnnnwnnww",
-    O: "wnnnwnnwn",
-    P: "nnwnwnnwn",
-    Q: "nnnnnnwww",
-    R: "wnnnnnwwn",
-    S: "nnwnnnwwn",
-    T: "nnnnwnwwn",
-    U: "wwnnnnnnw",
-    V: "nwwnnnnnw",
-    W: "wwwnnnnnn",
-    X: "nwnnwnnnw",
-    Y: "wwnnwnnnn",
-    Z: "nwwnwnnnn",
-    "-": "nwnnnnwnw",
-    ".": "wwnnnnwnn",
-    " ": "nwwnnnwnn",
-    "*": "nwnnwnwnn"
-  };
-  function code39Svg(value) {
-    const text = `*${String(value || "").trim().toUpperCase()}*`;
-    const narrow = 2, wide = 5, gap = 2, height = 58;
-    let x = 4;
-    const bars = [];
-    for (const character of text) {
-      const pattern = code39Patterns[character];
-      if (!pattern) continue;
-      pattern.split("").forEach((widthCode, index) => {
-        const width = widthCode === "w" ? wide : narrow;
-        if (index % 2 === 0) bars.push(`<rect x="${x}" y="1" width="${width}" height="${height}"/>`);
-        x += width;
-      });
-      x += gap;
-    }
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${x + 4} ${height + 2}" preserveAspectRatio="none"><g fill="#000">${bars.join("")}</g></svg>`;
-  }
   async function printKeyLabel(record) {
     const escapeHtml = (value = "") => String(value || "").replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character] || character);
     const propertyNo = String(record.propertyNo || "").trim();
@@ -51287,32 +51228,9 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     const keyNumber = String(record.key || "").match(/公司\s*[#＃]?\s*(\d+)/)?.[1] || "\u2014";
     if (keyNumber === "\u2014") return alert("\u516C\u53F8\u9470\u5319\u865F\u78BC\u672A\u586B\u5BEB\uFF0C\u7121\u6CD5\u7522\u751F\u689D\u78BC\u8207 QR Code\u3002");
     const keyCode = `${propertyNo.toUpperCase()}K${keyNumber.padStart(2, "0")}`;
-    let qrDataUrl = "";
-    try {
-      qrDataUrl = await createColorWorkbookQr(keyCode);
-    } catch (error) {
-      return alert(error instanceof Error ? error.message : "QR Code \u7522\u751F\u5931\u6557\uFF0C\u8ACB\u5148\u6838\u5C0D\u7269\u4EF6\u7DE8\u865F\u8207\u516C\u53F8\u9470\u5319\u865F\u78BC\u3002");
-    }
-    try {
-      const qrImage = new Image();
-      qrImage.src = qrDataUrl;
-      await qrImage.decode();
-      const qrCanvas = document.createElement("canvas");
-      qrCanvas.width = qrImage.naturalWidth;
-      qrCanvas.height = qrImage.naturalHeight;
-      const qrContext = qrCanvas.getContext("2d", { willReadFrequently: true });
-      if (!qrContext) throw new Error("\u7121\u6CD5\u5EFA\u7ACB\u89E3\u78BC\u756B\u5E03");
-      qrContext.drawImage(qrImage, 0, 0);
-      const qrPixels = qrContext.getImageData(0, 0, qrCanvas.width, qrCanvas.height);
-      const decodedKeyCode = (0, import_jsQR.default)(qrPixels.data, qrCanvas.width, qrCanvas.height, { inversionAttempts: "attemptBoth" })?.data || "";
-      if (decodedKeyCode !== keyCode) throw new Error(`\u9810\u671F\u300C${keyCode}\u300D\uFF0C\u5BE6\u969B\u300C${decodedKeyCode || "\u7121\u6CD5\u8FA8\u8B58"}\u300D`);
-    } catch (error) {
-      return alert(`\u9470\u5319 QR Code \u9A57\u8B49\u5931\u6557\uFF1A${error instanceof Error ? error.message : "\u5167\u5BB9\u4E0D\u4E00\u81F4"}\uFF0C\u5DF2\u505C\u6B62\u5217\u5370\u3002`);
-    }
     const kind = typeShort(record.type || "");
     const ping = (label, value) => `${label} ${escapeHtml(value || "\u2014")}\u576A`;
     const metrics = kind === "\u571F\u5730" ? ping("\u5730\u576A", record.landPing) : kind === "\u900F\u5929" ? [ping("\u5EFA\u576A", record.buildingPing), ping("\u5730\u576A", record.landPing), `\u8ECA\u4F4D ${escapeHtml(parkingShort(record.parking) || "\u2014")}`].join("\u3000") : [ping("\u5EFA\u576A", record.buildingPing), ping("\u5BA4\u5167\u576A", record.indoorPing), `\u8ECA\u4F4D ${escapeHtml(parkingShort(record.parking) || "\u2014")}`].join("\u3000");
-    const barcodeSvg = code39Svg(keyCode);
     const frame = document.createElement("iframe");
     Object.assign(frame.style, { position: "fixed", right: "0", bottom: "0", width: "1px", height: "1px", border: "0", opacity: "0", pointerEvents: "none" });
     document.body.appendChild(frame);
@@ -51322,7 +51240,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       return alert("\u7121\u6CD5\u958B\u555F\u9470\u5319\u6A19\u7C64\u5217\u5370\u756B\u9762\uFF0C\u8ACB\u518D\u8A66\u4E00\u6B21\u3002");
     }
     printDocument.open();
-    printDocument.write(`<!doctype html><html lang="zh-Hant"><head><meta charset="UTF-8"><title>\u9470\u5319\u6A19\u7C64 ${escapeHtml(propertyNo)}</title><style>@page{size:75mm 50mm;margin:0}*{box-sizing:border-box}html,body{width:75mm;margin:0;padding:0;background:#fff;color:#000;font-family:"Microsoft JhengHei",sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}.label{width:75mm;height:50mm;border:.35mm solid #000;overflow:hidden;break-after:page;page-break-after:always}.label:last-child{break-after:auto;page-break-after:auto}.info{height:25mm;padding:1.2mm 1.6mm .8mm;border-bottom:.3mm dashed #555;display:flex;flex-direction:column;justify-content:space-between}.topline,.case-line,.metric-line{display:flex;align-items:center;gap:1.5mm;white-space:nowrap}.topline{font-size:8pt;font-weight:800}.topline b{font-size:9pt}.topline .key{margin-left:auto}.case-line{font-size:9pt;font-weight:900}.case-line .case{max-width:50mm;overflow:hidden;text-overflow:ellipsis}.case-line .developer{margin-left:auto;font-size:7.5pt}.address{font-size:7.4pt;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.metric-line{font-size:7.2pt}.company{font-size:6.7pt;display:flex;justify-content:space-between;align-items:center;white-space:nowrap}.codes{height:25mm;padding:1mm 1.5mm;display:grid;grid-template-columns:1fr 18mm;gap:1.5mm;align-items:center}.barcode{height:15mm;display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:0}.barcode svg{width:100%;height:11.5mm}.barcode span{font-size:7.5pt;font-weight:800;letter-spacing:.08em}.qr{width:17mm;height:17mm;object-fit:contain}.property-sheet{border:0;display:flex;align-items:flex-start}.mini-stack{width:30mm;height:50mm}.mini-card{width:30mm;height:25mm;border:.35mm solid #000;padding:1.4mm;display:flex;flex-direction:column;justify-content:center;gap:1.2mm;overflow:hidden}.mini-card .card-case{font-size:6.4pt;line-height:1.25;font-weight:900;overflow-wrap:anywhere}.mini-card .card-address{padding-top:1mm;border-top:.25mm dashed #555;font-size:6pt;line-height:1.25;font-weight:800;overflow-wrap:anywhere}</style></head><body><section class="label"><div class="info"><div class="topline"><b>${escapeHtml(propertyNo)}</b><span class="key">\u516C\u53F8#${escapeHtml(keyNumber)}</span></div><div class="case-line"><span class="case">${escapeHtml(record.caseName || "\u2014")}</span><span class="developer">${escapeHtml(developerFullNameText(record.developer) || "\u2014")}</span></div><div class="address">${escapeHtml(record.address || "\u2014")}</div><div class="metric-line">${metrics}</div><div class="company"><span>\u53F0\u5357\u6587\u5316\u5D07\u660E\u52A0\u76DF\u5E97</span><span>\u96FB\u8A71\uFF1A06-3356699</span></div></div><div class="codes"><div class="barcode">${barcodeSvg}<span>${escapeHtml(keyCode)}</span></div><img class="qr" src="${qrDataUrl}" alt="QR Code"></div></section><section class="label property-sheet"><div class="mini-stack"><div class="mini-card"><div class="card-case">${escapeHtml(record.caseName || "\u2014")}</div><div class="card-address">${escapeHtml(record.address || "\u2014")}</div></div><div class="mini-card"><div class="card-case">${escapeHtml(record.caseName || "\u2014")}</div><div class="card-address">${escapeHtml(record.address || "\u2014")}</div></div></div></section></body></html>`);
+    printDocument.write(`<!doctype html><html lang="zh-Hant"><head><meta charset="UTF-8"><title>\u9470\u5319\u6A19\u7C64 ${escapeHtml(propertyNo)}</title><style>@page{size:75mm 50mm;margin:0}*{box-sizing:border-box}html,body{width:75mm;margin:0;padding:0;background:#fff;color:#000;font-family:"Microsoft JhengHei",sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}.label{width:75mm;height:50mm;border:.35mm solid #000;overflow:hidden;break-after:page;page-break-after:always}.label:last-child{break-after:auto;page-break-after:auto}.info{height:25mm;padding:1.2mm 1.6mm .8mm;border-bottom:.3mm dashed #555;display:flex;flex-direction:column;justify-content:space-between}.topline,.case-line,.metric-line{display:flex;align-items:center;gap:1.5mm;white-space:nowrap}.topline{font-size:8pt;font-weight:800}.topline b{font-size:9pt}.topline .key{margin-left:auto}.case-line{font-size:9pt;font-weight:900}.case-line .case{max-width:50mm;overflow:hidden;text-overflow:ellipsis}.case-line .developer{margin-left:auto;font-size:7.5pt}.address{font-size:7.4pt;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.metric-line{font-size:7.2pt}.company{font-size:6.7pt;display:flex;justify-content:space-between;align-items:center;white-space:nowrap}.codes{height:25mm}.property-sheet{border:0;display:flex;align-items:flex-start}.mini-stack{width:30mm;height:50mm}.mini-card{width:30mm;height:25mm;border:.35mm solid #000;padding:1.4mm;display:flex;flex-direction:column;justify-content:center;gap:1.2mm;overflow:hidden}.mini-card .card-case{font-size:6.4pt;line-height:1.25;font-weight:900;overflow-wrap:anywhere}.mini-card .card-address{padding-top:1mm;border-top:.25mm dashed #555;font-size:6pt;line-height:1.25;font-weight:800;overflow-wrap:anywhere}</style></head><body><section class="label"><div class="info"><div class="topline"><b>${escapeHtml(propertyNo)}</b><span class="key">\u516C\u53F8#${escapeHtml(keyNumber)}</span></div><div class="case-line"><span class="case">${escapeHtml(record.caseName || "\u2014")}</span><span class="developer">${escapeHtml(developerFullNameText(record.developer) || "\u2014")}</span></div><div class="address">${escapeHtml(record.address || "\u2014")}</div><div class="metric-line">${metrics}</div><div class="company"><span>\u53F0\u5357\u6587\u5316\u5D07\u660E\u52A0\u76DF\u5E97</span><span>\u96FB\u8A71\uFF1A06-3356699</span></div></div><div class="codes"></div></section><section class="label property-sheet"><div class="mini-stack"><div class="mini-card"><div class="card-case">${escapeHtml(record.caseName || "\u2014")}</div><div class="card-address">${escapeHtml(record.address || "\u2014")}</div></div><div class="mini-card"><div class="card-case">${escapeHtml(record.caseName || "\u2014")}</div><div class="card-address">${escapeHtml(record.address || "\u2014")}</div></div></div></section></body></html>`);
     printDocument.close();
     const cleanup = () => setTimeout(() => frame.remove(), 1e3);
     printWindow.addEventListener("afterprint", cleanup, { once: true });
