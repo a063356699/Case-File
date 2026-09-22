@@ -3144,7 +3144,7 @@ export default function Home() {
 
   return <main lang="zh-Hant-TW" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-        <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V464</small></h1></div>
+        <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V465</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingIntakeReminderRecords.length > 0 && <button className="new-case-reminder-header-button" onClick={() => { setNewCaseReminder({ ...pendingIntakeReminderRecords[0] }); setNewCaseReminderBatchIds(pendingIntakeReminderRecords.map(record => record.id)); }}>新進案件提醒 {pendingIntakeReminderRecords.length}</button>}{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -3199,7 +3199,7 @@ export default function Home() {
     {restoreChoiceRecord && <div className="modal-backdrop"><div className="modal restore-choice-modal"><div className="modal-head"><div><span>恢復封存物件</span><h2>{restoreChoiceRecord.caseName || "未命名案件"}</h2></div><button className="close" onClick={() => setRestoreChoiceRecord(null)}>×</button></div><div className="restore-choice-body"><p>請選擇這次恢復的原因：</p><label className="field restore-price-field"><span>重新上架價格（萬）</span><input inputMode="decimal" value={restoreChoiceRecord._restorePrice || ""} onChange={event => setRestoreChoiceRecord({ ...restoreChoiceRecord, _restorePrice: event.target.value })} placeholder={`目前 ${restoreChoiceRecord.reducedPrice || restoreChoiceRecord.price || "未填"} 萬；不改價可留空`}/><small>填入新價格後，會和重新上架一起發布至「更新物件」。</small></label><button className="primary" onClick={() => restoreRecord(restoreChoiceRecord, true)}><b>重新上架並發布每日動態</b><span>一次顯示今天重新上架；有填新價格時，同時顯示紅字降價／調價</span></button><button onClick={() => restoreRecord(restoreChoiceRecord, false)}><b>恢復委託中物件</b><span>只恢復到委託中，不標示重新上架，也不套用上方價格</span></button></div>
 <div className="modal-foot"><button onClick={() => setRestoreChoiceRecord(null)}>取消</button></div></div></div>}
     {editing && <div className="modal-backdrop" onMouseDown={e => e.target === e.currentTarget && requestCloseEditing()}><div className="modal record-edit-modal"><div className="modal-head"><div className="record-modal-title"><span>{editing._intakeDraftId ? "編輯進案草稿" : records.some(r => r.id === editing.id) ? "編輯案件" : "建立新物件"}</span><h2><b>{editing.propertyNo || "尚無編號"}</b><em>{editing.caseName || "尚未命名"}</em></h2><small>{editing.address || "尚未填寫地址"}</small><small className="record-intake-file-name" title={`檔名：${intakeDraftEditorTitle(recordToIntake(editing))}`}>檔名：{intakeDraftEditorTitle(recordToIntake(editing))}</small><p>開發業務：{developerFullNameText(editing.developer) || "尚未填寫"}</p>{editing.archived && <i className="record-archive-title-note">{displayRocDate(editing.archived)} {editing.status || "下架"}</i>}</div>
-<div className="modal-head-actions">{records.some(record => record.id === editing.id) && !editing.archived && (editing.status || "委託中") === "委託中" && <><button className="record-print-button" type="button" onClick={() => openRecordIntakeDraft(editing)}>進案草稿</button><button className="record-print-button ppt" type="button" onClick={() => openRecordPptPreview(editing)}>PPT</button><button className={`record-print-button color${editing.colorSheetIssue ? " has-issue" : ""}`} type="button" onClick={() => { const attention = colorSheetAttention(editing.attentionNotes || "", editing.additionNotes || ""); setPrintEditor({ kind: "color", data: { ...editing, notes: attention, attentionNotes: attention, photos: [...(editing.photos || [])] } }); }}>{editing.colorSheetIssue ? "彩色表 Excel ●" : "彩色表 Excel"}</button><button className="record-print-button cover" type="button" onClick={() => printRecordDocument(editing, "cover")}>列印新進封面</button></>}<button className="close" type="button" onClick={requestCloseEditing}>×</button></div></div>
+<div className="modal-head-actions">{records.some(record => record.id === editing.id) && <button className="record-print-button key-label" type="button" onClick={() => void printKeyLabel(editing)}>列印鑰匙</button>}{records.some(record => record.id === editing.id) && !editing.archived && (editing.status || "委託中") === "委託中" && <><button className="record-print-button" type="button" onClick={() => openRecordIntakeDraft(editing)}>進案草稿</button><button className="record-print-button ppt" type="button" onClick={() => openRecordPptPreview(editing)}>PPT</button><button className={`record-print-button color${editing.colorSheetIssue ? " has-issue" : ""}`} type="button" onClick={() => { const attention = colorSheetAttention(editing.attentionNotes || "", editing.additionNotes || ""); setPrintEditor({ kind: "color", data: { ...editing, notes: attention, attentionNotes: attention, photos: [...(editing.photos || [])] } }); }}>{editing.colorSheetIssue ? "彩色表 Excel ●" : "彩色表 Excel"}</button><button className="record-print-button cover" type="button" onClick={() => printRecordDocument(editing, "cover")}>列印新進封面</button></>}<button className="close" type="button" onClick={requestCloseEditing}>×</button></div></div>
 {editing.archived && <div className="record-archive-date-editor"><Field fieldKey="archived" label="下架日期" record={editing} records={records} setRecord={updateEditingRecord}/></div>}
 <div className="form-grid record-edit-grid">{recordEditOrder.filter(key => key !== "area").map(key => {
   if (["feature2", "feature3", "feature4"].includes(key)) return null;
@@ -4301,6 +4301,52 @@ async function downloadColorWorkbook(record: RecordItem, personnel: Person[] = [
   // Keep the blob URL alive for this local session. Edge may hand the temporary
   // download path to Excel a few seconds after the click; revoking immediately
   // can make Excel report that the downloaded file has already disappeared.
+}
+
+const code39Patterns: Record<string, string> = {
+  "0":"nnnwwnwnn","1":"wnnwnnnnw","2":"nnwwnnnnw","3":"wnwwnnnnn","4":"nnnwwnnnw","5":"wnnwwnnnn","6":"nnwwwnnnn","7":"nnnwnnwnw","8":"wnnwnnwnn","9":"nnwwnnwnn",
+  A:"wnnnnwnnw",B:"nnwnnwnnw",C:"wnwnnwnnn",D:"nnnnwwnnw",E:"wnnnwwnnn",F:"nnwnwwnnn",G:"nnnnnwwnw",H:"wnnnnwwnn",I:"nnwnnwwnn",J:"nnnnwwwnn",
+  K:"wnnnnnnww",L:"nnwnnnnww",M:"wnwnnnnwn",N:"nnnnwnnww",O:"wnnnwnnwn",P:"nnwnwnnwn",Q:"nnnnnnwww",R:"wnnnnnwwn",S:"nnwnnnwwn",T:"nnnnwnwwn",
+  U:"wwnnnnnnw",V:"nwwnnnnnw",W:"wwwnnnnnn",X:"nwnnwnnnw",Y:"wwnnwnnnn",Z:"nwwnwnnnn","-":"nwnnnnwnw",".":"wwnnnnwnn"," ":"nwwnnnwnn","*":"nwnnwnwnn",
+};
+
+function code39Svg(value: string) {
+  const text = `*${String(value || "").trim().toUpperCase()}*`;
+  const narrow = 2, wide = 5, gap = 2, height = 58;
+  let x = 4; const bars: string[] = [];
+  for (const character of text) {
+    const pattern = code39Patterns[character];
+    if (!pattern) continue;
+    pattern.split("").forEach((widthCode, index) => { const width = widthCode === "w" ? wide : narrow; if (index % 2 === 0) bars.push(`<rect x="${x}" y="1" width="${width}" height="${height}"/>`); x += width; });
+    x += gap;
+  }
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${x + 4} ${height + 2}" preserveAspectRatio="none"><g fill="#000">${bars.join("")}</g></svg>`;
+}
+
+async function printKeyLabel(record: RecordItem) {
+  const escapeHtml = (value = "") => String(value || "").replace(/[&<>"']/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[character] || character));
+  const propertyNo = String(record.propertyNo || "").trim();
+  if (!propertyNo) return alert("主約編號未填寫，無法列印鑰匙標籤。");
+  let qrDataUrl = "";
+  try { qrDataUrl = await createColorWorkbookQr(colorWorkbookQrPayload(propertyNo)); }
+  catch (error) { return alert(error instanceof Error ? error.message : "QR Code 產生失敗，請先核對主約編號。"); }
+  const keyNumber = String(record.key || "").match(/公司\s*[#＃]?\s*(\d+)/)?.[1] || "—";
+  const kind = typeShort(record.type || "");
+  const ping = (label: string, value: string) => `${label} ${escapeHtml(value || "—")}坪`;
+  const metrics = kind === "土地" ? ping("地坪", record.landPing) : kind === "透天" ? [ping("建坪", record.buildingPing), ping("地坪", record.landPing), `車位 ${escapeHtml(parkingShort(record.parking) || "—")}`].join("　") : [ping("建坪", record.buildingPing), ping("室內坪", record.indoorPing), `車位 ${escapeHtml(parkingShort(record.parking) || "—")}`].join("　");
+  const barcodeSvg = code39Svg(propertyNo);
+  const frame = document.createElement("iframe");
+  Object.assign(frame.style, { position: "fixed", right: "0", bottom: "0", width: "1px", height: "1px", border: "0", opacity: "0", pointerEvents: "none" });
+  document.body.appendChild(frame);
+  const printDocument = frame.contentDocument, printWindow = frame.contentWindow;
+  if (!printDocument || !printWindow) { frame.remove(); return alert("無法開啟鑰匙標籤列印畫面，請再試一次。"); }
+  printDocument.open();
+  printDocument.write(`<!doctype html><html lang="zh-Hant"><head><meta charset="UTF-8"><title>鑰匙標籤 ${escapeHtml(propertyNo)}</title><style>@page{size:70mm 50mm;margin:0}*{box-sizing:border-box}html,body{width:70mm;height:50mm;margin:0;padding:0;background:#fff;color:#000;font-family:"Microsoft JhengHei",sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}.label{width:70mm;height:50mm;border:.35mm solid #000;overflow:hidden}.info{height:25mm;padding:1.2mm 1.6mm .8mm;border-bottom:.3mm dashed #555;display:flex;flex-direction:column;justify-content:space-between}.topline,.case-line,.metric-line{display:flex;align-items:center;gap:1.5mm;white-space:nowrap}.topline{font-size:8pt;font-weight:800}.topline b{font-size:9pt}.topline .key{margin-left:auto}.case-line{font-size:9pt;font-weight:900}.case-line .case{max-width:45mm;overflow:hidden;text-overflow:ellipsis}.case-line .developer{margin-left:auto;font-size:7.5pt}.address{font-size:7.4pt;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.metric-line{font-size:7.2pt}.company{font-size:6.7pt;text-align:center;white-space:nowrap}.codes{height:25mm;padding:1mm 1.5mm;display:grid;grid-template-columns:1fr 18mm;gap:1.5mm;align-items:center}.barcode{height:15mm;display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:0}.barcode svg{width:100%;height:11.5mm}.barcode span{font-size:7.5pt;font-weight:800;letter-spacing:.08em}.qr{width:17mm;height:17mm;object-fit:contain}</style></head><body><section class="label"><div class="info"><div class="topline"><b>主約編號 ${escapeHtml(propertyNo)}</b><span class="key">公司#${escapeHtml(keyNumber)}</span></div><div class="case-line"><span class="case">${escapeHtml(record.caseName || "—")}</span><span class="developer">開發 ${escapeHtml(developerFullNameText(record.developer) || "—")}</span></div><div class="address">${escapeHtml(record.address || "—")}</div><div class="metric-line">${metrics}</div><div class="company">台南文化崇明加盟店　電話：06-3356699</div></div><div class="codes"><div class="barcode">${barcodeSvg}<span>${escapeHtml(propertyNo)}</span></div><img class="qr" src="${qrDataUrl}" alt="QR Code"></div></section></body></html>`);
+  printDocument.close();
+  const cleanup = () => setTimeout(() => frame.remove(), 1000);
+  printWindow.addEventListener("afterprint", cleanup, { once: true });
+  setTimeout(() => { printWindow.focus(); printWindow.print(); }, 300);
+  setTimeout(() => { if (frame.isConnected) frame.remove(); }, 60000);
 }
 
 function printRecordDocument(record: RecordItem, kind: "color" | "cover") {
