@@ -48402,7 +48402,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V478" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V479" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -49019,7 +49019,7 @@ ${changedLabels}
             ] })
           ] }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal-head-actions", children: [
-            records.some((record) => record.id === editing.id) && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "record-print-button key-label", type: "button", onClick: () => void printKeyLabel(editing), children: "PDF\u9470\u5319" }),
+            records.some((record) => record.id === editing.id) && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "record-print-button key-label", type: "button", onClick: () => void printKeyLabel(editing), children: "\u5217\u5370\u9470\u5319" }),
             records.some((record) => record.id === editing.id) && !editing.archived && (editing.status || "\u59D4\u8A17\u4E2D") === "\u59D4\u8A17\u4E2D" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "record-print-button", type: "button", onClick: () => openRecordIntakeDraft(editing), children: "\u9032\u6848\u8349\u7A3F" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "record-print-button ppt", type: "button", onClick: () => openRecordPptPreview(editing), children: "PPT" }),
@@ -51229,6 +51229,28 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     const kind = typeShort(record.type || "");
     const ping = (label, value) => `${label} ${String(value || "\u2014")}\u576A`;
     const metrics = kind === "\u571F\u5730" ? ping("\u5730\u576A", record.landPing) : kind === "\u900F\u5929" ? [ping("\u5EFA\u576A", record.buildingPing), ping("\u5730\u576A", record.landPing), `\u8ECA\u4F4D ${parkingShort(record.parking) || "\u2014"}`].join("\u3000") : [ping("\u5EFA\u576A", record.buildingPing), ping("\u5BA4\u5167\u576A", record.indoorPing), `\u8ECA\u4F4D ${parkingShort(record.parking) || "\u2014"}`].join("\u3000");
+    const escapeHtml = (value = "") => String(value || "").replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character] || character);
+    const frame = document.createElement("iframe");
+    Object.assign(frame.style, { position: "fixed", right: "0", bottom: "0", width: "1px", height: "1px", border: "0", opacity: "0", pointerEvents: "none" });
+    document.body.appendChild(frame);
+    const printDocument = frame.contentDocument, printWindow = frame.contentWindow;
+    if (!printDocument || !printWindow) {
+      frame.remove();
+      return alert("\u7121\u6CD5\u958B\u555F\u9470\u5319\u6A19\u7C64\u5217\u5370\u756B\u9762\uFF0C\u8ACB\u518D\u8A66\u4E00\u6B21\u3002");
+    }
+    printDocument.open();
+    printDocument.write(`<!doctype html><html lang="zh-Hant"><head><meta charset="UTF-8"><title>\u9470\u5319\u6A19\u7C64 ${escapeHtml(propertyNo)}</title><style>@page{size:105mm 50mm;margin:0}*{box-sizing:border-box}html,body{width:105mm;height:50mm;margin:0;padding:0;background:#fff;color:#000;font-family:"Microsoft JhengHei",sans-serif;overflow:hidden}.sheet{position:relative;width:105mm;height:50mm}.label{position:absolute;left:0;top:0;width:75mm;height:50mm;border:.35mm solid #000}.info{height:25mm;padding:.8mm 1.4mm .6mm;border-bottom:.3mm dashed #555;display:flex;flex-direction:column;justify-content:space-between}.line{display:flex;align-items:center;gap:1.2mm;white-space:nowrap}.top{font-size:10pt;font-weight:900}.top b{font-size:11pt}.right{margin-left:auto}.case{font-size:10.5pt;font-weight:900;max-width:52mm;overflow:hidden;text-overflow:ellipsis}.developer{margin-left:auto;font-size:9pt}.address{font-size:9.5pt;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.metrics{font-size:8.5pt;font-weight:700}.company{font-size:8pt;font-weight:700;display:flex;justify-content:space-between}.blank{height:25mm}.side{position:absolute;left:75mm;top:0;width:30mm;height:50mm}.side-top{height:25mm}.side-card{width:30mm;height:12.5mm;border:.35mm solid #000;padding:.6mm;display:flex;align-items:center;justify-content:center;text-align:center;font-weight:900;line-height:1.05;overflow:hidden;overflow-wrap:anywhere}.side-case{font-size:9.5pt}.side-address{font-size:8.5pt}</style></head><body><main class="sheet"><section class="label"><div class="info"><div class="line top"><b>${escapeHtml(propertyNo)}</b><span class="right">\u516C\u53F8#${escapeHtml(keyNumber)}</span></div><div class="line"><span class="case">${escapeHtml(record.caseName || "\u2014")}</span><span class="developer">${escapeHtml(developerFullNameText(record.developer) || "\u2014")}</span></div><div class="address">${escapeHtml(record.address || "\u2014")}</div><div class="metrics">${escapeHtml(metrics)}</div><div class="company"><span>\u53F0\u5357\u6587\u5316\u5D07\u660E\u52A0\u76DF\u5E97</span><span>\u96FB\u8A71\uFF1A06-3356699</span></div></div><div class="blank"></div></section><aside class="side"><div class="side-top"></div><div class="side-card side-case">${escapeHtml(record.caseName || "\u2014")}</div><div class="side-card side-address">${escapeHtml(record.address || "\u2014")}</div></aside></main></body></html>`);
+    printDocument.close();
+    const cleanup = () => setTimeout(() => frame.remove(), 1e3);
+    printWindow.addEventListener("afterprint", cleanup, { once: true });
+    setTimeout(() => {
+      printWindow.focus();
+      printWindow.print();
+    }, 300);
+    setTimeout(() => {
+      if (frame.isConnected) frame.remove();
+    }, 6e4);
+    return;
     await document.fonts?.ready;
     const canvas = document.createElement("canvas");
     canvas.width = 1240;
