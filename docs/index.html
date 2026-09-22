@@ -37966,7 +37966,7 @@ html,body{max-width:100%;overflow-x:hidden}
   var require_browser = __commonJS({
     "node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/browser.js"(exports) {
       var canPromise = require_can_promise();
-      var QRCode3 = require_qrcode();
+      var QRCode2 = require_qrcode();
       var CanvasRenderer = require_canvas();
       var SvgRenderer = require_svg_tag();
       function renderCanvas(renderFunc, canvas, text, opts, cb) {
@@ -38009,7 +38009,7 @@ html,body{max-width:100%;overflow-x:hidden}
           }
           return new Promise(function(resolve, reject) {
             try {
-              const data = QRCode3.create(text, opts);
+              const data = QRCode2.create(text, opts);
               resolve(renderFunc(data, canvas, opts));
             } catch (e) {
               reject(e);
@@ -38017,13 +38017,13 @@ html,body{max-width:100%;overflow-x:hidden}
           });
         }
         try {
-          const data = QRCode3.create(text, opts);
+          const data = QRCode2.create(text, opts);
           cb(null, renderFunc(data, canvas, opts));
         } catch (e) {
           cb(e);
         }
       }
-      exports.create = QRCode3.create;
+      exports.create = QRCode2.create;
       exports.toCanvas = renderCanvas.bind(null, CanvasRenderer.render);
       exports.toDataURL = renderCanvas.bind(null, CanvasRenderer.renderToDataURL);
       exports.toString = renderCanvas.bind(null, function(data, _, opts) {
@@ -48402,7 +48402,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V467" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V468" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -51289,7 +51289,7 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     const keyCode = `${propertyNo.toUpperCase()}K${keyNumber.padStart(2, "0")}`;
     let qrDataUrl = "";
     try {
-      qrDataUrl = await QRCode.toDataURL(keyCode, { width: 280, margin: 1, errorCorrectionLevel: "M", color: { dark: "#000000", light: "#ffffff" } });
+      qrDataUrl = await createColorWorkbookQr(keyCode);
     } catch (error) {
       return alert(error instanceof Error ? error.message : "QR Code \u7522\u751F\u5931\u6557\uFF0C\u8ACB\u5148\u6838\u5C0D\u7269\u4EF6\u7DE8\u865F\u8207\u516C\u53F8\u9470\u5319\u865F\u78BC\u3002");
     }
