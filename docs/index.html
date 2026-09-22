@@ -48402,7 +48402,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V477" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V478" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -49019,7 +49019,7 @@ ${changedLabels}
             ] })
           ] }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal-head-actions", children: [
-            records.some((record) => record.id === editing.id) && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "record-print-button key-label", type: "button", onClick: () => void printKeyLabel(editing), children: "\u5217\u5370\u9470\u5319" }),
+            records.some((record) => record.id === editing.id) && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "record-print-button key-label", type: "button", onClick: () => void printKeyLabel(editing), children: "PDF\u9470\u5319" }),
             records.some((record) => record.id === editing.id) && !editing.archived && (editing.status || "\u59D4\u8A17\u4E2D") === "\u59D4\u8A17\u4E2D" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "record-print-button", type: "button", onClick: () => openRecordIntakeDraft(editing), children: "\u9032\u6848\u8349\u7A3F" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "record-print-button ppt", type: "button", onClick: () => openRecordPptPreview(editing), children: "PPT" }),
@@ -51222,35 +51222,150 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     link.remove();
   }
   async function printKeyLabel(record) {
-    const escapeHtml = (value = "") => String(value || "").replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character] || character);
     const propertyNo = String(record.propertyNo || "").trim();
-    if (!propertyNo) return alert("\u7269\u4EF6\u7DE8\u865F\u672A\u586B\u5BEB\uFF0C\u7121\u6CD5\u5217\u5370\u9470\u5319\u6A19\u7C64\u3002");
+    if (!propertyNo) return alert("\u7269\u4EF6\u7DE8\u865F\u672A\u586B\u5BEB\uFF0C\u7121\u6CD5\u7522\u751F\u9470\u5319 PDF\u3002");
     const keyNumber = String(record.key || "").match(/公司\s*[#＃]?\s*(\d+)/)?.[1] || "\u2014";
-    if (keyNumber === "\u2014") return alert("\u516C\u53F8\u9470\u5319\u865F\u78BC\u672A\u586B\u5BEB\uFF0C\u7121\u6CD5\u7522\u751F\u689D\u78BC\u8207 QR Code\u3002");
-    const keyCode = `${propertyNo.toUpperCase()}K${keyNumber.padStart(2, "0")}`;
+    if (keyNumber === "\u2014") return alert("\u516C\u53F8\u9470\u5319\u865F\u78BC\u672A\u586B\u5BEB\uFF0C\u7121\u6CD5\u7522\u751F\u9470\u5319 PDF\u3002");
     const kind = typeShort(record.type || "");
-    const ping = (label, value) => `${label} ${escapeHtml(value || "\u2014")}\u576A`;
-    const metrics = kind === "\u571F\u5730" ? ping("\u5730\u576A", record.landPing) : kind === "\u900F\u5929" ? [ping("\u5EFA\u576A", record.buildingPing), ping("\u5730\u576A", record.landPing), `\u8ECA\u4F4D ${escapeHtml(parkingShort(record.parking) || "\u2014")}`].join("\u3000") : [ping("\u5EFA\u576A", record.buildingPing), ping("\u5BA4\u5167\u576A", record.indoorPing), `\u8ECA\u4F4D ${escapeHtml(parkingShort(record.parking) || "\u2014")}`].join("\u3000");
-    const frame = document.createElement("iframe");
-    Object.assign(frame.style, { position: "fixed", right: "0", bottom: "0", width: "1px", height: "1px", border: "0", opacity: "0", pointerEvents: "none" });
-    document.body.appendChild(frame);
-    const printDocument = frame.contentDocument, printWindow = frame.contentWindow;
-    if (!printDocument || !printWindow) {
-      frame.remove();
-      return alert("\u7121\u6CD5\u958B\u555F\u9470\u5319\u6A19\u7C64\u5217\u5370\u756B\u9762\uFF0C\u8ACB\u518D\u8A66\u4E00\u6B21\u3002");
-    }
-    printDocument.open();
-    printDocument.write(`<!doctype html><html lang="zh-Hant"><head><meta charset="UTF-8"><title>\u9470\u5319\u6A19\u7C64 ${escapeHtml(propertyNo)}</title><style>@page{size:105mm 50mm;margin:0}*{box-sizing:border-box}html,body{width:105mm;height:50mm;margin:0;padding:0;background:#fff!important;color:#000!important;font-family:"Microsoft JhengHei",sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact;overflow:hidden}.print-sheet{position:relative;width:105mm;height:50mm;background:#fff!important;color:#000!important;overflow:hidden}.label{position:absolute;left:0;top:0;width:75mm;height:50mm;border:.35mm solid #000;overflow:hidden;background:#fff!important;color:#000!important}.info{height:25mm;padding:.8mm 1.4mm .6mm;border-bottom:.3mm dashed #555;display:flex;flex-direction:column;justify-content:space-between;background:#fff!important;color:#000!important}.topline,.case-line,.metric-line{display:flex;align-items:center;gap:1.2mm;white-space:nowrap}.topline{font-size:10pt;font-weight:900}.topline b{font-size:11pt}.topline .key{margin-left:auto}.case-line{font-size:10.5pt;font-weight:900}.case-line .case{max-width:52mm;overflow:hidden;text-overflow:ellipsis}.case-line .developer{margin-left:auto;font-size:9pt}.address{font-size:9.5pt;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.metric-line{font-size:8.5pt;font-weight:700}.company{font-size:8pt;font-weight:700;display:flex;justify-content:space-between;align-items:center;white-space:nowrap}.barcode-blank{height:25mm;background:#fff!important}.side-stack{position:absolute;left:75mm;top:0;width:30mm;height:50mm;background:#fff!important;color:#000!important;overflow:hidden}.side-blank{width:30mm;height:25mm;border:.35mm solid #000;background:#fff!important}.side-card{width:30mm;height:12.5mm;border:.35mm solid #000;padding:.6mm;display:flex;align-items:center;justify-content:center;text-align:center;font-weight:900;line-height:1.05;overflow:hidden;overflow-wrap:anywhere;background:#fff!important;color:#000!important}.side-case{font-size:9.5pt}.side-address{font-size:8.5pt}</style></head><body><main class="print-sheet"><section class="label"><div class="info"><div class="topline"><b>${escapeHtml(propertyNo)}</b><span class="key">\u516C\u53F8#${escapeHtml(keyNumber)}</span></div><div class="case-line"><span class="case">${escapeHtml(record.caseName || "\u2014")}</span><span class="developer">${escapeHtml(developerFullNameText(record.developer) || "\u2014")}</span></div><div class="address">${escapeHtml(record.address || "\u2014")}</div><div class="metric-line">${metrics}</div><div class="company"><span>\u53F0\u5357\u6587\u5316\u5D07\u660E\u52A0\u76DF\u5E97</span><span>\u96FB\u8A71\uFF1A06-3356699</span></div></div><div class="barcode-blank"></div></section><aside class="side-stack"><div class="side-blank"></div><div class="side-card side-case">${escapeHtml(record.caseName || "\u2014")}</div><div class="side-card side-address">${escapeHtml(record.address || "\u2014")}</div></aside></main></body></html>`);
-    printDocument.close();
-    const cleanup = () => setTimeout(() => frame.remove(), 1e3);
-    printWindow.addEventListener("afterprint", cleanup, { once: true });
-    setTimeout(() => {
-      printWindow.focus();
-      printWindow.print();
-    }, 300);
-    setTimeout(() => {
-      if (frame.isConnected) frame.remove();
-    }, 6e4);
+    const ping = (label, value) => `${label} ${String(value || "\u2014")}\u576A`;
+    const metrics = kind === "\u571F\u5730" ? ping("\u5730\u576A", record.landPing) : kind === "\u900F\u5929" ? [ping("\u5EFA\u576A", record.buildingPing), ping("\u5730\u576A", record.landPing), `\u8ECA\u4F4D ${parkingShort(record.parking) || "\u2014"}`].join("\u3000") : [ping("\u5EFA\u576A", record.buildingPing), ping("\u5BA4\u5167\u576A", record.indoorPing), `\u8ECA\u4F4D ${parkingShort(record.parking) || "\u2014"}`].join("\u3000");
+    await document.fonts?.ready;
+    const canvas = document.createElement("canvas");
+    canvas.width = 1240;
+    canvas.height = 1748;
+    const context = canvas.getContext("2d");
+    if (!context) return alert("\u7121\u6CD5\u5EFA\u7ACB\u9470\u5319 PDF\uFF0C\u8ACB\u91CD\u65B0\u6574\u7406\u5F8C\u518D\u8A66\u4E00\u6B21\u3002");
+    const mm = canvas.width / 105;
+    const px = (value) => value * mm;
+    context.fillStyle = "#ffffff";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.strokeStyle = "#000000";
+    context.fillStyle = "#000000";
+    context.lineWidth = 3;
+    context.strokeRect(1.5, 1.5, px(75) - 3, px(50) - 3);
+    context.setLineDash([8, 5]);
+    context.beginPath();
+    context.moveTo(0, px(25));
+    context.lineTo(px(75), px(25));
+    context.stroke();
+    context.setLineDash([]);
+    const font = (size, weight = 800) => {
+      context.font = `${weight} ${size}px "Microsoft JhengHei","Noto Sans TC",sans-serif`;
+      context.textBaseline = "middle";
+      context.fillStyle = "#000000";
+    };
+    const fit = (value, maxWidth) => {
+      let text = String(value || "\u2014");
+      if (context.measureText(text).width <= maxWidth) return text;
+      while (text.length > 1 && context.measureText(`${text}\u2026`).width > maxWidth) text = text.slice(0, -1);
+      return `${text}\u2026`;
+    };
+    const centeredLines = (value, left2, top, width, height, size, maxLines) => {
+      font(size, 900);
+      const characters = Array.from(String(value || "\u2014"));
+      const lines = [];
+      let line = "";
+      characters.forEach((character) => {
+        const candidate = line + character;
+        if (line && context.measureText(candidate).width > width - px(2)) {
+          lines.push(line);
+          line = character;
+        } else line = candidate;
+      });
+      if (line) lines.push(line);
+      const visible = lines.slice(0, maxLines);
+      if (lines.length > maxLines && visible.length) visible[visible.length - 1] = fit(`${visible[visible.length - 1]}\u2026`, width - px(2));
+      const lineHeight = size * 1.08;
+      const startY = top + (height - visible.length * lineHeight) / 2 + lineHeight / 2;
+      context.textAlign = "center";
+      visible.forEach((text, index) => context.fillText(text, left2 + width / 2, startY + index * lineHeight));
+    };
+    const left = px(2), right = px(73), row = px(5);
+    font(43, 900);
+    context.textAlign = "left";
+    context.fillText(propertyNo.toUpperCase(), left, row * 0.65);
+    context.textAlign = "right";
+    context.fillText(`\u516C\u53F8#${keyNumber}`, right, row * 0.65);
+    font(38, 900);
+    context.textAlign = "left";
+    context.fillText(fit(record.caseName || "\u2014", px(55)), left, row * 1.65);
+    font(31, 800);
+    context.textAlign = "right";
+    context.fillText(fit(developerFullNameText(record.developer) || "\u2014", px(17)), right, row * 1.65);
+    font(33, 800);
+    context.textAlign = "left";
+    context.fillText(fit(record.address || "\u2014", px(71)), left, row * 2.65);
+    font(29, 750);
+    context.fillText(fit(metrics, px(71)), left, row * 3.65);
+    font(26, 750);
+    context.fillText("\u53F0\u5357\u6587\u5316\u5D07\u660E\u52A0\u76DF\u5E97", left, row * 4.55);
+    context.textAlign = "right";
+    context.fillText("\u96FB\u8A71\uFF1A06-3356699", right, row * 4.55);
+    const sideLeft = px(75), sideWidth = px(30), sideTop = px(25), sideRowHeight = px(12.5);
+    context.lineWidth = 3;
+    context.strokeRect(sideLeft + 1.5, sideTop + 1.5, sideWidth - 3, sideRowHeight - 3);
+    context.strokeRect(sideLeft + 1.5, sideTop + sideRowHeight + 1.5, sideWidth - 3, sideRowHeight - 3);
+    centeredLines(record.caseName || "\u2014", sideLeft, sideTop, sideWidth, sideRowHeight, 29, 3);
+    centeredLines(record.address || "\u2014", sideLeft, sideTop + sideRowHeight, sideWidth, sideRowHeight, 26, 3);
+    const jpegData = canvas.toDataURL("image/jpeg", 0.96).split(",")[1];
+    const jpeg = Uint8Array.from(atob(jpegData), (character) => character.charCodeAt(0));
+    const encoder = new TextEncoder();
+    const ascii = (value) => encoder.encode(value);
+    const join = (...parts) => {
+      const result = new Uint8Array(parts.reduce((sum, part) => sum + part.length, 0));
+      let offset = 0;
+      parts.forEach((part) => {
+        result.set(part, offset);
+        offset += part.length;
+      });
+      return result;
+    };
+    const pageWidth = 297.6378, pageHeight = 419.5276;
+    const content = ascii(`q
+${pageWidth} 0 0 ${pageHeight} 0 0 cm
+/Im0 Do
+Q
+`);
+    const objects = [
+      ascii("<< /Type /Catalog /Pages 2 0 R >>"),
+      ascii("<< /Type /Pages /Kids [3 0 R] /Count 1 >>"),
+      ascii(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageWidth} ${pageHeight}] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>`),
+      join(ascii(`<< /Type /XObject /Subtype /Image /Width ${canvas.width} /Height ${canvas.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpeg.length} >>
+stream
+`), jpeg, ascii("\nendstream")),
+      join(ascii(`<< /Length ${content.length} >>
+stream
+`), content, ascii("endstream"))
+    ];
+    const chunks = [ascii("%PDF-1.4\n%PDFKEY\n")];
+    const offsets = [0];
+    let length = chunks[0].length;
+    objects.forEach((object, index) => {
+      offsets.push(length);
+      const wrapped = join(ascii(`${index + 1} 0 obj
+`), object, ascii("\nendobj\n"));
+      chunks.push(wrapped);
+      length += wrapped.length;
+    });
+    const xrefOffset = length;
+    const xref = [`xref
+0 ${objects.length + 1}
+`, "0000000000 65535 f\n", ...offsets.slice(1).map((offset) => `${String(offset).padStart(10, "0")} 00000 n
+`), `trailer
+<< /Size ${objects.length + 1} /Root 1 0 R >>
+startxref
+${xrefOffset}
+%%EOF`].join("");
+    chunks.push(ascii(xref));
+    const pdf = new Blob([join(...chunks)], { type: "application/pdf" });
+    const url = URL.createObjectURL(pdf);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `PDF\u9470\u5319 ${propertyNo.toUpperCase()}.pdf`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1e3);
   }
   function printRecordDocument(record, kind) {
     const escapeHtml = (value2 = "") => String(value2 || "").replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character] || character);

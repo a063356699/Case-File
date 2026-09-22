@@ -3144,7 +3144,7 @@ export default function Home() {
 
   return <main lang="zh-Hant-TW" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-        <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V477</small></h1></div>
+        <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V478</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingIntakeReminderRecords.length > 0 && <button className="new-case-reminder-header-button" onClick={() => { setNewCaseReminder({ ...pendingIntakeReminderRecords[0] }); setNewCaseReminderBatchIds(pendingIntakeReminderRecords.map(record => record.id)); }}>新進案件提醒 {pendingIntakeReminderRecords.length}</button>}{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -3199,7 +3199,7 @@ export default function Home() {
     {restoreChoiceRecord && <div className="modal-backdrop"><div className="modal restore-choice-modal"><div className="modal-head"><div><span>恢復封存物件</span><h2>{restoreChoiceRecord.caseName || "未命名案件"}</h2></div><button className="close" onClick={() => setRestoreChoiceRecord(null)}>×</button></div><div className="restore-choice-body"><p>請選擇這次恢復的原因：</p><label className="field restore-price-field"><span>重新上架價格（萬）</span><input inputMode="decimal" value={restoreChoiceRecord._restorePrice || ""} onChange={event => setRestoreChoiceRecord({ ...restoreChoiceRecord, _restorePrice: event.target.value })} placeholder={`目前 ${restoreChoiceRecord.reducedPrice || restoreChoiceRecord.price || "未填"} 萬；不改價可留空`}/><small>填入新價格後，會和重新上架一起發布至「更新物件」。</small></label><button className="primary" onClick={() => restoreRecord(restoreChoiceRecord, true)}><b>重新上架並發布每日動態</b><span>一次顯示今天重新上架；有填新價格時，同時顯示紅字降價／調價</span></button><button onClick={() => restoreRecord(restoreChoiceRecord, false)}><b>恢復委託中物件</b><span>只恢復到委託中，不標示重新上架，也不套用上方價格</span></button></div>
 <div className="modal-foot"><button onClick={() => setRestoreChoiceRecord(null)}>取消</button></div></div></div>}
     {editing && <div className="modal-backdrop" onMouseDown={e => e.target === e.currentTarget && requestCloseEditing()}><div className="modal record-edit-modal"><div className="modal-head"><div className="record-modal-title"><span>{editing._intakeDraftId ? "編輯進案草稿" : records.some(r => r.id === editing.id) ? "編輯案件" : "建立新物件"}</span><h2><b>{editing.propertyNo || "尚無編號"}</b><em>{editing.caseName || "尚未命名"}</em></h2><small>{editing.address || "尚未填寫地址"}</small><small className="record-intake-file-name" title={`檔名：${intakeDraftEditorTitle(recordToIntake(editing))}`}>檔名：{intakeDraftEditorTitle(recordToIntake(editing))}</small><p>開發業務：{developerFullNameText(editing.developer) || "尚未填寫"}</p>{editing.archived && <i className="record-archive-title-note">{displayRocDate(editing.archived)} {editing.status || "下架"}</i>}</div>
-<div className="modal-head-actions">{records.some(record => record.id === editing.id) && <button className="record-print-button key-label" type="button" onClick={() => void printKeyLabel(editing)}>列印鑰匙</button>}{records.some(record => record.id === editing.id) && !editing.archived && (editing.status || "委託中") === "委託中" && <><button className="record-print-button" type="button" onClick={() => openRecordIntakeDraft(editing)}>進案草稿</button><button className="record-print-button ppt" type="button" onClick={() => openRecordPptPreview(editing)}>PPT</button><button className={`record-print-button color${editing.colorSheetIssue ? " has-issue" : ""}`} type="button" onClick={() => { const attention = colorSheetAttention(editing.attentionNotes || "", editing.additionNotes || ""); setPrintEditor({ kind: "color", data: { ...editing, notes: attention, attentionNotes: attention, photos: [...(editing.photos || [])] } }); }}>{editing.colorSheetIssue ? "彩色表 Excel ●" : "彩色表 Excel"}</button><button className="record-print-button cover" type="button" onClick={() => printRecordDocument(editing, "cover")}>列印新進封面</button></>}<button className="close" type="button" onClick={requestCloseEditing}>×</button></div></div>
+<div className="modal-head-actions">{records.some(record => record.id === editing.id) && <button className="record-print-button key-label" type="button" onClick={() => void printKeyLabel(editing)}>PDF鑰匙</button>}{records.some(record => record.id === editing.id) && !editing.archived && (editing.status || "委託中") === "委託中" && <><button className="record-print-button" type="button" onClick={() => openRecordIntakeDraft(editing)}>進案草稿</button><button className="record-print-button ppt" type="button" onClick={() => openRecordPptPreview(editing)}>PPT</button><button className={`record-print-button color${editing.colorSheetIssue ? " has-issue" : ""}`} type="button" onClick={() => { const attention = colorSheetAttention(editing.attentionNotes || "", editing.additionNotes || ""); setPrintEditor({ kind: "color", data: { ...editing, notes: attention, attentionNotes: attention, photos: [...(editing.photos || [])] } }); }}>{editing.colorSheetIssue ? "彩色表 Excel ●" : "彩色表 Excel"}</button><button className="record-print-button cover" type="button" onClick={() => printRecordDocument(editing, "cover")}>列印新進封面</button></>}<button className="close" type="button" onClick={requestCloseEditing}>×</button></div></div>
 {editing.archived && <div className="record-archive-date-editor"><Field fieldKey="archived" label="下架日期" record={editing} records={records} setRecord={updateEditingRecord}/></div>}
 <div className="form-grid record-edit-grid">{recordEditOrder.filter(key => key !== "area").map(key => {
   if (["feature2", "feature3", "feature4"].includes(key)) return null;
@@ -4324,27 +4324,91 @@ function code39Svg(value: string) {
 }
 
 async function printKeyLabel(record: RecordItem) {
-  const escapeHtml = (value = "") => String(value || "").replace(/[&<>"']/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[character] || character));
   const propertyNo = String(record.propertyNo || "").trim();
-  if (!propertyNo) return alert("物件編號未填寫，無法列印鑰匙標籤。");
+  if (!propertyNo) return alert("物件編號未填寫，無法產生鑰匙 PDF。");
   const keyNumber = String(record.key || "").match(/公司\s*[#＃]?\s*(\d+)/)?.[1] || "—";
-  if (keyNumber === "—") return alert("公司鑰匙號碼未填寫，無法產生條碼與 QR Code。");
-  const keyCode = `${propertyNo.toUpperCase()}K${keyNumber.padStart(2, "0")}`;
+  if (keyNumber === "—") return alert("公司鑰匙號碼未填寫，無法產生鑰匙 PDF。");
   const kind = typeShort(record.type || "");
-  const ping = (label: string, value: string) => `${label} ${escapeHtml(value || "—")}坪`;
-  const metrics = kind === "土地" ? ping("地坪", record.landPing) : kind === "透天" ? [ping("建坪", record.buildingPing), ping("地坪", record.landPing), `車位 ${escapeHtml(parkingShort(record.parking) || "—")}`].join("　") : [ping("建坪", record.buildingPing), ping("室內坪", record.indoorPing), `車位 ${escapeHtml(parkingShort(record.parking) || "—")}`].join("　");
-  const frame = document.createElement("iframe");
-  Object.assign(frame.style, { position: "fixed", right: "0", bottom: "0", width: "1px", height: "1px", border: "0", opacity: "0", pointerEvents: "none" });
-  document.body.appendChild(frame);
-  const printDocument = frame.contentDocument, printWindow = frame.contentWindow;
-  if (!printDocument || !printWindow) { frame.remove(); return alert("無法開啟鑰匙標籤列印畫面，請再試一次。"); }
-  printDocument.open();
-  printDocument.write(`<!doctype html><html lang="zh-Hant"><head><meta charset="UTF-8"><title>鑰匙標籤 ${escapeHtml(propertyNo)}</title><style>@page{size:105mm 50mm;margin:0}*{box-sizing:border-box}html,body{width:105mm;height:50mm;margin:0;padding:0;background:#fff!important;color:#000!important;font-family:"Microsoft JhengHei",sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact;overflow:hidden}.print-sheet{position:relative;width:105mm;height:50mm;background:#fff!important;color:#000!important;overflow:hidden}.label{position:absolute;left:0;top:0;width:75mm;height:50mm;border:.35mm solid #000;overflow:hidden;background:#fff!important;color:#000!important}.info{height:25mm;padding:.8mm 1.4mm .6mm;border-bottom:.3mm dashed #555;display:flex;flex-direction:column;justify-content:space-between;background:#fff!important;color:#000!important}.topline,.case-line,.metric-line{display:flex;align-items:center;gap:1.2mm;white-space:nowrap}.topline{font-size:10pt;font-weight:900}.topline b{font-size:11pt}.topline .key{margin-left:auto}.case-line{font-size:10.5pt;font-weight:900}.case-line .case{max-width:52mm;overflow:hidden;text-overflow:ellipsis}.case-line .developer{margin-left:auto;font-size:9pt}.address{font-size:9.5pt;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.metric-line{font-size:8.5pt;font-weight:700}.company{font-size:8pt;font-weight:700;display:flex;justify-content:space-between;align-items:center;white-space:nowrap}.barcode-blank{height:25mm;background:#fff!important}.side-stack{position:absolute;left:75mm;top:0;width:30mm;height:50mm;background:#fff!important;color:#000!important;overflow:hidden}.side-blank{width:30mm;height:25mm;border:.35mm solid #000;background:#fff!important}.side-card{width:30mm;height:12.5mm;border:.35mm solid #000;padding:.6mm;display:flex;align-items:center;justify-content:center;text-align:center;font-weight:900;line-height:1.05;overflow:hidden;overflow-wrap:anywhere;background:#fff!important;color:#000!important}.side-case{font-size:9.5pt}.side-address{font-size:8.5pt}</style></head><body><main class="print-sheet"><section class="label"><div class="info"><div class="topline"><b>${escapeHtml(propertyNo)}</b><span class="key">公司#${escapeHtml(keyNumber)}</span></div><div class="case-line"><span class="case">${escapeHtml(record.caseName || "—")}</span><span class="developer">${escapeHtml(developerFullNameText(record.developer) || "—")}</span></div><div class="address">${escapeHtml(record.address || "—")}</div><div class="metric-line">${metrics}</div><div class="company"><span>台南文化崇明加盟店</span><span>電話：06-3356699</span></div></div><div class="barcode-blank"></div></section><aside class="side-stack"><div class="side-blank"></div><div class="side-card side-case">${escapeHtml(record.caseName || "—")}</div><div class="side-card side-address">${escapeHtml(record.address || "—")}</div></aside></main></body></html>`);
-  printDocument.close();
-  const cleanup = () => setTimeout(() => frame.remove(), 1000);
-  printWindow.addEventListener("afterprint", cleanup, { once: true });
-  setTimeout(() => { printWindow.focus(); printWindow.print(); }, 300);
-  setTimeout(() => { if (frame.isConnected) frame.remove(); }, 60000);
+  const ping = (label: string, value: string) => `${label} ${String(value || "—")}坪`;
+  const metrics = kind === "土地" ? ping("地坪", record.landPing) : kind === "透天" ? [ping("建坪", record.buildingPing), ping("地坪", record.landPing), `車位 ${parkingShort(record.parking) || "—"}`].join("　") : [ping("建坪", record.buildingPing), ping("室內坪", record.indoorPing), `車位 ${parkingShort(record.parking) || "—"}`].join("　");
+  await document.fonts?.ready;
+  const canvas = document.createElement("canvas");
+  canvas.width = 1240;
+  canvas.height = 1748;
+  const context = canvas.getContext("2d");
+  if (!context) return alert("無法建立鑰匙 PDF，請重新整理後再試一次。");
+  const mm = canvas.width / 105;
+  const px = (value: number) => value * mm;
+  context.fillStyle = "#ffffff";
+  context.fillRect(0, 0, canvas.width, canvas.height);
+  context.strokeStyle = "#000000";
+  context.fillStyle = "#000000";
+  context.lineWidth = 3;
+  context.strokeRect(1.5, 1.5, px(75) - 3, px(50) - 3);
+  context.setLineDash([8, 5]);
+  context.beginPath(); context.moveTo(0, px(25)); context.lineTo(px(75), px(25)); context.stroke();
+  context.setLineDash([]);
+  const font = (size: number, weight = 800) => { context.font = `${weight} ${size}px "Microsoft JhengHei","Noto Sans TC",sans-serif`; context.textBaseline = "middle"; context.fillStyle = "#000000"; };
+  const fit = (value: string, maxWidth: number) => { let text = String(value || "—"); if (context.measureText(text).width <= maxWidth) return text; while (text.length > 1 && context.measureText(`${text}…`).width > maxWidth) text = text.slice(0, -1); return `${text}…`; };
+  const centeredLines = (value: string, left: number, top: number, width: number, height: number, size: number, maxLines: number) => {
+    font(size, 900);
+    const characters = Array.from(String(value || "—"));
+    const lines: string[] = [];
+    let line = "";
+    characters.forEach(character => { const candidate = line + character; if (line && context.measureText(candidate).width > width - px(2)) { lines.push(line); line = character; } else line = candidate; });
+    if (line) lines.push(line);
+    const visible = lines.slice(0, maxLines);
+    if (lines.length > maxLines && visible.length) visible[visible.length - 1] = fit(`${visible[visible.length - 1]}…`, width - px(2));
+    const lineHeight = size * 1.08;
+    const startY = top + (height - visible.length * lineHeight) / 2 + lineHeight / 2;
+    context.textAlign = "center";
+    visible.forEach((text, index) => context.fillText(text, left + width / 2, startY + index * lineHeight));
+  };
+  const left = px(2), right = px(73), row = px(5);
+  font(43, 900); context.textAlign = "left"; context.fillText(propertyNo.toUpperCase(), left, row * .65);
+  context.textAlign = "right"; context.fillText(`公司#${keyNumber}`, right, row * .65);
+  font(38, 900); context.textAlign = "left"; context.fillText(fit(record.caseName || "—", px(55)), left, row * 1.65);
+  font(31, 800); context.textAlign = "right"; context.fillText(fit(developerFullNameText(record.developer) || "—", px(17)), right, row * 1.65);
+  font(33, 800); context.textAlign = "left"; context.fillText(fit(record.address || "—", px(71)), left, row * 2.65);
+  font(29, 750); context.fillText(fit(metrics, px(71)), left, row * 3.65);
+  font(26, 750); context.fillText("台南文化崇明加盟店", left, row * 4.55);
+  context.textAlign = "right"; context.fillText("電話：06-3356699", right, row * 4.55);
+  const sideLeft = px(75), sideWidth = px(30), sideTop = px(25), sideRowHeight = px(12.5);
+  context.lineWidth = 3;
+  context.strokeRect(sideLeft + 1.5, sideTop + 1.5, sideWidth - 3, sideRowHeight - 3);
+  context.strokeRect(sideLeft + 1.5, sideTop + sideRowHeight + 1.5, sideWidth - 3, sideRowHeight - 3);
+  centeredLines(record.caseName || "—", sideLeft, sideTop, sideWidth, sideRowHeight, 29, 3);
+  centeredLines(record.address || "—", sideLeft, sideTop + sideRowHeight, sideWidth, sideRowHeight, 26, 3);
+  const jpegData = canvas.toDataURL("image/jpeg", .96).split(",")[1];
+  const jpeg = Uint8Array.from(atob(jpegData), character => character.charCodeAt(0));
+  const encoder = new TextEncoder();
+  const ascii = (value: string) => encoder.encode(value);
+  const join = (...parts: Uint8Array[]) => { const result = new Uint8Array(parts.reduce((sum, part) => sum + part.length, 0)); let offset = 0; parts.forEach(part => { result.set(part, offset); offset += part.length; }); return result; };
+  const pageWidth = 297.6378, pageHeight = 419.5276;
+  const content = ascii(`q\n${pageWidth} 0 0 ${pageHeight} 0 0 cm\n/Im0 Do\nQ\n`);
+  const objects = [
+    ascii("<< /Type /Catalog /Pages 2 0 R >>"),
+    ascii("<< /Type /Pages /Kids [3 0 R] /Count 1 >>"),
+    ascii(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageWidth} ${pageHeight}] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>`),
+    join(ascii(`<< /Type /XObject /Subtype /Image /Width ${canvas.width} /Height ${canvas.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpeg.length} >>\nstream\n`), jpeg, ascii("\nendstream")),
+    join(ascii(`<< /Length ${content.length} >>\nstream\n`), content, ascii("endstream")),
+  ];
+  const chunks: Uint8Array[] = [ascii("%PDF-1.4\n%PDFKEY\n")];
+  const offsets = [0];
+  let length = chunks[0].length;
+  objects.forEach((object, index) => { offsets.push(length); const wrapped = join(ascii(`${index + 1} 0 obj\n`), object, ascii("\nendobj\n")); chunks.push(wrapped); length += wrapped.length; });
+  const xrefOffset = length;
+  const xref = [`xref\n0 ${objects.length + 1}\n`, "0000000000 65535 f\n", ...offsets.slice(1).map(offset => `${String(offset).padStart(10, "0")} 00000 n\n`), `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`].join("");
+  chunks.push(ascii(xref));
+  const pdf = new Blob([join(...chunks)], { type: "application/pdf" });
+  const url = URL.createObjectURL(pdf);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = `PDF鑰匙 ${propertyNo.toUpperCase()}.pdf`;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 function printRecordDocument(record: RecordItem, kind: "color" | "cover") {
