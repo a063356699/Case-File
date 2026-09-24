@@ -45147,6 +45147,53 @@ ${String(ex)}`);
     const corrected = normalized.replace(/\d+陽台$/, `${balcony}\u967D\u53F0`);
     return corrected === normalized ? record : { ...record, layout: corrected };
   });
+  var REQUIRED_CASE_IMPORT_LA0046219 = "2026-09-24-v2";
+  var ensureRequiredCaseImports = (records) => {
+    const propertyNo = "LA0046219";
+    const index = records.findIndex((record) => String(record.propertyNo || "").trim().toUpperCase() === propertyNo);
+    const modifiedAt = (/* @__PURE__ */ new Date()).toISOString();
+    const archivedPatch = {
+      propertyNo,
+      type: "\u571F\u5730",
+      contractType: "\u5C08\u7D04",
+      status: "\u5230\u671F\u4E0B\u67B6",
+      area: "\u9AD8\u96C4\u5E02\u6960\u6893\u5340",
+      caseName: "\u6960\u6893\u5F8C\u52C1\u53F0\u7A4D\u96FB\u81E8\u8DEF\u6301\u5206\u5EFA\u5730",
+      address: "\u9AD8\u96C4\u5E02\u6960\u6893\u5340\u5F8C\u52C1\u6BB5\u4E8C\u5C0F\u6BB5456\u3001456-2\u5730\u865F",
+      price: "1600",
+      landPing: "53.467",
+      parking: "\u7121",
+      managementFee: "0",
+      key: "\u571F\u5730 (\u7121\u9470\u5319)",
+      currentState: "\u571F\u5730",
+      road: "8",
+      zoning: "\u7B2C\u4E09\u7A2E\u4F4F\u5B85\u5340",
+      coverage: "50",
+      far: "240",
+      developer: "\u4F69\u73B2",
+      entrustStart: "2024-06-01",
+      entrustEnd: "2026-03-30",
+      reportDate: "2024-05-31",
+      notes: "\u9053\u8DEF\u7528\u5730\uFF1A3.17\u576A",
+      photoInfo: "\u5916\u7E23\u5E02",
+      archived: "2026-03-30",
+      _archiveStatus: "\u5230\u671F\u4E0B\u67B6",
+      _archiveActionDate: "2026-03-30",
+      archiveReason: "",
+      _restoredAt: "",
+      caseNameNote: "",
+      caseNameNoteModifiedAt: "",
+      updateDate: "",
+      lastModifiedAt: modifiedAt,
+      _requiredCaseImport: REQUIRED_CASE_IMPORT_LA0046219
+    };
+    if (index >= 0) {
+      const existing = records[index];
+      if (existing._requiredCaseImport === REQUIRED_CASE_IMPORT_LA0046219 && existing.entrustEnd === archivedPatch.entrustEnd && existing.archived === archivedPatch.archived) return records;
+      return records.map((record, recordIndex) => recordIndex === index ? normalizeRecordPings({ ...record, ...archivedPatch }) : record);
+    }
+    return [normalizeRecordPings({ ...blankRecord(), ...archivedPatch, id: "import-la0046219-20260924", photos: [] }), ...records];
+  };
   var daysUntil = (date = "") => validDate(date) && date ? Math.ceil((Date.parse(`${date}T00:00:00`) - Date.parse(`${today()}T00:00:00`)) / 864e5) : 99999;
   var nextDate = (date = "") => {
     const normalized = normalizeDateInput(date);
@@ -46066,7 +46113,7 @@ ${String(ex)}`);
           localStorage.setItem(appRestoreMarker, "1");
         }
         const beforeSourceFixes = JSON.stringify(loadedRecords);
-        loadedRecords = applySourceLayoutFixes(loadedRecords).map((record) => normalizeRecordPings({ ...record, salesBook: record.salesBook || "\u88FD\u4F5C" }));
+        loadedRecords = ensureRequiredCaseImports(applySourceLayoutFixes(loadedRecords).map((record) => normalizeRecordPings({ ...record, salesBook: record.salesBook || "\u88FD\u4F5C" })));
         if (JSON.stringify(loadedRecords) !== beforeSourceFixes) localStorage.setItem(STORAGE_KEY, JSON.stringify(loadedRecords));
         const savedSettings = localStorage.getItem(SETTINGS_KEY);
         setSettings((s) => {
@@ -47750,8 +47797,9 @@ ${changedLabels}
           localStorage.setItem(CLOUD_LAST_UPLOAD_KEY, rows[0].updated_at);
         }
         if (automatic || confirm("\u96F2\u7AEF\u8CC7\u6599\u5C07\u8207\u672C\u6A5F\u8CC7\u6599\u5408\u4F75\uFF0C\u672C\u6A5F\u5DF2\u4FEE\u6539\u4F46\u5C1A\u672A\u540C\u6B65\u7684\u540C\u4E00\u7B46\u8CC7\u6599\u5C07\u4EE5\u96F2\u7AEF\u7248\u672C\u70BA\u6E96\u3002\u78BA\u5B9A\u55CE\uFF1F")) {
-          cloudSkipNextPushRef.current = true;
-          cloudPullGuardUntilRef.current = Date.now() + 1500;
+          const requiredCaseImportPending = !data.records.some((record) => String(record.propertyNo || "").trim().toUpperCase() === "LA0046219" && record._requiredCaseImport === REQUIRED_CASE_IMPORT_LA0046219 && record.entrustEnd === "2026-03-30" && record.archived === "2026-03-30");
+          cloudSkipNextPushRef.current = !requiredCaseImportPending;
+          cloudPullGuardUntilRef.current = requiredCaseImportPending ? 0 : Date.now() + 1500;
           setRecords((prev) => {
             const map = new Map(prev.map((r) => [r.id, r]));
             data.records.forEach((r) => {
@@ -47759,7 +47807,7 @@ ${changedLabels}
               const local = map.get(normalized.id);
               map.set(normalized.id, preserveNewCaseReminderCompletion(local, { ...local, ...normalized, photos: normalized.photos || local?.photos || [] }));
             });
-            return [...map.values()];
+            return ensureRequiredCaseImports([...map.values()]);
           });
           if (data.settings) setSettings((previous) => ({ ...previous, ...data.settings.bookReviewCurrentDate ? { bookReviewCurrentDate: data.settings.bookReviewCurrentDate } : {}, ...data.settings.bookReviewNextDate ? { bookReviewNextDate: data.settings.bookReviewNextDate } : {}, ...data.settings.expiry591 ? { expiry591: data.settings.expiry591 } : {}, ...data.settings.expiry5168 ? { expiry5168: data.settings.expiry5168 } : {}, ...data.settings.brokerExpiry ? { brokerExpiry: data.settings.brokerExpiry } : {}, ...Array.isArray(data.settings.inventoryGroups) ? { inventoryGroups: data.settings.inventoryGroups } : {}, ...Array.isArray(data.settings.personnel) && data.settings.personnel.length > 0 ? { personnel: mergeSuppliedPersonnel(data.settings.personnel) } : {} }));
           if (data.intake) {
@@ -48409,7 +48457,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V482" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V483" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),

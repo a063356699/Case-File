@@ -691,6 +691,53 @@ const applySourceLayoutFixes = (records: RecordItem[]) => records.map(record => 
   const corrected = normalized.replace(/\d+陽台$/, `${balcony}陽台`);
   return corrected === normalized ? record : { ...record, layout: corrected };
 });
+const REQUIRED_CASE_IMPORT_LA0046219 = "2026-09-24-v2";
+const ensureRequiredCaseImports = (records: RecordItem[]) => {
+  const propertyNo = "LA0046219";
+  const index = records.findIndex(record => String(record.propertyNo || "").trim().toUpperCase() === propertyNo);
+  const modifiedAt = new Date().toISOString();
+  const archivedPatch: Partial<RecordItem> = {
+    propertyNo,
+    type: "土地",
+    contractType: "專約",
+    status: "到期下架",
+    area: "高雄市楠梓區",
+    caseName: "楠梓後勁台積電臨路持分建地",
+    address: "高雄市楠梓區後勁段二小段456、456-2地號",
+    price: "1600",
+    landPing: "53.467",
+    parking: "無",
+    managementFee: "0",
+    key: "土地 (無鑰匙)",
+    currentState: "土地",
+    road: "8",
+    zoning: "第三種住宅區",
+    coverage: "50",
+    far: "240",
+    developer: "佩玲",
+    entrustStart: "2024-06-01",
+    entrustEnd: "2026-03-30",
+    reportDate: "2024-05-31",
+    notes: "道路用地：3.17坪",
+    photoInfo: "外縣市",
+    archived: "2026-03-30",
+    _archiveStatus: "到期下架",
+    _archiveActionDate: "2026-03-30",
+    archiveReason: "",
+    _restoredAt: "",
+    caseNameNote: "",
+    caseNameNoteModifiedAt: "",
+    updateDate: "",
+    lastModifiedAt: modifiedAt,
+    _requiredCaseImport: REQUIRED_CASE_IMPORT_LA0046219,
+  };
+  if (index >= 0) {
+    const existing = records[index];
+    if (existing._requiredCaseImport === REQUIRED_CASE_IMPORT_LA0046219 && existing.entrustEnd === archivedPatch.entrustEnd && existing.archived === archivedPatch.archived) return records;
+    return records.map((record, recordIndex) => recordIndex === index ? normalizeRecordPings({ ...record, ...archivedPatch }) : record);
+  }
+  return [normalizeRecordPings({ ...blankRecord(), ...archivedPatch, id: "import-la0046219-20260924", photos: [] }), ...records];
+};
 const daysUntil = (date = "") => validDate(date) && date ? Math.ceil((Date.parse(`${date}T00:00:00`) - Date.parse(`${today()}T00:00:00`)) / 86400000) : 99999;
 const nextDate = (date = "") => { const normalized = normalizeDateInput(date); if (!validDate(normalized)) return today(); const value = new Date(`${normalized}T00:00:00`); value.setDate(value.getDate() + 1); return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(value.getDate()).padStart(2, "0")}`; };
 const intakeEntrustPeriod = (startValue = "", endValue = "") => {
@@ -1389,7 +1436,7 @@ export default function Home() {
       let loadedRecords: RecordItem[] = saved ? JSON.parse(saved) : [sample];
       const officialRecords = ((window as any).__PROPERTY_OFFICIAL_RECORDS__ || []) as RecordItem[]; const appRestoreMarker = "property-desk-app-restore-216-v3"; if (officialRecords.length && localStorage.getItem(appRestoreMarker) !== "1") { const keyOf = (record: RecordItem) => String(record.propertyNo || record.id || "").trim(); const merged = new Map(officialRecords.map(record => [keyOf(record), record])); loadedRecords.forEach(record => { const key = keyOf(record); if (!key) return; const base = merged.get(key) || {} as RecordItem; const next = { ...base, ...record }; if (!String(next.bookLocationDate || "").trim() && String(base.bookLocationDate || "").trim()) next.bookLocationDate = base.bookLocationDate; if (!String(next.bookLocationType || "").trim() && String(base.bookLocationType || "").trim()) next.bookLocationType = base.bookLocationType; merged.set(key, next); }); loadedRecords = [...merged.values()]; localStorage.setItem(STORAGE_KEY, JSON.stringify(loadedRecords)); localStorage.setItem(appRestoreMarker, "1"); }
       const beforeSourceFixes = JSON.stringify(loadedRecords);
-      loadedRecords = applySourceLayoutFixes(loadedRecords).map(record => normalizeRecordPings({ ...record, salesBook: record.salesBook || "製作" }));
+      loadedRecords = ensureRequiredCaseImports(applySourceLayoutFixes(loadedRecords).map(record => normalizeRecordPings({ ...record, salesBook: record.salesBook || "製作" })));
       // 來源修正（含舊的「更新：案名」）要立即寫回，避免使用者重新進入編輯時又看到舊值。
       if (JSON.stringify(loadedRecords) !== beforeSourceFixes) localStorage.setItem(STORAGE_KEY, JSON.stringify(loadedRecords));
       const savedSettings = localStorage.getItem(SETTINGS_KEY); setSettings(s => { const old = savedSettings ? JSON.parse(savedSettings) : {}; const personnel = old.personnel || (old.staffName || old.staffId ? [{ id: newId(), name: old.staffName || "", nationalId: old.staffId || "", status: "在職" }] : []); return { ...s, ...old, supabaseUrl: old.supabaseUrl || CASE_FILE_SUPABASE_URL, supabaseKey: old.supabaseKey || CASE_FILE_SUPABASE_PUBLISHABLE_KEY, supabaseTable: old.supabaseTable === "property_app_state" || !old.supabaseTable ? CASE_FILE_SUPABASE_TABLE : old.supabaseTable, supabaseRecord: old.supabaseRecord || "main", personnel: mergeSuppliedPersonnel(personnel) }; });
@@ -2628,8 +2675,9 @@ export default function Home() {
       setCloudConfirmationRecords(confirmationRecords);
       if (rows[0]?.updated_at) { setCloudLastUploadAt(rows[0].updated_at); setCloudRemoteUpdateAt(""); localStorage.setItem(CLOUD_LAST_UPLOAD_KEY, rows[0].updated_at); }
       if (automatic || confirm("雲端資料將與本機資料合併，本機已修改但尚未同步的同一筆資料將以雲端版本為準。確定嗎？")) {
-        cloudSkipNextPushRef.current = true;
-        cloudPullGuardUntilRef.current = Date.now() + 1500;
+        const requiredCaseImportPending = !(data.records as RecordItem[]).some(record => String(record.propertyNo || "").trim().toUpperCase() === "LA0046219" && record._requiredCaseImport === REQUIRED_CASE_IMPORT_LA0046219 && record.entrustEnd === "2026-03-30" && record.archived === "2026-03-30");
+        cloudSkipNextPushRef.current = !requiredCaseImportPending;
+        cloudPullGuardUntilRef.current = requiredCaseImportPending ? 0 : Date.now() + 1500;
         setRecords(prev => {
           const map = new Map(prev.map(r => [r.id, r]));
           data.records.forEach((r: RecordItem) => {
@@ -2637,7 +2685,7 @@ export default function Home() {
             const local = map.get(normalized.id);
             map.set(normalized.id, preserveNewCaseReminderCompletion(local, { ...local, ...normalized, photos: normalized.photos || local?.photos || [] } as RecordItem));
           });
-          return [...map.values()];
+          return ensureRequiredCaseImports([...map.values()]);
         });
         if (data.settings) setSettings(previous => ({ ...previous, ...(data.settings.bookReviewCurrentDate ? { bookReviewCurrentDate: data.settings.bookReviewCurrentDate } : {}), ...(data.settings.bookReviewNextDate ? { bookReviewNextDate: data.settings.bookReviewNextDate } : {}), ...(data.settings.expiry591 ? { expiry591: data.settings.expiry591 } : {}), ...(data.settings.expiry5168 ? { expiry5168: data.settings.expiry5168 } : {}), ...(data.settings.brokerExpiry ? { brokerExpiry: data.settings.brokerExpiry } : {}), ...(Array.isArray(data.settings.inventoryGroups) ? { inventoryGroups: data.settings.inventoryGroups } : {}), ...(Array.isArray(data.settings.personnel) && data.settings.personnel.length > 0 ? { personnel: mergeSuppliedPersonnel(data.settings.personnel) } : {}) }));
         if (data.intake) {
@@ -3148,7 +3196,7 @@ export default function Home() {
 
   return <main lang="zh-Hant-TW" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-        <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V482</small></h1></div>
+        <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V483</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingIntakeReminderRecords.length > 0 && <button className="new-case-reminder-header-button" onClick={() => { setNewCaseReminder({ ...pendingIntakeReminderRecords[0] }); setNewCaseReminderBatchIds(pendingIntakeReminderRecords.map(record => record.id)); }}>新進案件提醒 {pendingIntakeReminderRecords.length}</button>}{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{expiredUnarchived.length > 0 && <button className="expired-entrust-button" onClick={() => setExpiryReminderOpen(true)}>委託到期 {expiredUnarchived.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
