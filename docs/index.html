@@ -46461,6 +46461,10 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       end: normalizeDateInput(pptCustomEnd) || defaultSelectedPptWeek.end,
       meeting: normalizeDateInput(pptCustomMeeting) || defaultSelectedPptWeek.meeting
     };
+    const selectedPptIntakeWeek = {
+      ...selectedPptWeek,
+      end: selectedPptWeek.start <= today() && today() < selectedPptWeek.end ? today() : selectedPptWeek.end
+    };
     const resetPptCustomWeek = () => {
       setPptCustomStart("");
       setPptCustomEnd("");
@@ -46475,13 +46479,13 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       ...records.filter((record) => {
         const required = isRequiredAug17PptRecord(record);
         const manuallyAdded = pptExtraIds.includes(record.id);
-        return (belongsToPptWeek(record, selectedPptWeek) || manuallyAdded || required) && (manuallyAdded || required || !excludedFromPptWeek(record, selectedPptWeek.start));
+        return (belongsToPptWeek(record, selectedPptIntakeWeek) || manuallyAdded || required) && (manuallyAdded || required || !excludedFromPptWeek(record, selectedPptWeek.start));
       }),
       ...pptDraftRecords.filter((record) => pptExtraIds.includes(record.id) || isRequiredAug17PptRecord(record)),
       ...pptAdHocRecords
     ]);
-    const deferredPptRecords = sortPptRecords(records.filter((record) => belongsToPptWeek(record, selectedPptWeek) && excludedFromPptWeek(record, selectedPptWeek.start) && !pptExtraIds.includes(record.id)));
-    const pptExtraCandidates = [...records.filter((record) => !belongsToPptWeek(record, selectedPptWeek)), ...pptDraftRecords].filter((record) => [record.caseName, record.address].join(" ").toLowerCase().includes(pptExtraSearch.trim().toLowerCase()));
+    const deferredPptRecords = sortPptRecords(records.filter((record) => belongsToPptWeek(record, selectedPptIntakeWeek) && excludedFromPptWeek(record, selectedPptWeek.start) && !pptExtraIds.includes(record.id)));
+    const pptExtraCandidates = [...records.filter((record) => !belongsToPptWeek(record, selectedPptIntakeWeek)), ...pptDraftRecords].filter((record) => [record.caseName, record.address].join(" ").toLowerCase().includes(pptExtraSearch.trim().toLowerCase()));
     const selectedPptBaseRecords = (() => {
       const standard = sortPptRecords([...records.filter((record) => weeklyPptRecords.some((item) => item.id === record.id) || pptExtraIds.includes(record.id)), ...pptDraftRecords.filter((record) => pptExtraIds.includes(record.id) || isRequiredAug17PptRecord(record)), ...pptAdHocRecords]);
       const position = new Map(pptOrderIds.map((id, index) => [id, index]));
@@ -48462,7 +48466,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V484" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V485" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
