@@ -1136,6 +1136,7 @@ export default function Home() {
   const [notice, setNotice] = useState("");
   const [intakeRaw, setIntakeRaw] = useState("");
   const [intakeDrafts, setIntakeDrafts] = useState<IntakeData[]>([]);
+  const [intakeDeletedIds, setIntakeDeletedIds] = useState<string[]>([]);
   const [selectedIntakeId, setSelectedIntakeId] = useState("");
   const [pptPickerOpen, setPptPickerOpen] = useState(false);
   const [pptExtraSearch, setPptExtraSearch] = useState("");
@@ -1393,7 +1394,7 @@ export default function Home() {
       if (JSON.stringify(loadedRecords) !== beforeSourceFixes) localStorage.setItem(STORAGE_KEY, JSON.stringify(loadedRecords));
       const savedSettings = localStorage.getItem(SETTINGS_KEY); setSettings(s => { const old = savedSettings ? JSON.parse(savedSettings) : {}; const personnel = old.personnel || (old.staffName || old.staffId ? [{ id: newId(), name: old.staffName || "", nationalId: old.staffId || "", status: "在職" }] : []); return { ...s, ...old, supabaseUrl: old.supabaseUrl || CASE_FILE_SUPABASE_URL, supabaseKey: old.supabaseKey || CASE_FILE_SUPABASE_PUBLISHABLE_KEY, supabaseTable: old.supabaseTable === "property_app_state" || !old.supabaseTable ? CASE_FILE_SUPABASE_TABLE : old.supabaseTable, supabaseRecord: old.supabaseRecord || "main", personnel: mergeSuppliedPersonnel(personnel) }; });
       const savedCloudSession = localStorage.getItem(CLOUD_SESSION_KEY); if (savedCloudSession) setCloudSession(JSON.parse(savedCloudSession));
-      const savedIntake = localStorage.getItem(INTAKE_KEY); if (savedIntake) { const saved = JSON.parse(savedIntake); const savedDrafts: IntakeData[] = saved.drafts || (saved.parsed ? [{ ...saved.parsed, raw: saved.raw || "" }] : []); const drafts = reconcileIntakeDraftLinks(savedDrafts, loadedRecords); if (!localStorage.getItem(PHOTO_INTAKE_CLEANUP_KEY)) { const legacyPhotoValues = new Map(drafts.filter(draft => draft.linkedRecordId).map(draft => [draft.linkedRecordId!, new Set(Object.entries(draft.values).filter(([key, value]) => value && (key.includes("進案文件") || key.includes("當下進案文件"))).map(([, value]) => value.trim()))])); loadedRecords = loadedRecords.map(record => { const values = legacyPhotoValues.get(record.id); const current = String(record.photoInfo || "").split(/[／/]/).map(value => value.trim()).filter(Boolean); return values && current.length && current.every(value => values.has(value)) ? { ...record, photoInfo: "" } : record; }); localStorage.setItem(PHOTO_INTAKE_CLEANUP_KEY, "1"); } setIntakeDrafts(drafts); setSelectedIntakeId(saved.selectedId || drafts.find(draft => !draft.linkedRecordId)?.id || ""); setIntakeRaw(saved.raw || ""); }
+      const savedIntake = localStorage.getItem(INTAKE_KEY); if (savedIntake) { const saved = JSON.parse(savedIntake); const savedDrafts: IntakeData[] = saved.drafts || (saved.parsed ? [{ ...saved.parsed, raw: saved.raw || "" }] : []); const deletedIds = [...new Set([...(Array.isArray(saved.deletedIds) ? saved.deletedIds.map(String) : []), ...savedDrafts.filter(isLegacyTestIntakeDraft).map(draft => draft.id)])]; const drafts = reconcileIntakeDraftLinks(savedDrafts.filter(draft => !deletedIds.includes(draft.id)), loadedRecords); if (!localStorage.getItem(PHOTO_INTAKE_CLEANUP_KEY)) { const legacyPhotoValues = new Map(drafts.filter(draft => draft.linkedRecordId).map(draft => [draft.linkedRecordId!, new Set(Object.entries(draft.values).filter(([key, value]) => value && (key.includes("進案文件") || key.includes("當下進案文件"))).map(([, value]) => value.trim()))])); loadedRecords = loadedRecords.map(record => { const values = legacyPhotoValues.get(record.id); const current = String(record.photoInfo || "").split(/[／/]/).map(value => value.trim()).filter(Boolean); return values && current.length && current.every(value => values.has(value)) ? { ...record, photoInfo: "" } : record; }); localStorage.setItem(PHOTO_INTAKE_CLEANUP_KEY, "1"); } setIntakeDeletedIds(deletedIds); setIntakeDrafts(drafts); setSelectedIntakeId(saved.selectedId && !deletedIds.includes(saved.selectedId) ? saved.selectedId : drafts.find(draft => !draft.linkedRecordId)?.id || ""); setIntakeRaw(saved.raw || ""); }
       const savedTour = localStorage.getItem(TOUR_KEY); if (savedTour) { const tour = JSON.parse(savedTour); setTourItems(Array.isArray(tour.items) ? tour.items : []); setTourDate(tour.date || today()); setTourTitle(tour.title || `${displayRocDate(tour.date || today()).replace(/\//g, ".")}團看`); setTourModifiedAt(tour.modifiedAt || new Date().toISOString()); setTourHistory(Array.isArray(tour.history) ? tour.history : []); }
       setRecords(loadedRecords);
       setStorageReady(true);
@@ -1522,7 +1523,7 @@ export default function Home() {
   // 先完成本機設定讀取，才允許寫回；避免匯入後被初始空白人員覆蓋。
   useEffect(() => { if (!internalView && tab !== "public" && storageReady) localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); }, [settings, storageReady, internalView, tab]);
   // 等草稿讀取完成後才寫回，避免剛開新版本時用初始空白內容覆寫舊草稿。
-  useEffect(() => { if (!internalView && tab !== "public" && storageReady) localStorage.setItem(INTAKE_KEY, JSON.stringify({ raw: intakeRaw, drafts: intakeDrafts, selectedId: selectedIntakeId })); }, [intakeRaw, intakeDrafts, selectedIntakeId, storageReady, internalView, tab]);
+  useEffect(() => { if (!internalView && tab !== "public" && storageReady) localStorage.setItem(INTAKE_KEY, JSON.stringify({ raw: intakeRaw, drafts: intakeDrafts, deletedIds: intakeDeletedIds, selectedId: selectedIntakeId })); }, [intakeRaw, intakeDrafts, intakeDeletedIds, selectedIntakeId, storageReady, internalView, tab]);
   useEffect(() => { if (!internalView && tab !== "public") localStorage.setItem(TOUR_KEY, JSON.stringify({ date: tourDate, title: tourTitle, items: tourItems, modifiedAt: tourModifiedAt, history: tourHistory })); }, [tourDate, tourTitle, tourItems, tourModifiedAt, tourHistory, internalView, tab]);
   // V181 起保留完成團看歷史；先把舊資料中已有團看日期、但當時尚未建立歷史的案件補成可查看列表。
   useEffect(() => {
@@ -2081,7 +2082,7 @@ export default function Home() {
     // 未按「文件已收，正式進案」前，絕不可加入 records 或每日新增。
     if (next._intakeDraftId) {
       const savedDrafts = intakeDrafts.map(draft => draft.id === next._intakeDraftId ? { ...draft, linkedRecordId: undefined, enteredAt: undefined, values: syncRecordToDraftValues(draft, next), propertyKind: next.type.includes("土地") ? "土地" : "房屋" } : draft);
-      localStorage.setItem(INTAKE_KEY, JSON.stringify({ raw: intakeRaw, drafts: savedDrafts, selectedId: selectedIntakeId }));
+      localStorage.setItem(INTAKE_KEY, JSON.stringify({ raw: intakeRaw, drafts: savedDrafts, deletedIds: intakeDeletedIds, selectedId: selectedIntakeId }));
       setIntakeDrafts(savedDrafts);
       setTourItems(previous => previous.map(item => item.data._intakeDraftId === next._intakeDraftId ? { ...item, recordId: undefined, temporary: true, data: { ...item.data, ...next, reportDate: "", status: "尚未進案", _notEntered: "1" } } : item));
       editingInitialRef.current = JSON.stringify(next);
@@ -2415,7 +2416,7 @@ export default function Home() {
   const cloudData = () => ({
     records: records.map(({ photos, ...record }) => record),
     settings: { personnel: settings.personnel, inventoryGroups: settings.inventoryGroups, bookReviewCurrentDate: settings.bookReviewCurrentDate, bookReviewNextDate: settings.bookReviewNextDate, expiry591: settings.expiry591, expiry5168: settings.expiry5168, brokerExpiry: settings.brokerExpiry },
-    intake: { raw: intakeRaw, drafts: intakeDrafts },
+    intake: { raw: intakeRaw, drafts: intakeDrafts, deletedIds: intakeDeletedIds },
     tour: { date: tourDate, title: tourTitle, items: tourItems, modifiedAt: tourModifiedAt, history: tourHistory },
     pptWeeks: (() => {
       try {
@@ -2615,11 +2616,11 @@ export default function Home() {
       // 這也避免版本檢查與完整下載之間短暫產生 pending 時，把新表單整筆擋掉。
       if (automatic && data.intake) {
         const remoteDrafts = Array.isArray(data.intake.drafts) ? data.intake.drafts : [];
-        if (remoteDrafts.length > 0) {
-          setIntakeDrafts(previous => reconcileIntakeDraftLinks(mergeIntakeDrafts(previous, remoteDrafts), [...records, ...data.records]));
-          setIntakeRaw(previous => previous || data.intake.raw || "");
-          setSelectedIntakeId(previous => previous || data.intake.selectedId || "");
-        }
+        const deletedIds = [...new Set([...intakeDeletedIds, ...(Array.isArray(data.intake.deletedIds) ? data.intake.deletedIds.map(String) : []), ...remoteDrafts.filter(isLegacyTestIntakeDraft).map((draft: IntakeData) => draft.id)])];
+        setIntakeDeletedIds(deletedIds);
+        setIntakeDrafts(previous => reconcileIntakeDraftLinks(mergeIntakeDrafts(previous, remoteDrafts, deletedIds), [...records, ...data.records]));
+        setIntakeRaw(previous => previous || data.intake.raw || "");
+        setSelectedIntakeId(previous => previous && !deletedIds.includes(previous) ? previous : "");
       }
       // 自動同步絕不覆蓋本機尚未成功上傳的內容，例如剛輸入的照片文字。
       if (automatic && cloudLocalPendingRef.current) return;
@@ -2640,9 +2641,12 @@ export default function Home() {
         });
         if (data.settings) setSettings(previous => ({ ...previous, ...(data.settings.bookReviewCurrentDate ? { bookReviewCurrentDate: data.settings.bookReviewCurrentDate } : {}), ...(data.settings.bookReviewNextDate ? { bookReviewNextDate: data.settings.bookReviewNextDate } : {}), ...(data.settings.expiry591 ? { expiry591: data.settings.expiry591 } : {}), ...(data.settings.expiry5168 ? { expiry5168: data.settings.expiry5168 } : {}), ...(data.settings.brokerExpiry ? { brokerExpiry: data.settings.brokerExpiry } : {}), ...(Array.isArray(data.settings.inventoryGroups) ? { inventoryGroups: data.settings.inventoryGroups } : {}), ...(Array.isArray(data.settings.personnel) && data.settings.personnel.length > 0 ? { personnel: mergeSuppliedPersonnel(data.settings.personnel) } : {}) }));
         if (data.intake) {
+          const remoteDrafts = Array.isArray(data.intake.drafts) ? data.intake.drafts : [];
+          const deletedIds = [...new Set([...intakeDeletedIds, ...(Array.isArray(data.intake.deletedIds) ? data.intake.deletedIds.map(String) : []), ...remoteDrafts.filter(isLegacyTestIntakeDraft).map((draft: IntakeData) => draft.id)])];
+          setIntakeDeletedIds(deletedIds);
           setIntakeRaw(previous => previous || data.intake.raw || "");
-          setIntakeDrafts(previous => reconcileIntakeDraftLinks(mergeIntakeDrafts(previous, Array.isArray(data.intake.drafts) ? data.intake.drafts : []), [...records, ...data.records]));
-          setSelectedIntakeId(previous => previous || data.intake.selectedId || "");
+          setIntakeDrafts(previous => reconcileIntakeDraftLinks(mergeIntakeDrafts(previous, remoteDrafts, deletedIds), [...records, ...data.records]));
+          setSelectedIntakeId(previous => previous && !deletedIds.includes(previous) ? previous : data.intake.selectedId && !deletedIds.includes(data.intake.selectedId) ? data.intake.selectedId : "");
         }
         if (data.tour) {
           const remoteModifiedAt = String(data.tour.modifiedAt || "");
@@ -2752,7 +2756,7 @@ export default function Home() {
     } catch {}
   };
   // 僅正式資料內容可觸發上傳；目前選到哪筆草稿、切到哪一週等畫面狀態不算資料修改。
-  const cloudSnapshot = JSON.stringify({ records, personnel: settings.personnel, inventoryGroups: settings.inventoryGroups, bookReviewCurrentDate: settings.bookReviewCurrentDate, bookReviewNextDate: settings.bookReviewNextDate, expiry591: settings.expiry591, expiry5168: settings.expiry5168, brokerExpiry: settings.brokerExpiry, intakeRaw, intakeDrafts, tourDate, tourTitle, tourItems, tourModifiedAt, tourHistory, pptExtraIds, pptOrderIds, pptAdHocRecords, pptConfirmedSnapshots });
+  const cloudSnapshot = JSON.stringify({ records, personnel: settings.personnel, inventoryGroups: settings.inventoryGroups, bookReviewCurrentDate: settings.bookReviewCurrentDate, bookReviewNextDate: settings.bookReviewNextDate, expiry591: settings.expiry591, expiry5168: settings.expiry5168, brokerExpiry: settings.brokerExpiry, intakeRaw, intakeDrafts, intakeDeletedIds, tourDate, tourTitle, tourItems, tourModifiedAt, tourHistory, pptExtraIds, pptOrderIds, pptAdHocRecords, pptConfirmedSnapshots });
   useEffect(() => {
     if (internalView || tab === "public" || !storageReady) return;
     if (cloudSkipNextPushRef.current || Date.now() < cloudPullGuardUntilRef.current) {
@@ -3036,7 +3040,7 @@ export default function Home() {
     flash(printedForSalesAt ? `已記錄「${intakeValue(target.values, "案名") || "未命名案件"}」列印草稿` : "已取消列印草稿紀錄");
   };
   const confirmIntake = (draftId?: string) => { const targetId = draftId || selectedIntakeRef.current; const target = targetId ? intakeDrafts.find(d => d.id === targetId) : intakeDraft; if (!target) return; const targetNo = intakeValue(target.values, "委託主約編號"); const existing = target.linkedRecordId ? records.find(record => record.id === target.linkedRecordId) : records.find(record => !!targetNo && record.propertyNo === targetNo); const record = intakeToRecord(target, existing); if (!record.propertyNo || !record.caseName) return flash("缺少物件編號或案名，請先確認表單內容"); if (existing) { const firstFormalEntry = !target.enteredAt; const tracked = { ...withTrackedUpdate(existing, record), ...(firstFormalEntry ? { _newCaseReminderEnabled: "1", _newCaseReminderSource: "intake" } : {}) }; const enteredAt = target.enteredAt || new Date().toISOString(); setRecords(prev => prev.map(item => item.id === existing.id ? tracked : item)); setIntakeDrafts(prev => prev.map(draft => draft.id === target.id ? { ...draft, linkedRecordId: existing.id, enteredAt, modifiedAt: enteredAt } : draft)); flash(firstFormalEntry ? "已正式進案；請稍後至「新進案件提醒」完成後續作業" : "已連結並同步更新原總表資料"); return; } if (!confirm(`確定文件已收到，將「${record.caseName}」正式加入總表？`)) return; const enteredAt = new Date().toISOString(); const entered = { ...record, _newCaseReminderEnabled: "1", _newCaseReminderSource: "intake" }; setRecords(prev => [entered, ...prev]); setIntakeDrafts(prev => prev.map(draft => draft.id === target.id ? { ...draft, linkedRecordId: entered.id, enteredAt, modifiedAt: enteredAt } : draft)); flash("已正式進案；請稍後至「新進案件提醒」完成後續作業"); };
-  const removeIntakeDraft = (id: string) => { const target = intakeDrafts.find(d => d.id === id); if (!target || !confirm(`確定刪除「${intakeValue(target.values, "案名") || "未命名草稿"}」？`)) return; setIntakeDrafts(prev => prev.filter(d => d.id !== id)); if (selectedIntakeId === id) setSelectedIntakeId(""); };
+  const removeIntakeDraft = (id: string) => { const target = intakeDrafts.find(d => d.id === id); if (!target || !confirm(`確定刪除「${intakeValue(target.values, "案名") || "未命名草稿"}」？`)) return; setIntakeDeletedIds(previous => previous.includes(id) ? previous : [...previous, id]); setIntakeDrafts(prev => prev.filter(d => d.id !== id)); if (selectedIntakeId === id) setSelectedIntakeId(""); };
   const updateIntakeDraftCaseName = (id: string, caseName: string) => setIntakeDrafts(previous => previous.map(draft => { if (draft.id !== id) return draft; const key = Object.keys(draft.values).find(name => name.includes("案名")) || "案名"; return { ...draft, values: { ...draft.values, [key]: caseName } }; }));
   useEffect(() => {
     if (!publicReportHoldUntil) return;
@@ -3144,7 +3148,7 @@ export default function Home() {
 
   return <main lang="zh-Hant-TW" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-        <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V480</small></h1></div>
+        <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V481</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingIntakeReminderRecords.length > 0 && <button className="new-case-reminder-header-button" onClick={() => { setNewCaseReminder({ ...pendingIntakeReminderRecords[0] }); setNewCaseReminderBatchIds(pendingIntakeReminderRecords.map(record => record.id)); }}>新進案件提醒 {pendingIntakeReminderRecords.length}</button>}{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -3440,10 +3444,19 @@ const reconcileIntakeDraftLinks = (drafts: IntakeData[], records: RecordItem[]) 
     return { ...draft, linkedRecordId: record.id, enteredAt, modifiedAt: draft.modifiedAt || enteredAt };
   });
 };
-const mergeIntakeDrafts = (localDrafts: IntakeData[], cloudDrafts: IntakeData[]) => {
+const isLegacyTestIntakeDraft = (draft: IntakeData) => {
+  const propertyNo = intakeValue(draft.values, "委託主約編號").trim().toUpperCase();
+  const caseName = intakeValue(draft.values, "案名").trim();
+  const address = intakeValue(draft.values, "物件(完整)地址").trim();
+  const developer = intakeValue(draft.values, "開發１/開發２").trim();
+  const timestamp = intakeValue(draft.values, "時間戳記").trim();
+  return propertyNo === "EG123456" || (!draft.linkedRecordId && !propertyNo && !caseName && !address && !developer && !timestamp);
+};
+const mergeIntakeDrafts = (localDrafts: IntakeData[], cloudDrafts: IntakeData[], deletedIds: Iterable<string> = []) => {
   const merged = new Map<string, IntakeData>();
+  const deleted = new Set(deletedIds);
   [...cloudDrafts, ...localDrafts].forEach(draft => {
-    if (!draft?.id) return;
+    if (!draft?.id || deleted.has(draft.id) || isLegacyTestIntakeDraft(draft)) return;
     const key = intakeDraftIdentity(draft);
     const existing = merged.get(key);
     if (!existing || intakeDraftStamp(draft) >= intakeDraftStamp(existing)) merged.set(key, draft);

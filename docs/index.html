@@ -45770,6 +45770,7 @@ ${String(ex)}`);
     const [notice, setNotice] = (0, import_react.useState)("");
     const [intakeRaw, setIntakeRaw] = (0, import_react.useState)("");
     const [intakeDrafts, setIntakeDrafts] = (0, import_react.useState)([]);
+    const [intakeDeletedIds, setIntakeDeletedIds] = (0, import_react.useState)([]);
     const [selectedIntakeId, setSelectedIntakeId] = (0, import_react.useState)("");
     const [pptPickerOpen, setPptPickerOpen] = (0, import_react.useState)(false);
     const [pptExtraSearch, setPptExtraSearch] = (0, import_react.useState)("");
@@ -46079,7 +46080,8 @@ ${String(ex)}`);
         if (savedIntake) {
           const saved2 = JSON.parse(savedIntake);
           const savedDrafts = saved2.drafts || (saved2.parsed ? [{ ...saved2.parsed, raw: saved2.raw || "" }] : []);
-          const drafts = reconcileIntakeDraftLinks(savedDrafts, loadedRecords);
+          const deletedIds = [.../* @__PURE__ */ new Set([...Array.isArray(saved2.deletedIds) ? saved2.deletedIds.map(String) : [], ...savedDrafts.filter(isLegacyTestIntakeDraft).map((draft) => draft.id)])];
+          const drafts = reconcileIntakeDraftLinks(savedDrafts.filter((draft) => !deletedIds.includes(draft.id)), loadedRecords);
           if (!localStorage.getItem(PHOTO_INTAKE_CLEANUP_KEY)) {
             const legacyPhotoValues = new Map(drafts.filter((draft) => draft.linkedRecordId).map((draft) => [draft.linkedRecordId, new Set(Object.entries(draft.values).filter(([key, value]) => value && (key.includes("\u9032\u6848\u6587\u4EF6") || key.includes("\u7576\u4E0B\u9032\u6848\u6587\u4EF6"))).map(([, value]) => value.trim()))]));
             loadedRecords = loadedRecords.map((record) => {
@@ -46089,8 +46091,9 @@ ${String(ex)}`);
             });
             localStorage.setItem(PHOTO_INTAKE_CLEANUP_KEY, "1");
           }
+          setIntakeDeletedIds(deletedIds);
           setIntakeDrafts(drafts);
-          setSelectedIntakeId(saved2.selectedId || drafts.find((draft) => !draft.linkedRecordId)?.id || "");
+          setSelectedIntakeId(saved2.selectedId && !deletedIds.includes(saved2.selectedId) ? saved2.selectedId : drafts.find((draft) => !draft.linkedRecordId)?.id || "");
           setIntakeRaw(saved2.raw || "");
         }
         const savedTour = localStorage.getItem(TOUR_KEY);
@@ -46241,8 +46244,8 @@ ${String(ex)}`);
       if (!internalView && tab !== "public" && storageReady) localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
     }, [settings, storageReady, internalView, tab]);
     (0, import_react.useEffect)(() => {
-      if (!internalView && tab !== "public" && storageReady) localStorage.setItem(INTAKE_KEY, JSON.stringify({ raw: intakeRaw, drafts: intakeDrafts, selectedId: selectedIntakeId }));
-    }, [intakeRaw, intakeDrafts, selectedIntakeId, storageReady, internalView, tab]);
+      if (!internalView && tab !== "public" && storageReady) localStorage.setItem(INTAKE_KEY, JSON.stringify({ raw: intakeRaw, drafts: intakeDrafts, deletedIds: intakeDeletedIds, selectedId: selectedIntakeId }));
+    }, [intakeRaw, intakeDrafts, intakeDeletedIds, selectedIntakeId, storageReady, internalView, tab]);
     (0, import_react.useEffect)(() => {
       if (!internalView && tab !== "public") localStorage.setItem(TOUR_KEY, JSON.stringify({ date: tourDate, title: tourTitle, items: tourItems, modifiedAt: tourModifiedAt, history: tourHistory }));
     }, [tourDate, tourTitle, tourItems, tourModifiedAt, tourHistory, internalView, tab]);
@@ -46960,7 +46963,7 @@ ${changedLabels}
       }));
       if (next._intakeDraftId) {
         const savedDrafts = intakeDrafts.map((draft) => draft.id === next._intakeDraftId ? { ...draft, linkedRecordId: void 0, enteredAt: void 0, values: syncRecordToDraftValues(draft, next), propertyKind: next.type.includes("\u571F\u5730") ? "\u571F\u5730" : "\u623F\u5C4B" } : draft);
-        localStorage.setItem(INTAKE_KEY, JSON.stringify({ raw: intakeRaw, drafts: savedDrafts, selectedId: selectedIntakeId }));
+        localStorage.setItem(INTAKE_KEY, JSON.stringify({ raw: intakeRaw, drafts: savedDrafts, deletedIds: intakeDeletedIds, selectedId: selectedIntakeId }));
         setIntakeDrafts(savedDrafts);
         setTourItems((previous) => previous.map((item) => item.data._intakeDraftId === next._intakeDraftId ? { ...item, recordId: void 0, temporary: true, data: { ...item.data, ...next, reportDate: "", status: "\u5C1A\u672A\u9032\u6848", _notEntered: "1" } } : item));
         editingInitialRef.current = JSON.stringify(next);
@@ -47521,7 +47524,7 @@ ${changedLabels}
     const cloudData = () => ({
       records: records.map(({ photos, ...record }) => record),
       settings: { personnel: settings.personnel, inventoryGroups: settings.inventoryGroups, bookReviewCurrentDate: settings.bookReviewCurrentDate, bookReviewNextDate: settings.bookReviewNextDate, expiry591: settings.expiry591, expiry5168: settings.expiry5168, brokerExpiry: settings.brokerExpiry },
-      intake: { raw: intakeRaw, drafts: intakeDrafts },
+      intake: { raw: intakeRaw, drafts: intakeDrafts, deletedIds: intakeDeletedIds },
       tour: { date: tourDate, title: tourTitle, items: tourItems, modifiedAt: tourModifiedAt, history: tourHistory },
       pptWeeks: (() => {
         try {
@@ -47732,11 +47735,11 @@ ${changedLabels}
         if (!res.ok || !data?.records) throw new Error();
         if (automatic && data.intake) {
           const remoteDrafts = Array.isArray(data.intake.drafts) ? data.intake.drafts : [];
-          if (remoteDrafts.length > 0) {
-            setIntakeDrafts((previous) => reconcileIntakeDraftLinks(mergeIntakeDrafts(previous, remoteDrafts), [...records, ...data.records]));
-            setIntakeRaw((previous) => previous || data.intake.raw || "");
-            setSelectedIntakeId((previous) => previous || data.intake.selectedId || "");
-          }
+          const deletedIds = [.../* @__PURE__ */ new Set([...intakeDeletedIds, ...Array.isArray(data.intake.deletedIds) ? data.intake.deletedIds.map(String) : [], ...remoteDrafts.filter(isLegacyTestIntakeDraft).map((draft) => draft.id)])];
+          setIntakeDeletedIds(deletedIds);
+          setIntakeDrafts((previous) => reconcileIntakeDraftLinks(mergeIntakeDrafts(previous, remoteDrafts, deletedIds), [...records, ...data.records]));
+          setIntakeRaw((previous) => previous || data.intake.raw || "");
+          setSelectedIntakeId((previous) => previous && !deletedIds.includes(previous) ? previous : "");
         }
         if (automatic && cloudLocalPendingRef.current) return;
         const confirmationRecords = data.records.map((record) => normalizeRecordPings(applySourceLayoutFixes([record])[0])).filter(isActiveCommission);
@@ -47760,9 +47763,12 @@ ${changedLabels}
           });
           if (data.settings) setSettings((previous) => ({ ...previous, ...data.settings.bookReviewCurrentDate ? { bookReviewCurrentDate: data.settings.bookReviewCurrentDate } : {}, ...data.settings.bookReviewNextDate ? { bookReviewNextDate: data.settings.bookReviewNextDate } : {}, ...data.settings.expiry591 ? { expiry591: data.settings.expiry591 } : {}, ...data.settings.expiry5168 ? { expiry5168: data.settings.expiry5168 } : {}, ...data.settings.brokerExpiry ? { brokerExpiry: data.settings.brokerExpiry } : {}, ...Array.isArray(data.settings.inventoryGroups) ? { inventoryGroups: data.settings.inventoryGroups } : {}, ...Array.isArray(data.settings.personnel) && data.settings.personnel.length > 0 ? { personnel: mergeSuppliedPersonnel(data.settings.personnel) } : {} }));
           if (data.intake) {
+            const remoteDrafts = Array.isArray(data.intake.drafts) ? data.intake.drafts : [];
+            const deletedIds = [.../* @__PURE__ */ new Set([...intakeDeletedIds, ...Array.isArray(data.intake.deletedIds) ? data.intake.deletedIds.map(String) : [], ...remoteDrafts.filter(isLegacyTestIntakeDraft).map((draft) => draft.id)])];
+            setIntakeDeletedIds(deletedIds);
             setIntakeRaw((previous) => previous || data.intake.raw || "");
-            setIntakeDrafts((previous) => reconcileIntakeDraftLinks(mergeIntakeDrafts(previous, Array.isArray(data.intake.drafts) ? data.intake.drafts : []), [...records, ...data.records]));
-            setSelectedIntakeId((previous) => previous || data.intake.selectedId || "");
+            setIntakeDrafts((previous) => reconcileIntakeDraftLinks(mergeIntakeDrafts(previous, remoteDrafts, deletedIds), [...records, ...data.records]));
+            setSelectedIntakeId((previous) => previous && !deletedIds.includes(previous) ? previous : data.intake.selectedId && !deletedIds.includes(data.intake.selectedId) ? data.intake.selectedId : "");
           }
           if (data.tour) {
             const remoteModifiedAt = String(data.tour.modifiedAt || "");
@@ -47885,7 +47891,7 @@ ${changedLabels}
       } catch {
       }
     };
-    const cloudSnapshot = JSON.stringify({ records, personnel: settings.personnel, inventoryGroups: settings.inventoryGroups, bookReviewCurrentDate: settings.bookReviewCurrentDate, bookReviewNextDate: settings.bookReviewNextDate, expiry591: settings.expiry591, expiry5168: settings.expiry5168, brokerExpiry: settings.brokerExpiry, intakeRaw, intakeDrafts, tourDate, tourTitle, tourItems, tourModifiedAt, tourHistory, pptExtraIds, pptOrderIds, pptAdHocRecords, pptConfirmedSnapshots });
+    const cloudSnapshot = JSON.stringify({ records, personnel: settings.personnel, inventoryGroups: settings.inventoryGroups, bookReviewCurrentDate: settings.bookReviewCurrentDate, bookReviewNextDate: settings.bookReviewNextDate, expiry591: settings.expiry591, expiry5168: settings.expiry5168, brokerExpiry: settings.brokerExpiry, intakeRaw, intakeDrafts, intakeDeletedIds, tourDate, tourTitle, tourItems, tourModifiedAt, tourHistory, pptExtraIds, pptOrderIds, pptAdHocRecords, pptConfirmedSnapshots });
     (0, import_react.useEffect)(() => {
       if (internalView || tab === "public" || !storageReady) return;
       if (cloudSkipNextPushRef.current || Date.now() < cloudPullGuardUntilRef.current) {
@@ -48253,6 +48259,7 @@ ${changedLabels}
     const removeIntakeDraft = (id) => {
       const target = intakeDrafts.find((d) => d.id === id);
       if (!target || !confirm(`\u78BA\u5B9A\u522A\u9664\u300C${intakeValue(target.values, "\u6848\u540D") || "\u672A\u547D\u540D\u8349\u7A3F"}\u300D\uFF1F`)) return;
+      setIntakeDeletedIds((previous) => previous.includes(id) ? previous : [...previous, id]);
       setIntakeDrafts((prev) => prev.filter((d) => d.id !== id));
       if (selectedIntakeId === id) setSelectedIntakeId("");
     };
@@ -48402,7 +48409,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V480" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V481" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -50046,10 +50053,19 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
       return { ...draft, linkedRecordId: record.id, enteredAt, modifiedAt: draft.modifiedAt || enteredAt };
     });
   };
-  var mergeIntakeDrafts = (localDrafts, cloudDrafts) => {
+  var isLegacyTestIntakeDraft = (draft) => {
+    const propertyNo = intakeValue(draft.values, "\u59D4\u8A17\u4E3B\u7D04\u7DE8\u865F").trim().toUpperCase();
+    const caseName = intakeValue(draft.values, "\u6848\u540D").trim();
+    const address = intakeValue(draft.values, "\u7269\u4EF6(\u5B8C\u6574)\u5730\u5740").trim();
+    const developer = intakeValue(draft.values, "\u958B\u767C\uFF11/\u958B\u767C\uFF12").trim();
+    const timestamp = intakeValue(draft.values, "\u6642\u9593\u6233\u8A18").trim();
+    return propertyNo === "EG123456" || !draft.linkedRecordId && !propertyNo && !caseName && !address && !developer && !timestamp;
+  };
+  var mergeIntakeDrafts = (localDrafts, cloudDrafts, deletedIds = []) => {
     const merged = /* @__PURE__ */ new Map();
+    const deleted = new Set(deletedIds);
     [...cloudDrafts, ...localDrafts].forEach((draft) => {
-      if (!draft?.id) return;
+      if (!draft?.id || deleted.has(draft.id) || isLegacyTestIntakeDraft(draft)) return;
       const key = intakeDraftIdentity(draft);
       const existing = merged.get(key);
       if (!existing || intakeDraftStamp(draft) >= intakeDraftStamp(existing)) merged.set(key, draft);
