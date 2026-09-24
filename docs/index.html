@@ -45189,7 +45189,7 @@ ${String(ex)}`);
     };
     if (index >= 0) {
       const existing = records[index];
-      if (existing._requiredCaseImport === REQUIRED_CASE_IMPORT_LA0046219 && existing.entrustEnd === archivedPatch.entrustEnd && existing.archived === archivedPatch.archived) return records;
+      if (existing._requiredCaseImport === REQUIRED_CASE_IMPORT_LA0046219) return records;
       return records.map((record, recordIndex) => recordIndex === index ? normalizeRecordPings({ ...record, ...archivedPatch }) : record);
     }
     return [normalizeRecordPings({ ...blankRecord(), ...archivedPatch, id: "import-la0046219-20260924", photos: [] }), ...records];
@@ -46861,6 +46861,11 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
         ...editedFieldKeys(editing),
         ...Object.keys(editing).filter((key) => !ignored.has(key) && !websiteTrackingKeys.has(key) && trackedValue(existing[key]) !== trackedValue(editing[key]))
       ])].filter((key) => dailyActivityUpdateKeys.has(key));
+      const autoReopen = Boolean(existing.archived) && existing.status === "\u5230\u671F\u4E0B\u67B6" && trackedValue(existing.entrustEnd) !== trackedValue(editing.entrustEnd) && validDate(normalizeDateInput(editing.entrustEnd)) && !isExpired({ ...editing, entrustEnd: normalizeDateInput(editing.entrustEnd) });
+      if (!fields2.length && autoReopen) {
+        saveRecord(true, [], true);
+        return;
+      }
       if (!fields2.length) return flash("\u9019\u6B21\u6C92\u6709\u53EF\u767C\u5E03\u7684\u6B04\u4F4D\uFF1B\u8ACB\u5148\u4FEE\u6539\u8CC7\u6599\u6216\u6309\u66AB\u5B58");
       const overlay = document.createElement("div");
       overlay.className = "daily-publish-picker";
@@ -47797,7 +47802,7 @@ ${changedLabels}
           localStorage.setItem(CLOUD_LAST_UPLOAD_KEY, rows[0].updated_at);
         }
         if (automatic || confirm("\u96F2\u7AEF\u8CC7\u6599\u5C07\u8207\u672C\u6A5F\u8CC7\u6599\u5408\u4F75\uFF0C\u672C\u6A5F\u5DF2\u4FEE\u6539\u4F46\u5C1A\u672A\u540C\u6B65\u7684\u540C\u4E00\u7B46\u8CC7\u6599\u5C07\u4EE5\u96F2\u7AEF\u7248\u672C\u70BA\u6E96\u3002\u78BA\u5B9A\u55CE\uFF1F")) {
-          const requiredCaseImportPending = !data.records.some((record) => String(record.propertyNo || "").trim().toUpperCase() === "LA0046219" && record._requiredCaseImport === REQUIRED_CASE_IMPORT_LA0046219 && record.entrustEnd === "2026-03-30" && record.archived === "2026-03-30");
+          const requiredCaseImportPending = !data.records.some((record) => String(record.propertyNo || "").trim().toUpperCase() === "LA0046219" && record._requiredCaseImport === REQUIRED_CASE_IMPORT_LA0046219);
           cloudSkipNextPushRef.current = !requiredCaseImportPending;
           cloudPullGuardUntilRef.current = requiredCaseImportPending ? 0 : Date.now() + 1500;
           setRecords((prev) => {
@@ -48457,7 +48462,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V483" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V484" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),

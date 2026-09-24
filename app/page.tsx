@@ -733,7 +733,8 @@ const ensureRequiredCaseImports = (records: RecordItem[]) => {
   };
   if (index >= 0) {
     const existing = records[index];
-    if (existing._requiredCaseImport === REQUIRED_CASE_IMPORT_LA0046219 && existing.entrustEnd === archivedPatch.entrustEnd && existing.archived === archivedPatch.archived) return records;
+    // 匯入只做一次；使用者之後自行改期限或重新上架時，不可再被來源舊日期覆蓋。
+    if (existing._requiredCaseImport === REQUIRED_CASE_IMPORT_LA0046219) return records;
     return records.map((record, recordIndex) => recordIndex === index ? normalizeRecordPings({ ...record, ...archivedPatch }) : record);
   }
   return [normalizeRecordPings({ ...blankRecord(), ...archivedPatch, id: "import-la0046219-20260924", photos: [] }), ...records];
@@ -2000,6 +2001,10 @@ export default function Home() {
       ...editedFieldKeys(editing),
       ...Object.keys(editing).filter(key => !ignored.has(key) && !websiteTrackingKeys.has(key) && trackedValue(existing[key]) !== trackedValue(editing[key])),
     ])].filter(key => dailyActivityUpdateKeys.has(key));
+    const autoReopen = Boolean(existing.archived) && existing.status === "到期下架" && trackedValue(existing.entrustEnd) !== trackedValue(editing.entrustEnd) && validDate(normalizeDateInput(editing.entrustEnd)) && !isExpired({ ...editing, entrustEnd: normalizeDateInput(editing.entrustEnd) });
+    // 延長到期日重新上架不是一般「更新欄位」；直接走重新上架流程，
+    // 每日動態只顯示標準紅字「月/日重新上架」。
+    if (!fields.length && autoReopen) { saveRecord(true, [], true); return; }
     if (!fields.length) return flash("這次沒有可發布的欄位；請先修改資料或按暫存");
     const overlay = document.createElement("div");
     overlay.className = "daily-publish-picker";
@@ -2675,7 +2680,7 @@ export default function Home() {
       setCloudConfirmationRecords(confirmationRecords);
       if (rows[0]?.updated_at) { setCloudLastUploadAt(rows[0].updated_at); setCloudRemoteUpdateAt(""); localStorage.setItem(CLOUD_LAST_UPLOAD_KEY, rows[0].updated_at); }
       if (automatic || confirm("雲端資料將與本機資料合併，本機已修改但尚未同步的同一筆資料將以雲端版本為準。確定嗎？")) {
-        const requiredCaseImportPending = !(data.records as RecordItem[]).some(record => String(record.propertyNo || "").trim().toUpperCase() === "LA0046219" && record._requiredCaseImport === REQUIRED_CASE_IMPORT_LA0046219 && record.entrustEnd === "2026-03-30" && record.archived === "2026-03-30");
+        const requiredCaseImportPending = !(data.records as RecordItem[]).some(record => String(record.propertyNo || "").trim().toUpperCase() === "LA0046219" && record._requiredCaseImport === REQUIRED_CASE_IMPORT_LA0046219);
         cloudSkipNextPushRef.current = !requiredCaseImportPending;
         cloudPullGuardUntilRef.current = requiredCaseImportPending ? 0 : Date.now() + 1500;
         setRecords(prev => {
@@ -3196,7 +3201,7 @@ export default function Home() {
 
   return <main lang="zh-Hant-TW" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-        <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V483</small></h1></div>
+        <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V484</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingIntakeReminderRecords.length > 0 && <button className="new-case-reminder-header-button" onClick={() => { setNewCaseReminder({ ...pendingIntakeReminderRecords[0] }); setNewCaseReminderBatchIds(pendingIntakeReminderRecords.map(record => record.id)); }}>新進案件提醒 {pendingIntakeReminderRecords.length}</button>}{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{expiredUnarchived.length > 0 && <button className="expired-entrust-button" onClick={() => setExpiryReminderOpen(true)}>委託到期 {expiredUnarchived.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
