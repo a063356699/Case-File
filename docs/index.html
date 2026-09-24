@@ -44862,7 +44862,11 @@ ${String(ex)}`);
     }
   };
   var nextPptWeekStart = (start) => addDaysIso(start, 7);
-  var belongsToPptWeek = (record, week) => isPptWeek(record.reportDate, week) || pptStoredList(record._pptExtraWeeks).includes(week.start);
+  var belongsToPptWeek = (record, week) => {
+    if (isPptWeek(record.reportDate, week)) return true;
+    const previousWeekStart = addDaysIso(week.start, -7);
+    return pptStoredList(record._pptExtraWeeks).includes(week.start) && pptStoredChoices(record._pptWeekChoices)[previousWeekStart] === "next";
+  };
   var excludedFromPptWeek = (record, weekStart) => pptStoredList(record._pptExcludedWeeks).includes(weekStart);
   var isCurrentPptWeek = (value = "") => isPptWeek(value, currentPptWeek());
   var pptIncluded = (record) => record.pptSelected === "1" || record.pptSelected !== "0" && isCurrentPptWeek(record.reportDate);
@@ -48466,7 +48470,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V485" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V486" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),

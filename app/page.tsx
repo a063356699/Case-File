@@ -408,7 +408,13 @@ const isPptWeek = (value = "", week = currentPptWeek()) => {
 const pptStoredList = (value = "") => { try { const parsed = JSON.parse(value || "[]"); return Array.isArray(parsed) ? parsed : []; } catch { return []; } };
 const pptStoredChoices = (value = "") => { try { const parsed = JSON.parse(value || "{}"); return parsed && typeof parsed === "object" ? parsed : {}; } catch { return {}; } };
 const nextPptWeekStart = (start: string) => addDaysIso(start, 7);
-const belongsToPptWeek = (record: RecordItem, week: ReturnType<typeof pptWeekOf>) => isPptWeek(record.reportDate, week) || pptStoredList(record._pptExtraWeeks).includes(week.start);
+const belongsToPptWeek = (record: RecordItem, week: ReturnType<typeof pptWeekOf>) => {
+  if (isPptWeek(record.reportDate, week)) return true;
+  // 舊版會把曾手動加入週報的案件永久寫進 _pptExtraWeeks，造成已報告案件於後續週期重複出現。
+  // 只有上一週明確按過「下次報告」的案件，才允許延後到這一週一次。
+  const previousWeekStart = addDaysIso(week.start, -7);
+  return pptStoredList(record._pptExtraWeeks).includes(week.start) && pptStoredChoices(record._pptWeekChoices)[previousWeekStart] === "next";
+};
 const excludedFromPptWeek = (record: RecordItem, weekStart: string) => pptStoredList(record._pptExcludedWeeks).includes(weekStart);
 const isCurrentPptWeek = (value = "") => isPptWeek(value, currentPptWeek());
 const pptIncluded = (record: RecordItem) => record.pptSelected === "1" || (record.pptSelected !== "0" && isCurrentPptWeek(record.reportDate));
@@ -3206,7 +3212,7 @@ export default function Home() {
 
   return <main lang="zh-Hant-TW" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-        <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V485</small></h1></div>
+        <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V486</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingIntakeReminderRecords.length > 0 && <button className="new-case-reminder-header-button" onClick={() => { setNewCaseReminder({ ...pendingIntakeReminderRecords[0] }); setNewCaseReminderBatchIds(pendingIntakeReminderRecords.map(record => record.id)); }}>新進案件提醒 {pendingIntakeReminderRecords.length}</button>}{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{expiredUnarchived.length > 0 && <button className="expired-entrust-button" onClick={() => setExpiryReminderOpen(true)}>委託到期 {expiredUnarchived.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
