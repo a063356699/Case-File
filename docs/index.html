@@ -48470,7 +48470,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V486" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V487" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -49094,13 +49094,13 @@ ${changedLabels}
             records.some((record) => record.id === editing.id) && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "record-print-button key-label", type: "button", onClick: () => void printKeyLabel(editing), children: "\u5217\u5370\u9470\u5319" }),
             records.some((record) => record.id === editing.id) && !editing.archived && (editing.status || "\u59D4\u8A17\u4E2D") === "\u59D4\u8A17\u4E2D" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "record-print-button", type: "button", onClick: () => openRecordIntakeDraft(editing), children: "\u9032\u6848\u8349\u7A3F" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "record-print-button ppt", type: "button", onClick: () => openRecordPptPreview(editing), children: "PPT" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: `record-print-button color${editing.colorSheetIssue ? " has-issue" : ""}`, type: "button", onClick: () => {
-                const attention = colorSheetAttention(editing.attentionNotes || "", editing.additionNotes || "");
-                setPrintEditor({ kind: "color", data: { ...editing, notes: attention, attentionNotes: attention, photos: [...editing.photos || []] } });
-              }, children: editing.colorSheetIssue ? "\u5F69\u8272\u8868 Excel \u25CF" : "\u5F69\u8272\u8868 Excel" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "record-print-button cover", type: "button", onClick: () => printRecordDocument(editing, "cover"), children: "\u5217\u5370\u65B0\u9032\u5C01\u9762" })
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "record-print-button ppt", type: "button", onClick: () => openRecordPptPreview(editing), children: "PPT" })
             ] }),
+            records.some((record) => record.id === editing.id) && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: `record-print-button color${editing.colorSheetIssue ? " has-issue" : ""}`, type: "button", onClick: () => {
+              const attention = colorSheetAttention(editing.attentionNotes || "", editing.additionNotes || "");
+              setPrintEditor({ kind: "color", data: { ...editing, notes: attention, attentionNotes: attention, photos: [...editing.photos || []] } });
+            }, children: editing.colorSheetIssue ? "\u5F69\u8272\u8868 Excel \u25CF" : "\u5F69\u8272\u8868 Excel" }),
+            records.some((record) => record.id === editing.id) && !editing.archived && (editing.status || "\u59D4\u8A17\u4E2D") === "\u59D4\u8A17\u4E2D" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "record-print-button cover", type: "button", onClick: () => printRecordDocument(editing, "cover"), children: "\u5217\u5370\u65B0\u9032\u5C01\u9762" }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "close", type: "button", onClick: requestCloseEditing, children: "\xD7" })
           ] })
         ] }),
