@@ -46015,6 +46015,31 @@ ${String(ex)}`);
       }
       flash("\u5DF2\u8907\u88FD\u7279\u8272\u8AAA\u660E1\uFF5E4");
     };
+    const copyDealData = async () => {
+      if (!editing) return;
+      const saved = records.find((record) => record.id === editing.id);
+      if (!saved) return;
+      const text = [
+        "\u3010Case-File\u9032\u6848\u8CC7\u6599\u3011",
+        `\u59D4\u8A17\u66F8\u7DE8\u865F\uFF1A${saved.propertyNo || ""}`,
+        `\u6848\u540D\uFF1A${saved.caseName || ""}`,
+        `\u5730\u5740\uFF1A${saved.address || ""}`,
+        `\u958B\u767C\u696D\u52D9\uFF1A${saved.developer || ""}`
+      ].join("\n");
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch {
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        textarea.remove();
+      }
+      flash("\u5DF2\u8907\u88FD\u6210\u4EA4\u8CC7\u6599");
+    };
     (0, import_react.useEffect)(() => {
       if (tab !== "active") {
         document.body.classList.remove("active-list-stuck");
@@ -48470,7 +48495,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V487" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V488" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -49091,6 +49116,7 @@ ${changedLabels}
             ] })
           ] }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal-head-actions", children: [
+            records.some((record) => record.id === editing.id) && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "record-print-button", type: "button", onClick: copyDealData, children: "\u8907\u88FD\u6210\u4EA4\u8CC7\u6599" }),
             records.some((record) => record.id === editing.id) && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "record-print-button key-label", type: "button", onClick: () => void printKeyLabel(editing), children: "\u5217\u5370\u9470\u5319" }),
             records.some((record) => record.id === editing.id) && !editing.archived && (editing.status || "\u59D4\u8A17\u4E2D") === "\u59D4\u8A17\u4E2D" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "record-print-button", type: "button", onClick: () => openRecordIntakeDraft(editing), children: "\u9032\u6848\u8349\u7A3F" }),
