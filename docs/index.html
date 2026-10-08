@@ -903,6 +903,7 @@ button:hover,.file-button:hover{border-color:#9fbad0;box-shadow:0 2px 8px #7895a
 .record-edit-grid>.edit-features{grid-column:1/-1!important;display:grid!important;grid-template-columns:1fr!important;gap:10px!important;background:#eef6fb!important;border-color:#cfdfeb!important}.record-edit-grid>.edit-features .field{padding:0!important}.completion-age-field>span{display:flex!important;align-items:baseline!important;gap:8px!important}.completion-age-field>span small{color:#e00000!important;font-size:13px!important;font-weight:700!important;white-space:nowrap!important}
 .editing-feature-row{position:relative;display:block}.editing-feature-row .field{width:100%;min-width:0}.editing-feature-row:first-child .field>span{padding-right:118px}.editing-feature-row .copy-features-button{position:absolute;right:0;top:-2px;margin:0;z-index:1}
 .editing-feature-row:first-child .field>span{padding-right:270px}.editing-feature-copy-actions{position:absolute;right:0;top:-2px;display:flex;align-items:center;gap:5px;z-index:1}.editing-feature-copy-actions .copy-features-button{position:static;right:auto;top:auto;margin:0}
+.editing-feature-copy-actions .copy-land-dimensions-button{border-color:#7d8fbd!important;background:#eef1fb!important;color:#334f91!important}
 .record-edit-grid>.edit-auxiliaryBuildingPing,.record-edit-grid>.edit-commonAreaPing,.record-edit-grid>.edit-basementPing{grid-column:span 40!important;background:#f4f1f8!important;border-color:#ded5e8!important}
 .record-edit-grid>.edit-developer{grid-column:span 30!important}.record-edit-grid>.edit-price{grid-column:span 45!important}.record-edit-grid>.edit-completionDate{grid-column:span 15!important}.record-edit-grid>.edit-direction{grid-column:span 30!important}
 .record-edit-grid>.edit-caseName{grid-column:span 85!important}.record-edit-grid>.edit-caseNameNote{grid-column:span 35!important;background:#fff8e9!important;border-color:#eadbb9!important}.record-edit-grid>.edit-caseName .field>span,.record-edit-grid>.edit-caseNameNote .field>span{white-space:nowrap!important}.record-edit-grid>.edit-caseName input,.record-edit-grid>.edit-caseNameNote input{white-space:nowrap!important}
@@ -48517,7 +48518,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V489" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V490" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -49160,7 +49161,7 @@ ${changedLabels}
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Field, { fieldKey: featureKey, label: labels[featureKey], record: editing, records, setRecord: updateEditingRecord }),
             index === 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "editing-feature-copy-actions", children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: "copy-features-button", onClick: copyEditingFeatures, children: "\u8907\u88FD\u7279\u82721\uFF5E4" }),
-              /^(?:LG|LA)/i.test(String(editing.propertyNo || "").trim()) && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: "copy-features-button", onClick: copyLandDimensions, children: "\u8907\u88FD\u81E8\u8DEF\u9762\u5BEC\u6DF1\u5EA6" })
+              /^(?:LG|LA)/i.test(String(editing.propertyNo || "").trim()) && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: "copy-features-button copy-land-dimensions-button", onClick: copyLandDimensions, children: "\u8907\u88FD\u81E8\u8DEF\u9762\u5BEC\u6DF1\u5EA6" })
             ] })
           ] }, featureKey)) }, "features");
           const label = recordEditLabels[key] || labels[key] || key;
