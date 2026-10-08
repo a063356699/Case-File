@@ -902,6 +902,7 @@ button:hover,.file-button:hover{border-color:#9fbad0;box-shadow:0 2px 8px #7895a
 .record-edit-grid>.edit-landSharePing,.record-edit-grid>.edit-registryBuildingPing,.record-edit-grid>.edit-registryIndoorPing,.record-edit-grid>.edit-buildingOtherPing,.record-edit-grid>.edit-mainBuildingPing{grid-column:span 24!important}.record-edit-grid>.edit-buildingName,.record-edit-grid>.edit-unitsPerFloor,.record-edit-grid>.edit-elevatorCount,.record-edit-grid>.edit-generalLandValueTax,.record-edit-grid>.edit-selfUseLandValueTax{grid-column:span 24!important}.record-edit-grid>.edit-feature1,.record-edit-grid>.edit-feature2,.record-edit-grid>.edit-feature3,.record-edit-grid>.edit-feature4{grid-column:1/-1!important}.record-edit-grid>.edit-landTitleCount{grid-column:span 12!important}.record-edit-grid>.edit-buildingTitleCount{grid-column:span 12!important}.record-edit-grid>.edit-titleUndertaking{grid-column:span 12!important}.record-edit-grid>.edit-zoningDocumentStatus{grid-column:span 36!important}.record-edit-grid>.edit-authorizationStatus{grid-column:span 30!important}.record-edit-grid>.edit-authorizationCopyType{grid-column:span 18!important}.record-edit-grid>.edit-zoningDocumentStatus .pill-options{flex-wrap:wrap!important;overflow:visible!important}.record-edit-grid>.edit-zoningDocumentStatus .pill-options button{min-width:0!important;white-space:normal!important}.website-field{pointer-events:none!important}.website-field input,.website-field select,.website-field textarea,.website-field button{pointer-events:auto!important}
 .record-edit-grid>.edit-features{grid-column:1/-1!important;display:grid!important;grid-template-columns:1fr!important;gap:10px!important;background:#eef6fb!important;border-color:#cfdfeb!important}.record-edit-grid>.edit-features .field{padding:0!important}.completion-age-field>span{display:flex!important;align-items:baseline!important;gap:8px!important}.completion-age-field>span small{color:#e00000!important;font-size:13px!important;font-weight:700!important;white-space:nowrap!important}
 .editing-feature-row{position:relative;display:block}.editing-feature-row .field{width:100%;min-width:0}.editing-feature-row:first-child .field>span{padding-right:118px}.editing-feature-row .copy-features-button{position:absolute;right:0;top:-2px;margin:0;z-index:1}
+.editing-feature-row:first-child .field>span{padding-right:270px}.editing-feature-copy-actions{position:absolute;right:0;top:-2px;display:flex;align-items:center;gap:5px;z-index:1}.editing-feature-copy-actions .copy-features-button{position:static;right:auto;top:auto;margin:0}
 .record-edit-grid>.edit-auxiliaryBuildingPing,.record-edit-grid>.edit-commonAreaPing,.record-edit-grid>.edit-basementPing{grid-column:span 40!important;background:#f4f1f8!important;border-color:#ded5e8!important}
 .record-edit-grid>.edit-developer{grid-column:span 30!important}.record-edit-grid>.edit-price{grid-column:span 45!important}.record-edit-grid>.edit-completionDate{grid-column:span 15!important}.record-edit-grid>.edit-direction{grid-column:span 30!important}
 .record-edit-grid>.edit-caseName{grid-column:span 85!important}.record-edit-grid>.edit-caseNameNote{grid-column:span 35!important;background:#fff8e9!important;border-color:#eadbb9!important}.record-edit-grid>.edit-caseName .field>span,.record-edit-grid>.edit-caseNameNote .field>span{white-space:nowrap!important}.record-edit-grid>.edit-caseName input,.record-edit-grid>.edit-caseNameNote input{white-space:nowrap!important}
@@ -46015,6 +46016,27 @@ ${String(ex)}`);
       }
       flash("\u5DF2\u8907\u88FD\u7279\u8272\u8AAA\u660E1\uFF5E4");
     };
+    const copyLandDimensions = async () => {
+      if (!editing || !/^(?:LG|LA)/i.test(String(editing.propertyNo || "").trim())) return;
+      const measure = (label, value = "") => {
+        const clean = String(value || "").trim().replace(new RegExp(`^${label}\\s*`), "").replace(/^約\s*/, "").replace(/\s*米\s*$/, "").trim();
+        return clean ? `${label}\u7D04${clean}\u7C73` : label;
+      };
+      const text = [measure("\u81E8\u8DEF", editing.road), measure("\u9762\u5BEC", editing.frontage), measure("\u6DF1\u5EA6", editing.depth)].join("/");
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch {
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        textarea.remove();
+      }
+      flash("\u5DF2\u8907\u88FD\u81E8\u8DEF\u9762\u5BEC\u6DF1\u5EA6");
+    };
     const copyDealData = async () => {
       if (!editing) return;
       const saved = records.find((record) => record.id === editing.id);
@@ -48495,7 +48517,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V488" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V489" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -49136,7 +49158,10 @@ ${changedLabels}
           if (key === "bookLocationReason" && editing.bookLocationType !== "\u65C15") return null;
           if (key === "feature1") return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "edit-cell edit-features", children: ["feature1", "feature2", "feature3", "feature4"].map((featureKey, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "editing-feature-row", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Field, { fieldKey: featureKey, label: labels[featureKey], record: editing, records, setRecord: updateEditingRecord }),
-            index === 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: "copy-features-button", onClick: copyEditingFeatures, children: "\u8907\u88FD\u7279\u82721\uFF5E4" })
+            index === 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "editing-feature-copy-actions", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: "copy-features-button", onClick: copyEditingFeatures, children: "\u8907\u88FD\u7279\u82721\uFF5E4" }),
+              /^(?:LG|LA)/i.test(String(editing.propertyNo || "").trim()) && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: "copy-features-button", onClick: copyLandDimensions, children: "\u8907\u88FD\u81E8\u8DEF\u9762\u5BEC\u6DF1\u5EA6" })
+            ] })
           ] }, featureKey)) }, "features");
           const label = recordEditLabels[key] || labels[key] || key;
           const isBookRow = ["photoInfo", "bookLocationType", "salesBook"].includes(key);
@@ -51514,6 +51539,13 @@ ${xrefOffset}
     const coverChangePurpose = value("coverChangePurpose");
     const coverIsLand = typeShort(record.type) === "\u571F\u5730" || /^(?:LG|LA)/i.test(record.propertyNo || "");
     const coverZoningStatus = record.zoningDocumentStatus || (coverIsLand ? "" : "\u623F\u5C4B\u4E0D\u9700\u8981");
+    const coverZoningDate = record.zoningApplicationDate ? displayRocDate(record.zoningApplicationDate) : "";
+    const coverZoningCount = String(record.zoningCertificateCount || "").trim();
+    const coverZoningChoice = coverZoningStatus === "\u623F\u5C4B\u4E0D\u9700\u8981" ? "house" : coverZoningStatus === "\u8B04\u672C\u5DF2\u6A19\u793A\u4E0D\u7528\u9644" ? "deed" : coverZoningDate ? "date" : coverZoningCount ? "count" : "";
+    const coverZoningHouseBox = coverZoningChoice === "house" ? "\u2713" : coverZoningChoice ? "\uFF0D" : "";
+    const coverZoningDateBox = coverZoningChoice === "date" ? coverZoningDate : coverZoningChoice ? "\uFF0D" : "";
+    const coverZoningCountBox = coverZoningChoice === "count" ? coverZoningCount : coverZoningChoice === "date" ? "" : coverZoningChoice ? "\uFF0D" : "";
+    const coverZoningDeedBox = coverZoningChoice === "deed" ? "\u2713" : coverZoningChoice ? "\uFF0D" : "";
     const coverContractRows = false ? `<table class="contract-grid-v3"><colgroup><col style="width:25mm"><col style="width:11mm"><col style="width:11mm"><col style="width:11mm"><col style="width:58mm"><col></colgroup><tbody>
       <tr style="height:9mm"><th rowspan="2">\u5951\u7D04\u7DE8\u865F</th><th colspan="3">\u5951\u7BA1</th><th rowspan="2">\u65E5\u671F\uFF0F\u59D4\u8A17\u8D77\u8A16\u65E5</th><td class="report">\u9032\u6848\u65E5\u671F\uFF1A\u3000${date("reportDate")}</td></tr>
       <tr style="height:9mm"><th>\u623F\u7BA1</th><th>\u7167\u7247</th><th>\u7D19\u672C</th><th>\u7528\u9014</th></tr>
@@ -51560,10 +51592,10 @@ ${xrefOffset}
       <div class="stars">\u2605\u539F\u7A3F/\u8349\u7A3F\uFF1B</div>
       <div class="stars">\u2605\u571F\u5730\u6B0A\u72C0\xD7<span class="form-box">${escapeHtml(record.landTitleCount || "")}</span>\u5F35/\u5EFA\u7269\u6B0A\u72C0\xD7<span class="form-box">${escapeHtml(record.buildingTitleCount || "")}</span>\u5F35/<span class="form-box">${record.titleUndertaking === "\u6709\u5207\u7D50" ? "\u2713" : ""}</span>\u5207\u7D50</div>
       <div>\u25CE \u4F7F\u7528\u5206\u5340:\u5982\u679C\u92B7\u552E\u571F\u5730\u70BA\u7A7A\u767D*\u5FC5\u7533\u8ACB\u3002</div>
-      <div class="sub"><span class="form-box">${coverZoningStatus === "\u623F\u5C4B\u4E0D\u9700\u8981" ? "\u2713" : ""}</span>\u6B64\u7269\u4EF6\u70BA\u92B7\u552E\u623F\u5B50\u4E0D\u9700\u8981</div>
-      <div class="sub">\u25CF\u6B64\u7269\u4EF6\u70BA\u92B7\u552E\u90FD\u5E02\u571F\u5730,\u9700\u7533\u8ACB\u5206\u5340\u7533\u8ACB\u65E5\u671F\uFF1A<span class="form-box cover-date-box">${escapeHtml(record.zoningApplicationDate ? displayRocDate(record.zoningApplicationDate) : "")}</span></div>
-      <div class="sub">\u25CF\u6B64\u7269\u4EF6\u70BA\u92B7\u552E\u90FD\u5E02\u571F\u5730,\u4E14\u5DF2\u9644\u5206\u5340\u8B49\u660E\xD7<span class="form-box">${escapeHtml(record.zoningCertificateCount || "")}</span>\u5F35</div>
-      <div class="sub">\u25CF\u6B64\u7269\u4EF6\u70BA\u92B7\u552E\u571F\u5730\uFF0C\u8B04\u672C<span class="form-box">${coverZoningStatus === "\u8B04\u672C\u5DF2\u6A19\u793A\u4E0D\u7528\u9644" ? "\u2713" : ""}</span>\u5DF2\u6A19\u793A--\u4E0D\u7528\u9644\u4E0A\u4F7F\u7528\u5206\u5340</div>
+      <div class="sub"><span class="form-box">${coverZoningHouseBox}</span>\u6B64\u7269\u4EF6\u70BA\u92B7\u552E\u623F\u5B50\u4E0D\u9700\u8981</div>
+      <div class="sub">\u25CF\u6B64\u7269\u4EF6\u70BA\u92B7\u552E\u90FD\u5E02\u571F\u5730,\u9700\u7533\u8ACB\u5206\u5340\u7533\u8ACB\u65E5\u671F\uFF1A<span class="form-box cover-date-box">${escapeHtml(coverZoningDateBox)}</span></div>
+      <div class="sub">\u25CF\u6B64\u7269\u4EF6\u70BA\u92B7\u552E\u90FD\u5E02\u571F\u5730,\u4E14\u5DF2\u9644\u5206\u5340\u8B49\u660E\xD7<span class="form-box">${escapeHtml(coverZoningCountBox)}</span>\u5F35</div>
+      <div class="sub">\u25CF\u6B64\u7269\u4EF6\u70BA\u92B7\u552E\u571F\u5730\uFF0C\u8B04\u672C<span class="form-box">${coverZoningDeedBox}</span>\u5DF2\u6A19\u793A--\u4E0D\u7528\u9644\u4E0A\u4F7F\u7528\u5206\u5340</div>
       <div>\u25CE \u2605\u6388\u6B0A\u66F8:<span class="form-box">${record.authorizationStatus === "\u7F3A\u6388" ? "\u2713" : ""}</span>\u7F3A\u6388/<span class="form-box">${record.authorizationStatus === "\u7121\u9700\u8981" ? "\u2713" : ""}</span>\u7121\u9700\u8981/\u5DF2\u9644\u4E0A\u6B78\u6A94(\u5F71\u672C\xD7<span class="form-box">${escapeHtml(record.authorizationCopyCount || (record.authorizationCopyType === "\u5F71\u672C" ? "1" : ""))}</span>\u5F35/\u6B63\u672C\xD7<span class="form-box">${escapeHtml(record.authorizationOriginalCount || (record.authorizationCopyType === "\u6B63\u672C" ? "1" : ""))}</span>\u5F35)</div>
     </div></div>
   </div></div>`;

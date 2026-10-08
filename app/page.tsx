@@ -1361,6 +1361,18 @@ export default function Home() {
     flash("已複製特色說明1～4");
   };
 
+  const copyLandDimensions = async () => {
+    if (!editing || !/^(?:LG|LA)/i.test(String(editing.propertyNo || "").trim())) return;
+    const measure = (label: string, value = "") => {
+      const clean = String(value || "").trim().replace(new RegExp(`^${label}\\s*`), "").replace(/^約\s*/, "").replace(/\s*米\s*$/, "").trim();
+      return clean ? `${label}約${clean}米` : label;
+    };
+    const text = [measure("臨路", editing.road), measure("面寬", editing.frontage), measure("深度", editing.depth)].join("/");
+    try { await navigator.clipboard.writeText(text); }
+    catch { const textarea = document.createElement("textarea"); textarea.value = text; textarea.style.position = "fixed"; textarea.style.opacity = "0"; document.body.appendChild(textarea); textarea.select(); document.execCommand("copy"); textarea.remove(); }
+    flash("已複製臨路面寬深度");
+  };
+
   const copyDealData = async () => {
     if (!editing) return;
     const saved = records.find(record => record.id === editing.id);
@@ -3228,7 +3240,7 @@ export default function Home() {
 
   return <main lang="zh-Hant-TW" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-        <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V488</small></h1></div>
+        <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V489</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingIntakeReminderRecords.length > 0 && <button className="new-case-reminder-header-button" onClick={() => { setNewCaseReminder({ ...pendingIntakeReminderRecords[0] }); setNewCaseReminderBatchIds(pendingIntakeReminderRecords.map(record => record.id)); }}>新進案件提醒 {pendingIntakeReminderRecords.length}</button>}{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{expiredUnarchived.length > 0 && <button className="expired-entrust-button" onClick={() => setExpiryReminderOpen(true)}>委託到期 {expiredUnarchived.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -3288,7 +3300,7 @@ export default function Home() {
 <div className="form-grid record-edit-grid">{recordEditOrder.filter(key => key !== "area").map(key => {
   if (["feature2", "feature3", "feature4"].includes(key)) return null;
   if (key === "bookLocationReason" && editing.bookLocationType !== "旁5") return null;
-  if (key === "feature1") return <div className="edit-cell edit-features" key="features">{["feature1", "feature2", "feature3", "feature4"].map((featureKey, index) => <div className="editing-feature-row" key={featureKey}><Field fieldKey={featureKey} label={labels[featureKey]} record={editing} records={records} setRecord={updateEditingRecord}/>{index === 0 && <button type="button" className="copy-features-button" onClick={copyEditingFeatures}>複製特色1～4</button>}</div>)}</div>;
+  if (key === "feature1") return <div className="edit-cell edit-features" key="features">{["feature1", "feature2", "feature3", "feature4"].map((featureKey, index) => <div className="editing-feature-row" key={featureKey}><Field fieldKey={featureKey} label={labels[featureKey]} record={editing} records={records} setRecord={updateEditingRecord}/>{index === 0 && <div className="editing-feature-copy-actions"><button type="button" className="copy-features-button" onClick={copyEditingFeatures}>複製特色1～4</button>{/^(?:LG|LA)/i.test(String(editing.propertyNo || "").trim()) && <button type="button" className="copy-features-button" onClick={copyLandDimensions}>複製臨路面寬深度</button>}</div>}</div>)}</div>;
   const label = recordEditLabels[key] || labels[key] || key;
   const isBookRow = ["photoInfo", "bookLocationType", "salesBook"].includes(key);
   return <div className={`${recordEditClass(key)}${editing.bookLocationType !== "旁5" && isBookRow ? " book-row-no-reason" : ""}`} key={key}><Field fieldKey={key} label={label} record={editing} records={records} setRecord={updateEditingRecord}/></div>;
@@ -4538,6 +4550,13 @@ function printRecordDocument(record: RecordItem, kind: "color" | "cover") {
   const coverChangePurpose = value("coverChangePurpose");
   const coverIsLand = typeShort(record.type) === "土地" || /^(?:LG|LA)/i.test(record.propertyNo || "");
   const coverZoningStatus = record.zoningDocumentStatus || (coverIsLand ? "" : "房屋不需要");
+  const coverZoningDate = record.zoningApplicationDate ? displayRocDate(record.zoningApplicationDate) : "";
+  const coverZoningCount = String(record.zoningCertificateCount || "").trim();
+  const coverZoningChoice = coverZoningStatus === "房屋不需要" ? "house" : coverZoningStatus === "謄本已標示不用附" ? "deed" : coverZoningDate ? "date" : coverZoningCount ? "count" : "";
+  const coverZoningHouseBox = coverZoningChoice === "house" ? "✓" : coverZoningChoice ? "－" : "";
+  const coverZoningDateBox = coverZoningChoice === "date" ? coverZoningDate : coverZoningChoice ? "－" : "";
+  const coverZoningCountBox = coverZoningChoice === "count" ? coverZoningCount : coverZoningChoice === "date" ? "" : coverZoningChoice ? "－" : "";
+  const coverZoningDeedBox = coverZoningChoice === "deed" ? "✓" : coverZoningChoice ? "－" : "";
   const coverContractRows = false ? `<table class="contract-grid-v3"><colgroup><col style="width:25mm"><col style="width:11mm"><col style="width:11mm"><col style="width:11mm"><col style="width:58mm"><col></colgroup><tbody>
       <tr style="height:9mm"><th rowspan="2">契約編號</th><th colspan="3">契管</th><th rowspan="2">日期／委託起訖日</th><td class="report">進案日期：　${date("reportDate")}</td></tr>
       <tr style="height:9mm"><th>房管</th><th>照片</th><th>紙本</th><th>用途</th></tr>
@@ -4584,10 +4603,10 @@ function printRecordDocument(record: RecordItem, kind: "color" | "cover") {
       <div class="stars">★原稿/草稿；</div>
       <div class="stars">★土地權狀×<span class="form-box">${escapeHtml(record.landTitleCount || "")}</span>張/建物權狀×<span class="form-box">${escapeHtml(record.buildingTitleCount || "")}</span>張/<span class="form-box">${record.titleUndertaking === "有切結" ? "✓" : ""}</span>切結</div>
       <div>◎ 使用分區:如果銷售土地為空白*必申請。</div>
-      <div class="sub"><span class="form-box">${coverZoningStatus === "房屋不需要" ? "✓" : ""}</span>此物件為銷售房子不需要</div>
-      <div class="sub">●此物件為銷售都市土地,需申請分區申請日期：<span class="form-box cover-date-box">${escapeHtml(record.zoningApplicationDate ? displayRocDate(record.zoningApplicationDate) : "")}</span></div>
-      <div class="sub">●此物件為銷售都市土地,且已附分區證明×<span class="form-box">${escapeHtml(record.zoningCertificateCount || "")}</span>張</div>
-      <div class="sub">●此物件為銷售土地，謄本<span class="form-box">${coverZoningStatus === "謄本已標示不用附" ? "✓" : ""}</span>已標示--不用附上使用分區</div>
+      <div class="sub"><span class="form-box">${coverZoningHouseBox}</span>此物件為銷售房子不需要</div>
+      <div class="sub">●此物件為銷售都市土地,需申請分區申請日期：<span class="form-box cover-date-box">${escapeHtml(coverZoningDateBox)}</span></div>
+      <div class="sub">●此物件為銷售都市土地,且已附分區證明×<span class="form-box">${escapeHtml(coverZoningCountBox)}</span>張</div>
+      <div class="sub">●此物件為銷售土地，謄本<span class="form-box">${coverZoningDeedBox}</span>已標示--不用附上使用分區</div>
       <div>◎ ★授權書:<span class="form-box">${record.authorizationStatus === "缺授" ? "✓" : ""}</span>缺授/<span class="form-box">${record.authorizationStatus === "無需要" ? "✓" : ""}</span>無需要/已附上歸檔(影本×<span class="form-box">${escapeHtml(record.authorizationCopyCount || (record.authorizationCopyType === "影本" ? "1" : ""))}</span>張/正本×<span class="form-box">${escapeHtml(record.authorizationOriginalCount || (record.authorizationCopyType === "正本" ? "1" : ""))}</span>張)</div>
     </div></div>
   </div></div>`;
