@@ -883,6 +883,7 @@ button:hover,.file-button:hover{border-color:#9fbad0;box-shadow:0 2px 8px #7895a
 .record-modal-title h2 em{font-size:22px!important;font-style:normal!important;font-weight:800!important}
 .record-modal-title>small{display:block!important;order:3!important;flex:0 0 100%!important;min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;color:#56645f!important;font-size:16px!important;font-weight:400!important;line-height:1.2!important}
 .record-modal-title>.record-intake-file-name{order:4!important;color:#5b7185!important;font-size:13px!important;font-weight:700!important;margin-top:2px!important;border:0!important;background:transparent!important;padding:0!important;text-align:left!important;cursor:pointer!important}.record-modal-title>.record-intake-file-name:hover{text-decoration:underline!important;color:#1765a8!important}
+.record-modal-title .record-header-copy{border:0!important;background:transparent!important;padding:0!important;margin:0!important;border-radius:0!important;text-align:left!important;line-height:inherit!important;transform:none!important}.record-modal-title .record-header-copy:hover{text-decoration:underline!important;color:#1765a8!important}.record-modal-title>.record-address-copy{display:block!important;order:3!important;flex:0 0 100%!important;min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;color:#56645f!important;font-size:16px!important;font-weight:400!important;line-height:1.2!important;white-space:nowrap!important}
 .record-modal-title>p{order:2!important;flex:0 0 auto!important;margin:0!important;color:#0066cc!important;font-size:calc(22px - 1pt)!important;font-weight:800!important;white-space:nowrap!important}
 
 /* 彩色表補充資料：固定放在網站編號區塊上方。 */
@@ -46080,6 +46081,22 @@ ${String(ex)}`);
       }
       flash("\u5DF2\u8907\u88FD\u6A94\u540D");
     };
+    const copyEditingHeaderValue = async (value, label) => {
+      const text = String(value || "");
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch {
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        textarea.remove();
+      }
+      flash(`\u5DF2\u8907\u88FD${label}`);
+    };
     (0, import_react.useEffect)(() => {
       if (tab !== "active") {
         document.body.classList.remove("active-list-stuck");
@@ -48535,7 +48552,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V491" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V492" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -49137,10 +49154,10 @@ ${changedLabels}
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "record-modal-title", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: editing._intakeDraftId ? "\u7DE8\u8F2F\u9032\u6848\u8349\u7A3F" : records.some((r) => r.id === editing.id) ? "\u7DE8\u8F2F\u6848\u4EF6" : "\u5EFA\u7ACB\u65B0\u7269\u4EF6" }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h2", { children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: editing.propertyNo || "\u5C1A\u7121\u7DE8\u865F" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("em", { children: editing.caseName || "\u5C1A\u672A\u547D\u540D" })
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: "record-header-copy", title: "\u9EDE\u4E00\u4E0B\u8907\u88FD\u7269\u4EF6\u7DE8\u865F", onClick: () => copyEditingHeaderValue(editing.propertyNo || "", "\u7269\u4EF6\u7DE8\u865F"), children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: editing.propertyNo || "\u5C1A\u7121\u7DE8\u865F" }) }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: "record-header-copy", title: "\u9EDE\u4E00\u4E0B\u8907\u88FD\u6848\u540D", onClick: () => copyEditingHeaderValue(editing.caseName || "", "\u6848\u540D"), children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("em", { children: editing.caseName || "\u5C1A\u672A\u547D\u540D" }) })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: editing.address || "\u5C1A\u672A\u586B\u5BEB\u5730\u5740" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: "record-header-copy record-address-copy", title: "\u9EDE\u4E00\u4E0B\u8907\u88FD\u5730\u5740", onClick: () => copyEditingHeaderValue(editing.address || "", "\u5730\u5740"), children: editing.address || "\u5C1A\u672A\u586B\u5BEB\u5730\u5740" }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { type: "button", className: "record-intake-file-name", title: "\u9EDE\u4E00\u4E0B\u8907\u88FD\u6A94\u540D", onClick: copyEditingFileName, children: [
               "\u6A94\u540D\uFF1A",
               intakeDraftEditorTitle(recordToIntake(editing))
