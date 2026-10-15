@@ -47006,6 +47006,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
     };
     const saveRecord = (publishDaily = false, publishedFields, skipConfirm = false) => {
       if (!editing) return;
+      if (editing.zoningDocumentStatus === "\u9700\u7533\u8ACB" && !normalizeDateInput(editing.zoningApplicationDate || "")) return flash("\u8ACB\u586B\u5BEB\u4F7F\u7528\u5206\u5340\u7533\u8ACB\u65E5\u671F\u5F8C\u518D\u5132\u5B58");
       if (publishDaily && !publishedFields && records.some((record) => record.id === editing.id)) {
         beginDailyPublish();
         return;
@@ -47094,6 +47095,7 @@ ${changedLabels}
     };
     const temporarilySaveRecord = () => {
       if (!editing) return;
+      if (editing.zoningDocumentStatus === "\u9700\u7533\u8ACB" && !normalizeDateInput(editing.zoningApplicationDate || "")) return flash("\u8ACB\u586B\u5BEB\u4F7F\u7528\u5206\u5340\u7533\u8ACB\u65E5\u671F\u5F8C\u518D\u66AB\u5B58");
       if (editing.bookLocationType === "\u65C15" && !String(editing.bookLocationReason || "").trim()) return flash("\u8ACB\u586B\u5BEB\u65C15\u539F\u56E0\u5F8C\u518D\u66AB\u5B58");
       const savedAt = (/* @__PURE__ */ new Date()).toISOString();
       const next = normalizeRecordPings(clearImportedLandLabels({
@@ -48552,7 +48554,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V493" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V494" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -51576,7 +51578,7 @@ ${xrefOffset}
     const coverZoningStatus = record.zoningDocumentStatus || (coverIsLand ? "" : "\u623F\u5C4B\u4E0D\u9700\u8981");
     const coverZoningDate = record.zoningApplicationDate ? displayRocDate(record.zoningApplicationDate) : "";
     const coverZoningCount = String(record.zoningCertificateCount || "").trim();
-    const coverZoningChoice = coverZoningStatus === "\u623F\u5C4B\u4E0D\u9700\u8981" ? "house" : coverZoningStatus === "\u8B04\u672C\u5DF2\u6A19\u793A\u4E0D\u7528\u9644" ? "deed" : coverZoningDate ? "date" : coverZoningCount ? "count" : "";
+    const coverZoningChoice = coverZoningStatus === "\u623F\u5C4B\u4E0D\u9700\u8981" ? "house" : coverZoningStatus === "\u8B04\u672C\u5DF2\u6A19\u793A\u4E0D\u7528\u9644" ? "deed" : coverZoningStatus === "\u9700\u7533\u8ACB" || coverZoningDate ? "date" : coverZoningCount ? "count" : "";
     const coverZoningHouseBox = coverZoningChoice === "house" ? "\u2713" : coverZoningChoice ? "\uFF0D" : "";
     const coverZoningDateBox = coverZoningChoice === "date" ? coverZoningDate : coverZoningChoice ? "\uFF0D" : "";
     const coverZoningCountBox = coverZoningChoice === "count" ? coverZoningCount : coverZoningChoice === "date" ? "" : coverZoningChoice ? "\uFF0D" : "";
@@ -54640,7 +54642,7 @@ ${differences.map((item) => `${item.label}\uFF1A\u539F\u672C ${item.before} \u57
       ] });
     }
     if (fieldKey === "zoningDocumentStatus") {
-      const options = ["\u623F\u5C4B\u4E0D\u9700\u8981", "\u8B04\u672C\u5DF2\u6A19\u793A\u4E0D\u7528\u9644"];
+      const options = ["\u623F\u5C4B\u4E0D\u9700\u8981", "\u8B04\u672C\u5DF2\u6A19\u793A\u4E0D\u7528\u9644", "\u9700\u7533\u8ACB"];
       return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: `field cover-pill-field cover-pill-${fieldKey}`, children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: label }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "pill-options", children: options.map((option) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: value === option ? "active" : "", onClick: () => set(value === option ? "" : option), children: option }, option)) })
@@ -54842,11 +54844,18 @@ ${differences.map((item) => `${item.label}\uFF1A\u539F\u672C ${item.before} \u57
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", inputMode: "numeric", value: displayRocDate(value), onChange: (e) => set(normalizeCompleteDateInput(e.target.value)), onBlur: (e) => set(normalizeDateInput(e.target.value)), placeholder: "\u4F8B\u5982 115/7/29" }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: record.lastModifiedAt ? `\u6700\u5F8C\u4FEE\u6539:${displayModifiedAt(record.lastModifiedAt)}` : "\u5C1A\u7121\u4FEE\u6539\u6642\u9593" })
     ] });
-    if (dateKeys.has(fieldKey)) return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: `field ${value && !validDate(normalizeDateInput(value)) ? "invalid" : ""}`, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: label }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", inputMode: "numeric", placeholder: "\u4F8B\u5982 7/24", value: displayRocDate(normalizeDateInput(value)), onChange: (e) => set(normalizeCompleteDateInput(e.target.value)), onBlur: (e) => set(normalizeDateInput(e.target.value)) }),
-      fieldKey !== "zoningApplicationDate" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "\u53EF\u8F38\u5165 7/24\uFF0C\u81EA\u52D5\u8F49\u70BA\u6C11\u570B\u65E5\u671F" })
-    ] });
+    if (dateKeys.has(fieldKey)) {
+      const zoningRequired = fieldKey === "zoningApplicationDate" && record.zoningDocumentStatus === "\u9700\u7533\u8ACB";
+      const invalidDate = !!value && !validDate(normalizeDateInput(value));
+      return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: `field ${invalidDate || zoningRequired && !normalizeDateInput(value) ? "invalid" : ""}`, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+          label,
+          zoningRequired && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { className: "required-mark", children: "\u5FC5\u586B" })
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", inputMode: "numeric", placeholder: "\u4F8B\u5982 7/24", value: displayRocDate(normalizeDateInput(value)), onChange: (e) => set(normalizeCompleteDateInput(e.target.value)), onBlur: (e) => set(normalizeDateInput(e.target.value)) }),
+        fieldKey !== "zoningApplicationDate" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "\u53EF\u8F38\u5165 7/24\uFF0C\u81EA\u52D5\u8F49\u70BA\u6C11\u570B\u65E5\u671F" })
+      ] });
+    }
     return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "field", children: [
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
         label,

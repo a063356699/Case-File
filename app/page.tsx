@@ -2086,6 +2086,7 @@ export default function Home() {
   };
   const saveRecord = (publishDaily = false, publishedFields?: string[], skipConfirm = false) => {
     if (!editing) return;
+    if (editing.zoningDocumentStatus === "需申請" && !normalizeDateInput(editing.zoningApplicationDate || "")) return flash("請填寫使用分區申請日期後再儲存");
     // 按「儲存並發布每日動態」先選擇欄位；真正確認後才帶入 publishedFields 儲存。
     if (publishDaily && !publishedFields && records.some(record => record.id === editing.id)) { beginDailyPublish(); return; }
     if (editing.bookLocationType === "旁5" && !String(editing.bookLocationReason || "").trim()) return flash("請填寫旁5原因後再儲存");
@@ -2175,6 +2176,7 @@ export default function Home() {
   };
   const temporarilySaveRecord = () => {
     if (!editing) return;
+    if (editing.zoningDocumentStatus === "需申請" && !normalizeDateInput(editing.zoningApplicationDate || "")) return flash("請填寫使用分區申請日期後再暫存");
     if (editing.bookLocationType === "旁5" && !String(editing.bookLocationReason || "").trim()) return flash("請填寫旁5原因後再暫存");
     const savedAt = new Date().toISOString();
     const next = normalizeRecordPings(clearImportedLandLabels({
@@ -3255,7 +3257,7 @@ export default function Home() {
 
   return <main lang="zh-Hant-TW" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-        <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V493</small></h1></div>
+        <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V494</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingIntakeReminderRecords.length > 0 && <button className="new-case-reminder-header-button" onClick={() => { setNewCaseReminder({ ...pendingIntakeReminderRecords[0] }); setNewCaseReminderBatchIds(pendingIntakeReminderRecords.map(record => record.id)); }}>新進案件提醒 {pendingIntakeReminderRecords.length}</button>}{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{expiredUnarchived.length > 0 && <button className="expired-entrust-button" onClick={() => setExpiryReminderOpen(true)}>委託到期 {expiredUnarchived.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -4567,7 +4569,7 @@ function printRecordDocument(record: RecordItem, kind: "color" | "cover") {
   const coverZoningStatus = record.zoningDocumentStatus || (coverIsLand ? "" : "房屋不需要");
   const coverZoningDate = record.zoningApplicationDate ? displayRocDate(record.zoningApplicationDate) : "";
   const coverZoningCount = String(record.zoningCertificateCount || "").trim();
-  const coverZoningChoice = coverZoningStatus === "房屋不需要" ? "house" : coverZoningStatus === "謄本已標示不用附" ? "deed" : coverZoningDate ? "date" : coverZoningCount ? "count" : "";
+  const coverZoningChoice = coverZoningStatus === "房屋不需要" ? "house" : coverZoningStatus === "謄本已標示不用附" ? "deed" : coverZoningStatus === "需申請" || coverZoningDate ? "date" : coverZoningCount ? "count" : "";
   const coverZoningHouseBox = coverZoningChoice === "house" ? "✓" : coverZoningChoice ? "－" : "";
   const coverZoningDateBox = coverZoningChoice === "date" ? coverZoningDate : coverZoningChoice ? "－" : "";
   const coverZoningCountBox = coverZoningChoice === "count" ? coverZoningCount : coverZoningChoice === "date" ? "" : coverZoningChoice ? "－" : "";
@@ -5443,7 +5445,7 @@ function Field({ fieldKey, label, record, records, setRecord }: { fieldKey: stri
     parkingOwnership: ["無車位", "停自有地", "固定車位", "車位另租", "抽籤決定", "先到先停"], parkingMethod: ["坡道/平面", "坡道/機械", "昇降/平面", "昇降/機械", "庭院", "車庫", "平移/機械"]
   };
   if (fieldKey === "coverNoChange") { const hasChangeNo = !!String(record.coverChangeNo || "").trim() && !isImportedDashPlaceholder(record.coverChangeNo); return <label className={`field cover-pill-field cover-pill-${fieldKey}`}><span>{label}</span><span className="pill-options">{hasChangeNo ? <button type="button" className="active" disabled>有契變</button> : <button type="button" className={value === "無契變" ? "active" : ""} onClick={() => setRecord(value === "無契變" ? { ...record, coverNoChange: "" } : { ...record, coverNoChange: "無契變", coverChangeNo: "", coverChangeDate: "", coverChangePurpose: "" })}>無契變</button>}</span></label>; }
-  if (fieldKey === "zoningDocumentStatus") { const options = ["房屋不需要", "謄本已標示不用附"]; return <label className={`field cover-pill-field cover-pill-${fieldKey}`}><span>{label}</span><span className="pill-options">{options.map(option => <button type="button" className={value === option ? "active" : ""} onClick={() => set(value === option ? "" : option)} key={option}>{option}</button>)}</span></label>; }
+  if (fieldKey === "zoningDocumentStatus") { const options = ["房屋不需要", "謄本已標示不用附", "需申請"]; return <label className={`field cover-pill-field cover-pill-${fieldKey}`}><span>{label}</span><span className="pill-options">{options.map(option => <button type="button" className={value === option ? "active" : ""} onClick={() => set(value === option ? "" : option)} key={option}>{option}</button>)}</span></label>; }
   if (pillChoices[fieldKey]) { const displayedValue = fieldKey === "parkingMethod" && !value && pillChoices.parkingMethod.includes(record.parkingType || "") ? record.parkingType : value; const selectPill = (option: string) => fieldKey === "parkingMethod" ? setRecord({ ...record, parkingMethod: displayedValue === option ? "" : option, parkingType: "" }) : set(displayedValue === option ? "" : option); return <label className={`field cover-pill-field cover-pill-${fieldKey}`}><span>{label}</span><span className="pill-options">{pillChoices[fieldKey].map(option => <button type="button" className={displayedValue === option ? "active" : ""} onClick={() => selectPill(option)} key={option}>{option}</button>)}</span></label>; }
   if (fieldKey === "reducedPrice") return null;
   if (fieldKey === "caseNameNote") return <label className="field case-name-note-field"><span>{label}{record.caseNameNoteModifiedAt && <small>修改:{displayModifiedAt(record.caseNameNoteModifiedAt)}</small>}</span><input type="text" value={value} onChange={event => setRecord({ ...record, caseNameNote: event.target.value, caseNameNoteModifiedAt: new Date().toISOString() })}/></label>;
@@ -5472,7 +5474,7 @@ function Field({ fieldKey, label, record, records, setRecord }: { fieldKey: stri
   if (selectOptions[fieldKey]) return <label className="field"><span>{label}</span><select value={value} onChange={e => set(e.target.value)}><option value="">請選擇</option>{selectOptions[fieldKey].map(o => <option key={o}>{o}</option>)}</select></label>;
   if (fieldKey === "groupViewDate") return <label className="field"><span>{label}</span><input type="text" placeholder="例如：115年7月28日、已團看" value={value} onChange={e => set(e.target.value)}/><small>可輸入日期或中文註記</small></label>;
   if (fieldKey === "updateDate") return <label className="field update-date-field"><span>{label}</span><input type="text" inputMode="numeric" value={displayRocDate(value)} onChange={e => set(normalizeCompleteDateInput(e.target.value))} onBlur={e => set(normalizeDateInput(e.target.value))} placeholder="例如 115/7/29"/><small>{record.lastModifiedAt ? `最後修改:${displayModifiedAt(record.lastModifiedAt)}` : "尚無修改時間"}</small></label>;
-  if (dateKeys.has(fieldKey)) return <label className={`field ${value && !validDate(normalizeDateInput(value)) ? "invalid" : ""}`}><span>{label}</span><input type="text" inputMode="numeric" placeholder="例如 7/24" value={displayRocDate(normalizeDateInput(value))} onChange={e => set(normalizeCompleteDateInput(e.target.value))} onBlur={e => set(normalizeDateInput(e.target.value))}/>{fieldKey !== "zoningApplicationDate" && <small>可輸入 7/24，自動轉為民國日期</small>}</label>;
+  if (dateKeys.has(fieldKey)) { const zoningRequired = fieldKey === "zoningApplicationDate" && record.zoningDocumentStatus === "需申請"; const invalidDate = !!value && !validDate(normalizeDateInput(value)); return <label className={`field ${invalidDate || zoningRequired && !normalizeDateInput(value) ? "invalid" : ""}`}><span>{label}{zoningRequired && <b className="required-mark">必填</b>}</span><input type="text" inputMode="numeric" placeholder="例如 7/24" value={displayRocDate(normalizeDateInput(value))} onChange={e => set(normalizeCompleteDateInput(e.target.value))} onBlur={e => set(normalizeDateInput(e.target.value))}/>{fieldKey !== "zoningApplicationDate" && <small>可輸入 7/24，自動轉為民國日期</small>}</label>; }
   return <label className="field"><span>{label}{fieldKey === "propertyNo" || fieldKey === "caseName" ? " *" : ""}</span><input type="text" inputMode={["price", "reducedPrice", "builtYear", "indoorPing", "buildingPing", "landPing", "coverage", "far", "zoningCertificateCount", "authorizationCopyCount", "authorizationOriginalCount"].includes(fieldKey) ? "decimal" : undefined} value={inputValue} onChange={e => set(e.target.value)}/>{fieldKey === "builtYear" && value && <small>目前換算：{ageOf(record)}</small>}</label>;
 }
 
