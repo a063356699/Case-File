@@ -44203,7 +44203,8 @@ ${String(ex)}`);
         const matched = matchedParent || matches(relativePath);
         if (entry.kind === "directory") {
           const recycled = depth === 0 && /^#?recycle$/i.test(entry.name.trim());
-          if (!recycled && (matched || depth === 0)) await visit(entry, `${relativePath}/`, matched, depth + 1);
+          const published = /^po$/i.test(entry.name.trim());
+          if (!recycled && !published && (matched || depth === 0)) await visit(entry, `${relativePath}/`, matched, depth + 1);
         } else if (matched && /\.(?:jpe?g|png)$/i.test(entry.name) && (kind === "layout" || /^1\.(?:jpe?g|png)$/i.test(entry.name))) {
           const file = await entry.getFile();
           Object.defineProperty(file, "webkitRelativePath", { configurable: true, value: `${root.name}/${relativePath}` });
@@ -48555,7 +48556,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V495" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V496" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
