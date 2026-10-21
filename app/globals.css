@@ -817,6 +817,7 @@ button:hover,.file-button:hover{border-color:#9fbad0;box-shadow:0 2px 8px #7895a
 .active-lead-table td.col-area{vertical-align:middle!important;font-size:13.5px!important}
 .active-lead-table td.col-area .area-lines{height:100%;min-height:0!important;justify-content:center!important;align-items:center!important;text-align:center!important}
 .active-lead-table .land-no-key,.active-lead-table .land-no-key span,.active-lead-table .land-no-key small{color:#111!important;font-weight:400!important}
+.active-lead-table td{height:auto!important;min-height:58px;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;overflow-wrap:anywhere;word-break:break-word;line-height:1.3}
 .key-summary-table th:nth-child(2),.key-summary-table td:nth-child(2),.key-summary-table th:nth-child(7),.key-summary-table td:nth-child(7){white-space:nowrap!important;word-break:keep-all!important}
 .key-summary-table .key-case-lines,.key-summary-table .key-case-lines>span{color:#111!important;font-weight:400!important}
 .key-summary-table thead th{background:#d9d9d9!important;color:#222!important}
