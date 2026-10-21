@@ -3260,7 +3260,7 @@ export default function Home() {
 
   return <main lang="zh-Hant-TW" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-        <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V498</small></h1></div>
+        <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V499</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingIntakeReminderRecords.length > 0 && <button className="new-case-reminder-header-button" onClick={() => { setNewCaseReminder({ ...pendingIntakeReminderRecords[0] }); setNewCaseReminderBatchIds(pendingIntakeReminderRecords.map(record => record.id)); }}>新進案件提醒 {pendingIntakeReminderRecords.length}</button>}{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{expiredUnarchived.length > 0 && <button className="expired-entrust-button" onClick={() => setExpiryReminderOpen(true)}>委託到期 {expiredUnarchived.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -4990,7 +4990,7 @@ function PropertyTable({ records, columns, publicMode = false, dailyMode = false
       return <Fragment key={r.id}>
         {showAreaGroups && (recordIndex === 0 || areaGroup(records[recordIndex - 1]) !== areaGroup(r)) && <tr className="area-group-row"><td colSpan={columns.length + (showPpt ? 2 : 0)}><span>{areaGroup(r)}</span></td></tr>}
         <tr onMouseEnter={event => { if (publicMode) { setHoveredPublicCase(r.caseName || r.propertyNo || "未命名案件"); setHoveredPublicCaseTop(event.currentTarget.offsetTop + 6); } }} onMouseLeave={() => publicMode && setHoveredPublicCase("")}>
-          {columns.map((k, i) => <td key={k} className={`${i < stickyCount ? `sticky sticky-${i}` : ""} col-${k} ${dateKeys.has(k) && k !== "groupViewDate" && !validDate(r[k]) ? "date-error" : ""} ${dailyMode && isHighlighted(k) ? "daily-updated-cell" : ""}`}>{k === "caseName" ? caseNameCell(r, k) : k === "status" ? <span className={`status ${displayStatus(r) === "委託中" ? "live" : "off"}`}>{displayStatus(r)}</span> : <CellContent record={r} column={k}/>}</td>)}
+          {columns.map((k, i) => <td key={k} className={`${i < stickyCount ? `sticky sticky-${i}` : ""} col-${k} ${dateKeys.has(k) && k !== "groupViewDate" && !validDate(r[k]) ? "date-error" : ""} ${dailyMode && k !== "notes" && isHighlighted(k) ? "daily-updated-cell" : ""}`}>{k === "caseName" ? caseNameCell(r, k) : k === "status" ? <span className={`status ${displayStatus(r) === "委託中" ? "live" : "off"}`}>{displayStatus(r)}</span> : <CellContent record={r} column={k}/>}</td>)}
           {showPpt && <><td className="ppt-col"><input type="checkbox" checked={pptIncluded(r)} onChange={e => onPptChange(r, { pptSelected: e.target.checked ? "1" : "0", pptCategory: r.pptCategory || (isCurrentPptWeek(r.reportDate) ? "本週進案" : "臨時新增") })}/></td><td className="ppt-type-col"><select value={pptCategory(r)} onChange={e => onPptChange(r, { pptCategory: e.target.value, pptSelected: "1" })}><option>本週進案</option><option>臨時新增</option></select></td></>}
           {!publicMode && (r.archived || isExpired(r) || r.status !== "委託中") && <td className="actions-col"><div className="row-actions"><button onClick={() => onRestore(r)}>恢復</button><button className="danger" onClick={() => onRemove(r)}>刪除</button></div></td>}
         </tr>
@@ -5073,8 +5073,8 @@ function CellContent({ record: r, column: k }: { record: RecordItem; column: str
     return <>{`${fee}/月`}</>;
   }
   if (k === "notes") {
-    const internalNoteText = displayNoteSegments(r.notes || "").join("；");
-    return <>{internalNoteText || "—"}</>;
+    const segments = displayNoteSegments(r.notes || "");
+    return segments.length ? <span className="notes-display notes-segments">{segments.map((segment, index) => <span className={/(?:中人|介紹費|開發\s*%)/.test(segment) ? "notes-middleman-note" : "notes-standard-note"} key={`${segment}-${index}`}>{segment}</span>)}</span> : <>—</>;
   }
   return <>{cellValue(r, k) || "—"}</>;
 }

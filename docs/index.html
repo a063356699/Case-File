@@ -473,6 +473,7 @@ button:hover,.file-button:hover{border-color:#9fbad0;box-shadow:0 2px 8px #7895a
   align-items: flex-start;
   text-align: left;
 }
+.notes-segments{display:flex!important;flex-direction:column;gap:2px;color:#111!important}.notes-standard-note{display:block;color:#111!important;font-weight:400!important}.notes-middleman-note{display:block;color:#f00!important;font-weight:900!important}
 .natural-notes-display {
   display: block;
   width: 100%;
@@ -48557,7 +48558,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V498" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V499" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -52941,7 +52942,7 @@ ${xrefOffset}
                 setHoveredPublicCaseTop(event.currentTarget.offsetTop + 6);
               }
             }, onMouseLeave: () => publicMode && setHoveredPublicCase(""), children: [
-              columns.map((k, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { className: `${i < stickyCount ? `sticky sticky-${i}` : ""} col-${k} ${dateKeys.has(k) && k !== "groupViewDate" && !validDate(r[k]) ? "date-error" : ""} ${dailyMode && isHighlighted(k) ? "daily-updated-cell" : ""}`, children: k === "caseName" ? caseNameCell(r, k) : k === "status" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: `status ${displayStatus(r) === "\u59D4\u8A17\u4E2D" ? "live" : "off"}`, children: displayStatus(r) }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CellContent, { record: r, column: k }) }, k)),
+              columns.map((k, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { className: `${i < stickyCount ? `sticky sticky-${i}` : ""} col-${k} ${dateKeys.has(k) && k !== "groupViewDate" && !validDate(r[k]) ? "date-error" : ""} ${dailyMode && k !== "notes" && isHighlighted(k) ? "daily-updated-cell" : ""}`, children: k === "caseName" ? caseNameCell(r, k) : k === "status" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: `status ${displayStatus(r) === "\u59D4\u8A17\u4E2D" ? "live" : "off"}`, children: displayStatus(r) }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CellContent, { record: r, column: k }) }, k)),
               showPpt && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { className: "ppt-col", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: pptIncluded(r), onChange: (e) => onPptChange(r, { pptSelected: e.target.checked ? "1" : "0", pptCategory: r.pptCategory || (isCurrentPptWeek(r.reportDate) ? "\u672C\u9031\u9032\u6848" : "\u81E8\u6642\u65B0\u589E") }) }) }),
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { className: "ppt-type-col", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", { value: pptCategory(r), onChange: (e) => onPptChange(r, { pptCategory: e.target.value, pptSelected: "1" }), children: [
@@ -53211,8 +53212,8 @@ ${xrefOffset}
       return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: `${fee}/\u6708` });
     }
     if (k === "notes") {
-      const internalNoteText = displayNoteSegments(r.notes || "").join("\uFF1B");
-      return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: internalNoteText || "\u2014" });
+      const segments = displayNoteSegments(r.notes || "");
+      return segments.length ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "notes-display notes-segments", children: segments.map((segment, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: /(?:中人|介紹費|開發\s*%)/.test(segment) ? "notes-middleman-note" : "notes-standard-note", children: segment }, `${segment}-${index}`)) }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: "\u2014" });
     }
     return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: cellValue(r, k) || "\u2014" });
   }

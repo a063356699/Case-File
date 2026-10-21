@@ -466,6 +466,7 @@ button:hover,.file-button:hover{border-color:#9fbad0;box-shadow:0 2px 8px #7895a
   align-items: flex-start;
   text-align: left;
 }
+.notes-segments{display:flex!important;flex-direction:column;gap:2px;color:#111!important}.notes-standard-note{display:block;color:#111!important;font-weight:400!important}.notes-middleman-note{display:block;color:#f00!important;font-weight:900!important}
 .natural-notes-display {
   display: block;
   width: 100%;
