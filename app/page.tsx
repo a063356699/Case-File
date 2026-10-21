@@ -950,10 +950,7 @@ const directionShort = (value = "") => {
   return parsed.map(part => `${part.label || "朝向"}朝${part.facing}`).join("／");
 };
 
-const displayNoteSegments = (value = "") => String(value || "").split(/[；;\n]+/).flatMap(part => {
-  const middlemanAndNote = part.trim().match(/^((?:中人|介紹費|開發\s*%)[^/／]*)[/／](.+)$/);
-  return middlemanAndNote ? [middlemanAndNote[1], middlemanAndNote[2]] : [part];
-}).map(part => part.trim()).filter(part => {
+const displayNoteSegments = (value = "") => String(value || "").split(/[；;\n/／]+/).map(part => part.trim()).filter(part => {
   const normalized = part.replace(/\s+/g, "");
   return normalized && !/^(?:0|無|-|中人[:：]?(?:無|0|-)?$)/.test(normalized);
 }).map(part => part.includes("開發%") && !/^中人\s*[:：]/.test(part) ? `中人:${part}` : part);
@@ -2046,7 +2043,7 @@ export default function Home() {
   };
   const updateEditingRecord = (next: RecordItem) => setEditing(previous => {
     if (!previous) return next;
-    const ignored = new Set(["id", "lastModifiedAt", "priceModifiedAt", "reducedPriceModifiedAt", "groupViewDate", "_updateHistory", "_dailyAnnotation", "_dailyHighlight"]);
+    const ignored = new Set(["id", "lastModifiedAt", "priceModifiedAt", "reducedPriceModifiedAt", "groupViewDate", "_updateHistory", "_dailyAnnotation", "_dailyHighlight", "_latestNoteSegments"]);
     const changed = Object.keys(next).filter(key => !ignored.has(key) && !websiteTrackingKeys.has(key) && trackedValue(previous[key]) !== trackedValue(next[key]));
     if (!changed.length) return next;
     const edited = new Set([...editedFieldKeys(previous), ...changed]);
@@ -2056,7 +2053,7 @@ export default function Home() {
     if (!editing) return;
     const existing = records.find(record => record.id === editing.id);
     if (!existing) { saveRecord(true); return; }
-    const ignored = new Set(["id", "lastModifiedAt", "priceModifiedAt", "reducedPriceModifiedAt", "groupViewDate", "_updateHistory", "_dailyAnnotation", "_dailyHighlight"]);
+    const ignored = new Set(["id", "lastModifiedAt", "priceModifiedAt", "reducedPriceModifiedAt", "groupViewDate", "_updateHistory", "_dailyAnnotation", "_dailyHighlight", "_latestNoteSegments"]);
     const fields = [...new Set([
       ...editedFieldKeys(editing),
       ...Object.keys(editing).filter(key => !ignored.has(key) && !websiteTrackingKeys.has(key) && trackedValue(existing[key]) !== trackedValue(editing[key])),
@@ -2156,6 +2153,11 @@ export default function Home() {
       const history = recordUpdateHistory(next);
       if (history[today()]) history[today()] = history[today()].filter(key => key !== "caseNameNote" && key !== "caseNameNoteModifiedAt");
       next = { ...next, _updateHistory: JSON.stringify(history) };
+    }
+    if (existing && trackedValue(existing.notes) !== trackedValue(preparedForSave.notes)) {
+      const previousSegments = displayNoteSegments(existing.notes || "");
+      const latestSegments = displayNoteSegments(preparedForSave.notes || "").filter(segment => !previousSegments.includes(segment));
+      next = { ...next, _latestNoteSegments: JSON.stringify(latestSegments) };
     }
     setRecords(prev => prev.some(r => r.id === next.id) ? prev.map(r => r.id === next.id ? next : r) : [next, ...prev]);
     setIntakeDrafts(previous => previous.map(draft => draft.linkedRecordId === next.id ? { ...draft, values: syncRecordToDraftValues(draft, next) } : draft));
@@ -3263,7 +3265,7 @@ export default function Home() {
 
   return <main lang="zh-Hant-TW" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-        <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V500</small></h1></div>
+        <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V501</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingIntakeReminderRecords.length > 0 && <button className="new-case-reminder-header-button" onClick={() => { setNewCaseReminder({ ...pendingIntakeReminderRecords[0] }); setNewCaseReminderBatchIds(pendingIntakeReminderRecords.map(record => record.id)); }}>新進案件提醒 {pendingIntakeReminderRecords.length}</button>}{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{expiredUnarchived.length > 0 && <button className="expired-entrust-button" onClick={() => setExpiryReminderOpen(true)}>委託到期 {expiredUnarchived.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -5077,7 +5079,9 @@ function CellContent({ record: r, column: k }: { record: RecordItem; column: str
   }
   if (k === "notes") {
     const segments = displayNoteSegments(r.notes || "");
-    return segments.length ? <span className="notes-display notes-segments">{segments.map((segment, index) => <span className={/(?:中人|介紹費|開發\s*%)/.test(segment) ? "notes-middleman-note" : "notes-standard-note"} key={`${segment}-${index}`}>{segment}</span>)}</span> : <>—</>;
+    const latestSegments: string[] = (() => { try { return JSON.parse(r._latestNoteSegments || "[]"); } catch { return []; } })();
+    const legacyMiddleman = !r._latestNoteSegments;
+    return segments.length ? <span className="notes-display notes-segments">{segments.map((segment, index) => <span className={latestSegments.includes(segment) || (legacyMiddleman && /(?:中人|介紹費|開發\s*%)/.test(segment)) ? "notes-middleman-note" : "notes-standard-note"} key={`${segment}-${index}`}>{segment}</span>)}</span> : <>—</>;
   }
   return <>{cellValue(r, k) || "—"}</>;
 }

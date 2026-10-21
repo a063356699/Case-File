@@ -45480,10 +45480,7 @@ ${String(ex)}`);
     if (new Set(parsed.map((part) => part.facing)).size === 1) return parsed[0].facing;
     return parsed.map((part) => `${part.label || "\u671D\u5411"}\u671D${part.facing}`).join("\uFF0F");
   };
-  var displayNoteSegments = (value = "") => String(value || "").split(/[；;\n]+/).flatMap((part) => {
-    const middlemanAndNote = part.trim().match(/^((?:中人|介紹費|開發\s*%)[^/／]*)[/／](.+)$/);
-    return middlemanAndNote ? [middlemanAndNote[1], middlemanAndNote[2]] : [part];
-  }).map((part) => part.trim()).filter((part) => {
+  var displayNoteSegments = (value = "") => String(value || "").split(/[；;\n/／]+/).map((part) => part.trim()).filter((part) => {
     const normalized = part.replace(/\s+/g, "");
     return normalized && !/^(?:0|無|-|中人[:：]?(?:無|0|-)?$)/.test(normalized);
   }).map((part) => part.includes("\u958B\u767C%") && !/^中人\s*[:：]/.test(part) ? `\u4E2D\u4EBA:${part}` : part);
@@ -46940,7 +46937,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
     };
     const updateEditingRecord = (next) => setEditing((previous) => {
       if (!previous) return next;
-      const ignored = /* @__PURE__ */ new Set(["id", "lastModifiedAt", "priceModifiedAt", "reducedPriceModifiedAt", "groupViewDate", "_updateHistory", "_dailyAnnotation", "_dailyHighlight"]);
+      const ignored = /* @__PURE__ */ new Set(["id", "lastModifiedAt", "priceModifiedAt", "reducedPriceModifiedAt", "groupViewDate", "_updateHistory", "_dailyAnnotation", "_dailyHighlight", "_latestNoteSegments"]);
       const changed = Object.keys(next).filter((key) => !ignored.has(key) && !websiteTrackingKeys.has(key) && trackedValue(previous[key]) !== trackedValue(next[key]));
       if (!changed.length) return next;
       const edited = /* @__PURE__ */ new Set([...editedFieldKeys(previous), ...changed]);
@@ -46953,7 +46950,7 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
         saveRecord(true);
         return;
       }
-      const ignored = /* @__PURE__ */ new Set(["id", "lastModifiedAt", "priceModifiedAt", "reducedPriceModifiedAt", "groupViewDate", "_updateHistory", "_dailyAnnotation", "_dailyHighlight"]);
+      const ignored = /* @__PURE__ */ new Set(["id", "lastModifiedAt", "priceModifiedAt", "reducedPriceModifiedAt", "groupViewDate", "_updateHistory", "_dailyAnnotation", "_dailyHighlight", "_latestNoteSegments"]);
       const fields2 = [.../* @__PURE__ */ new Set([
         ...editedFieldKeys(editing),
         ...Object.keys(editing).filter((key) => !ignored.has(key) && !websiteTrackingKeys.has(key) && trackedValue(existing[key]) !== trackedValue(editing[key]))
@@ -47076,6 +47073,11 @@ ${changedLabels}
         const history = recordUpdateHistory(next);
         if (history[today()]) history[today()] = history[today()].filter((key) => key !== "caseNameNote" && key !== "caseNameNoteModifiedAt");
         next = { ...next, _updateHistory: JSON.stringify(history) };
+      }
+      if (existing && trackedValue(existing.notes) !== trackedValue(preparedForSave.notes)) {
+        const previousSegments = displayNoteSegments(existing.notes || "");
+        const latestSegments = displayNoteSegments(preparedForSave.notes || "").filter((segment) => !previousSegments.includes(segment));
+        next = { ...next, _latestNoteSegments: JSON.stringify(latestSegments) };
       }
       setRecords((prev) => prev.some((r) => r.id === next.id) ? prev.map((r) => r.id === next.id ? next : r) : [next, ...prev]);
       setIntakeDrafts((previous) => previous.map((draft) => draft.linkedRecordId === next.id ? { ...draft, values: syncRecordToDraftValues(draft, next) } : draft));
@@ -48561,7 +48563,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V500" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V501" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -53216,7 +53218,15 @@ ${xrefOffset}
     }
     if (k === "notes") {
       const segments = displayNoteSegments(r.notes || "");
-      return segments.length ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "notes-display notes-segments", children: segments.map((segment, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: /(?:中人|介紹費|開發\s*%)/.test(segment) ? "notes-middleman-note" : "notes-standard-note", children: segment }, `${segment}-${index}`)) }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: "\u2014" });
+      const latestSegments = (() => {
+        try {
+          return JSON.parse(r._latestNoteSegments || "[]");
+        } catch {
+          return [];
+        }
+      })();
+      const legacyMiddleman = !r._latestNoteSegments;
+      return segments.length ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "notes-display notes-segments", children: segments.map((segment, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: latestSegments.includes(segment) || legacyMiddleman && /(?:中人|介紹費|開發\s*%)/.test(segment) ? "notes-middleman-note" : "notes-standard-note", children: segment }, `${segment}-${index}`)) }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: "\u2014" });
     }
     return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: cellValue(r, k) || "\u2014" });
   }
