@@ -45480,7 +45480,10 @@ ${String(ex)}`);
     if (new Set(parsed.map((part) => part.facing)).size === 1) return parsed[0].facing;
     return parsed.map((part) => `${part.label || "\u671D\u5411"}\u671D${part.facing}`).join("\uFF0F");
   };
-  var displayNoteSegments = (value = "") => String(value || "").split(/[；;]/).map((part) => part.trim()).filter((part) => {
+  var displayNoteSegments = (value = "") => String(value || "").split(/[；;\n]+/).flatMap((part) => {
+    const middlemanAndNote = part.trim().match(/^((?:中人|介紹費|開發\s*%)[^/／]*)[/／](.+)$/);
+    return middlemanAndNote ? [middlemanAndNote[1], middlemanAndNote[2]] : [part];
+  }).map((part) => part.trim()).filter((part) => {
     const normalized = part.replace(/\s+/g, "");
     return normalized && !/^(?:0|無|-|中人[:：]?(?:無|0|-)?$)/.test(normalized);
   }).map((part) => part.includes("\u958B\u767C%") && !/^中人\s*[:：]/.test(part) ? `\u4E2D\u4EBA:${part}` : part);
@@ -48558,7 +48561,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V499" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V500" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
