@@ -47550,13 +47550,13 @@ ${changedLabels}
         }
       });
       try {
-        const pptBlob = await pptx.write({ outputType: "blob" });
-        download(`${pptMeetingDateLabel(selectedPptWeek)}\u958B\u6703PPT.pptx`, pptBlob);
+        const fileName = `${pptMeetingDateLabel(selectedPptWeek)}\u958B\u6703PPT.pptx`;
+        await pptx.writeFile({ fileName });
         setPptPickerOpen(false);
-        flash(`\u5DF2\u7522\u751F PPT\uFF0C\u5171 ${selected.length} \u7B46\u7269\u4EF6`);
+        flash(`\u5DF2\u4E0B\u8F09 PPT\uFF0C\u5171 ${selected.length} \u7B46\u7269\u4EF6`);
       } catch (error) {
         console.error(error);
-        flash("PPT \u7522\u751F\u5931\u6557\uFF0C\u8ACB\u91CD\u65B0\u6574\u7406\u5F8C\u518D\u8A66\u4E00\u6B21");
+        flash("PPT \u4E0B\u8F09\u5931\u6557\uFF0C\u8ACB\u91CD\u65B0\u6574\u7406\u5F8C\u518D\u8A66\u4E00\u6B21");
       }
     };
     const exportPpt = async () => {
@@ -47719,13 +47719,13 @@ ${changedLabels}
         }
       }
       try {
-        const pptBlob = await pptx.write({ outputType: "blob" });
-        download(`${pptMeetingDateLabel(selectedPptWeek)}\u958B\u6703PPT.pptx`, pptBlob);
+        const fileName = `${pptMeetingDateLabel(selectedPptWeek)}\u958B\u6703PPT.pptx`;
+        await pptx.writeFile({ fileName });
         setPptPickerOpen(false);
-        flash(`\u5DF2\u7522\u751F PPT\uFF0C\u5171 ${selected.length} \u7B46\u7269\u4EF6`);
+        flash(`\u5DF2\u4E0B\u8F09 PPT\uFF0C\u5171 ${selected.length} \u7B46\u7269\u4EF6`);
       } catch (error) {
         console.error(error);
-        flash("PPT \u7522\u751F\u5931\u6557\uFF0C\u8ACB\u518D\u8A66\u4E00\u6B21");
+        flash("PPT \u4E0B\u8F09\u5931\u6557\uFF0C\u8ACB\u518D\u8A66\u4E00\u6B21");
       }
     };
     const cloudData = () => ({
@@ -48619,7 +48619,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V505" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V506" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
