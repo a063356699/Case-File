@@ -48352,8 +48352,9 @@ ${changedLabels}
         const no = intakeValue(item.values, "\u59D4\u8A17\u4E3B\u7D04\u7DE8\u865F").trim();
         const caseName = intakeValue(item.values, "\u6848\u540D").trim();
         const address = intakeValue(item.values, "\u7269\u4EF6(\u5B8C\u6574)\u5730\u5740").trim();
-        const sameDraft = intakeDrafts.some((draft) => no ? intakeValue(draft.values, "\u59D4\u8A17\u4E3B\u7D04\u7DE8\u865F").trim() === no : !!caseName && !!address && intakeValue(draft.values, "\u6848\u540D").trim() === caseName && intakeValue(draft.values, "\u7269\u4EF6(\u5B8C\u6574)\u5730\u5740").trim() === address);
-        const sameRecord = records.some((record) => no ? record.propertyNo.trim() === no : !!caseName && !!address && record.caseName.trim() === caseName && record.address.trim() === address);
+        const identity = intakeDraftIdentity(item);
+        const sameDraft = intakeDrafts.some((draft) => intakeDraftIdentity(draft) === identity || (no ? intakeValue(draft.values, "\u59D4\u8A17\u4E3B\u7D04\u7DE8\u865F").trim() === no : !!caseName && !!address && intakeValue(draft.values, "\u6848\u540D").trim() === caseName && intakeValue(draft.values, "\u7269\u4EF6(\u5B8C\u6574)\u5730\u5740").trim() === address));
+        const sameRecord = !!findMatchingIntakeRecord(item, records);
         return sameDraft || sameRecord ? [no || caseName || "\u672A\u547D\u540D\u6848\u4EF6"] : [];
       });
       if (duplicateNames.length && !confirm(`\u767C\u73FE\u76F8\u540C\u6848\u4EF6\uFF1A${duplicateNames.join("\u3001")}
@@ -48446,8 +48447,7 @@ ${changedLabels}
       const targetId = draftId || selectedIntakeRef.current;
       const target = targetId ? intakeDrafts.find((d) => d.id === targetId) : intakeDraft;
       if (!target) return;
-      const targetNo = intakeValue(target.values, "\u59D4\u8A17\u4E3B\u7D04\u7DE8\u865F");
-      const existing = target.linkedRecordId ? records.find((record2) => record2.id === target.linkedRecordId) : records.find((record2) => !!targetNo && record2.propertyNo === targetNo);
+      const existing = target.linkedRecordId ? records.find((record2) => record2.id === target.linkedRecordId) : findMatchingIntakeRecord(target, records);
       const record = intakeToRecord(target, existing);
       if (!record.propertyNo || !record.caseName) return flash("\u7F3A\u5C11\u7269\u4EF6\u7DE8\u865F\u6216\u6848\u540D\uFF0C\u8ACB\u5148\u78BA\u8A8D\u8868\u55AE\u5167\u5BB9");
       if (existing) {
@@ -48619,7 +48619,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V506" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V507" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -50276,20 +50276,46 @@ ${record.far || ""}`, imageDeveloper(record.developer || ""), displayNoteSegment
     ] });
   }
   var intakeDraftStamp = (draft) => Date.parse(draft.modifiedAt || draft.createdAt || "") || 0;
-  var intakeDraftIdentity = (draft) => intakeValue(draft.values, "\u59D4\u8A17\u4E3B\u7D04\u7DE8\u865F").trim() || draft.linkedRecordId || `${intakeValue(draft.values, "\u6848\u540D").trim()}|${intakeValue(draft.values, "\u7269\u4EF6(\u5B8C\u6574)\u5730\u5740").trim()}` || draft.id;
+  var normalizeIntakeIdentityText = (value = "") => String(value || "").normalize("NFKC").replace(/[\s　\-－—_、，,。．.()（）]/g, "").toLowerCase();
+  var intakeDraftIdentity = (draft) => {
+    const timestamp = normalizeIntakeIdentityText(intakeValue(draft.values, "\u6642\u9593\u6233\u8A18"));
+    const submitter = normalizeIntakeIdentityText(intakeValue(draft.values, "\u8868\u55AE\u586B\u5BEB\u4EBA"));
+    const caseName = normalizeIntakeIdentityText(intakeValue(draft.values, "\u6848\u540D"));
+    if (timestamp) return `form:${timestamp}|${submitter}|${caseName}`;
+    return intakeValue(draft.values, "\u59D4\u8A17\u4E3B\u7D04\u7DE8\u865F").trim() || draft.linkedRecordId || `${normalizeIntakeIdentityText(intakeValue(draft.values, "\u6848\u540D"))}|${normalizeIntakeIdentityText(intakeValue(draft.values, "\u7269\u4EF6(\u5B8C\u6574)\u5730\u5740"))}` || draft.id;
+  };
+  var findMatchingIntakeRecord = (draft, records) => {
+    const propertyNo = intakeValue(draft.values, "\u59D4\u8A17\u4E3B\u7D04\u7DE8\u865F").trim();
+    if (propertyNo) {
+      const exactNo = records.find((record) => String(record.propertyNo || "").trim() === propertyNo);
+      if (exactNo) return exactNo;
+    }
+    const address = normalizeIntakeIdentityText(intakeValue(draft.values, "\u7269\u4EF6(\u5B8C\u6574)\u5730\u5740"));
+    if (address) {
+      const exactAddress = records.filter((record) => normalizeIntakeIdentityText(record.address) === address);
+      if (exactAddress.length === 1) return exactAddress[0];
+    }
+    const caseName = normalizeIntakeIdentityText(intakeValue(draft.values, "\u6848\u540D"));
+    if (!caseName) return void 0;
+    const sameName = records.filter((record) => normalizeIntakeIdentityText(record.caseName) === caseName);
+    return sameName.length === 1 ? sameName[0] : void 0;
+  };
   var reconcileIntakeDraftLinks = (drafts, records) => {
     const byId = new Map(records.map((record) => [String(record.id || ""), record]));
-    const byNo = new Map(records.filter((record) => String(record.propertyNo || "").trim()).map((record) => [String(record.propertyNo).trim(), record]));
-    const byCaseAddress = new Map(records.filter((record) => String(record.caseName || "").trim() && String(record.address || "").trim()).map((record) => [`${String(record.caseName).trim()}|${String(record.address).trim()}`, record]));
-    return drafts.map((draft) => {
+    const reconciled = drafts.map((draft) => {
       if (draft.linkedRecordId && byId.has(draft.linkedRecordId)) return draft;
-      const propertyNo = intakeValue(draft.values, "\u59D4\u8A17\u4E3B\u7D04\u7DE8\u865F").trim();
-      const caseAddress = `${intakeValue(draft.values, "\u6848\u540D").trim()}|${intakeValue(draft.values, "\u7269\u4EF6(\u5B8C\u6574)\u5730\u5740").trim()}`;
-      const record = (propertyNo ? byNo.get(propertyNo) : void 0) || (caseAddress !== "|" ? byCaseAddress.get(caseAddress) : void 0);
+      const record = findMatchingIntakeRecord(draft, records);
       if (!record) return draft.linkedRecordId || draft.enteredAt ? { ...draft, linkedRecordId: void 0, enteredAt: void 0 } : draft;
       const enteredAt = draft.enteredAt || record.reportDate || record.lastModifiedAt || (/* @__PURE__ */ new Date()).toISOString();
-      return { ...draft, linkedRecordId: record.id, enteredAt, modifiedAt: draft.modifiedAt || enteredAt };
+      return { ...draft, values: syncRecordToDraftValues(draft, record), linkedRecordId: record.id, enteredAt, modifiedAt: draft.modifiedAt || enteredAt };
     });
+    const unique = /* @__PURE__ */ new Map();
+    reconciled.forEach((draft) => {
+      const key = draft.linkedRecordId ? `record:${draft.linkedRecordId}` : `draft:${intakeDraftIdentity(draft)}`;
+      const current = unique.get(key);
+      if (!current || intakeDraftStamp(draft) >= intakeDraftStamp(current)) unique.set(key, draft);
+    });
+    return [...unique.values()].sort((a, b) => intakeDraftStamp(b) - intakeDraftStamp(a));
   };
   var isLegacyTestIntakeDraft = (draft) => {
     const propertyNo = intakeValue(draft.values, "\u59D4\u8A17\u4E3B\u7D04\u7DE8\u865F").trim().toUpperCase();

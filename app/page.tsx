@@ -3109,8 +3109,9 @@ export default function Home() {
     const parsed = parseIntakes(intakeRaw); if (!parsed.length) return flash("無法辨識資料，請貼上業務回應的一列資料");
     const duplicateNames = parsed.flatMap(item => {
       const no = intakeValue(item.values, "委託主約編號").trim(); const caseName = intakeValue(item.values, "案名").trim(); const address = intakeValue(item.values, "物件(完整)地址").trim();
-      const sameDraft = intakeDrafts.some(draft => no ? intakeValue(draft.values, "委託主約編號").trim() === no : !!caseName && !!address && intakeValue(draft.values, "案名").trim() === caseName && intakeValue(draft.values, "物件(完整)地址").trim() === address);
-      const sameRecord = records.some(record => no ? record.propertyNo.trim() === no : !!caseName && !!address && record.caseName.trim() === caseName && record.address.trim() === address);
+      const identity = intakeDraftIdentity(item);
+      const sameDraft = intakeDrafts.some(draft => intakeDraftIdentity(draft) === identity || (no ? intakeValue(draft.values, "委託主約編號").trim() === no : !!caseName && !!address && intakeValue(draft.values, "案名").trim() === caseName && intakeValue(draft.values, "物件(完整)地址").trim() === address));
+      const sameRecord = !!findMatchingIntakeRecord(item, records);
       return sameDraft || sameRecord ? [no || caseName || "未命名案件"] : [];
     });
     if (duplicateNames.length && !confirm(`發現相同案件：${duplicateNames.join("、")}\n資料已存在草稿或總表，仍要再次加入嗎？`)) return;
@@ -3193,7 +3194,7 @@ export default function Home() {
     setIntakeDrafts(previous => previous.map(draft => draft.id === id ? { ...draft, printedForSalesAt, modifiedAt: new Date().toISOString() } : draft));
     flash(printedForSalesAt ? `已記錄「${intakeValue(target.values, "案名") || "未命名案件"}」列印草稿` : "已取消列印草稿紀錄");
   };
-  const confirmIntake = (draftId?: string) => { const targetId = draftId || selectedIntakeRef.current; const target = targetId ? intakeDrafts.find(d => d.id === targetId) : intakeDraft; if (!target) return; const targetNo = intakeValue(target.values, "委託主約編號"); const existing = target.linkedRecordId ? records.find(record => record.id === target.linkedRecordId) : records.find(record => !!targetNo && record.propertyNo === targetNo); const record = intakeToRecord(target, existing); if (!record.propertyNo || !record.caseName) return flash("缺少物件編號或案名，請先確認表單內容"); if (existing) { const firstFormalEntry = !target.enteredAt; const tracked = { ...withTrackedUpdate(existing, record), ...(firstFormalEntry ? { _newCaseReminderEnabled: "1", _newCaseReminderSource: "intake" } : {}) }; const enteredAt = target.enteredAt || new Date().toISOString(); setRecords(prev => prev.map(item => item.id === existing.id ? tracked : item)); setIntakeDrafts(prev => prev.map(draft => draft.id === target.id ? { ...draft, linkedRecordId: existing.id, enteredAt, modifiedAt: enteredAt } : draft)); flash(firstFormalEntry ? "已正式進案；請稍後至「新進案件提醒」完成後續作業" : "已連結並同步更新原總表資料"); return; } if (!confirm(`確定文件已收到，將「${record.caseName}」正式加入總表？`)) return; const enteredAt = new Date().toISOString(); const entered = { ...record, _newCaseReminderEnabled: "1", _newCaseReminderSource: "intake" }; setRecords(prev => [entered, ...prev]); setIntakeDrafts(prev => prev.map(draft => draft.id === target.id ? { ...draft, linkedRecordId: entered.id, enteredAt, modifiedAt: enteredAt } : draft)); flash("已正式進案；請稍後至「新進案件提醒」完成後續作業"); };
+  const confirmIntake = (draftId?: string) => { const targetId = draftId || selectedIntakeRef.current; const target = targetId ? intakeDrafts.find(d => d.id === targetId) : intakeDraft; if (!target) return; const existing = target.linkedRecordId ? records.find(record => record.id === target.linkedRecordId) : findMatchingIntakeRecord(target, records); const record = intakeToRecord(target, existing); if (!record.propertyNo || !record.caseName) return flash("缺少物件編號或案名，請先確認表單內容"); if (existing) { const firstFormalEntry = !target.enteredAt; const tracked = { ...withTrackedUpdate(existing, record), ...(firstFormalEntry ? { _newCaseReminderEnabled: "1", _newCaseReminderSource: "intake" } : {}) }; const enteredAt = target.enteredAt || new Date().toISOString(); setRecords(prev => prev.map(item => item.id === existing.id ? tracked : item)); setIntakeDrafts(prev => prev.map(draft => draft.id === target.id ? { ...draft, linkedRecordId: existing.id, enteredAt, modifiedAt: enteredAt } : draft)); flash(firstFormalEntry ? "已正式進案；請稍後至「新進案件提醒」完成後續作業" : "已連結並同步更新原總表資料"); return; } if (!confirm(`確定文件已收到，將「${record.caseName}」正式加入總表？`)) return; const enteredAt = new Date().toISOString(); const entered = { ...record, _newCaseReminderEnabled: "1", _newCaseReminderSource: "intake" }; setRecords(prev => [entered, ...prev]); setIntakeDrafts(prev => prev.map(draft => draft.id === target.id ? { ...draft, linkedRecordId: entered.id, enteredAt, modifiedAt: enteredAt } : draft)); flash("已正式進案；請稍後至「新進案件提醒」完成後續作業"); };
   const removeIntakeDraft = (id: string) => { const target = intakeDrafts.find(d => d.id === id); if (!target || !confirm(`確定刪除「${intakeValue(target.values, "案名") || "未命名草稿"}」？`)) return; setIntakeDeletedIds(previous => previous.includes(id) ? previous : [...previous, id]); setIntakeDrafts(prev => prev.filter(d => d.id !== id)); if (selectedIntakeId === id) setSelectedIntakeId(""); };
   const updateIntakeDraftCaseName = (id: string, caseName: string) => setIntakeDrafts(previous => previous.map(draft => { if (draft.id !== id) return draft; const key = Object.keys(draft.values).find(name => name.includes("案名")) || "案名"; return { ...draft, values: { ...draft.values, [key]: caseName } }; }));
   useEffect(() => {
@@ -3302,7 +3303,7 @@ export default function Home() {
 
   return <main lang="zh-Hant-TW" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-        <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V506</small></h1></div>
+        <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V507</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingIntakeReminderRecords.length > 0 && <button className="new-case-reminder-header-button" onClick={() => { setNewCaseReminder({ ...pendingIntakeReminderRecords[0] }); setNewCaseReminderBatchIds(pendingIntakeReminderRecords.map(record => record.id)); }}>新進案件提醒 {pendingIntakeReminderRecords.length}</button>}{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{expiredUnarchived.length > 0 && <button className="expired-entrust-button" onClick={() => setExpiryReminderOpen(true)}>委託到期 {expiredUnarchived.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -3581,22 +3582,51 @@ function ContactDirectory({ people, printable = false }: { people: Person[]; pri
 }
 
 const intakeDraftStamp = (draft: IntakeData) => Date.parse(draft.modifiedAt || draft.createdAt || "") || 0;
-const intakeDraftIdentity = (draft: IntakeData) => intakeValue(draft.values, "委託主約編號").trim() || draft.linkedRecordId || `${intakeValue(draft.values, "案名").trim()}|${intakeValue(draft.values, "物件(完整)地址").trim()}` || draft.id;
+const normalizeIntakeIdentityText = (value = "") => String(value || "").normalize("NFKC").replace(/[\s　\-－—_、，,。．.()（）]/g, "").toLowerCase();
+const intakeDraftIdentity = (draft: IntakeData) => {
+  // Google 表單時間戳記在業務修正契約編號、地址後仍不變，優先用它辨識同一份回覆。
+  const timestamp = normalizeIntakeIdentityText(intakeValue(draft.values, "時間戳記"));
+  const submitter = normalizeIntakeIdentityText(intakeValue(draft.values, "表單填寫人"));
+  const caseName = normalizeIntakeIdentityText(intakeValue(draft.values, "案名"));
+  if (timestamp) return `form:${timestamp}|${submitter}|${caseName}`;
+  return intakeValue(draft.values, "委託主約編號").trim() || draft.linkedRecordId || `${normalizeIntakeIdentityText(intakeValue(draft.values, "案名"))}|${normalizeIntakeIdentityText(intakeValue(draft.values, "物件(完整)地址"))}` || draft.id;
+};
+const findMatchingIntakeRecord = (draft: IntakeData, records: RecordItem[]) => {
+  const propertyNo = intakeValue(draft.values, "委託主約編號").trim();
+  if (propertyNo) {
+    const exactNo = records.find(record => String(record.propertyNo || "").trim() === propertyNo);
+    if (exactNo) return exactNo;
+  }
+  const address = normalizeIntakeIdentityText(intakeValue(draft.values, "物件(完整)地址"));
+  if (address) {
+    const exactAddress = records.filter(record => normalizeIntakeIdentityText(record.address) === address);
+    if (exactAddress.length === 1) return exactAddress[0];
+  }
+  // 契約編號與地址可能被業務修正；案名只能在唯一命中時自動連結，避免同名案件連錯。
+  const caseName = normalizeIntakeIdentityText(intakeValue(draft.values, "案名"));
+  if (!caseName) return undefined;
+  const sameName = records.filter(record => normalizeIntakeIdentityText(record.caseName) === caseName);
+  return sameName.length === 1 ? sameName[0] : undefined;
+};
 const reconcileIntakeDraftLinks = (drafts: IntakeData[], records: RecordItem[]) => {
   const byId = new Map(records.map(record => [String(record.id || ""), record]));
-  const byNo = new Map(records.filter(record => String(record.propertyNo || "").trim()).map(record => [String(record.propertyNo).trim(), record]));
-  const byCaseAddress = new Map(records.filter(record => String(record.caseName || "").trim() && String(record.address || "").trim()).map(record => [`${String(record.caseName).trim()}|${String(record.address).trim()}`, record]));
-  return drafts.map(draft => {
+  const reconciled = drafts.map(draft => {
     if (draft.linkedRecordId && byId.has(draft.linkedRecordId)) return draft;
-    const propertyNo = intakeValue(draft.values, "委託主約編號").trim();
-    const caseAddress = `${intakeValue(draft.values, "案名").trim()}|${intakeValue(draft.values, "物件(完整)地址").trim()}`;
-    const record = (propertyNo ? byNo.get(propertyNo) : undefined) || (caseAddress !== "|" ? byCaseAddress.get(caseAddress) : undefined);
+    const record = findMatchingIntakeRecord(draft, records);
     // 連結所指的正式案件已不存在時，這筆就是尚未進案草稿；
     // 不可只因殘留舊 linkedRecordId 而藏到「已進案列表」。
     if (!record) return draft.linkedRecordId || draft.enteredAt ? { ...draft, linkedRecordId: undefined, enteredAt: undefined } : draft;
     const enteredAt = draft.enteredAt || record.reportDate || record.lastModifiedAt || new Date().toISOString();
-    return { ...draft, linkedRecordId: record.id, enteredAt, modifiedAt: draft.modifiedAt || enteredAt };
+    return { ...draft, values: syncRecordToDraftValues(draft, record), linkedRecordId: record.id, enteredAt, modifiedAt: draft.modifiedAt || enteredAt };
   });
+  // 本機與雲端若各留有同一正式案件的草稿，只保留較新的版本。
+  const unique = new Map<string, IntakeData>();
+  reconciled.forEach(draft => {
+    const key = draft.linkedRecordId ? `record:${draft.linkedRecordId}` : `draft:${intakeDraftIdentity(draft)}`;
+    const current = unique.get(key);
+    if (!current || intakeDraftStamp(draft) >= intakeDraftStamp(current)) unique.set(key, draft);
+  });
+  return [...unique.values()].sort((a, b) => intakeDraftStamp(b) - intakeDraftStamp(a));
 };
 const isLegacyTestIntakeDraft = (draft: IntakeData) => {
   const propertyNo = intakeValue(draft.values, "委託主約編號").trim().toUpperCase();
