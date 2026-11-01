@@ -1710,6 +1710,14 @@ export default function Home() {
   }, [showingFollowUpRecords.map(record => `${record.id}:${record.showingFollowUpDueDate}`).join("|")]);
   const controlledKeyCount = new Set(records.map(record => String(record.key || "").match(/公司\s*[#＃]?\s*(\d+)/)?.[1]).filter(Boolean)).size;
   const pendingArchiveCleanup = archived.map(record => ({ record, tasks: archiveCleanupTasks(record).filter(task => !archiveCleanupTaskIsDone(record, task.key)) })).filter(item => item.record.archived && item.tasks.length > 0);
+  const copyPendingArchiveBookList = async () => {
+    const pending = pendingArchiveCleanup.filter(item => item.tasks.some(task => task.key === "bookDownDate"));
+    if (!pending.length) return flash("目前沒有物件本／旁5尚未下架的案件");
+    const text = pending.map(({ record }, index) => `${index + 1}. ${stripRestoredDisplay(record.caseName) || "未命名案件"}\n${record.address || "未填寫地址"}`).join("\n\n");
+    try { await navigator.clipboard.writeText(text); }
+    catch { const textarea = document.createElement("textarea"); textarea.value = text; textarea.style.position = "fixed"; textarea.style.opacity = "0"; document.body.appendChild(textarea); textarea.select(); document.execCommand("copy"); textarea.remove(); }
+    flash(`已複製 ${pending.length} 筆物件本／旁5尚未下架案件`);
+  };
   const toggleArchiveCleanupSort = (key: string) => setArchiveCleanupSort(previous => previous.key === key ? { key, direction: previous.direction === "asc" ? "desc" : "asc" } : { key, direction: "asc" });
   const sortedPendingArchiveCleanup = [...pendingArchiveCleanup].sort((a, b) => {
     if (!archiveCleanupSort.key) return 0;
@@ -1719,7 +1727,9 @@ export default function Home() {
     const compared = aValue.localeCompare(bValue, "zh-Hant");
     return archiveCleanupSort.direction === "asc" ? compared : -compared;
   });
-  const archiveCleanupHeader = (key: string, label: string) => <th className="archive-cleanup-sort-header" onClick={() => toggleArchiveCleanupSort(key)}>{label}<b>{archiveCleanupSort.key === key ? archiveCleanupSort.direction === "asc" ? " ↑" : " ↓" : " ↕"}</b></th>;
+  const archiveCleanupHeader = (key: string, label: string) => key === "bookDownDate"
+    ? <th className="archive-cleanup-sort-header archive-cleanup-copy-header" title="點一下複製尚未下架的案名與地址" onClick={() => void copyPendingArchiveBookList()}>{label}<b> ⧉</b></th>
+    : <th className="archive-cleanup-sort-header" onClick={() => toggleArchiveCleanupSort(key)}>{label}<b>{archiveCleanupSort.key === key ? archiveCleanupSort.direction === "asc" ? " ↑" : " ↓" : " ↕"}</b></th>;
   useEffect(() => { if (suppressArchiveCleanupReminderRef.current) { suppressArchiveCleanupReminderRef.current = false; setArchiveCleanupReminderOpen(false); return; } if (pendingArchiveCleanup.length) setArchiveCleanupReminderOpen(true); else setArchiveCleanupReminderOpen(false); }, [pendingArchiveCleanup.map(item => `${item.record.id}:${item.tasks.map(task => task.key).join(",")}`).join("|")]);
   const pendingDealCompletion = archived.map(record => ({ record, tasks: dealCompletionTasks.filter(([key]) => !record[key]) })).filter(item => item.record.archived && item.record.status === "成交下架" && item.tasks.length > 0);
   useEffect(() => { if (pendingDealCompletion.length) setDealCompletionReminderOpen(true); else setDealCompletionReminderOpen(false); }, [pendingDealCompletion.map(item => `${item.record.id}:${item.tasks.map(([key]) => key).join(",")}`).join("|")]);
@@ -3305,7 +3315,7 @@ export default function Home() {
 
   return <main lang="zh-Hant-TW" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-        <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V508</small></h1></div>
+        <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V509</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingIntakeReminderRecords.length > 0 && <button className="new-case-reminder-header-button" onClick={() => { setNewCaseReminder({ ...pendingIntakeReminderRecords[0] }); setNewCaseReminderBatchIds(pendingIntakeReminderRecords.map(record => record.id)); }}>新進案件提醒 {pendingIntakeReminderRecords.length}</button>}{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{expiredUnarchived.length > 0 && <button className="expired-entrust-button" onClick={() => setExpiryReminderOpen(true)}>委託到期 {expiredUnarchived.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>

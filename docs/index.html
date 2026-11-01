@@ -46485,6 +46485,25 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
     }, [showingFollowUpRecords.map((record) => `${record.id}:${record.showingFollowUpDueDate}`).join("|")]);
     const controlledKeyCount = new Set(records.map((record) => String(record.key || "").match(/公司\s*[#＃]?\s*(\d+)/)?.[1]).filter(Boolean)).size;
     const pendingArchiveCleanup = archived.map((record) => ({ record, tasks: archiveCleanupTasks(record).filter((task) => !archiveCleanupTaskIsDone(record, task.key)) })).filter((item) => item.record.archived && item.tasks.length > 0);
+    const copyPendingArchiveBookList = async () => {
+      const pending = pendingArchiveCleanup.filter((item) => item.tasks.some((task) => task.key === "bookDownDate"));
+      if (!pending.length) return flash("\u76EE\u524D\u6C92\u6709\u7269\u4EF6\u672C\uFF0F\u65C15\u5C1A\u672A\u4E0B\u67B6\u7684\u6848\u4EF6");
+      const text = pending.map(({ record }, index) => `${index + 1}. ${stripRestoredDisplay(record.caseName) || "\u672A\u547D\u540D\u6848\u4EF6"}
+${record.address || "\u672A\u586B\u5BEB\u5730\u5740"}`).join("\n\n");
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch {
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        textarea.remove();
+      }
+      flash(`\u5DF2\u8907\u88FD ${pending.length} \u7B46\u7269\u4EF6\u672C\uFF0F\u65C15\u5C1A\u672A\u4E0B\u67B6\u6848\u4EF6`);
+    };
     const toggleArchiveCleanupSort = (key) => setArchiveCleanupSort((previous) => previous.key === key ? { key, direction: previous.direction === "asc" ? "desc" : "asc" } : { key, direction: "asc" });
     const sortedPendingArchiveCleanup = [...pendingArchiveCleanup].sort((a, b) => {
       if (!archiveCleanupSort.key) return 0;
@@ -46494,7 +46513,10 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
       const compared = aValue.localeCompare(bValue, "zh-Hant");
       return archiveCleanupSort.direction === "asc" ? compared : -compared;
     });
-    const archiveCleanupHeader = (key, label) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("th", { className: "archive-cleanup-sort-header", onClick: () => toggleArchiveCleanupSort(key), children: [
+    const archiveCleanupHeader = (key, label) => key === "bookDownDate" ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("th", { className: "archive-cleanup-sort-header archive-cleanup-copy-header", title: "\u9EDE\u4E00\u4E0B\u8907\u88FD\u5C1A\u672A\u4E0B\u67B6\u7684\u6848\u540D\u8207\u5730\u5740", onClick: () => void copyPendingArchiveBookList(), children: [
+      label,
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: " \u29C9" })
+    ] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("th", { className: "archive-cleanup-sort-header", onClick: () => toggleArchiveCleanupSort(key), children: [
       label,
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: archiveCleanupSort.key === key ? archiveCleanupSort.direction === "asc" ? " \u2191" : " \u2193" : " \u2195" })
     ] });
@@ -48622,7 +48644,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V508" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V509" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
