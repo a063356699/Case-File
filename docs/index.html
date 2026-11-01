@@ -46488,8 +46488,17 @@ ${dueToday.map((record) => record.caseName || record.propertyNo).join("\n")}`), 
     const copyPendingArchiveBookList = async () => {
       const pending = pendingArchiveCleanup.filter((item) => item.tasks.some((task) => task.key === "bookDownDate"));
       if (!pending.length) return flash("\u76EE\u524D\u6C92\u6709\u7269\u4EF6\u672C\uFF0F\u65C15\u5C1A\u672A\u4E0B\u67B6\u7684\u6848\u4EF6");
-      const text = pending.map(({ record }, index) => `${index + 1}. ${stripRestoredDisplay(record.caseName) || "\u672A\u547D\u540D\u6848\u4EF6"}
-${record.address || "\u672A\u586B\u5BEB\u5730\u5740"}`).join("\n\n");
+      const grouped = /* @__PURE__ */ new Map();
+      pending.map((item) => item.record).sort((a, b) => {
+        const aArea = districtFromAddress(a.address) || a.area || "\u672A\u586B\u5340\u57DF";
+        const bArea = districtFromAddress(b.address) || b.area || "\u672A\u586B\u5340\u57DF";
+        return aArea.localeCompare(bArea, "zh-Hant") || String(a.caseName || "").localeCompare(String(b.caseName || ""), "zh-Hant");
+      }).forEach((record) => {
+        const area = districtFromAddress(record.address) || record.area || "\u672A\u586B\u5340\u57DF";
+        grouped.set(area, [...grouped.get(area) || [], record]);
+      });
+      const text = [...grouped.entries()].map(([area, records2]) => [`\u3010${area}\u3011`, ...records2.map((record, index) => `${index + 1}. ${stripRestoredDisplay(record.caseName) || "\u672A\u547D\u540D\u6848\u4EF6"}
+${record.address || "\u672A\u586B\u5BEB\u5730\u5740"}`)].join("\n\n")).join("\n\n");
       try {
         await navigator.clipboard.writeText(text);
       } catch {
@@ -48644,7 +48653,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V509" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V510" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
