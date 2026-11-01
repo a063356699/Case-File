@@ -466,13 +466,12 @@ const isExpired = (r: RecordItem) => validDate(r.entrustEnd) && !!r.entrustEnd &
 const isCommissioned = (r: RecordItem) => !String(r.archived || "").trim() && (r.status || "委託中") === "委託中";
 const isActiveCommission = (r: RecordItem) => isCommissioned(r) && !r.archived && !isExpired(r);
 const archiveStatusOf = (r: RecordItem) => {
-  // 「下架原因」只用於下架洽開發；舊同步資料可能仍保留「下架」或其他舊狀態。
-  // 先以原因判定，讓管理模式與業務前台都顯示完整原因。
-  if (String(r.archived || "").trim() && String(r.archiveReason || "").trim()) return "下架洽開發";
+  // _archiveStatus 是執行封存時保存的真正原因，優先於可能殘留的舊 status／archiveReason。
   const currentStatus = String(r.status || "").trim();
   const savedStatus = String(r._archiveStatus || "").trim();
   if (savedStatus && savedStatus !== "委託中") return savedStatus;
   if (currentStatus && currentStatus !== "委託中") return currentStatus;
+  if (String(r.archived || "").trim() && String(r.archiveReason || "").trim()) return "下架洽開發";
   if (savedStatus) return savedStatus;
   return String(r.archived || "").trim() ? "下架" : (currentStatus || "委託中");
 };
@@ -637,10 +636,13 @@ const districtFromAddress = (value = "") => {
 const salesBookDateCorrections = new Set(["EG0522899", "EG0522916", "LG0132934", "EG0522910", "EG0522911", "EG0522912", "EG0522915", "EG0522908"]);
 const applySourceLayoutFixes = (records: RecordItem[]) => records.map(record => {
   record = moveRestoredTextToCaseNote(clearImportedLandLabels(clearImportedContractChangePlaceholders(record)));
-  // 舊同步資料有可能已封存、也保留了下架原因，但 status 誤留「委託中」。
-  // 這種情況一律還原為「下架洽開發」，避免前台錯顯示成委託中或售出下架。
-  if (String(record.archived || "").trim() && String(record.archiveReason || "").trim()) {
-    record = { ...record, status: "下架洽開發", _archiveStatus: "下架洽開發" };
+  // 舊同步資料可能已封存，但 status 仍殘留「委託中」。
+  // 優先採用封存當下保存的 _archiveStatus；只有真的有下架原因時才判定為「下架洽開發」。
+  if (String(record.archived || "").trim()) {
+    const correctedArchiveStatus = archiveStatusOf(record);
+    if (correctedArchiveStatus !== record.status || !String(record._archiveStatus || "").trim()) {
+      record = { ...record, status: correctedArchiveStatus, _archiveStatus: correctedArchiveStatus };
+    }
   }
   // EA0163401 曾把每日動態的系統提示誤存入「案名後方備註」。
   // 這個欄位應保留重新上架文字，不能顯示「更新：案名」。
@@ -3303,7 +3305,7 @@ export default function Home() {
 
   return <main lang="zh-Hant-TW" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-        <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V507</small></h1></div>
+        <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V508</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingIntakeReminderRecords.length > 0 && <button className="new-case-reminder-header-button" onClick={() => { setNewCaseReminder({ ...pendingIntakeReminderRecords[0] }); setNewCaseReminderBatchIds(pendingIntakeReminderRecords.map(record => record.id)); }}>新進案件提醒 {pendingIntakeReminderRecords.length}</button>}{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{expiredUnarchived.length > 0 && <button className="expired-entrust-button" onClick={() => setExpiryReminderOpen(true)}>委託到期 {expiredUnarchived.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
