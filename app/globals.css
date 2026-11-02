@@ -2095,3 +2095,5 @@ html,body{max-width:100%;overflow-x:hidden}
 
 /* V503: combine meeting weeks without changing source records. */
 .ppt-merge-weeks{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:14px;margin:12px 0;background:#f0f5f9;border:1px solid #cad8e2;border-radius:10px}.ppt-merge-weeks small{flex-basis:100%;color:#526373}.ppt-merge-weeks select{max-width:100%;padding:8px;border-radius:8px;border:1px solid #cad8e2}.ppt-case-date>b{display:block;font-size:12px;color:#42627e}.ppt-case-row.meeting-change{background:#fff5e5}.ppt-case-row.meeting-change .ppt-case-date>b{color:#8a581d}
+.copy-m-folder-button{display:block;margin:5px auto 0;padding:3px 8px;border:1px solid #5b8f78;border-radius:999px;background:#eff8f3;color:#286047;font-size:11px;font-weight:800;line-height:1.25;white-space:nowrap;cursor:pointer}
+.copy-m-folder-button:hover{background:#dff1e7}
