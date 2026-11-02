@@ -45469,11 +45469,29 @@ ${String(ex)}`);
     }
     return "";
   }
+  var parseIntakeTimestamp = (value = "") => {
+    const text = String(value || "").trim();
+    const local = text.match(/^(\d{4})[\/.-](\d{1,2})[\/.-](\d{1,2})(?:\s*星期[日一二三四五六])?\s*(上午|下午)\s*(\d{1,2}):(\d{1,2})(?::\d{1,2})?$/);
+    if (local) {
+      let hour = Number(local[5]);
+      if (local[4] === "\u4E0B\u5348" && hour < 12) hour += 12;
+      if (local[4] === "\u4E0A\u5348" && hour === 12) hour = 0;
+      return /* @__PURE__ */ new Date(`${local[1]}-${local[2].padStart(2, "0")}-${local[3].padStart(2, "0")}T${String(hour).padStart(2, "0")}:${local[6].padStart(2, "0")}:00+08:00`);
+    }
+    return new Date(text);
+  };
+  var formatIntakeTimestamp = (value = "") => {
+    const parsed = parseIntakeTimestamp(value);
+    if (Number.isNaN(parsed.getTime())) return String(value || "").trim();
+    const parts = new Intl.DateTimeFormat("zh-TW", { timeZone: "Asia/Taipei", year: "numeric", month: "numeric", day: "numeric", weekday: "long", hour: "numeric", minute: "2-digit", hour12: true }).formatToParts(parsed);
+    const part = (type) => parts.find((item) => item.type === type)?.value || "";
+    return `${part("year")}/${part("month")}/${part("day")} ${part("weekday")} ${part("dayPeriod")}${part("hour")}:${part("minute")}`;
+  };
   var ensureIntakeTimestamp = (draft) => {
-    if (intakeValue(draft.values || {}, "\u6642\u9593\u6233\u8A18").trim()) return draft;
-    const source = draft.createdAt || draft.modifiedAt || (/* @__PURE__ */ new Date()).toISOString();
-    const parsed = new Date(source);
-    const timestamp = Number.isNaN(parsed.getTime()) ? source : parsed.toLocaleString("zh-TW", { timeZone: "Asia/Taipei" });
+    const existingTimestamp = intakeValue(draft.values || {}, "\u6642\u9593\u6233\u8A18").trim();
+    const source = existingTimestamp || draft.createdAt || draft.modifiedAt || (/* @__PURE__ */ new Date()).toISOString();
+    const parsed = parseIntakeTimestamp(source);
+    const timestamp = formatIntakeTimestamp(source) || source;
     const values = { ...draft.values || {} };
     const key = Object.keys(values).find((name) => normalizeIntakeHeader(name) === normalizeIntakeHeader("\u6642\u9593\u6233\u8A18")) || "\u6642\u9593\u6233\u8A18";
     values[key] = timestamp;
@@ -48615,7 +48633,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V512" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V513" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),

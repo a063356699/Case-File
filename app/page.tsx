@@ -923,11 +923,29 @@ function intakeValue(values: Record<string, string>, ...needles: string[]) {
   return "";
 }
 
+const parseIntakeTimestamp = (value = "") => {
+  const text = String(value || "").trim();
+  const local = text.match(/^(\d{4})[\/.-](\d{1,2})[\/.-](\d{1,2})(?:\s*星期[日一二三四五六])?\s*(上午|下午)\s*(\d{1,2}):(\d{1,2})(?::\d{1,2})?$/);
+  if (local) {
+    let hour = Number(local[5]);
+    if (local[4] === "下午" && hour < 12) hour += 12;
+    if (local[4] === "上午" && hour === 12) hour = 0;
+    return new Date(`${local[1]}-${local[2].padStart(2, "0")}-${local[3].padStart(2, "0")}T${String(hour).padStart(2, "0")}:${local[6].padStart(2, "0")}:00+08:00`);
+  }
+  return new Date(text);
+};
+const formatIntakeTimestamp = (value = "") => {
+  const parsed = parseIntakeTimestamp(value);
+  if (Number.isNaN(parsed.getTime())) return String(value || "").trim();
+  const parts = new Intl.DateTimeFormat("zh-TW", { timeZone: "Asia/Taipei", year: "numeric", month: "numeric", day: "numeric", weekday: "long", hour: "numeric", minute: "2-digit", hour12: true }).formatToParts(parsed);
+  const part = (type: string) => parts.find(item => item.type === type)?.value || "";
+  return `${part("year")}/${part("month")}/${part("day")} ${part("weekday")} ${part("dayPeriod")}${part("hour")}:${part("minute")}`;
+};
 const ensureIntakeTimestamp = (draft: IntakeData): IntakeData => {
-  if (intakeValue(draft.values || {}, "時間戳記").trim()) return draft;
-  const source = draft.createdAt || draft.modifiedAt || new Date().toISOString();
-  const parsed = new Date(source);
-  const timestamp = Number.isNaN(parsed.getTime()) ? source : parsed.toLocaleString("zh-TW", { timeZone: "Asia/Taipei" });
+  const existingTimestamp = intakeValue(draft.values || {}, "時間戳記").trim();
+  const source = existingTimestamp || draft.createdAt || draft.modifiedAt || new Date().toISOString();
+  const parsed = parseIntakeTimestamp(source);
+  const timestamp = formatIntakeTimestamp(source) || source;
   const values = { ...(draft.values || {}) };
   const key = Object.keys(values).find(name => normalizeIntakeHeader(name) === normalizeIntakeHeader("時間戳記")) || "時間戳記";
   values[key] = timestamp;
@@ -3287,7 +3305,7 @@ export default function Home() {
 
   return <main lang="zh-Hant-TW" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-        <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V512</small></h1></div>
+        <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V513</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{expiredUnarchived.length > 0 && <button className="expired-entrust-button" onClick={() => setExpiryReminderOpen(true)}>委託到期 {expiredUnarchived.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
