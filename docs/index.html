@@ -46135,7 +46135,8 @@ ${String(ex)}`);
     const copyMFolderRecord = async (record) => {
       const contractNo = (String(record.propertyNo || "").toUpperCase().match(/\b(?:EG|EA|LG|LA)[A-Z0-9-]*\b/) || [String(record.propertyNo || "").trim()])[0];
       const developer = developerFullNameText(record.developer);
-      const text = ["\u3010M\u593E\u65B0\u589E\u7269\u4EF6\u3011", `\u6848\u540D\uFF1A${String(record.caseName || "").trim()}`, `\u5730\u5740\uFF1A${String(record.address || "").trim()}`, `\u958B\u767C\u696D\u52D9\uFF1A${developer}`, `\u958B\u767C\uFF1A${developer}`, `\u4E3B\u7D04\u7DE8\u865F\uFF1A${contractNo}`].join("\n");
+      const latestPrice = String(record.reducedPrice || record.price || "").replace(/\s*萬(?:元)?\s*/g, "").trim();
+      const text = ["\u3010M\u593E\u65B0\u589E\u7269\u4EF6\u3011", `\u6848\u540D\uFF1A${String(record.caseName || "").trim()}`, `\u5730\u5740\uFF1A${String(record.address || "").trim()}`, `\u958B\u767C\u696D\u52D9\uFF1A${developer}`, `\u958B\u767C\uFF1A${developer}`, `\u6700\u65B0\u958B\u50F9\uFF1A${latestPrice}`, `\u4E3B\u7D04\u7DE8\u865F\uFF1A${contractNo}`].join("\n");
       try {
         await navigator.clipboard.writeText(text);
       } catch {
@@ -48674,7 +48675,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V522" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V523" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
