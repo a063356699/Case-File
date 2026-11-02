@@ -1527,7 +1527,8 @@ body{background:#f8fbfe!important;color:#405064!important}
 .compact-drafts .draft-card:not(.draft-columns){display:grid;grid-template-columns:minmax(0,1fr) 318px;gap:12px}.compact-drafts .draft-actions{width:318px;justify-content:flex-end}.compact-drafts .draft-actions button{white-space:nowrap}.draft-actions .draft-printed-recorded{background:#e5edf6!important;border-color:#a8bfd2!important;color:#345d7d!important;font-size:11px!important}
 
 /* 進案草稿：依實際字數配置案名與地址，並保留完整時間戳記。 */
-@media(min-width:1001px){.draft-summary{grid-template-columns:58px minmax(260px,340px) 110px minmax(320px,420px) 8em 230px!important}.draft-summary>.draft-case-link{max-width:340px!important}.draft-summary>.draft-address{max-width:420px!important}.draft-summary>small{overflow:visible!important;text-overflow:clip!important;white-space:nowrap!important;font-size:12px}}
+@media(min-width:1001px){.draft-summary{grid-template-columns:58px 110px minmax(0,1fr) minmax(0,1fr) 180px 230px!important}.draft-summary>.draft-case-link,.draft-summary>.draft-address{max-width:none!important;width:100%!important}.draft-summary>small{overflow:visible!important;text-overflow:clip!important;white-space:nowrap!important;font-size:12px}}
+@media(min-width:1001px){.draft-summary>span:nth-child(2),.draft-summary>span:nth-child(5),.draft-summary>small{justify-self:stretch!important;text-align:center!important;left:0!important}}
 
 /* 委託中編輯：學校依國小、國中、高中、大專各自輸入。 */
 .record-edit-grid>.edit-market,.record-edit-grid>.edit-park,.record-edit-grid>.edit-elementarySchool,.record-edit-grid>.edit-juniorHighSchool,.record-edit-grid>.edit-seniorHighSchool,.record-edit-grid>.edit-collegeSchool{grid-column:span 20!important;background:#f1f7ec!important;border-color:#d5e4cb!important}
