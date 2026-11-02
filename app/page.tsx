@@ -923,6 +923,17 @@ function intakeValue(values: Record<string, string>, ...needles: string[]) {
   return "";
 }
 
+const ensureIntakeTimestamp = (draft: IntakeData): IntakeData => {
+  if (intakeValue(draft.values || {}, "時間戳記").trim()) return draft;
+  const source = draft.createdAt || draft.modifiedAt || new Date().toISOString();
+  const parsed = new Date(source);
+  const timestamp = Number.isNaN(parsed.getTime()) ? source : parsed.toLocaleString("zh-TW", { timeZone: "Asia/Taipei" });
+  const values = { ...(draft.values || {}) };
+  const key = Object.keys(values).find(name => normalizeIntakeHeader(name) === normalizeIntakeHeader("時間戳記")) || "時間戳記";
+  values[key] = timestamp;
+  return { ...draft, values, createdAt: draft.createdAt || (Number.isNaN(parsed.getTime()) ? new Date().toISOString() : parsed.toISOString()), modifiedAt: draft.modifiedAt || draft.createdAt || new Date().toISOString() };
+};
+
 // Google 表單欄名曾出現全形數字、半形數字及「開發業務／人員資料」等版本。
 // 進案時統一從這些欄名找人員，避免案件其他資料已進來但開發人員空白。
 const intakeDeveloperValue = (values: Record<string, string>) => intakeValue(values, "開發１/開發２", "開發1/開發2", "開發業務", "人員資料");
@@ -3582,7 +3593,7 @@ const findMatchingIntakeRecord = (draft: IntakeData, records: RecordItem[]) => {
 };
 const reconcileIntakeDraftLinks = (drafts: IntakeData[], records: RecordItem[]) => {
   const byId = new Map(records.map(record => [String(record.id || ""), record]));
-  const reconciled = drafts.map(draft => {
+  const reconciled = drafts.map(ensureIntakeTimestamp).map(draft => {
     if (draft.linkedRecordId && byId.has(draft.linkedRecordId)) return draft;
     const record = findMatchingIntakeRecord(draft, records);
     // 連結所指的正式案件已不存在時，這筆就是尚未進案草稿；
@@ -3611,7 +3622,7 @@ const isLegacyTestIntakeDraft = (draft: IntakeData) => {
 const mergeIntakeDrafts = (localDrafts: IntakeData[], cloudDrafts: IntakeData[], deletedIds: Iterable<string> = []) => {
   const merged = new Map<string, IntakeData>();
   const deleted = new Set(deletedIds);
-  [...cloudDrafts, ...localDrafts].forEach(draft => {
+  [...cloudDrafts, ...localDrafts].map(ensureIntakeTimestamp).forEach(draft => {
     if (!draft?.id || deleted.has(draft.id) || isLegacyTestIntakeDraft(draft)) return;
     const key = intakeDraftIdentity(draft);
     const existing = merged.get(key);
