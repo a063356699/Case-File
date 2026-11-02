@@ -2117,7 +2117,11 @@ html,body{max-width:100%;overflow-x:hidden}
     throw Error('Dynamic require of "' + x + '" is not supported');
   });
   var __commonJS = (cb, mod) => function __require2() {
-    return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
+    try {
+      return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
+    } catch (e) {
+      throw mod = 0, e;
+    }
   };
   var __copyProps = (to, from, except, desc) => {
     if (from && typeof from === "object" || typeof from === "function") {
@@ -2136,9 +2140,9 @@ html,body{max-width:100%;overflow-x:hidden}
     mod
   ));
 
-  // ../meeting-deps/node_modules/.pnpm/scheduler@0.27.0/node_modules/scheduler/cjs/scheduler.development.js
+  // node_modules/.pnpm/scheduler@0.27.0/node_modules/scheduler/cjs/scheduler.development.js
   var require_scheduler_development = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/scheduler@0.27.0/node_modules/scheduler/cjs/scheduler.development.js"(exports) {
+    "node_modules/.pnpm/scheduler@0.27.0/node_modules/scheduler/cjs/scheduler.development.js"(exports) {
       "use strict";
       (function() {
         function performWorkUntilDeadline() {
@@ -2395,9 +2399,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/scheduler@0.27.0/node_modules/scheduler/index.js
+  // node_modules/.pnpm/scheduler@0.27.0/node_modules/scheduler/index.js
   var require_scheduler = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/scheduler@0.27.0/node_modules/scheduler/index.js"(exports, module) {
+    "node_modules/.pnpm/scheduler@0.27.0/node_modules/scheduler/index.js"(exports, module) {
       "use strict";
       if (false) {
         module.exports = null;
@@ -2407,9 +2411,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/react@19.2.6/node_modules/react/cjs/react.development.js
+  // node_modules/.pnpm/react@19.2.6/node_modules/react/cjs/react.development.js
   var require_react_development = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/react@19.2.6/node_modules/react/cjs/react.development.js"(exports, module) {
+    "node_modules/.pnpm/react@19.2.6/node_modules/react/cjs/react.development.js"(exports, module) {
       "use strict";
       (function() {
         function defineDeprecationWarning(methodName, info) {
@@ -2876,7 +2880,7 @@ html,body{max-width:100%;overflow-x:hidden}
           }
         }
         "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ && "function" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart && __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(Error());
-        var REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element"), REACT_PORTAL_TYPE = Symbol.for("react.portal"), REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"), REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"), REACT_PROFILER_TYPE = Symbol.for("react.profiler"), REACT_CONSUMER_TYPE = Symbol.for("react.consumer"), REACT_CONTEXT_TYPE = Symbol.for("react.context"), REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"), REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"), REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"), REACT_MEMO_TYPE = Symbol.for("react.memo"), REACT_LAZY_TYPE = Symbol.for("react.lazy"), REACT_ACTIVITY_TYPE = Symbol.for("react.activity"), MAYBE_ITERATOR_SYMBOL = Symbol.iterator, didWarnStateUpdateForUnmountedComponent = {}, ReactNoopUpdateQueue = {
+        var REACT_ELEMENT_TYPE = /* @__PURE__ */ Symbol.for("react.transitional.element"), REACT_PORTAL_TYPE = /* @__PURE__ */ Symbol.for("react.portal"), REACT_FRAGMENT_TYPE = /* @__PURE__ */ Symbol.for("react.fragment"), REACT_STRICT_MODE_TYPE = /* @__PURE__ */ Symbol.for("react.strict_mode"), REACT_PROFILER_TYPE = /* @__PURE__ */ Symbol.for("react.profiler"), REACT_CONSUMER_TYPE = /* @__PURE__ */ Symbol.for("react.consumer"), REACT_CONTEXT_TYPE = /* @__PURE__ */ Symbol.for("react.context"), REACT_FORWARD_REF_TYPE = /* @__PURE__ */ Symbol.for("react.forward_ref"), REACT_SUSPENSE_TYPE = /* @__PURE__ */ Symbol.for("react.suspense"), REACT_SUSPENSE_LIST_TYPE = /* @__PURE__ */ Symbol.for("react.suspense_list"), REACT_MEMO_TYPE = /* @__PURE__ */ Symbol.for("react.memo"), REACT_LAZY_TYPE = /* @__PURE__ */ Symbol.for("react.lazy"), REACT_ACTIVITY_TYPE = /* @__PURE__ */ Symbol.for("react.activity"), MAYBE_ITERATOR_SYMBOL = Symbol.iterator, didWarnStateUpdateForUnmountedComponent = {}, ReactNoopUpdateQueue = {
           isMounted: function() {
             return false;
           },
@@ -2919,7 +2923,7 @@ html,body{max-width:100%;overflow-x:hidden}
         deprecatedAPIs.constructor = PureComponent;
         assign(deprecatedAPIs, Component.prototype);
         deprecatedAPIs.isPureReactComponent = true;
-        var isArrayImpl = Array.isArray, REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"), ReactSharedInternals = {
+        var isArrayImpl = Array.isArray, REACT_CLIENT_REFERENCE = /* @__PURE__ */ Symbol.for("react.client.reference"), ReactSharedInternals = {
           H: null,
           A: null,
           T: null,
@@ -3379,9 +3383,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/react@19.2.6/node_modules/react/index.js
+  // node_modules/.pnpm/react@19.2.6/node_modules/react/index.js
   var require_react = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/react@19.2.6/node_modules/react/index.js"(exports, module) {
+    "node_modules/.pnpm/react@19.2.6/node_modules/react/index.js"(exports, module) {
       "use strict";
       if (false) {
         module.exports = null;
@@ -3391,9 +3395,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/cjs/react-dom.development.js
+  // node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/cjs/react-dom.development.js
   var require_react_dom_development = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/cjs/react-dom.development.js"(exports) {
+    "node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/cjs/react-dom.development.js"(exports) {
       "use strict";
       (function() {
         function noop() {
@@ -3458,7 +3462,7 @@ html,body{max-width:100%;overflow-x:hidden}
           },
           p: 0,
           findDOMNode: null
-        }, REACT_PORTAL_TYPE = Symbol.for("react.portal"), ReactSharedInternals = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+        }, REACT_PORTAL_TYPE = /* @__PURE__ */ Symbol.for("react.portal"), ReactSharedInternals = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
         "function" === typeof Map && null != Map.prototype && "function" === typeof Map.prototype.forEach && "function" === typeof Set && null != Set.prototype && "function" === typeof Set.prototype.clear && "function" === typeof Set.prototype.forEach || console.error(
           "React depends on Map and Set built-in types. Make sure that you load a polyfill in older browsers. https://reactjs.org/link/react-polyfills"
         );
@@ -3635,9 +3639,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/index.js
+  // node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/index.js
   var require_react_dom = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/index.js"(exports, module) {
+    "node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/index.js"(exports, module) {
       "use strict";
       if (false) {
         checkDCE();
@@ -3648,9 +3652,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/cjs/react-dom-client.development.js
+  // node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/cjs/react-dom-client.development.js
   var require_react_dom_client_development = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/cjs/react-dom-client.development.js"(exports) {
+    "node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/cjs/react-dom-client.development.js"(exports) {
       "use strict";
       (function() {
         function findHook(fiber, id) {
@@ -20625,14 +20629,14 @@ html,body{max-width:100%;overflow-x:hidden}
           ));
         }
         "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ && "function" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart && __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(Error());
-        var Scheduler = require_scheduler(), React = require_react(), ReactDOM = require_react_dom(), assign = Object.assign, REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"), REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element"), REACT_PORTAL_TYPE = Symbol.for("react.portal"), REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"), REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"), REACT_PROFILER_TYPE = Symbol.for("react.profiler"), REACT_CONSUMER_TYPE = Symbol.for("react.consumer"), REACT_CONTEXT_TYPE = Symbol.for("react.context"), REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"), REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"), REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"), REACT_MEMO_TYPE = Symbol.for("react.memo"), REACT_LAZY_TYPE = Symbol.for("react.lazy");
-        Symbol.for("react.scope");
-        var REACT_ACTIVITY_TYPE = Symbol.for("react.activity");
-        Symbol.for("react.legacy_hidden");
-        Symbol.for("react.tracing_marker");
-        var REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel");
-        Symbol.for("react.view_transition");
-        var MAYBE_ITERATOR_SYMBOL = Symbol.iterator, REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"), isArrayImpl = Array.isArray, ReactSharedInternals = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, ReactDOMSharedInternals = ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, NotPending = Object.freeze({
+        var Scheduler = require_scheduler(), React = require_react(), ReactDOM = require_react_dom(), assign = Object.assign, REACT_LEGACY_ELEMENT_TYPE = /* @__PURE__ */ Symbol.for("react.element"), REACT_ELEMENT_TYPE = /* @__PURE__ */ Symbol.for("react.transitional.element"), REACT_PORTAL_TYPE = /* @__PURE__ */ Symbol.for("react.portal"), REACT_FRAGMENT_TYPE = /* @__PURE__ */ Symbol.for("react.fragment"), REACT_STRICT_MODE_TYPE = /* @__PURE__ */ Symbol.for("react.strict_mode"), REACT_PROFILER_TYPE = /* @__PURE__ */ Symbol.for("react.profiler"), REACT_CONSUMER_TYPE = /* @__PURE__ */ Symbol.for("react.consumer"), REACT_CONTEXT_TYPE = /* @__PURE__ */ Symbol.for("react.context"), REACT_FORWARD_REF_TYPE = /* @__PURE__ */ Symbol.for("react.forward_ref"), REACT_SUSPENSE_TYPE = /* @__PURE__ */ Symbol.for("react.suspense"), REACT_SUSPENSE_LIST_TYPE = /* @__PURE__ */ Symbol.for("react.suspense_list"), REACT_MEMO_TYPE = /* @__PURE__ */ Symbol.for("react.memo"), REACT_LAZY_TYPE = /* @__PURE__ */ Symbol.for("react.lazy");
+        /* @__PURE__ */ Symbol.for("react.scope");
+        var REACT_ACTIVITY_TYPE = /* @__PURE__ */ Symbol.for("react.activity");
+        /* @__PURE__ */ Symbol.for("react.legacy_hidden");
+        /* @__PURE__ */ Symbol.for("react.tracing_marker");
+        var REACT_MEMO_CACHE_SENTINEL = /* @__PURE__ */ Symbol.for("react.memo_cache_sentinel");
+        /* @__PURE__ */ Symbol.for("react.view_transition");
+        var MAYBE_ITERATOR_SYMBOL = Symbol.iterator, REACT_CLIENT_REFERENCE = /* @__PURE__ */ Symbol.for("react.client.reference"), isArrayImpl = Array.isArray, ReactSharedInternals = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, ReactDOMSharedInternals = ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, NotPending = Object.freeze({
           pending: false,
           data: null,
           method: null,
@@ -23547,9 +23551,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/client.js
+  // node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/client.js
   var require_client = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/client.js"(exports, module) {
+    "node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/client.js"(exports, module) {
       "use strict";
       if (false) {
         checkDCE();
@@ -23560,9 +23564,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/dist/jszip.min.js
+  // node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/dist/jszip.min.js
   var require_jszip_min = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/dist/jszip.min.js"(exports, module) {
+    "node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/dist/jszip.min.js"(exports, module) {
       !(function(e) {
         if ("object" == typeof exports && "undefined" != typeof module) module.exports = e();
         else if ("function" == typeof define && define.amd) define([], e);
@@ -35958,18 +35962,18 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/can-promise.js
+  // node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/can-promise.js
   var require_can_promise = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/can-promise.js"(exports, module) {
+    "node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/can-promise.js"(exports, module) {
       module.exports = function() {
         return typeof Promise === "function" && Promise.prototype && Promise.prototype.then;
       };
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/utils.js
+  // node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/utils.js
   var require_utils = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/utils.js"(exports) {
+    "node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/utils.js"(exports) {
       var toSJISFunction;
       var CODEWORDS_COUNT = [
         0,
@@ -36046,9 +36050,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/error-correction-level.js
+  // node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/error-correction-level.js
   var require_error_correction_level = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/error-correction-level.js"(exports) {
+    "node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/error-correction-level.js"(exports) {
       exports.L = { bit: 1 };
       exports.M = { bit: 0 };
       exports.Q = { bit: 3 };
@@ -36091,9 +36095,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/bit-buffer.js
+  // node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/bit-buffer.js
   var require_bit_buffer = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/bit-buffer.js"(exports, module) {
+    "node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/bit-buffer.js"(exports, module) {
       function BitBuffer() {
         this.buffer = [];
         this.length = 0;
@@ -36126,9 +36130,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/bit-matrix.js
+  // node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/bit-matrix.js
   var require_bit_matrix = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/bit-matrix.js"(exports, module) {
+    "node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/bit-matrix.js"(exports, module) {
       function BitMatrix(size) {
         if (!size || size < 1) {
           throw new Error("BitMatrix size must be defined and greater than 0");
@@ -36155,9 +36159,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/alignment-pattern.js
+  // node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/alignment-pattern.js
   var require_alignment_pattern = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/alignment-pattern.js"(exports) {
+    "node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/alignment-pattern.js"(exports) {
       var getSymbolSize = require_utils().getSymbolSize;
       exports.getRowColCoords = function getRowColCoords(version) {
         if (version === 1) return [];
@@ -36190,9 +36194,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/finder-pattern.js
+  // node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/finder-pattern.js
   var require_finder_pattern = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/finder-pattern.js"(exports) {
+    "node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/finder-pattern.js"(exports) {
       var getSymbolSize = require_utils().getSymbolSize;
       var FINDER_PATTERN_SIZE = 7;
       exports.getPositions = function getPositions(version) {
@@ -36209,9 +36213,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/mask-pattern.js
+  // node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/mask-pattern.js
   var require_mask_pattern = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/mask-pattern.js"(exports) {
+    "node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/mask-pattern.js"(exports) {
       exports.Patterns = {
         PATTERN000: 0,
         PATTERN001: 1,
@@ -36351,9 +36355,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/error-correction-code.js
+  // node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/error-correction-code.js
   var require_error_correction_code = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/error-correction-code.js"(exports) {
+    "node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/error-correction-code.js"(exports) {
       var ECLevel = require_error_correction_level();
       var EC_BLOCKS_TABLE = [
         // L  M  Q  H
@@ -36712,9 +36716,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/galois-field.js
+  // node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/galois-field.js
   var require_galois_field = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/galois-field.js"(exports) {
+    "node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/galois-field.js"(exports) {
       var EXP_TABLE = new Uint8Array(512);
       var LOG_TABLE = new Uint8Array(256);
       (function initTables() {
@@ -36745,9 +36749,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/polynomial.js
+  // node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/polynomial.js
   var require_polynomial = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/polynomial.js"(exports) {
+    "node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/polynomial.js"(exports) {
       var GF = require_galois_field();
       exports.mul = function mul(p1, p2) {
         const coeff = new Uint8Array(p1.length + p2.length - 1);
@@ -36781,9 +36785,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/reed-solomon-encoder.js
+  // node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/reed-solomon-encoder.js
   var require_reed_solomon_encoder = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/reed-solomon-encoder.js"(exports, module) {
+    "node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/reed-solomon-encoder.js"(exports, module) {
       var Polynomial = require_polynomial();
       function ReedSolomonEncoder(degree) {
         this.genPoly = void 0;
@@ -36813,18 +36817,18 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/version-check.js
+  // node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/version-check.js
   var require_version_check = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/version-check.js"(exports) {
+    "node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/version-check.js"(exports) {
       exports.isValid = function isValid(version) {
         return !isNaN(version) && version >= 1 && version <= 40;
       };
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/regex.js
+  // node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/regex.js
   var require_regex = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/regex.js"(exports) {
+    "node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/regex.js"(exports) {
       var numeric = "[0-9]+";
       var alphanumeric = "[A-Z $%*+\\-./:]+";
       var kanji = "(?:[u3000-u303F]|[u3040-u309F]|[u30A0-u30FF]|[uFF00-uFFEF]|[u4E00-u9FAF]|[u2605-u2606]|[u2190-u2195]|u203B|[u2010u2015u2018u2019u2025u2026u201Cu201Du2225u2260]|[u0391-u0451]|[u00A7u00A8u00B1u00B4u00D7u00F7])+";
@@ -36850,9 +36854,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/mode.js
+  // node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/mode.js
   var require_mode = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/mode.js"(exports) {
+    "node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/mode.js"(exports) {
       var VersionCheck = require_version_check();
       var Regex = require_regex();
       exports.NUMERIC = {
@@ -36931,9 +36935,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/version.js
+  // node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/version.js
   var require_version = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/version.js"(exports) {
+    "node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/version.js"(exports) {
       var Utils = require_utils();
       var ECCode = require_error_correction_code();
       var ECLevel = require_error_correction_level();
@@ -37026,9 +37030,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/format-info.js
+  // node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/format-info.js
   var require_format_info = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/format-info.js"(exports) {
+    "node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/format-info.js"(exports) {
       var Utils = require_utils();
       var G15 = 1 << 10 | 1 << 8 | 1 << 5 | 1 << 4 | 1 << 2 | 1 << 1 | 1 << 0;
       var G15_MASK = 1 << 14 | 1 << 12 | 1 << 10 | 1 << 4 | 1 << 1;
@@ -37044,9 +37048,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/numeric-data.js
+  // node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/numeric-data.js
   var require_numeric_data = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/numeric-data.js"(exports, module) {
+    "node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/numeric-data.js"(exports, module) {
       var Mode = require_mode();
       function NumericData(data) {
         this.mode = Mode.NUMERIC;
@@ -37079,9 +37083,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/alphanumeric-data.js
+  // node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/alphanumeric-data.js
   var require_alphanumeric_data = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/alphanumeric-data.js"(exports, module) {
+    "node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/alphanumeric-data.js"(exports, module) {
       var Mode = require_mode();
       var ALPHA_NUM_CHARS = [
         "0",
@@ -37158,9 +37162,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/byte-data.js
+  // node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/byte-data.js
   var require_byte_data = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/byte-data.js"(exports, module) {
+    "node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/byte-data.js"(exports, module) {
       var Mode = require_mode();
       function ByteData(data) {
         this.mode = Mode.BYTE;
@@ -37188,9 +37192,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/kanji-data.js
+  // node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/kanji-data.js
   var require_kanji_data = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/kanji-data.js"(exports, module) {
+    "node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/kanji-data.js"(exports, module) {
       var Mode = require_mode();
       var Utils = require_utils();
       function KanjiData(data) {
@@ -37227,9 +37231,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/dijkstrajs@1.0.3/node_modules/dijkstrajs/dijkstra.js
+  // node_modules/.pnpm/dijkstrajs@1.0.3/node_modules/dijkstrajs/dijkstra.js
   var require_dijkstra = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/dijkstrajs@1.0.3/node_modules/dijkstrajs/dijkstra.js"(exports, module) {
+    "node_modules/.pnpm/dijkstrajs@1.0.3/node_modules/dijkstrajs/dijkstra.js"(exports, module) {
       "use strict";
       var dijkstra = {
         single_source_shortest_paths: function(graph, s, d) {
@@ -37328,9 +37332,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/segments.js
+  // node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/segments.js
   var require_segments = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/segments.js"(exports) {
+    "node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/segments.js"(exports) {
       var Mode = require_mode();
       var NumericData = require_numeric_data();
       var AlphanumericData = require_alphanumeric_data();
@@ -37514,9 +37518,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/qrcode.js
+  // node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/qrcode.js
   var require_qrcode = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/qrcode.js"(exports) {
+    "node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/qrcode.js"(exports) {
       var Utils = require_utils();
       var ECLevel = require_error_correction_level();
       var BitBuffer = require_bit_buffer();
@@ -37775,9 +37779,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/renderer/utils.js
+  // node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/renderer/utils.js
   var require_utils2 = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/renderer/utils.js"(exports) {
+    "node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/renderer/utils.js"(exports) {
       function hex2rgba(hex) {
         if (typeof hex === "number") {
           hex = hex.toString();
@@ -37855,9 +37859,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/renderer/canvas.js
+  // node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/renderer/canvas.js
   var require_canvas = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/renderer/canvas.js"(exports) {
+    "node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/renderer/canvas.js"(exports) {
       var Utils = require_utils2();
       function clearCanvas(ctx, canvas, size) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -37908,9 +37912,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/renderer/svg-tag.js
+  // node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/renderer/svg-tag.js
   var require_svg_tag = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/renderer/svg-tag.js"(exports) {
+    "node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/renderer/svg-tag.js"(exports) {
       var Utils = require_utils2();
       function getColorAttrib(color, attrib) {
         const alpha = color.a / 255;
@@ -37966,9 +37970,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/browser.js
+  // node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/browser.js
   var require_browser = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/browser.js"(exports) {
+    "node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/browser.js"(exports) {
       var canPromise = require_can_promise();
       var QRCode2 = require_qrcode();
       var CanvasRenderer = require_canvas();
@@ -38036,9 +38040,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/react@19.2.6/node_modules/react/cjs/react-jsx-runtime.development.js
+  // node_modules/.pnpm/react@19.2.6/node_modules/react/cjs/react-jsx-runtime.development.js
   var require_react_jsx_runtime_development = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/react@19.2.6/node_modules/react/cjs/react-jsx-runtime.development.js"(exports) {
+    "node_modules/.pnpm/react@19.2.6/node_modules/react/cjs/react-jsx-runtime.development.js"(exports) {
       "use strict";
       (function() {
         function getComponentNameFromType(type) {
@@ -38250,7 +38254,7 @@ html,body{max-width:100%;overflow-x:hidden}
         function isValidElement(object) {
           return "object" === typeof object && null !== object && object.$$typeof === REACT_ELEMENT_TYPE;
         }
-        var React = require_react(), REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element"), REACT_PORTAL_TYPE = Symbol.for("react.portal"), REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"), REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"), REACT_PROFILER_TYPE = Symbol.for("react.profiler"), REACT_CONSUMER_TYPE = Symbol.for("react.consumer"), REACT_CONTEXT_TYPE = Symbol.for("react.context"), REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"), REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"), REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"), REACT_MEMO_TYPE = Symbol.for("react.memo"), REACT_LAZY_TYPE = Symbol.for("react.lazy"), REACT_ACTIVITY_TYPE = Symbol.for("react.activity"), REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"), ReactSharedInternals = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, hasOwnProperty = Object.prototype.hasOwnProperty, isArrayImpl = Array.isArray, createTask = console.createTask ? console.createTask : function() {
+        var React = require_react(), REACT_ELEMENT_TYPE = /* @__PURE__ */ Symbol.for("react.transitional.element"), REACT_PORTAL_TYPE = /* @__PURE__ */ Symbol.for("react.portal"), REACT_FRAGMENT_TYPE = /* @__PURE__ */ Symbol.for("react.fragment"), REACT_STRICT_MODE_TYPE = /* @__PURE__ */ Symbol.for("react.strict_mode"), REACT_PROFILER_TYPE = /* @__PURE__ */ Symbol.for("react.profiler"), REACT_CONSUMER_TYPE = /* @__PURE__ */ Symbol.for("react.consumer"), REACT_CONTEXT_TYPE = /* @__PURE__ */ Symbol.for("react.context"), REACT_FORWARD_REF_TYPE = /* @__PURE__ */ Symbol.for("react.forward_ref"), REACT_SUSPENSE_TYPE = /* @__PURE__ */ Symbol.for("react.suspense"), REACT_SUSPENSE_LIST_TYPE = /* @__PURE__ */ Symbol.for("react.suspense_list"), REACT_MEMO_TYPE = /* @__PURE__ */ Symbol.for("react.memo"), REACT_LAZY_TYPE = /* @__PURE__ */ Symbol.for("react.lazy"), REACT_ACTIVITY_TYPE = /* @__PURE__ */ Symbol.for("react.activity"), REACT_CLIENT_REFERENCE = /* @__PURE__ */ Symbol.for("react.client.reference"), ReactSharedInternals = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, hasOwnProperty = Object.prototype.hasOwnProperty, isArrayImpl = Array.isArray, createTask = console.createTask ? console.createTask : function() {
           return null;
         };
         React = {
@@ -38293,9 +38297,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/react@19.2.6/node_modules/react/jsx-runtime.js
+  // node_modules/.pnpm/react@19.2.6/node_modules/react/jsx-runtime.js
   var require_jsx_runtime = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/react@19.2.6/node_modules/react/jsx-runtime.js"(exports, module) {
+    "node_modules/.pnpm/react@19.2.6/node_modules/react/jsx-runtime.js"(exports, module) {
       "use strict";
       if (false) {
         module.exports = null;
@@ -38325,7 +38329,7 @@ html,body{max-width:100%;overflow-x:hidden}
     return !!record.archived || /售出|租出|成交下架|下架/.test(record.status || "");
   }
 
-  // ../meeting-deps/node_modules/.pnpm/pptxgenjs@4.0.1/node_modules/pptxgenjs/dist/pptxgen.es.js
+  // node_modules/.pnpm/pptxgenjs@4.0.1/node_modules/pptxgenjs/dist/pptxgen.es.js
   var import_jszip = __toESM(require_jszip_min());
   function __awaiter(thisArg, _arguments, P, generator) {
     function adopt(value) {
@@ -44232,12 +44236,6 @@ ${String(ex)}`);
   };
   var CASE_FILE_SUPABASE_URL = "https://oiywtmjbasoonfuxemtr.supabase.co";
   var CASE_FILE_SUPABASE_TABLE = "case_file_state";
-  var newCaseReminderCompletionKeys = ["housingListingCompleted", "newBookCompleted", "wangReviewCompleted"];
-  var newCaseReminderPending = (record) => !newCaseReminderCompletionKeys.every((key) => record[key] === "1");
-  var preserveNewCaseReminderCompletion = (local, incoming) => {
-    if (!local) return incoming;
-    return newCaseReminderCompletionKeys.reduce((record, key) => ({ ...record, [key]: local[key] === "1" || incoming[key] === "1" ? "1" : incoming[key] || "" }), { ...incoming });
-  };
   var CASE_FILE_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_dhr81918k0zRtar14yepIA_ZWmTKT10";
   var newId = () => globalThis.crypto?.randomUUID?.() || `id-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   var jsonExportFileName = (date = /* @__PURE__ */ new Date()) => {
@@ -45729,9 +45727,6 @@ ${String(ex)}`);
         return records.find((record) => record.id === current.id) || current;
       });
     }, [records]);
-    const [newCaseReminder, setNewCaseReminder] = (0, import_react.useState)(null);
-    const [newCaseReminderBatchIds, setNewCaseReminderBatchIds] = (0, import_react.useState)([]);
-    const deferredNewCaseReminderIds = (0, import_react.useRef)(/* @__PURE__ */ new Set());
     const [expiryReminderOpen, setExpiryReminderOpen] = (0, import_react.useState)(false);
     const [websitePoReminderOpen, setWebsitePoReminderOpen] = (0, import_react.useState)(false);
     const [archiveCleanupReminderOpen, setArchiveCleanupReminderOpen] = (0, import_react.useState)(false);
@@ -45872,18 +45867,6 @@ ${String(ex)}`);
     const pptWeekLoadedRef = (0, import_react.useRef)("");
     const pptWeekSkipSaveRef = (0, import_react.useRef)(true);
     const pptConfirmationStateKeyRef = (0, import_react.useRef)("");
-    const reminderAnchorRecord = records.find((record) => String(record.address || "").includes("\u5BCC\u8FB2\u8857\u4E00\u6BB5188\u5DF740\u865F"));
-    const reminderAnchorDraft = reminderAnchorRecord ? intakeDrafts.find((draft) => draft.linkedRecordId === reminderAnchorRecord.id) : void 0;
-    const reminderAnchorTime = reminderAnchorDraft?.enteredAt || reminderAnchorDraft?.createdAt || "";
-    const intakeReminderDraft = (record) => intakeDrafts.find((draft) => draft.linkedRecordId === record.id && !!draft.enteredAt);
-    const isIntakeReminderRecord = (record) => {
-      if (record._newCaseReminderSource === "intake") return true;
-      const draft = intakeReminderDraft(record);
-      if (!draft || !reminderAnchorTime) return false;
-      return (draft.enteredAt || draft.createdAt || "") >= reminderAnchorTime;
-    };
-    const pendingIntakeReminderRecords = records.filter((record) => isIntakeReminderRecord(record) && newCaseReminderPending(record));
-    const newCaseReminderBatchRecords = newCaseReminderBatchIds.map((id) => records.find((record) => record.id === id) || (newCaseReminder?.id === id ? newCaseReminder : null)).filter((record) => !!record);
     (0, import_react.useEffect)(() => {
       setPptCustomStart("");
       setPptCustomEnd("");
@@ -46374,18 +46357,11 @@ ${String(ex)}`);
       });
     }, [storageReady, intakeDrafts]);
     (0, import_react.useEffect)(() => {
-      if (!storageReady) return;
-      setRecords((previous) => previous.map((record) => String(record.address || "").includes("\u5BCC\u8FB2\u8857\u4E00\u6BB5188\u5DF740\u865F") ? { ...record, _newCaseReminderEnabled: "1", _newCaseReminderSource: "intake", housingListingCompleted: "1", newBookCompleted: "1", wangReviewCompleted: "1" } : record));
-    }, [storageReady]);
-    (0, import_react.useEffect)(() => {
       const syncAcrossTabs = (event) => {
         if (event.key === STORAGE_KEY && event.newValue) {
           try {
             const incoming = applySourceLayoutFixes(JSON.parse(event.newValue)).map(normalizeRecordPings);
-            setRecords((previous) => {
-              const local = new Map(previous.map((record) => [record.id, record]));
-              return incoming.map((record) => preserveNewCaseReminderCompletion(local.get(record.id), record));
-            });
+            setRecords(incoming);
           } catch {
           }
         }
@@ -47162,24 +47138,6 @@ ${changedLabels}
       setIntakeDrafts((previous) => previous.map((draft) => draft.linkedRecordId === next.id ? { ...draft, values: syncRecordToDraftValues(draft, next) } : draft));
       setEditing(null);
       flash(autoReopen ? "\u5DF2\u91CD\u65B0\u4E0A\u67B6\uFF0C\u4E26\u8A18\u9304\u5728\u6848\u540D\u5F8C\u65B9\u5099\u8A3B" : "\u7269\u4EF6\u5DF2\u5132\u5B58");
-    };
-    const saveNewCaseReminder = () => {
-      if (!newCaseReminderBatchIds.length) return;
-      newCaseReminderBatchIds.forEach((id) => deferredNewCaseReminderIds.current.add(id));
-      setNewCaseReminder(null);
-      setNewCaseReminderBatchIds([]);
-      flash("\u65B0\u6848\u4EF6\u5B8C\u6210\u63D0\u9192\u5DF2\u5132\u5B58");
-    };
-    const deferNewCaseReminder = () => {
-      newCaseReminderBatchIds.forEach((id) => deferredNewCaseReminderIds.current.add(id));
-      setNewCaseReminder(null);
-      setNewCaseReminderBatchIds([]);
-    };
-    const updateNewCaseReminderItem = (id, key, checked) => {
-      const value = checked ? "1" : "";
-      const savedAt = (/* @__PURE__ */ new Date()).toISOString();
-      setRecords((previous) => previous.map((record) => record.id === id ? { ...record, [key]: value, lastModifiedAt: savedAt } : record));
-      setNewCaseReminder((previous) => previous?.id === id ? { ...previous, [key]: value, lastModifiedAt: savedAt } : previous);
     };
     const temporarilySaveRecord = () => {
       if (!editing) return;
@@ -48000,7 +47958,7 @@ ${changedLabels}
             data.records.forEach((r) => {
               const normalized = normalizeRecordPings(applySourceLayoutFixes([r])[0]);
               const local = map.get(normalized.id);
-              map.set(normalized.id, preserveNewCaseReminderCompletion(local, { ...local, ...normalized, photos: normalized.photos || local?.photos || [] }));
+              map.set(normalized.id, { ...local, ...normalized, photos: normalized.photos || local?.photos || [] });
             });
             return ensureRequiredCaseImports([...map.values()]);
           });
@@ -48485,20 +48443,18 @@ ${changedLabels}
       const record = intakeToRecord(target, existing);
       if (!record.propertyNo || !record.caseName) return flash("\u7F3A\u5C11\u7269\u4EF6\u7DE8\u865F\u6216\u6848\u540D\uFF0C\u8ACB\u5148\u78BA\u8A8D\u8868\u55AE\u5167\u5BB9");
       if (existing) {
-        const firstFormalEntry = !target.enteredAt;
-        const tracked = { ...withTrackedUpdate(existing, record), ...firstFormalEntry ? { _newCaseReminderEnabled: "1", _newCaseReminderSource: "intake" } : {} };
+        const tracked = withTrackedUpdate(existing, record);
         const enteredAt2 = target.enteredAt || (/* @__PURE__ */ new Date()).toISOString();
         setRecords((prev) => prev.map((item) => item.id === existing.id ? tracked : item));
         setIntakeDrafts((prev) => prev.map((draft) => draft.id === target.id ? { ...draft, linkedRecordId: existing.id, enteredAt: enteredAt2, modifiedAt: enteredAt2 } : draft));
-        flash(firstFormalEntry ? "\u5DF2\u6B63\u5F0F\u9032\u6848\uFF1B\u8ACB\u7A0D\u5F8C\u81F3\u300C\u65B0\u9032\u6848\u4EF6\u63D0\u9192\u300D\u5B8C\u6210\u5F8C\u7E8C\u4F5C\u696D" : "\u5DF2\u9023\u7D50\u4E26\u540C\u6B65\u66F4\u65B0\u539F\u7E3D\u8868\u8CC7\u6599");
+        flash(target.enteredAt ? "\u5DF2\u9023\u7D50\u4E26\u540C\u6B65\u66F4\u65B0\u539F\u7E3D\u8868\u8CC7\u6599" : "\u5DF2\u6B63\u5F0F\u9032\u6848");
         return;
       }
       if (!confirm(`\u78BA\u5B9A\u6587\u4EF6\u5DF2\u6536\u5230\uFF0C\u5C07\u300C${record.caseName}\u300D\u6B63\u5F0F\u52A0\u5165\u7E3D\u8868\uFF1F`)) return;
       const enteredAt = (/* @__PURE__ */ new Date()).toISOString();
-      const entered = { ...record, _newCaseReminderEnabled: "1", _newCaseReminderSource: "intake" };
-      setRecords((prev) => [entered, ...prev]);
-      setIntakeDrafts((prev) => prev.map((draft) => draft.id === target.id ? { ...draft, linkedRecordId: entered.id, enteredAt, modifiedAt: enteredAt } : draft));
-      flash("\u5DF2\u6B63\u5F0F\u9032\u6848\uFF1B\u8ACB\u7A0D\u5F8C\u81F3\u300C\u65B0\u9032\u6848\u4EF6\u63D0\u9192\u300D\u5B8C\u6210\u5F8C\u7E8C\u4F5C\u696D");
+      setRecords((prev) => [record, ...prev]);
+      setIntakeDrafts((prev) => prev.map((draft) => draft.id === target.id ? { ...draft, linkedRecordId: record.id, enteredAt, modifiedAt: enteredAt } : draft));
+      flash("\u5DF2\u6B63\u5F0F\u9032\u6848");
     };
     const removeIntakeDraft = (id) => {
       const target = intakeDrafts.find((d) => d.id === id);
@@ -48653,17 +48609,10 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V511" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V512" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
-            pendingIntakeReminderRecords.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { className: "new-case-reminder-header-button", onClick: () => {
-              setNewCaseReminder({ ...pendingIntakeReminderRecords[0] });
-              setNewCaseReminderBatchIds(pendingIntakeReminderRecords.map((record) => record.id));
-            }, children: [
-              "\u65B0\u9032\u6848\u4EF6\u63D0\u9192 ",
-              pendingIntakeReminderRecords.length
-            ] }),
             pendingDealCompletion.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", { className: "deal-reminder-header-button", onClick: () => setDealCompletionReminderOpen(true), children: [
               "\u6210\u4EA4\u5F8C\u7E8C\u63D0\u9192 ",
               pendingDealCompletion.length
@@ -49691,48 +49640,6 @@ ${conflicts.join("\n")}
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", onClick: resetPptCustomWeek, children: "\u6062\u5FA9\u9810\u8A2D\u9031\u671F" })
       ] }),
-      !internalView && newCaseReminder && newCaseReminderBatchRecords.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "modal-backdrop new-case-reminder-backdrop", onMouseDown: (event) => event.target === event.currentTarget && deferNewCaseReminder(), children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal new-case-reminder-modal new-case-reminder-list-modal", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal-head", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u65B0\u589E\u6848\u4EF6" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h2", { children: [
-              "\u65B0\u6848\u4EF6\u5B8C\u6210\u63D0\u9192\u3000",
-              newCaseReminderBatchRecords.length,
-              " \u7B46"
-            ] })
-          ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "close", type: "button", onClick: deferNewCaseReminder, children: "\xD7" })
-        ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "new-case-reminder-table-wrap", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("table", { className: "new-case-reminder-table", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("thead", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "\u6848\u540D" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "\u5730\u5740" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "\u958B\u767C" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "\u9032\u6848\u65E5\u671F" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "\u623F\u7BA1\u4E0A\u67B6\u5B8C\u6210" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "NEW \u672C\u88FD\u4F5C\u5B8C\u6210" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { children: "\u738B\u7E3D\u5BE9\u6838\u5B8C\u6210" })
-          ] }) }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("tbody", { children: newCaseReminderBatchRecords.map((record) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("td", { children: [
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: "new-case-reminder-case-link", onClick: () => {
-                setNewCaseReminder(null);
-                setEditing(record);
-              }, children: record.caseName || "\u672A\u547D\u540D\u6848\u4EF6" }),
-              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: record.propertyNo || "\u2014" })
-            ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: record.address || "\u672A\u586B\u5BEB\u5730\u5740" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: developerFullNameText(record.developer || "", settings.personnel) || "\u672A\u586B\u5BEB" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: displayRocDate(record.reportDate) || "\u2014" }),
-            ["housingListingCompleted", "newBookCompleted", "wangReviewCompleted"].map((key) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: record[key] === "1", onChange: (event) => updateNewCaseReminderItem(record.id, key, event.target.checked) }) }, key))
-          ] }, record.id)) })
-        ] }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "modal-foot", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u4F86\u6E90\uFF1A\u9032\u6848\u8349\u7A3F\u9EDE\u9078\u300C\u9032\u6848\u300D\uFF1B\u9EDE\u6848\u540D\u53EF\u76F4\u63A5\u7DE8\u8F2F\u3002" }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", onClick: deferNewCaseReminder, children: "\u7A0D\u5F8C\u8655\u7406" }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: "primary", onClick: saveNewCaseReminder, children: "\u5132\u5B58\u63D0\u9192" })
-        ] })
-      ] }) }),
       notice && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "toast", children: notice })
     ] });
   }
