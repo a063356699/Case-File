@@ -2097,12 +2097,12 @@ html,body{max-width:100%;overflow-x:hidden}
 .ppt-merge-weeks{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:14px;margin:12px 0;background:#f0f5f9;border:1px solid #cad8e2;border-radius:10px}.ppt-merge-weeks small{flex-basis:100%;color:#526373}.ppt-merge-weeks select{max-width:100%;padding:8px;border-radius:8px;border:1px solid #cad8e2}.ppt-case-date>b{display:block;font-size:12px;color:#42627e}.ppt-case-row.meeting-change{background:#fff5e5}.ppt-case-row.meeting-change .ppt-case-date>b{color:#8a581d}
 .record-edit-modal .modal-head-actions .record-print-button{border-color:#637b8c!important;background:#e4edf2!important;color:#294e63!important}
 .record-edit-modal .modal-head-actions .record-print-button:first-child{border-color:#27845c!important;background:#ccebd9!important;color:#145f3e!important}
-.record-print-button.m-folder{border-color:#8245ad!important;background:#e4d0f4!important;color:#602788!important}
-.record-print-button.key-label{border-color:#c57a00!important;background:#ffe1a8!important;color:#805000!important}
+.record-edit-modal .modal-head-actions .record-print-button.m-folder{border-color:#8245ad!important;background:#e4d0f4!important;color:#602788!important}
+.record-edit-modal .modal-head-actions .record-print-button.key-label{border-color:#c57a00!important;background:#ffe1a8!important;color:#805000!important}
 .record-edit-modal .modal-head-actions .record-print-button:nth-of-type(4){border-color:#c85d48!important;background:#ffd4c8!important;color:#8f3727!important}
-.record-print-button.ppt{border-color:#3476bd!important;background:#cfe3ff!important;color:#155b9f!important}
-.record-print-button.color{border-color:#168c87!important;background:#ccece8!important;color:#086763!important}
-.record-print-button.cover{border-color:#bf467d!important;background:#f6d3e3!important;color:#8b2857!important}
+.record-edit-modal .modal-head-actions .record-print-button.ppt{border-color:#3476bd!important;background:#cfe3ff!important;color:#155b9f!important}
+.record-edit-modal .modal-head-actions .record-print-button.color{border-color:#168c87!important;background:#ccece8!important;color:#086763!important}
+.record-edit-modal .modal-head-actions .record-print-button.cover{border-color:#bf467d!important;background:#f6d3e3!important;color:#8b2857!important}
 .record-edit-modal .modal-head-actions .record-print-button:hover{filter:brightness(.94)}
 .ppt-add-actions>.ppt-asset-folder-button{font-size:0}
 .ppt-add-actions>.ppt-asset-folder-button::before{font-size:13px}
