@@ -1424,6 +1424,19 @@ export default function Home() {
     catch { return flash("複製失敗，請再按一次"); }
     flash("已複製M夾新增物件資料");
   };
+  useEffect(() => {
+    if (!editing || !records.some(record => record.id === editing.id)) return;
+    const actions = document.querySelector(".record-edit-modal .modal-head-actions");
+    const dealButton = actions?.querySelector("button");
+    if (!actions || !dealButton) return;
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "record-print-button m-folder";
+    button.textContent = "複製M夾";
+    button.onclick = () => void copyMFolderRecord(editing);
+    dealButton.insertAdjacentElement("afterend", button);
+    return () => button.remove();
+  }, [editing]);
 
   const copyEditingHeaderValue = async (value: string, label: string) => {
     const text = String(value || "");
@@ -3313,7 +3326,7 @@ export default function Home() {
 
   return <main lang="zh-Hant-TW" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-        <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V518</small></h1></div>
+        <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V519</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{expiredUnarchived.length > 0 && <button className="expired-entrust-button" onClick={() => setExpiryReminderOpen(true)}>委託到期 {expiredUnarchived.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -3347,7 +3360,7 @@ export default function Home() {
     <section className={`content ${tab === "archive" ? "archive-list-page" : "active-list-page"}`}>
       <div className="list-head active-list-toolbar"><div className="list-title-search"><SectionTitle title={tab === "archive" ? "封存物件" : "委託中物件"} subtitle={tab === "archive" ? "到期與已下架物件紀錄" : ""}/><label className="search">⌕<input value={currentListQuery} onChange={e => tab === "archive" ? setArchiveQuery(e.target.value) : setQuery(e.target.value)} placeholder="搜尋編號、地區、案名、地址…"/></label>{tab === "archive" && <button className="clear-filter-button" onClick={() => setArchiveQuery("")}>清除篩選</button>}</div><div className="tools">{tab === "active" && <><button className="showing-follow-up-filter" onClick={() => setShowingFollowUpOpen(true)}>暫停帶看 {showingFollowUpRecords.length}</button><button className={missingDataRecords.length ? "missing-data-button has-items" : "missing-data-button"} onClick={() => setMissingDataReminderOpen(true)}>待補資料 {missingDataRecords.length}</button><select className="website-filter" value={websiteFilter} onChange={event => setWebsiteFilter(event.target.value)}><option value="">全部物件</option><option value="missing_sales_book_date">銷售本缺日期</option><option value="missing_book_location_date">物件本位置缺日期</option><option value="missing_photo_info">照片缺填寫</option><option value="all">全部尚未 PO</option>{Object.entries(websiteFieldMap).map(([key, name]) => <option key={key} value={key}>{name} 尚未 PO</option>)}</select><button className="advanced-filter-button" onClick={() => setAdvancedFilterOpen(true)}>進階篩選</button><button className="clear-filter-button" onClick={() => { setShowingFollowUpOnly(false); setWebsiteFilter(""); setAdvancedFilter(blankAdvancedFilter()); setQuery(""); }}>清除篩選</button></>}</div></div>
       {tab === "active" && websiteExpiryRecords.length > 0 && <div className="website-expiry-reminder"><b>網站廣告到期提醒</b>{websiteExpiryRecords.map(({ record, site, date }) => <button key={`${record.id}-${site}`} onClick={() => setEditing(record)}>{record.caseName || record.propertyNo}：{site} 已於 {displayRocDate(date)} 到期</button>)}</div>}
-      <PropertyTable records={tab === "archive" ? shown.map(archiveDisplayRecord) : shown.map(showingFollowUpDisplayRecord).map((record, index) => ({ ...record, displaySequence: String(index + 1) }))} columns={tab === "archive" ? archiveColumns : activeColumns} archiveMode={tab === "archive"} activeLead={tab === "active"} showAreaGroups={tab === "active"} onEdit={setEditing} onArchive={archiveRecord} onRestore={setRestoreChoiceRecord} onRemove={removeRecord} onCopyM={copyMFolderRecord}/>
+      <PropertyTable records={tab === "archive" ? shown.map(archiveDisplayRecord) : shown.map(showingFollowUpDisplayRecord).map((record, index) => ({ ...record, displaySequence: String(index + 1) }))} columns={tab === "archive" ? archiveColumns : activeColumns} archiveMode={tab === "archive"} activeLead={tab === "active"} showAreaGroups={tab === "active"} onEdit={setEditing} onArchive={archiveRecord} onRestore={setRestoreChoiceRecord} onRemove={removeRecord}/>
       {advancedFilterOpen && <AdvancedFilterModal value={advancedFilter} setValue={setAdvancedFilter} onClose={() => setAdvancedFilterOpen(false)} onReset={() => setAdvancedFilter(blankAdvancedFilter())}/>}
       {!shown.length && <Empty text={query || tab === "active" && Object.values(advancedFilter).some(Boolean) ? "找不到符合的物件" : tab === "archive" ? "目前沒有封存物件" : "目前沒有委託中物件"}/>}
     </section>}
@@ -5023,7 +5036,7 @@ function AdvancedFilterModal({ value, setValue, onClose, onReset }: { value: Adv
   </div><div className="modal-foot"><button onClick={onReset}>清除全部條件</button><button className="primary" onClick={onClose}>套用篩選</button></div></div></div>;
 }
 
-function PropertyTable({ records, columns, publicMode = false, dailyMode = false, archiveMode = false, activeLead = false, expiryAnnotation = false, showAreaGroups = false, zoom = 100, onEdit, onArchive, onRestore, onRemove, onPptChange, onCopyM }: { records: RecordItem[]; columns: string[]; publicMode?: boolean; dailyMode?: boolean; archiveMode?: boolean; activeLead?: boolean; expiryAnnotation?: boolean; showAreaGroups?: boolean; zoom?: number; onEdit: (r: RecordItem) => void; onArchive: (r: RecordItem, status?: string) => void; onRestore: (r: RecordItem) => void; onRemove: (r: RecordItem) => void; onPptChange?: (r: RecordItem, patch: Partial<RecordItem>) => void; onCopyM?: (r: RecordItem) => void }) {
+function PropertyTable({ records, columns, publicMode = false, dailyMode = false, archiveMode = false, activeLead = false, expiryAnnotation = false, showAreaGroups = false, zoom = 100, onEdit, onArchive, onRestore, onRemove, onPptChange }: { records: RecordItem[]; columns: string[]; publicMode?: boolean; dailyMode?: boolean; archiveMode?: boolean; activeLead?: boolean; expiryAnnotation?: boolean; showAreaGroups?: boolean; zoom?: number; onEdit: (r: RecordItem) => void; onArchive: (r: RecordItem, status?: string) => void; onRestore: (r: RecordItem) => void; onRemove: (r: RecordItem) => void; onPptChange?: (r: RecordItem, patch: Partial<RecordItem>) => void }) {
   const [publicScrollLeft, setPublicScrollLeftState] = useState(0);
   const setPublicScrollLeft = (value: number) => setPublicScrollLeftState(value > 0 ? value + 81 : 0);
   const [hoveredPublicCase, setHoveredPublicCase] = useState("");
@@ -5057,7 +5070,7 @@ function PropertyTable({ records, columns, publicMode = false, dailyMode = false
     const archiveStatus = r.archived ? archiveStatusOf(r) : "到期下架";
     const archiveLabel = `${displayRocDate(archiveDate)}${archiveStatus}${archiveStatus === "下架洽開發" && r.archiveReason ? `：${r.archiveReason}` : ""}`;
     if (publicMode) return <><span className="public-case-name">{chunkText(r.caseName || "—", 10).map((line, lineIndex) => <span key={`${line}-${lineIndex}`}>{line}</span>)}</span>{note && <small className="case-name-note">{note}</small>}{dailyMode && r._dailyAnnotation && !note.includes(r._dailyAnnotation) && <small className="daily-case-annotation">{r._dailyAnnotation}</small>}{expiryAnnotation && daysUntil(r.entrustEnd) >= 0 && daysUntil(r.entrustEnd) <= 30 && <small className="mine-expiry-annotation">提醒{displayRocDate(r.entrustEnd)}到期</small>}</>;
-    return <span className={activeLead ? "active-case-name-cell" : ""}><button className="case-link" onClick={() => onEdit(r)}>{chunkText(r.caseName || "—", activeLead ? 12 : 15).map((line, lineIndex) => <span className="case-name-line" key={`${line}-${lineIndex}`}>{line}</span>)}</button>{activeLead && onCopyM && <button type="button" className="copy-m-folder-button" onClick={() => onCopyM(r)}>複製M夾</button>}{note && <span className="case-name-note active-case-name-note">{note}</span>}{activeLead && restoredLabel && !note.includes("重新上架") && <span className="restore-case-annotation">{restoredLabel}</span>}{archiveMode && <small className="archive-case-annotation">{archiveLabel}</small>}</span>;
+    return <span className={activeLead ? "active-case-name-cell" : ""}><button className="case-link" onClick={() => onEdit(r)}>{chunkText(r.caseName || "—", activeLead ? 12 : 15).map((line, lineIndex) => <span className="case-name-line" key={`${line}-${lineIndex}`}>{line}</span>)}</button>{note && <span className="case-name-note active-case-name-note">{note}</span>}{activeLead && restoredLabel && !note.includes("重新上架") && <span className="restore-case-annotation">{restoredLabel}</span>}{archiveMode && <small className="archive-case-annotation">{archiveLabel}</small>}</span>;
   };
   return <div className={`table-wrap ${publicMode ? "public-table" : ""} ${dailyMode ? "daily-table" : ""} ${activeLead ? "active-lead-table" : ""}`} onScroll={event => publicMode && setPublicScrollLeft(event.currentTarget.scrollLeft)}>
     {publicMode && publicScrollLeft > 80 && hoveredPublicCase && <div className="public-floating-case-name" style={{ left: publicScrollLeft + 8, top: hoveredPublicCaseTop }}>{hoveredPublicCase}</div>}

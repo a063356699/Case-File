@@ -2102,8 +2102,8 @@ html,body{max-width:100%;overflow-x:hidden}
 
 /* V503: combine meeting weeks without changing source records. */
 .ppt-merge-weeks{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:14px;margin:12px 0;background:#f0f5f9;border:1px solid #cad8e2;border-radius:10px}.ppt-merge-weeks small{flex-basis:100%;color:#526373}.ppt-merge-weeks select{max-width:100%;padding:8px;border-radius:8px;border:1px solid #cad8e2}.ppt-case-date>b{display:block;font-size:12px;color:#42627e}.ppt-case-row.meeting-change{background:#fff5e5}.ppt-case-row.meeting-change .ppt-case-date>b{color:#8a581d}
-.copy-m-folder-button{display:block;margin:5px auto 0;padding:3px 8px;border:1px solid #5b8f78;border-radius:999px;background:#eff8f3;color:#286047;font-size:11px;font-weight:800;line-height:1.25;white-space:nowrap;cursor:pointer}
-.copy-m-folder-button:hover{background:#dff1e7}
+.record-print-button.m-folder{border-color:#8a67b8;background:#f0e8fa;color:#5e348d}
+.record-print-button.m-folder:hover{background:#dfcef3}
 .ppt-add-actions>.ppt-asset-folder-button{font-size:0}
 .ppt-add-actions>.ppt-asset-folder-button::before{font-size:13px}
 .ppt-add-actions>.ppt-asset-folder-button:nth-of-type(1)::before{content:"PPT動畫"}
@@ -46136,6 +46136,19 @@ ${String(ex)}`);
       }
       flash("\u5DF2\u8907\u88FDM\u593E\u65B0\u589E\u7269\u4EF6\u8CC7\u6599");
     };
+    (0, import_react.useEffect)(() => {
+      if (!editing || !records.some((record) => record.id === editing.id)) return;
+      const actions = document.querySelector(".record-edit-modal .modal-head-actions");
+      const dealButton = actions?.querySelector("button");
+      if (!actions || !dealButton) return;
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "record-print-button m-folder";
+      button.textContent = "\u8907\u88FDM\u593E";
+      button.onclick = () => void copyMFolderRecord(editing);
+      dealButton.insertAdjacentElement("afterend", button);
+      return () => button.remove();
+    }, [editing]);
     const copyEditingHeaderValue = async (value, label) => {
       const text = String(value || "");
       try {
@@ -48654,7 +48667,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V518" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V519" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -48894,7 +48907,7 @@ ${changedLabels}
             " \u5230\u671F"
           ] }, `${record.id}-${site}`))
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PropertyTable, { records: tab === "archive" ? shown.map(archiveDisplayRecord) : shown.map(showingFollowUpDisplayRecord).map((record, index) => ({ ...record, displaySequence: String(index + 1) })), columns: tab === "archive" ? archiveColumns : activeColumns, archiveMode: tab === "archive", activeLead: tab === "active", showAreaGroups: tab === "active", onEdit: setEditing, onArchive: archiveRecord, onRestore: setRestoreChoiceRecord, onRemove: removeRecord, onCopyM: copyMFolderRecord }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PropertyTable, { records: tab === "archive" ? shown.map(archiveDisplayRecord) : shown.map(showingFollowUpDisplayRecord).map((record, index) => ({ ...record, displaySequence: String(index + 1) })), columns: tab === "archive" ? archiveColumns : activeColumns, archiveMode: tab === "archive", activeLead: tab === "active", showAreaGroups: tab === "active", onEdit: setEditing, onArchive: archiveRecord, onRestore: setRestoreChoiceRecord, onRemove: removeRecord }),
         advancedFilterOpen && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(AdvancedFilterModal, { value: advancedFilter, setValue: setAdvancedFilter, onClose: () => setAdvancedFilterOpen(false), onReset: () => setAdvancedFilter(blankAdvancedFilter()) }),
         !shown.length && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Empty, { text: query || tab === "active" && Object.values(advancedFilter).some(Boolean) ? "\u627E\u4E0D\u5230\u7B26\u5408\u7684\u7269\u4EF6" : tab === "archive" ? "\u76EE\u524D\u6C92\u6709\u5C01\u5B58\u7269\u4EF6" : "\u76EE\u524D\u6C92\u6709\u59D4\u8A17\u4E2D\u7269\u4EF6" })
       ] }),
@@ -52951,7 +52964,7 @@ ${xrefOffset}
       ] })
     ] }) });
   }
-  function PropertyTable({ records, columns, publicMode = false, dailyMode = false, archiveMode = false, activeLead = false, expiryAnnotation = false, showAreaGroups = false, zoom = 100, onEdit, onArchive, onRestore, onRemove, onPptChange, onCopyM }) {
+  function PropertyTable({ records, columns, publicMode = false, dailyMode = false, archiveMode = false, activeLead = false, expiryAnnotation = false, showAreaGroups = false, zoom = 100, onEdit, onArchive, onRestore, onRemove, onPptChange }) {
     const [publicScrollLeft, setPublicScrollLeftState] = (0, import_react.useState)(0);
     const setPublicScrollLeft = (value) => setPublicScrollLeftState(value > 0 ? value + 81 : 0);
     const [hoveredPublicCase, setHoveredPublicCase] = (0, import_react.useState)("");
@@ -53002,7 +53015,6 @@ ${xrefOffset}
       ] });
       return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { className: activeLead ? "active-case-name-cell" : "", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "case-link", onClick: () => onEdit(r), children: chunkText(r.caseName || "\u2014", activeLead ? 12 : 15).map((line, lineIndex) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "case-name-line", children: line }, `${line}-${lineIndex}`)) }),
-        activeLead && onCopyM && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: "copy-m-folder-button", onClick: () => onCopyM(r), children: "\u8907\u88FDM\u593E" }),
         note && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "case-name-note active-case-name-note", children: note }),
         activeLead && restoredLabel && !note.includes("\u91CD\u65B0\u4E0A\u67B6") && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "restore-case-annotation", children: restoredLabel }),
         archiveMode && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "archive-case-annotation", children: archiveLabel })
