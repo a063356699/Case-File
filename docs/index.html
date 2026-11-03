@@ -2134,7 +2134,11 @@ html,body{max-width:100%;overflow-x:hidden}
     throw Error('Dynamic require of "' + x + '" is not supported');
   });
   var __commonJS = (cb, mod) => function __require2() {
-    return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
+    try {
+      return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
+    } catch (e) {
+      throw mod = 0, e;
+    }
   };
   var __copyProps = (to, from, except, desc) => {
     if (from && typeof from === "object" || typeof from === "function") {
@@ -2153,9 +2157,9 @@ html,body{max-width:100%;overflow-x:hidden}
     mod
   ));
 
-  // ../meeting-deps/node_modules/.pnpm/scheduler@0.27.0/node_modules/scheduler/cjs/scheduler.development.js
+  // node_modules/.pnpm/scheduler@0.27.0/node_modules/scheduler/cjs/scheduler.development.js
   var require_scheduler_development = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/scheduler@0.27.0/node_modules/scheduler/cjs/scheduler.development.js"(exports) {
+    "node_modules/.pnpm/scheduler@0.27.0/node_modules/scheduler/cjs/scheduler.development.js"(exports) {
       "use strict";
       (function() {
         function performWorkUntilDeadline() {
@@ -2412,9 +2416,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/scheduler@0.27.0/node_modules/scheduler/index.js
+  // node_modules/.pnpm/scheduler@0.27.0/node_modules/scheduler/index.js
   var require_scheduler = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/scheduler@0.27.0/node_modules/scheduler/index.js"(exports, module) {
+    "node_modules/.pnpm/scheduler@0.27.0/node_modules/scheduler/index.js"(exports, module) {
       "use strict";
       if (false) {
         module.exports = null;
@@ -2424,9 +2428,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/react@19.2.6/node_modules/react/cjs/react.development.js
+  // node_modules/.pnpm/react@19.2.6/node_modules/react/cjs/react.development.js
   var require_react_development = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/react@19.2.6/node_modules/react/cjs/react.development.js"(exports, module) {
+    "node_modules/.pnpm/react@19.2.6/node_modules/react/cjs/react.development.js"(exports, module) {
       "use strict";
       (function() {
         function defineDeprecationWarning(methodName, info) {
@@ -2893,7 +2897,7 @@ html,body{max-width:100%;overflow-x:hidden}
           }
         }
         "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ && "function" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart && __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(Error());
-        var REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element"), REACT_PORTAL_TYPE = Symbol.for("react.portal"), REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"), REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"), REACT_PROFILER_TYPE = Symbol.for("react.profiler"), REACT_CONSUMER_TYPE = Symbol.for("react.consumer"), REACT_CONTEXT_TYPE = Symbol.for("react.context"), REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"), REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"), REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"), REACT_MEMO_TYPE = Symbol.for("react.memo"), REACT_LAZY_TYPE = Symbol.for("react.lazy"), REACT_ACTIVITY_TYPE = Symbol.for("react.activity"), MAYBE_ITERATOR_SYMBOL = Symbol.iterator, didWarnStateUpdateForUnmountedComponent = {}, ReactNoopUpdateQueue = {
+        var REACT_ELEMENT_TYPE = /* @__PURE__ */ Symbol.for("react.transitional.element"), REACT_PORTAL_TYPE = /* @__PURE__ */ Symbol.for("react.portal"), REACT_FRAGMENT_TYPE = /* @__PURE__ */ Symbol.for("react.fragment"), REACT_STRICT_MODE_TYPE = /* @__PURE__ */ Symbol.for("react.strict_mode"), REACT_PROFILER_TYPE = /* @__PURE__ */ Symbol.for("react.profiler"), REACT_CONSUMER_TYPE = /* @__PURE__ */ Symbol.for("react.consumer"), REACT_CONTEXT_TYPE = /* @__PURE__ */ Symbol.for("react.context"), REACT_FORWARD_REF_TYPE = /* @__PURE__ */ Symbol.for("react.forward_ref"), REACT_SUSPENSE_TYPE = /* @__PURE__ */ Symbol.for("react.suspense"), REACT_SUSPENSE_LIST_TYPE = /* @__PURE__ */ Symbol.for("react.suspense_list"), REACT_MEMO_TYPE = /* @__PURE__ */ Symbol.for("react.memo"), REACT_LAZY_TYPE = /* @__PURE__ */ Symbol.for("react.lazy"), REACT_ACTIVITY_TYPE = /* @__PURE__ */ Symbol.for("react.activity"), MAYBE_ITERATOR_SYMBOL = Symbol.iterator, didWarnStateUpdateForUnmountedComponent = {}, ReactNoopUpdateQueue = {
           isMounted: function() {
             return false;
           },
@@ -2936,7 +2940,7 @@ html,body{max-width:100%;overflow-x:hidden}
         deprecatedAPIs.constructor = PureComponent;
         assign(deprecatedAPIs, Component.prototype);
         deprecatedAPIs.isPureReactComponent = true;
-        var isArrayImpl = Array.isArray, REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"), ReactSharedInternals = {
+        var isArrayImpl = Array.isArray, REACT_CLIENT_REFERENCE = /* @__PURE__ */ Symbol.for("react.client.reference"), ReactSharedInternals = {
           H: null,
           A: null,
           T: null,
@@ -3396,9 +3400,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/react@19.2.6/node_modules/react/index.js
+  // node_modules/.pnpm/react@19.2.6/node_modules/react/index.js
   var require_react = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/react@19.2.6/node_modules/react/index.js"(exports, module) {
+    "node_modules/.pnpm/react@19.2.6/node_modules/react/index.js"(exports, module) {
       "use strict";
       if (false) {
         module.exports = null;
@@ -3408,9 +3412,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/cjs/react-dom.development.js
+  // node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/cjs/react-dom.development.js
   var require_react_dom_development = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/cjs/react-dom.development.js"(exports) {
+    "node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/cjs/react-dom.development.js"(exports) {
       "use strict";
       (function() {
         function noop() {
@@ -3475,7 +3479,7 @@ html,body{max-width:100%;overflow-x:hidden}
           },
           p: 0,
           findDOMNode: null
-        }, REACT_PORTAL_TYPE = Symbol.for("react.portal"), ReactSharedInternals = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+        }, REACT_PORTAL_TYPE = /* @__PURE__ */ Symbol.for("react.portal"), ReactSharedInternals = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
         "function" === typeof Map && null != Map.prototype && "function" === typeof Map.prototype.forEach && "function" === typeof Set && null != Set.prototype && "function" === typeof Set.prototype.clear && "function" === typeof Set.prototype.forEach || console.error(
           "React depends on Map and Set built-in types. Make sure that you load a polyfill in older browsers. https://reactjs.org/link/react-polyfills"
         );
@@ -3652,9 +3656,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/index.js
+  // node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/index.js
   var require_react_dom = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/index.js"(exports, module) {
+    "node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/index.js"(exports, module) {
       "use strict";
       if (false) {
         checkDCE();
@@ -3665,9 +3669,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/cjs/react-dom-client.development.js
+  // node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/cjs/react-dom-client.development.js
   var require_react_dom_client_development = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/cjs/react-dom-client.development.js"(exports) {
+    "node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/cjs/react-dom-client.development.js"(exports) {
       "use strict";
       (function() {
         function findHook(fiber, id) {
@@ -20642,14 +20646,14 @@ html,body{max-width:100%;overflow-x:hidden}
           ));
         }
         "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ && "function" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart && __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(Error());
-        var Scheduler = require_scheduler(), React = require_react(), ReactDOM = require_react_dom(), assign = Object.assign, REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"), REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element"), REACT_PORTAL_TYPE = Symbol.for("react.portal"), REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"), REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"), REACT_PROFILER_TYPE = Symbol.for("react.profiler"), REACT_CONSUMER_TYPE = Symbol.for("react.consumer"), REACT_CONTEXT_TYPE = Symbol.for("react.context"), REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"), REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"), REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"), REACT_MEMO_TYPE = Symbol.for("react.memo"), REACT_LAZY_TYPE = Symbol.for("react.lazy");
-        Symbol.for("react.scope");
-        var REACT_ACTIVITY_TYPE = Symbol.for("react.activity");
-        Symbol.for("react.legacy_hidden");
-        Symbol.for("react.tracing_marker");
-        var REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel");
-        Symbol.for("react.view_transition");
-        var MAYBE_ITERATOR_SYMBOL = Symbol.iterator, REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"), isArrayImpl = Array.isArray, ReactSharedInternals = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, ReactDOMSharedInternals = ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, NotPending = Object.freeze({
+        var Scheduler = require_scheduler(), React = require_react(), ReactDOM = require_react_dom(), assign = Object.assign, REACT_LEGACY_ELEMENT_TYPE = /* @__PURE__ */ Symbol.for("react.element"), REACT_ELEMENT_TYPE = /* @__PURE__ */ Symbol.for("react.transitional.element"), REACT_PORTAL_TYPE = /* @__PURE__ */ Symbol.for("react.portal"), REACT_FRAGMENT_TYPE = /* @__PURE__ */ Symbol.for("react.fragment"), REACT_STRICT_MODE_TYPE = /* @__PURE__ */ Symbol.for("react.strict_mode"), REACT_PROFILER_TYPE = /* @__PURE__ */ Symbol.for("react.profiler"), REACT_CONSUMER_TYPE = /* @__PURE__ */ Symbol.for("react.consumer"), REACT_CONTEXT_TYPE = /* @__PURE__ */ Symbol.for("react.context"), REACT_FORWARD_REF_TYPE = /* @__PURE__ */ Symbol.for("react.forward_ref"), REACT_SUSPENSE_TYPE = /* @__PURE__ */ Symbol.for("react.suspense"), REACT_SUSPENSE_LIST_TYPE = /* @__PURE__ */ Symbol.for("react.suspense_list"), REACT_MEMO_TYPE = /* @__PURE__ */ Symbol.for("react.memo"), REACT_LAZY_TYPE = /* @__PURE__ */ Symbol.for("react.lazy");
+        /* @__PURE__ */ Symbol.for("react.scope");
+        var REACT_ACTIVITY_TYPE = /* @__PURE__ */ Symbol.for("react.activity");
+        /* @__PURE__ */ Symbol.for("react.legacy_hidden");
+        /* @__PURE__ */ Symbol.for("react.tracing_marker");
+        var REACT_MEMO_CACHE_SENTINEL = /* @__PURE__ */ Symbol.for("react.memo_cache_sentinel");
+        /* @__PURE__ */ Symbol.for("react.view_transition");
+        var MAYBE_ITERATOR_SYMBOL = Symbol.iterator, REACT_CLIENT_REFERENCE = /* @__PURE__ */ Symbol.for("react.client.reference"), isArrayImpl = Array.isArray, ReactSharedInternals = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, ReactDOMSharedInternals = ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, NotPending = Object.freeze({
           pending: false,
           data: null,
           method: null,
@@ -23564,9 +23568,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/client.js
+  // node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/client.js
   var require_client = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/client.js"(exports, module) {
+    "node_modules/.pnpm/react-dom@19.2.6_react@19.2.6/node_modules/react-dom/client.js"(exports, module) {
       "use strict";
       if (false) {
         checkDCE();
@@ -23577,9 +23581,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/dist/jszip.min.js
+  // node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/dist/jszip.min.js
   var require_jszip_min = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/dist/jszip.min.js"(exports, module) {
+    "node_modules/.pnpm/jszip@3.10.1/node_modules/jszip/dist/jszip.min.js"(exports, module) {
       !(function(e) {
         if ("object" == typeof exports && "undefined" != typeof module) module.exports = e();
         else if ("function" == typeof define && define.amd) define([], e);
@@ -35975,18 +35979,18 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/can-promise.js
+  // node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/can-promise.js
   var require_can_promise = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/can-promise.js"(exports, module) {
+    "node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/can-promise.js"(exports, module) {
       module.exports = function() {
         return typeof Promise === "function" && Promise.prototype && Promise.prototype.then;
       };
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/utils.js
+  // node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/utils.js
   var require_utils = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/utils.js"(exports) {
+    "node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/utils.js"(exports) {
       var toSJISFunction;
       var CODEWORDS_COUNT = [
         0,
@@ -36063,9 +36067,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/error-correction-level.js
+  // node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/error-correction-level.js
   var require_error_correction_level = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/error-correction-level.js"(exports) {
+    "node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/error-correction-level.js"(exports) {
       exports.L = { bit: 1 };
       exports.M = { bit: 0 };
       exports.Q = { bit: 3 };
@@ -36108,9 +36112,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/bit-buffer.js
+  // node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/bit-buffer.js
   var require_bit_buffer = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/bit-buffer.js"(exports, module) {
+    "node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/bit-buffer.js"(exports, module) {
       function BitBuffer() {
         this.buffer = [];
         this.length = 0;
@@ -36143,9 +36147,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/bit-matrix.js
+  // node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/bit-matrix.js
   var require_bit_matrix = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/bit-matrix.js"(exports, module) {
+    "node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/bit-matrix.js"(exports, module) {
       function BitMatrix(size) {
         if (!size || size < 1) {
           throw new Error("BitMatrix size must be defined and greater than 0");
@@ -36172,9 +36176,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/alignment-pattern.js
+  // node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/alignment-pattern.js
   var require_alignment_pattern = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/alignment-pattern.js"(exports) {
+    "node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/alignment-pattern.js"(exports) {
       var getSymbolSize = require_utils().getSymbolSize;
       exports.getRowColCoords = function getRowColCoords(version) {
         if (version === 1) return [];
@@ -36207,9 +36211,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/finder-pattern.js
+  // node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/finder-pattern.js
   var require_finder_pattern = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/finder-pattern.js"(exports) {
+    "node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/finder-pattern.js"(exports) {
       var getSymbolSize = require_utils().getSymbolSize;
       var FINDER_PATTERN_SIZE = 7;
       exports.getPositions = function getPositions(version) {
@@ -36226,9 +36230,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/mask-pattern.js
+  // node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/mask-pattern.js
   var require_mask_pattern = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/mask-pattern.js"(exports) {
+    "node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/mask-pattern.js"(exports) {
       exports.Patterns = {
         PATTERN000: 0,
         PATTERN001: 1,
@@ -36368,9 +36372,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/error-correction-code.js
+  // node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/error-correction-code.js
   var require_error_correction_code = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/error-correction-code.js"(exports) {
+    "node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/error-correction-code.js"(exports) {
       var ECLevel = require_error_correction_level();
       var EC_BLOCKS_TABLE = [
         // L  M  Q  H
@@ -36729,9 +36733,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/galois-field.js
+  // node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/galois-field.js
   var require_galois_field = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/galois-field.js"(exports) {
+    "node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/galois-field.js"(exports) {
       var EXP_TABLE = new Uint8Array(512);
       var LOG_TABLE = new Uint8Array(256);
       (function initTables() {
@@ -36762,9 +36766,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/polynomial.js
+  // node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/polynomial.js
   var require_polynomial = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/polynomial.js"(exports) {
+    "node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/polynomial.js"(exports) {
       var GF = require_galois_field();
       exports.mul = function mul(p1, p2) {
         const coeff = new Uint8Array(p1.length + p2.length - 1);
@@ -36798,9 +36802,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/reed-solomon-encoder.js
+  // node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/reed-solomon-encoder.js
   var require_reed_solomon_encoder = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/reed-solomon-encoder.js"(exports, module) {
+    "node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/reed-solomon-encoder.js"(exports, module) {
       var Polynomial = require_polynomial();
       function ReedSolomonEncoder(degree) {
         this.genPoly = void 0;
@@ -36830,18 +36834,18 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/version-check.js
+  // node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/version-check.js
   var require_version_check = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/version-check.js"(exports) {
+    "node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/version-check.js"(exports) {
       exports.isValid = function isValid(version) {
         return !isNaN(version) && version >= 1 && version <= 40;
       };
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/regex.js
+  // node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/regex.js
   var require_regex = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/regex.js"(exports) {
+    "node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/regex.js"(exports) {
       var numeric = "[0-9]+";
       var alphanumeric = "[A-Z $%*+\\-./:]+";
       var kanji = "(?:[u3000-u303F]|[u3040-u309F]|[u30A0-u30FF]|[uFF00-uFFEF]|[u4E00-u9FAF]|[u2605-u2606]|[u2190-u2195]|u203B|[u2010u2015u2018u2019u2025u2026u201Cu201Du2225u2260]|[u0391-u0451]|[u00A7u00A8u00B1u00B4u00D7u00F7])+";
@@ -36867,9 +36871,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/mode.js
+  // node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/mode.js
   var require_mode = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/mode.js"(exports) {
+    "node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/mode.js"(exports) {
       var VersionCheck = require_version_check();
       var Regex = require_regex();
       exports.NUMERIC = {
@@ -36948,9 +36952,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/version.js
+  // node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/version.js
   var require_version = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/version.js"(exports) {
+    "node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/version.js"(exports) {
       var Utils = require_utils();
       var ECCode = require_error_correction_code();
       var ECLevel = require_error_correction_level();
@@ -37043,9 +37047,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/format-info.js
+  // node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/format-info.js
   var require_format_info = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/format-info.js"(exports) {
+    "node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/format-info.js"(exports) {
       var Utils = require_utils();
       var G15 = 1 << 10 | 1 << 8 | 1 << 5 | 1 << 4 | 1 << 2 | 1 << 1 | 1 << 0;
       var G15_MASK = 1 << 14 | 1 << 12 | 1 << 10 | 1 << 4 | 1 << 1;
@@ -37061,9 +37065,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/numeric-data.js
+  // node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/numeric-data.js
   var require_numeric_data = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/numeric-data.js"(exports, module) {
+    "node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/numeric-data.js"(exports, module) {
       var Mode = require_mode();
       function NumericData(data) {
         this.mode = Mode.NUMERIC;
@@ -37096,9 +37100,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/alphanumeric-data.js
+  // node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/alphanumeric-data.js
   var require_alphanumeric_data = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/alphanumeric-data.js"(exports, module) {
+    "node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/alphanumeric-data.js"(exports, module) {
       var Mode = require_mode();
       var ALPHA_NUM_CHARS = [
         "0",
@@ -37175,9 +37179,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/byte-data.js
+  // node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/byte-data.js
   var require_byte_data = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/byte-data.js"(exports, module) {
+    "node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/byte-data.js"(exports, module) {
       var Mode = require_mode();
       function ByteData(data) {
         this.mode = Mode.BYTE;
@@ -37205,9 +37209,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/kanji-data.js
+  // node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/kanji-data.js
   var require_kanji_data = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/kanji-data.js"(exports, module) {
+    "node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/kanji-data.js"(exports, module) {
       var Mode = require_mode();
       var Utils = require_utils();
       function KanjiData(data) {
@@ -37244,9 +37248,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/dijkstrajs@1.0.3/node_modules/dijkstrajs/dijkstra.js
+  // node_modules/.pnpm/dijkstrajs@1.0.3/node_modules/dijkstrajs/dijkstra.js
   var require_dijkstra = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/dijkstrajs@1.0.3/node_modules/dijkstrajs/dijkstra.js"(exports, module) {
+    "node_modules/.pnpm/dijkstrajs@1.0.3/node_modules/dijkstrajs/dijkstra.js"(exports, module) {
       "use strict";
       var dijkstra = {
         single_source_shortest_paths: function(graph, s, d) {
@@ -37345,9 +37349,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/segments.js
+  // node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/segments.js
   var require_segments = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/segments.js"(exports) {
+    "node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/segments.js"(exports) {
       var Mode = require_mode();
       var NumericData = require_numeric_data();
       var AlphanumericData = require_alphanumeric_data();
@@ -37531,9 +37535,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/qrcode.js
+  // node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/qrcode.js
   var require_qrcode = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/qrcode.js"(exports) {
+    "node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/core/qrcode.js"(exports) {
       var Utils = require_utils();
       var ECLevel = require_error_correction_level();
       var BitBuffer = require_bit_buffer();
@@ -37792,9 +37796,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/renderer/utils.js
+  // node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/renderer/utils.js
   var require_utils2 = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/renderer/utils.js"(exports) {
+    "node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/renderer/utils.js"(exports) {
       function hex2rgba(hex) {
         if (typeof hex === "number") {
           hex = hex.toString();
@@ -37872,9 +37876,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/renderer/canvas.js
+  // node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/renderer/canvas.js
   var require_canvas = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/renderer/canvas.js"(exports) {
+    "node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/renderer/canvas.js"(exports) {
       var Utils = require_utils2();
       function clearCanvas(ctx, canvas, size) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -37925,9 +37929,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/renderer/svg-tag.js
+  // node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/renderer/svg-tag.js
   var require_svg_tag = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/renderer/svg-tag.js"(exports) {
+    "node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/renderer/svg-tag.js"(exports) {
       var Utils = require_utils2();
       function getColorAttrib(color, attrib) {
         const alpha = color.a / 255;
@@ -37983,9 +37987,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/browser.js
+  // node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/browser.js
   var require_browser = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/browser.js"(exports) {
+    "node_modules/.pnpm/qrcode@1.5.4/node_modules/qrcode/lib/browser.js"(exports) {
       var canPromise = require_can_promise();
       var QRCode2 = require_qrcode();
       var CanvasRenderer = require_canvas();
@@ -38053,9 +38057,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/react@19.2.6/node_modules/react/cjs/react-jsx-runtime.development.js
+  // node_modules/.pnpm/react@19.2.6/node_modules/react/cjs/react-jsx-runtime.development.js
   var require_react_jsx_runtime_development = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/react@19.2.6/node_modules/react/cjs/react-jsx-runtime.development.js"(exports) {
+    "node_modules/.pnpm/react@19.2.6/node_modules/react/cjs/react-jsx-runtime.development.js"(exports) {
       "use strict";
       (function() {
         function getComponentNameFromType(type) {
@@ -38267,7 +38271,7 @@ html,body{max-width:100%;overflow-x:hidden}
         function isValidElement(object) {
           return "object" === typeof object && null !== object && object.$$typeof === REACT_ELEMENT_TYPE;
         }
-        var React = require_react(), REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element"), REACT_PORTAL_TYPE = Symbol.for("react.portal"), REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"), REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"), REACT_PROFILER_TYPE = Symbol.for("react.profiler"), REACT_CONSUMER_TYPE = Symbol.for("react.consumer"), REACT_CONTEXT_TYPE = Symbol.for("react.context"), REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"), REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"), REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"), REACT_MEMO_TYPE = Symbol.for("react.memo"), REACT_LAZY_TYPE = Symbol.for("react.lazy"), REACT_ACTIVITY_TYPE = Symbol.for("react.activity"), REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"), ReactSharedInternals = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, hasOwnProperty = Object.prototype.hasOwnProperty, isArrayImpl = Array.isArray, createTask = console.createTask ? console.createTask : function() {
+        var React = require_react(), REACT_ELEMENT_TYPE = /* @__PURE__ */ Symbol.for("react.transitional.element"), REACT_PORTAL_TYPE = /* @__PURE__ */ Symbol.for("react.portal"), REACT_FRAGMENT_TYPE = /* @__PURE__ */ Symbol.for("react.fragment"), REACT_STRICT_MODE_TYPE = /* @__PURE__ */ Symbol.for("react.strict_mode"), REACT_PROFILER_TYPE = /* @__PURE__ */ Symbol.for("react.profiler"), REACT_CONSUMER_TYPE = /* @__PURE__ */ Symbol.for("react.consumer"), REACT_CONTEXT_TYPE = /* @__PURE__ */ Symbol.for("react.context"), REACT_FORWARD_REF_TYPE = /* @__PURE__ */ Symbol.for("react.forward_ref"), REACT_SUSPENSE_TYPE = /* @__PURE__ */ Symbol.for("react.suspense"), REACT_SUSPENSE_LIST_TYPE = /* @__PURE__ */ Symbol.for("react.suspense_list"), REACT_MEMO_TYPE = /* @__PURE__ */ Symbol.for("react.memo"), REACT_LAZY_TYPE = /* @__PURE__ */ Symbol.for("react.lazy"), REACT_ACTIVITY_TYPE = /* @__PURE__ */ Symbol.for("react.activity"), REACT_CLIENT_REFERENCE = /* @__PURE__ */ Symbol.for("react.client.reference"), ReactSharedInternals = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, hasOwnProperty = Object.prototype.hasOwnProperty, isArrayImpl = Array.isArray, createTask = console.createTask ? console.createTask : function() {
           return null;
         };
         React = {
@@ -38310,9 +38314,9 @@ html,body{max-width:100%;overflow-x:hidden}
     }
   });
 
-  // ../meeting-deps/node_modules/.pnpm/react@19.2.6/node_modules/react/jsx-runtime.js
+  // node_modules/.pnpm/react@19.2.6/node_modules/react/jsx-runtime.js
   var require_jsx_runtime = __commonJS({
-    "../meeting-deps/node_modules/.pnpm/react@19.2.6/node_modules/react/jsx-runtime.js"(exports, module) {
+    "node_modules/.pnpm/react@19.2.6/node_modules/react/jsx-runtime.js"(exports, module) {
       "use strict";
       if (false) {
         module.exports = null;
@@ -38342,7 +38346,7 @@ html,body{max-width:100%;overflow-x:hidden}
     return !!record.archived || /售出|租出|成交下架|下架/.test(record.status || "");
   }
 
-  // ../meeting-deps/node_modules/.pnpm/pptxgenjs@4.0.1/node_modules/pptxgenjs/dist/pptxgen.es.js
+  // node_modules/.pnpm/pptxgenjs@4.0.1/node_modules/pptxgenjs/dist/pptxgen.es.js
   var import_jszip = __toESM(require_jszip_min());
   function __awaiter(thisArg, _arguments, P, generator) {
     function adopt(value) {
@@ -48675,7 +48679,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V523" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V524" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -49582,12 +49586,12 @@ ${conflicts.join("\n")}
           ] }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "ppt-add-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "ppt-asset-folder-button", children: [
-              "\u9078\u64C7 GIF \u8CC7\u6599\u593E",
+              "\u9078\u64C7\u52D5\u756BGIF",
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "file", accept: ".gif,image/gif", multiple: true, ...{ webkitdirectory: "", directory: "" }, onChange: (event) => loadPptAssetFolder(event, "gif") })
             ] }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "ppt-asset-folder-summary", children: pptAssetPairs.some((pair) => pair.gif) ? `\u5DF2\u8B80\u53D6 ${pptAssetPairs.filter((pair) => pair.gif).length} \u500B GIF` : "\u5C1A\u672A\u9078\u64C7 GIF \u8CC7\u6599\u593E" }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "ppt-asset-folder-button", children: [
-              "\u9078\u64C7 JPG \u8CC7\u6599\u593E",
+              "\u9078\u64C7\u683C\u5C40\u5716",
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "file", accept: ".jpg,.jpeg,image/jpeg", multiple: true, ...{ webkitdirectory: "", directory: "" }, onChange: (event) => loadPptAssetFolder(event, "layout") })
             ] }),
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "ppt-asset-folder-summary", children: pptAssetPairs.some((pair) => pair.layout) ? `\u5DF2\u8B80\u53D6 ${pptAssetPairs.filter((pair) => pair.layout).length} \u5F35 JPG` : "\u5C1A\u672A\u9078\u64C7 JPG \u8CC7\u6599\u593E" }),
@@ -51696,7 +51700,7 @@ ${xrefOffset}
     const coverZoningStatus = record.zoningDocumentStatus || (coverIsLand ? "" : "\u623F\u5C4B\u4E0D\u9700\u8981");
     const coverZoningDate = record.zoningApplicationDate ? displayRocDate(record.zoningApplicationDate) : "";
     const coverZoningCount = String(record.zoningCertificateCount || "").trim();
-    const coverZoningChoice = coverZoningStatus === "\u623F\u5C4B\u4E0D\u9700\u8981" ? "house" : coverZoningStatus === "\u8B04\u672C\u5DF2\u6A19\u793A\u4E0D\u7528\u9644" ? "deed" : coverZoningStatus === "\u9700\u7533\u8ACB" || coverZoningDate ? "date" : coverZoningCount ? "count" : "";
+    const coverZoningChoice = coverZoningStatus === "\u623F\u5C4B\u4E0D\u9700\u8981" ? "house" : coverZoningStatus === "\u8B04\u672C\u5DF2\u6A19\u793A\u4E0D\u7528\u9644" ? "deed" : coverZoningCount ? "count" : coverZoningStatus === "\u9700\u7533\u8ACB" || coverZoningDate ? "date" : "";
     const coverZoningHouseBox = coverZoningChoice === "house" ? "\u2713" : coverZoningChoice ? "\uFF0D" : "";
     const coverZoningDateBox = coverZoningChoice === "date" ? coverZoningDate : coverZoningChoice ? "\uFF0D" : "";
     const coverZoningCountBox = coverZoningChoice === "count" ? coverZoningCount : coverZoningChoice === "date" ? "" : coverZoningChoice ? "\uFF0D" : "";
@@ -54771,7 +54775,10 @@ ${differences.map((item) => `${item.label}\uFF1A\u539F\u672C ${item.before} \u57
       const options = ["\u623F\u5C4B\u4E0D\u9700\u8981", "\u8B04\u672C\u5DF2\u6A19\u793A\u4E0D\u7528\u9644", "\u9700\u7533\u8ACB"];
       return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: `field cover-pill-field cover-pill-${fieldKey}`, children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: label }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "pill-options", children: options.map((option) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: value === option ? "active" : "", onClick: () => set(value === option ? "" : option), children: option }, option)) })
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "pill-options", children: options.map((option) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: value === option ? "active" : "", onClick: () => {
+          if (value === option) return set("");
+          setRecord({ ...record, zoningDocumentStatus: option, zoningCertificateCount: "", ...option === "\u9700\u7533\u8ACB" ? {} : { zoningApplicationDate: "" } });
+        }, children: option }, option)) })
       ] });
     }
     if (pillChoices[fieldKey]) {
@@ -54939,7 +54946,14 @@ ${differences.map((item) => `${item.label}\uFF1A\u539F\u672C ${item.before} \u57
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: label }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("textarea", { value, onChange: (e) => set(e.target.value), rows: 3 })
     ] });
-    if (["zoningCertificateCount", "authorizationCopyCount", "authorizationOriginalCount"].includes(fieldKey)) return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "field", children: [
+    if (fieldKey === "zoningCertificateCount") return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "field", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: label }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", inputMode: "numeric", value, onChange: (event) => {
+        const count = event.target.value.replace(/\D/g, "");
+        setRecord({ ...record, zoningCertificateCount: count, ...count ? { zoningDocumentStatus: "", zoningApplicationDate: "" } : {} });
+      }, placeholder: "\u8ACB\u586B\u5F35\u6578" })
+    ] });
+    if (["authorizationCopyCount", "authorizationOriginalCount"].includes(fieldKey)) return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "field", children: [
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: label }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", inputMode: "numeric", value, onChange: (event) => set(event.target.value.replace(/\D/g, "")), placeholder: "\u8ACB\u586B\u5F35\u6578" })
     ] });
@@ -54973,12 +54987,13 @@ ${differences.map((item) => `${item.label}\uFF1A\u539F\u672C ${item.before} \u57
     if (dateKeys.has(fieldKey)) {
       const zoningRequired = fieldKey === "zoningApplicationDate" && record.zoningDocumentStatus === "\u9700\u7533\u8ACB";
       const invalidDate = !!value && !validDate(normalizeDateInput(value));
+      const setDate = (next) => fieldKey === "zoningApplicationDate" && next ? setRecord({ ...record, zoningApplicationDate: next, zoningDocumentStatus: "\u9700\u7533\u8ACB", zoningCertificateCount: "" }) : set(next);
       return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: `field ${invalidDate || zoningRequired && !normalizeDateInput(value) ? "invalid" : ""}`, children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
           label,
           zoningRequired && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { className: "required-mark", children: "\u5FC5\u586B" })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", inputMode: "numeric", placeholder: "\u4F8B\u5982 7/24", value: displayRocDate(normalizeDateInput(value)), onChange: (e) => set(normalizeCompleteDateInput(e.target.value)), onBlur: (e) => set(normalizeDateInput(e.target.value)) }),
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", inputMode: "numeric", placeholder: "\u4F8B\u5982 7/24", value: displayRocDate(normalizeDateInput(value)), onChange: (e) => setDate(normalizeCompleteDateInput(e.target.value)), onBlur: (e) => setDate(normalizeDateInput(e.target.value)) }),
         fieldKey !== "zoningApplicationDate" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "\u53EF\u8F38\u5165 7/24\uFF0C\u81EA\u52D5\u8F49\u70BA\u6C11\u570B\u65E5\u671F" })
       ] });
     }
