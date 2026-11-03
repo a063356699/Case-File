@@ -48527,7 +48527,8 @@ ${changedLabels}
       }
       if (!confirm(`\u78BA\u5B9A\u6587\u4EF6\u5DF2\u6536\u5230\uFF0C\u5C07\u300C${record.caseName}\u300D\u6B63\u5F0F\u52A0\u5165\u7E3D\u8868\uFF1F`)) return;
       const enteredAt = (/* @__PURE__ */ new Date()).toISOString();
-      setRecords((prev) => [record, ...prev]);
+      const newlyEntered = { ...record, _latestNoteSegments: "[]" };
+      setRecords((prev) => [newlyEntered, ...prev]);
       setIntakeDrafts((prev) => prev.map((draft) => draft.id === target.id ? { ...draft, linkedRecordId: record.id, enteredAt, modifiedAt: enteredAt } : draft));
       flash("\u5DF2\u6B63\u5F0F\u9032\u6848");
     };
@@ -48684,7 +48685,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V526" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V527" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -53339,7 +53340,8 @@ ${xrefOffset}
           return [];
         }
       })();
-      const legacyMiddleman = !r._latestNoteSegments;
+      const reportDate = normalizeDateInput(String(r.reportDate || ""));
+      const legacyMiddleman = !r._latestNoteSegments && (!reportDate || reportDate < "2026-11-03");
       return segments.length ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "notes-display notes-segments", children: segments.map((segment, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: latestSegments.includes(segment) || legacyMiddleman && /(?:中人|介紹費|開發\s*%)/.test(segment) ? "notes-middleman-note" : "notes-standard-note", children: segment }, `${segment}-${index}`)) }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: "\u2014" });
     }
     return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: cellValue(r, k) || "\u2014" });
