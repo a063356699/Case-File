@@ -2108,3 +2108,8 @@ html,body{max-width:100%;overflow-x:hidden}
 .ppt-add-actions>.ppt-asset-folder-button::before{font-size:13px}
 .ppt-add-actions>.ppt-asset-folder-button:nth-of-type(1)::before{content:"PPT動畫"}
 .ppt-add-actions>.ppt-asset-folder-button:nth-of-type(2)::before{content:"格局圖JPG"}
+
+/* V525：臨路、面寬、深度的數字與「米」保持同一行。 */
+.active-lead-table td.col-road .road-lines,.active-lead-table td.col-frontage .measure-value,.active-lead-table td.col-depth .measure-value{display:inline-flex!important;flex-direction:row!important;align-items:baseline!important;justify-content:center!important;flex-wrap:nowrap!important;white-space:nowrap!important}
+.active-lead-table td.col-road small,.active-lead-table td.col-frontage .measure-value small,.active-lead-table td.col-depth .measure-value small{display:inline!important;margin:0 0 0 1px!important;white-space:nowrap!important}
+.active-lead-table .measure-number{display:inline!important;white-space:nowrap!important}

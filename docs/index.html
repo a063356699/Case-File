@@ -2115,6 +2115,11 @@ html,body{max-width:100%;overflow-x:hidden}
 .ppt-add-actions>.ppt-asset-folder-button::before{font-size:13px}
 .ppt-add-actions>.ppt-asset-folder-button:nth-of-type(1)::before{content:"PPT動畫"}
 .ppt-add-actions>.ppt-asset-folder-button:nth-of-type(2)::before{content:"格局圖JPG"}
+
+/* V525：臨路、面寬、深度的數字與「米」保持同一行。 */
+.active-lead-table td.col-road .road-lines,.active-lead-table td.col-frontage .measure-value,.active-lead-table td.col-depth .measure-value{display:inline-flex!important;flex-direction:row!important;align-items:baseline!important;justify-content:center!important;flex-wrap:nowrap!important;white-space:nowrap!important}
+.active-lead-table td.col-road small,.active-lead-table td.col-frontage .measure-value small,.active-lead-table td.col-depth .measure-value small{display:inline!important;margin:0 0 0 1px!important;white-space:nowrap!important}
+.active-lead-table .measure-number{display:inline!important;white-space:nowrap!important}
 </style>
 </head>
 <body>
@@ -48679,7 +48684,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V524" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V525" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -51700,7 +51705,7 @@ ${xrefOffset}
     const coverZoningStatus = record.zoningDocumentStatus || (coverIsLand ? "" : "\u623F\u5C4B\u4E0D\u9700\u8981");
     const coverZoningDate = record.zoningApplicationDate ? displayRocDate(record.zoningApplicationDate) : "";
     const coverZoningCount = String(record.zoningCertificateCount || "").trim();
-    const coverZoningChoice = coverZoningStatus === "\u623F\u5C4B\u4E0D\u9700\u8981" ? "house" : coverZoningStatus === "\u8B04\u672C\u5DF2\u6A19\u793A\u4E0D\u7528\u9644" ? "deed" : coverZoningCount ? "count" : coverZoningStatus === "\u9700\u7533\u8ACB" || coverZoningDate ? "date" : "";
+    const coverZoningChoice = coverZoningStatus === "\u623F\u5C4B\u4E0D\u9700\u8981" ? "house" : coverZoningStatus === "\u8B04\u672C\u5DF2\u6A19\u793A\u4E0D\u7528\u9644" ? "deed" : coverZoningStatus === "\u9700\u7533\u8ACB" || coverZoningDate ? "date" : coverZoningCount ? "count" : "";
     const coverZoningHouseBox = coverZoningChoice === "house" ? "\u2713" : coverZoningChoice ? "\uFF0D" : "";
     const coverZoningDateBox = coverZoningChoice === "date" ? coverZoningDate : coverZoningChoice ? "\uFF0D" : "";
     const coverZoningCountBox = coverZoningChoice === "count" ? coverZoningCount : coverZoningChoice === "date" ? "" : coverZoningChoice ? "\uFF0D" : "";
