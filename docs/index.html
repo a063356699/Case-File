@@ -47205,10 +47205,10 @@ ${changedLabels}
         if (history[today()]) history[today()] = history[today()].filter((key) => key !== "caseNameNote" && key !== "caseNameNoteModifiedAt");
         next = { ...next, _updateHistory: JSON.stringify(history) };
       }
-      if (existing && trackedValue(existing.notes) !== trackedValue(preparedForSave.notes)) {
+      if (existing && publishDaily && changedFields.includes("notes") && trackedValue(existing.notes) !== trackedValue(preparedForSave.notes)) {
         const previousSegments = displayNoteSegments(existing.notes || "");
         const latestSegments = displayNoteSegments(preparedForSave.notes || "").filter((segment) => !previousSegments.includes(segment));
-        next = { ...next, _latestNoteSegments: JSON.stringify(latestSegments) };
+        next = { ...next, _latestNoteSegments: JSON.stringify(latestSegments), _latestNoteSegmentsPublishedAt: (/* @__PURE__ */ new Date()).toISOString() };
       }
       setRecords((prev) => prev.some((r) => r.id === next.id) ? prev.map((r) => r.id === next.id ? next : r) : [next, ...prev]);
       setIntakeDrafts((previous) => previous.map((draft) => draft.linkedRecordId === next.id ? { ...draft, values: syncRecordToDraftValues(draft, next) } : draft));
@@ -48695,7 +48695,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V529" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V530" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -53343,13 +53343,16 @@ ${xrefOffset}
     }
     if (k === "notes") {
       const segments = displayNoteSegments(r.notes || "");
-      const latestSegments = (() => {
+      const storedLatestSegments = (() => {
         try {
           return JSON.parse(r._latestNoteSegments || "[]");
         } catch {
           return [];
         }
       })();
+      const lastModifiedDate = String(r.lastModifiedAt || "").slice(0, 10);
+      const publishedInHistory = !!lastModifiedDate && dailyUpdateFields(r, lastModifiedDate).includes("notes");
+      const latestSegments = r._latestNoteSegmentsPublishedAt || !lastModifiedDate || lastModifiedDate < "2026-11-06" || publishedInHistory ? storedLatestSegments : [];
       const reportDate = normalizeDateInput(String(r.reportDate || ""));
       const legacyMiddleman = !r._latestNoteSegments && (!reportDate || reportDate < "2026-11-03");
       return segments.length ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "notes-display notes-segments", children: segments.map((segment, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: latestSegments.includes(segment) || legacyMiddleman && /(?:中人|介紹費|開發\s*%)/.test(segment) ? "notes-middleman-note" : "notes-standard-note", children: segment }, `${segment}-${index}`)) }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: "\u2014" });
