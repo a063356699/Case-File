@@ -3295,11 +3295,8 @@ export default function Home() {
     const markHandled = (item: RecordItem) => {
       const reports = monthlyReportsOf(item._monthlyReports);
       if (!reports[reportKey]) return item;
-      const reportedAtValue = String(reports[reportKey].reportedAt || "");
-      const reportedAtDate = reportedAtValue ? new Date(reportedAtValue) : new Date();
-      const reportedDate = Number.isNaN(reportedAtDate.getTime()) ? today() : isoLocalDate(reportedAtDate);
       reports[reportKey] = { ...reports[reportKey], adminHandledAt: handledAt };
-      return { ...item, _monthlyReports: JSON.stringify(reports), ...(keepActive ? { updateDate: reportedDate, lastModifiedAt: handledAt } : {}) };
+      return { ...item, _monthlyReports: JSON.stringify(reports), ...(keepActive ? { updateDate: today(), lastModifiedAt: handledAt } : {}) };
     };
     try {
       const response = await fetch(`${CASE_FILE_SUPABASE_URL}/rest/v1/rpc/case_file_front_report_resolve`, {
@@ -3318,6 +3315,18 @@ export default function Home() {
     setCloudConfirmationRecords(previous => previous ? previous.map(item => item.id === record.id ? markHandled(item) : item) : previous);
     flash(keepActive ? "已確認完成，已從待處理列表移除" : "已標示處理完成");
   };
+  const changeMonthlyPropertyReport = (record: RecordItem, reportKey: string, status: string, reason = "") => {
+    const changedAt = new Date().toISOString();
+    const updateReport = (item: RecordItem) => {
+      const reports = monthlyReportsOf(item._monthlyReports);
+      if (!reports[reportKey]) return item;
+      reports[reportKey] = { ...reports[reportKey], status, reason: reason.trim(), dueDate: status === "待確認" ? reports[reportKey].dueDate || addDaysIso(today(), 7) : "", adminChangedAt: changedAt };
+      return { ...item, _monthlyReports: JSON.stringify(reports), lastModifiedAt: changedAt, ...(status === "委託中" ? { updateDate: today() } : {}) };
+    };
+    setRecords(previous => previous.map(item => item.id === record.id ? updateReport(item) : item));
+    setCloudConfirmationRecords(previous => previous ? previous.map(item => item.id === record.id ? updateReport(item) : item) : previous);
+    flash(`已將回報狀況改為「${status}」`);
+  };
   const submitBookReviews = (reviews: Array<{ record: RecordItem; status: string }>) => { const stamp = new Date().toISOString(), cycle = bookReviewCycleKey(); setRecords(previous => previous.map(item => reviews.some(value => value.record.id === item.id) ? { ...item, bookLocationDate: today(), _bookReviewAt: stamp, _bookReviewCycle: cycle, lastModifiedAt: stamp } : item)); flash(`已確認 ${reviews.length} 筆物件本，日期更新為今天`); };
   const updateTourDate = (date: string) => { setTourDate(date); setTourModifiedAt(new Date().toISOString()); };
   const updateTourTitle = (title: string) => { setTourTitle(title); setTourModifiedAt(new Date().toISOString()); };
@@ -3327,7 +3336,7 @@ export default function Home() {
 
   return <main lang="zh-Hant-TW" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-        <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V527</small></h1></div>
+        <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V528</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{expiredUnarchived.length > 0 && <button className="expired-entrust-button" onClick={() => setExpiryReminderOpen(true)}>委託到期 {expiredUnarchived.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -3346,7 +3355,7 @@ export default function Home() {
     {!internalView && tab === "active" && systemExpiryReminders.length > 0 && <div className="system-expiry-reminder"><b>系統到期提醒</b>{systemExpiryReminders.map(item => <span key={item.label}>{item.label}：{displayRocDate(item.date)} 到期{item.date < today() ? "（已到期）" : item.leadDays === 30 ? "（30天內）" : "（明天到期）"}</span>)}</div>}
     {!internalView && tab === "active" && <PropertyBookReview records={records} settings={settings} openRequest={bookReviewOpenRequest} submit={submitBookReviews} openRecord={setEditing}/>}
     {monthlyProgressOpen && <MonthlyConfirmationProgress records={cloudConfirmationRecords || active} people={settings.personnel} lastLogins={frontLastLogins} close={() => setMonthlyProgressOpen(false)}/>}
-    {!internalView && tab === "active" && <BusinessReportInbox records={cloudConfirmationRecords || active} resolve={resolveMonthlyPropertyReport} archive={(record, status) => setArchiveChoice({ record, status, date: today(), salesPerson: record.salesPerson || "", reason: record.archiveReason || "" })}/>}
+    {!internalView && tab === "active" && <BusinessReportInbox records={cloudConfirmationRecords || active} resolve={resolveMonthlyPropertyReport} changeReport={changeMonthlyPropertyReport} archive={(record, status) => setArchiveChoice({ record, status, date: today(), salesPerson: record.salesPerson || "", reason: record.archiveReason || "" })}/>}
     {showingPublic && publicUnlocked && publicScope === "mine" && publicPerson && <MonthlyPropertyReport records={myProperties} person={publicPerson} submit={submitMonthlyPropertyReports} holdUntil={publicReportHoldUntil}/>}
     {pptPickerOpen && selectedPptBaseRecords.length > 0 && <aside className="ppt-order-float"><b>調整本次排序</b><small>此順序會保留在本週</small><ol>{selectedPptBaseRecords.map((record, index) => <li key={record.id}><span>{index + 1}. {record.caseName || "未命名案件"}</span><div><button type="button" disabled={index === 0} onClick={() => movePptOrder(record.id, -1)}>↑</button><button type="button" disabled={index === selectedPptBaseRecords.length - 1} onClick={() => movePptOrder(record.id, 1)}>↓</button></div></li>)}</ol></aside>}
 
@@ -5239,7 +5248,7 @@ function MonthlyConfirmationProgress({ records, people, lastLogins, close }: { r
   return <div className="modal-backdrop monthly-progress-backdrop"><section className="monthly-progress-modal"><header><div><b>45天確認進度</b><span>查看業務進入前台與回報進度；點選標題可排序</span></div><button className="close" onClick={close}>×</button></header><div className="monthly-progress-list"><div className="monthly-progress-row monthly-progress-labels">{heading("person", "業務")}{heading("total", "應確認")}{heading("completed", "已完成")}{heading("pending", "尚未回報")}{heading("lastLogin", "最後進入前台")}{heading("latest", "最後回報")}{heading("status", "狀態")}</div>{sortedProgress.map(item => <div className={`monthly-progress-row ${item.pending ? "has-pending" : "is-complete"}`} key={item.person.id}><strong>{item.person.name}</strong><span>{item.total} 件</span><span>{item.completed} 件</span><span>{item.pending} 件</span><span>{item.lastLogin ? new Date(item.lastLogin).toLocaleString("zh-TW") : "尚無進入紀錄"}</span><span>{item.latest ? new Date(item.latest).toLocaleString("zh-TW") : "尚無回報"}</span><em>{item.pending ? "尚未完成" : "全數完成"}</em></div>)}{!progress.length && <p className="monthly-progress-empty">尚未設定在職業務人員。</p>}</div><footer><button type="button" onClick={printProgress}>列印</button><button className="primary" onClick={close}>關閉</button></footer></section></div>;
 }
 
-function BusinessReportInbox({ records, resolve, archive }: { records: RecordItem[]; resolve: (record: RecordItem, reportKey: string, keepActive?: boolean) => void; archive: (record: RecordItem, status: string) => void }) {
+function BusinessReportInbox({ records, resolve, changeReport, archive }: { records: RecordItem[]; resolve: (record: RecordItem, reportKey: string, keepActive?: boolean) => void; changeReport: (record: RecordItem, reportKey: string, status: string, reason?: string) => void; archive: (record: RecordItem, status: string) => void }) {
   const [developerFilter, setDeveloperFilter] = useState("");
   const items = records.flatMap(record => {
     const reports = monthlyReportsOf(record._monthlyReports);
@@ -5249,12 +5258,12 @@ function BusinessReportInbox({ records, resolve, archive }: { records: RecordIte
   const developers = Array.from(new Set(items.flatMap(item => developerNameLines(item.record.developer))));
   const shownItems = developerFilter ? items.filter(item => developerNameLines(item.record.developer).includes(developerFilter)) : items;
   const action = (item: { record: RecordItem; key: string; report: any }) => {
-    if (item.report.status === "售出下架") return <button className="primary" onClick={() => archive(item.record, "售出下架")}>確認售出下架</button>;
-    if (item.report.status === "下架洽開發") return <button className="primary" onClick={() => archive(item.record, "下架洽開發")}>確認下架</button>;
+    if (item.report.status === "售出下架") return <button type="button" className="primary" onClick={() => archive(item.record, "售出下架")}>確認售出下架</button>;
+    if (item.report.status === "下架洽開發") return <button type="button" className="primary" onClick={() => archive(item.record, "下架洽開發")}>確認下架</button>;
     if (item.report.status === "請跟開發業務2確認") return <small className="business-report-wait">等待另一位開發確認委託中</small>;
     return <button onClick={() => void resolve(item.record, item.key, true)}>確認完成</button>;
   };
-  return <section className="business-report-inbox"><header><div><div className="business-report-title-row"><b>業務回報待處理</b><div className="business-report-developer-filter">{developers.map(name => <button key={name} className={developerFilter === name ? "selected" : ""} onClick={() => setDeveloperFilter(current => current === name ? "" : name)}>#{name}</button>)}</div></div><span>業務回傳後，請在此完成下架或確認作業</span></div><strong>{shownItems.length}{developerFilter ? `／${items.length}` : ""} 筆</strong></header><div className="business-report-list">{shownItems.map(item => <article key={`${item.record.id}-${item.key}`}><div className="business-report-case"><div className="business-report-case-title"><b>{item.record.propertyNo || "—"}　{item.record.caseName || "未命名案件"}</b><small>開發：{developerFullNameText(item.record.developer) || "未填"}</small></div><small className="business-report-address">地址：{item.record.address || "未填地址"}</small><div className="business-report-action-row"><span>回報：<em>{item.report.status}</em>{item.report.reason ? `　原因：${item.report.reason}` : ""}</span><div className="business-report-action-meta"><small className="business-report-person">{item.report.personName || "業務人員"}　{new Date(item.report.reportedAt || Date.now()).toLocaleString("zh-TW")}</small>{action(item)}</div></div>{item.report.status === "待確認" && item.report.dueDate && <i>下次確認：{displayRocDate(item.report.dueDate)}</i>}</div></article>)}</div></section>;
+  return <section className="business-report-inbox"><header><div><div className="business-report-title-row"><b>業務回報待處理</b><div className="business-report-developer-filter">{developers.map(name => <button key={name} className={developerFilter === name ? "selected" : ""} onClick={() => setDeveloperFilter(current => current === name ? "" : name)}>#{name}</button>)}</div></div><span>業務回傳後，可先變更回報狀況，再完成下架或確認作業</span></div><strong>{shownItems.length}{developerFilter ? `／${items.length}` : ""} 筆</strong></header><div className="business-report-list">{shownItems.map(item => <article key={`${item.record.id}-${item.key}`}><div className="business-report-case"><div className="business-report-case-title"><b>{item.record.propertyNo || "—"}　{item.record.caseName || "未命名案件"}</b><small>開發：{developerFullNameText(item.record.developer) || "未填"}</small></div><small className="business-report-address">地址：{item.record.address || "未填地址"}</small><div className="business-report-action-row"><span>回報：<em>{item.report.status}</em>{item.report.reason ? `　原因：${item.report.reason}` : ""}</span><div className="business-report-action-meta"><small className="business-report-person">{item.report.personName || "業務人員"}　{new Date(item.report.reportedAt || Date.now()).toLocaleString("zh-TW")}</small><select className="business-report-status-select" aria-label="變更回報狀況" value={item.report.status} onChange={event => { const status = event.target.value; const reason = status === "下架洽開發" ? window.prompt("請輸入下架原因", item.report.reason || "") : ""; if (status === "下架洽開發" && reason === null) return; if (status === "下架洽開發" && !reason?.trim()) return alert("下架洽開發必須填寫原因"); changeReport(item.record, item.key, status, reason || ""); }}><option>委託中</option><option>售出下架</option><option>下架洽開發</option><option>待確認</option><option>請跟開發業務2確認</option></select>{action(item)}</div></div>{item.report.status === "待確認" && item.report.dueDate && <i>下次確認：{displayRocDate(item.report.dueDate)}</i>}</div></article>)}</div></section>;
 }
 
 function MonthlyPropertyReport({ records, person, submit, holdUntil }: { records: RecordItem[]; person: Person; submit: (entries: Array<{ record: RecordItem; status: string; reason: string }>) => Promise<boolean>; holdUntil: number }) {

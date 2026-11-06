@@ -1571,6 +1571,7 @@ body{background:#f8fbfe!important;color:#405064!important}
 .business-report-case>.business-report-address{width:100%;margin-top:5px!important}
 .business-report-action-meta{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex:none}
 .business-report-action-meta>button{flex:none;white-space:nowrap;padding:6px 9px;font-size:12px}
+.business-report-status-select{max-width:132px;padding:5px 7px;border:1px solid #d6b8ad;border-radius:7px;background:#fff;color:#6b4037;font-size:12px;font-weight:800}
 .business-report-case-title{flex-wrap:nowrap!important}.business-report-case-title>b{display:block!important;min-width:0!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}.business-report-case-title>small{flex:none}
 @media(max-width:900px){.business-report-action-meta{align-items:flex-end;flex-direction:column;gap:5px}}
 .book-review-complete-message{padding:32px;text-align:center;font-size:20px;font-weight:800;color:#267353}
@@ -48638,11 +48639,8 @@ ${changedLabels}
       const markHandled = (item) => {
         const reports = monthlyReportsOf(item._monthlyReports);
         if (!reports[reportKey]) return item;
-        const reportedAtValue = String(reports[reportKey].reportedAt || "");
-        const reportedAtDate = reportedAtValue ? new Date(reportedAtValue) : /* @__PURE__ */ new Date();
-        const reportedDate = Number.isNaN(reportedAtDate.getTime()) ? today() : isoLocalDate(reportedAtDate);
         reports[reportKey] = { ...reports[reportKey], adminHandledAt: handledAt };
-        return { ...item, _monthlyReports: JSON.stringify(reports), ...keepActive ? { updateDate: reportedDate, lastModifiedAt: handledAt } : {} };
+        return { ...item, _monthlyReports: JSON.stringify(reports), ...keepActive ? { updateDate: today(), lastModifiedAt: handledAt } : {} };
       };
       try {
         const response = await fetch(`${CASE_FILE_SUPABASE_URL}/rest/v1/rpc/case_file_front_report_resolve`, {
@@ -48661,6 +48659,18 @@ ${changedLabels}
       }));
       setCloudConfirmationRecords((previous) => previous ? previous.map((item) => item.id === record.id ? markHandled(item) : item) : previous);
       flash(keepActive ? "\u5DF2\u78BA\u8A8D\u5B8C\u6210\uFF0C\u5DF2\u5F9E\u5F85\u8655\u7406\u5217\u8868\u79FB\u9664" : "\u5DF2\u6A19\u793A\u8655\u7406\u5B8C\u6210");
+    };
+    const changeMonthlyPropertyReport = (record, reportKey, status, reason = "") => {
+      const changedAt = (/* @__PURE__ */ new Date()).toISOString();
+      const updateReport = (item) => {
+        const reports = monthlyReportsOf(item._monthlyReports);
+        if (!reports[reportKey]) return item;
+        reports[reportKey] = { ...reports[reportKey], status, reason: reason.trim(), dueDate: status === "\u5F85\u78BA\u8A8D" ? reports[reportKey].dueDate || addDaysIso(today(), 7) : "", adminChangedAt: changedAt };
+        return { ...item, _monthlyReports: JSON.stringify(reports), lastModifiedAt: changedAt, ...status === "\u59D4\u8A17\u4E2D" ? { updateDate: today() } : {} };
+      };
+      setRecords((previous) => previous.map((item) => item.id === record.id ? updateReport(item) : item));
+      setCloudConfirmationRecords((previous) => previous ? previous.map((item) => item.id === record.id ? updateReport(item) : item) : previous);
+      flash(`\u5DF2\u5C07\u56DE\u5831\u72C0\u6CC1\u6539\u70BA\u300C${status}\u300D`);
     };
     const submitBookReviews = (reviews) => {
       const stamp = (/* @__PURE__ */ new Date()).toISOString(), cycle = bookReviewCycleKey();
@@ -48685,7 +48695,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V527" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V528" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -48777,7 +48787,7 @@ ${changedLabels}
       ] }),
       !internalView && tab === "active" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PropertyBookReview, { records, settings, openRequest: bookReviewOpenRequest, submit: submitBookReviews, openRecord: setEditing }),
       monthlyProgressOpen && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(MonthlyConfirmationProgress, { records: cloudConfirmationRecords || active, people: settings.personnel, lastLogins: frontLastLogins, close: () => setMonthlyProgressOpen(false) }),
-      !internalView && tab === "active" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(BusinessReportInbox, { records: cloudConfirmationRecords || active, resolve: resolveMonthlyPropertyReport, archive: (record, status) => setArchiveChoice({ record, status, date: today(), salesPerson: record.salesPerson || "", reason: record.archiveReason || "" }) }),
+      !internalView && tab === "active" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(BusinessReportInbox, { records: cloudConfirmationRecords || active, resolve: resolveMonthlyPropertyReport, changeReport: changeMonthlyPropertyReport, archive: (record, status) => setArchiveChoice({ record, status, date: today(), salesPerson: record.salesPerson || "", reason: record.archiveReason || "" }) }),
       showingPublic && publicUnlocked && publicScope === "mine" && publicPerson && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(MonthlyPropertyReport, { records: myProperties, person: publicPerson, submit: submitMonthlyPropertyReports, holdUntil: publicReportHoldUntil }),
       pptPickerOpen && selectedPptBaseRecords.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("aside", { className: "ppt-order-float", children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "\u8ABF\u6574\u672C\u6B21\u6392\u5E8F" }),
@@ -53700,7 +53710,7 @@ ${xrefOffset}
       ] })
     ] }) });
   }
-  function BusinessReportInbox({ records, resolve, archive }) {
+  function BusinessReportInbox({ records, resolve, changeReport, archive }) {
     const [developerFilter, setDeveloperFilter] = (0, import_react.useState)("");
     const items = records.flatMap((record) => {
       const reports = monthlyReportsOf(record._monthlyReports);
@@ -53710,8 +53720,8 @@ ${xrefOffset}
     const developers = Array.from(new Set(items.flatMap((item) => developerNameLines(item.record.developer))));
     const shownItems = developerFilter ? items.filter((item) => developerNameLines(item.record.developer).includes(developerFilter)) : items;
     const action = (item) => {
-      if (item.report.status === "\u552E\u51FA\u4E0B\u67B6") return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "primary", onClick: () => archive(item.record, "\u552E\u51FA\u4E0B\u67B6"), children: "\u78BA\u8A8D\u552E\u51FA\u4E0B\u67B6" });
-      if (item.report.status === "\u4E0B\u67B6\u6D3D\u958B\u767C") return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "primary", onClick: () => archive(item.record, "\u4E0B\u67B6\u6D3D\u958B\u767C"), children: "\u78BA\u8A8D\u4E0B\u67B6" });
+      if (item.report.status === "\u552E\u51FA\u4E0B\u67B6") return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: "primary", onClick: () => archive(item.record, "\u552E\u51FA\u4E0B\u67B6"), children: "\u78BA\u8A8D\u552E\u51FA\u4E0B\u67B6" });
+      if (item.report.status === "\u4E0B\u67B6\u6D3D\u958B\u767C") return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: "primary", onClick: () => archive(item.record, "\u4E0B\u67B6\u6D3D\u958B\u767C"), children: "\u78BA\u8A8D\u4E0B\u67B6" });
       if (item.report.status === "\u8ACB\u8DDF\u958B\u767C\u696D\u52D92\u78BA\u8A8D") return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "business-report-wait", children: "\u7B49\u5F85\u53E6\u4E00\u4F4D\u958B\u767C\u78BA\u8A8D\u59D4\u8A17\u4E2D" });
       return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { onClick: () => void resolve(item.record, item.key, true), children: "\u78BA\u8A8D\u5B8C\u6210" });
     };
@@ -53725,7 +53735,7 @@ ${xrefOffset}
               name
             ] }, name)) })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u696D\u52D9\u56DE\u50B3\u5F8C\uFF0C\u8ACB\u5728\u6B64\u5B8C\u6210\u4E0B\u67B6\u6216\u78BA\u8A8D\u4F5C\u696D" })
+          /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "\u696D\u52D9\u56DE\u50B3\u5F8C\uFF0C\u53EF\u5148\u8B8A\u66F4\u56DE\u5831\u72C0\u6CC1\uFF0C\u518D\u5B8C\u6210\u4E0B\u67B6\u6216\u78BA\u8A8D\u4F5C\u696D" })
         ] }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("strong", { children: [
           shownItems.length,
@@ -53760,6 +53770,19 @@ ${xrefOffset}
               item.report.personName || "\u696D\u52D9\u4EBA\u54E1",
               "\u3000",
               new Date(item.report.reportedAt || Date.now()).toLocaleString("zh-TW")
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", { className: "business-report-status-select", "aria-label": "\u8B8A\u66F4\u56DE\u5831\u72C0\u6CC1", value: item.report.status, onChange: (event) => {
+              const status = event.target.value;
+              const reason = status === "\u4E0B\u67B6\u6D3D\u958B\u767C" ? window.prompt("\u8ACB\u8F38\u5165\u4E0B\u67B6\u539F\u56E0", item.report.reason || "") : "";
+              if (status === "\u4E0B\u67B6\u6D3D\u958B\u767C" && reason === null) return;
+              if (status === "\u4E0B\u67B6\u6D3D\u958B\u767C" && !reason?.trim()) return alert("\u4E0B\u67B6\u6D3D\u958B\u767C\u5FC5\u9808\u586B\u5BEB\u539F\u56E0");
+              changeReport(item.record, item.key, status, reason || "");
+            }, children: [
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { children: "\u59D4\u8A17\u4E2D" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { children: "\u552E\u51FA\u4E0B\u67B6" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { children: "\u4E0B\u67B6\u6D3D\u958B\u767C" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { children: "\u5F85\u78BA\u8A8D" }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", { children: "\u8ACB\u8DDF\u958B\u767C\u696D\u52D92\u78BA\u8A8D" })
             ] }),
             action(item)
           ] })
