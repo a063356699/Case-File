@@ -3342,7 +3342,7 @@ export default function Home() {
 
   return <main lang="zh-Hant-TW" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-        <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V532</small></h1></div>
+        <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V533</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{expiredUnarchived.length > 0 && <button className="expired-entrust-button" onClick={() => setExpiryReminderOpen(true)}>委託到期 {expiredUnarchived.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -5100,7 +5100,7 @@ function PropertyTable({ records, columns, publicMode = false, dailyMode = false
       return <Fragment key={r.id}>
         {showAreaGroups && (recordIndex === 0 || areaGroup(records[recordIndex - 1]) !== areaGroup(r)) && <tr className="area-group-row"><td colSpan={columns.length + (showPpt ? 2 : 0)}><span>{areaGroup(r)}</span></td></tr>}
         <tr onMouseEnter={event => { if (publicMode) { setHoveredPublicCase(r.caseName || r.propertyNo || "未命名案件"); setHoveredPublicCaseTop(event.currentTarget.offsetTop + 6); } }} onMouseLeave={() => publicMode && setHoveredPublicCase("")}>
-          {columns.map((k, i) => <td key={k} className={`${i < stickyCount ? `sticky sticky-${i}` : ""} col-${k} ${dateKeys.has(k) && k !== "groupViewDate" && !validDate(r[k]) ? "date-error" : ""} ${dailyMode && k !== "notes" && isHighlighted(k) ? "daily-updated-cell" : ""}`}>{k === "caseName" ? caseNameCell(r, k) : k === "status" ? <span className={`status ${displayStatus(r) === "委託中" ? "live" : "off"}`}>{displayStatus(r)}</span> : <CellContent record={r} column={k}/>}</td>)}
+          {columns.map((k, i) => <td key={k} className={`${i < stickyCount ? `sticky sticky-${i}` : ""} col-${k} ${dateKeys.has(k) && k !== "groupViewDate" && !validDate(r[k]) ? "date-error" : ""} ${dailyMode && k !== "notes" && isHighlighted(k) ? "daily-updated-cell" : ""}`}>{k === "caseName" ? caseNameCell(r, k) : k === "status" ? <span className={`status ${displayStatus(r) === "委託中" ? "live" : "off"}`}>{displayStatus(r)}</span> : <CellContent record={r} column={k} dailyMode={dailyMode} highlightNotes={isHighlighted("notes")}/>}</td>)}
           {showPpt && <><td className="ppt-col"><input type="checkbox" checked={pptIncluded(r)} onChange={e => onPptChange(r, { pptSelected: e.target.checked ? "1" : "0", pptCategory: r.pptCategory || (isCurrentPptWeek(r.reportDate) ? "本週進案" : "臨時新增") })}/></td><td className="ppt-type-col"><select value={pptCategory(r)} onChange={e => onPptChange(r, { pptCategory: e.target.value, pptSelected: "1" })}><option>本週進案</option><option>臨時新增</option></select></td></>}
           {!publicMode && (r.archived || isExpired(r) || r.status !== "委託中") && <td className="actions-col"><div className="row-actions"><button onClick={() => onRestore(r)}>恢復</button><button className="danger" onClick={() => onRemove(r)}>刪除</button></div></td>}
         </tr>
@@ -5131,7 +5131,7 @@ function ColumnLabel({ column }: { column: string }) {
   return <>{labels[column]}</>;
 }
 
-function CellContent({ record: r, column: k }: { record: RecordItem; column: string }) {
+function CellContent({ record: r, column: k, dailyMode = false, highlightNotes = false }: { record: RecordItem; column: string; dailyMode?: boolean; highlightNotes?: boolean }) {
   if (k === "type") return <>{typeShort(r.type) || "—"}</>;
   if (k === "direction") return <>{directionShort(r.direction) || "—"}</>;
   if (k === "dailyHide") return r._dailyHideKey ? <button className="daily-hide-button" type="button" title="不顯示於前台每日物件動態" onClick={() => window.dispatchEvent(new CustomEvent("hide-daily-item", { detail: r._dailyHideKey }))}>刪</button> : null;
@@ -5188,10 +5188,11 @@ function CellContent({ record: r, column: k }: { record: RecordItem; column: str
     const storedLatestFragments: string[] = (() => { try { return JSON.parse(r._latestNoteFragments || "[]"); } catch { return []; } })();
     const lastModifiedDate = String(r.lastModifiedAt || "").slice(0, 10);
     // V530 前的舊紅字照常保留；自 115/11/6 起，只有按「儲存並發布每日動態」才顯示紅字。
-    const latestSegments = r._latestNoteSegmentsPublishedAt || !lastModifiedDate || lastModifiedDate < "2026-11-06" ? storedLatestSegments : [];
+    const showPublishedHighlight = !dailyMode || highlightNotes;
+    const latestSegments = showPublishedHighlight && (r._latestNoteSegmentsPublishedAt || !lastModifiedDate || lastModifiedDate < "2026-11-06") ? storedLatestSegments : [];
     // V531 曾把「缺.../原備註」整段判成新增內容；沒有片段紀錄時，只取前方新增的缺件文字。
     const inferredMissingFragment = !storedLatestFragments.length && latestSegments.includes(String(r.notes || "")) ? String(r.notes || "").match(/^缺[^/／]*[/／]/)?.[0] || "" : "";
-    const latestFragments = [...storedLatestFragments, inferredMissingFragment].filter(Boolean);
+    const latestFragments = showPublishedHighlight ? [...storedLatestFragments, inferredMissingFragment].filter(Boolean) : [];
     const highlightParts = (segment: string) => {
       if (!latestFragments.length) return segment;
       const pattern = latestFragments.map(fragment => fragment.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).sort((a, b) => b.length - a.length).join("|");
@@ -5200,7 +5201,7 @@ function CellContent({ record: r, column: k }: { record: RecordItem; column: str
     // 新進案件的原始備註不是「後續修改」，第一次加入總表時一律維持黑字。
     // 115/11/3 以前沒有追蹤標記的舊案件，才保留原本中人備註紅字相容顯示。
     const reportDate = normalizeDateInput(String(r.reportDate || ""));
-    const legacyMiddleman = !r._latestNoteSegments && (!reportDate || reportDate < "2026-11-03");
+    const legacyMiddleman = showPublishedHighlight && !r._latestNoteSegments && (!reportDate || reportDate < "2026-11-03");
     return segments.length ? <span className="notes-display notes-segments">{segments.map((segment, index) => <span className={!latestFragments.length && latestSegments.includes(segment) || (legacyMiddleman && /(?:中人|介紹費|開發\s*%)/.test(segment)) ? "notes-middleman-note" : "notes-standard-note"} key={`${segment}-${index}`}>{highlightParts(segment)}</span>)}</span> : <>—</>;
   }
   return <>{cellValue(r, k) || "—"}</>;
