@@ -3342,7 +3342,7 @@ export default function Home() {
 
   return <main lang="zh-Hant-TW" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-        <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V533</small></h1></div>
+        <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V534</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{expiredUnarchived.length > 0 && <button className="expired-entrust-button" onClick={() => setExpiryReminderOpen(true)}>委託到期 {expiredUnarchived.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -5198,11 +5198,7 @@ function CellContent({ record: r, column: k, dailyMode = false, highlightNotes =
       const pattern = latestFragments.map(fragment => fragment.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).sort((a, b) => b.length - a.length).join("|");
       return segment.split(new RegExp(`(${pattern})`, "g")).filter(Boolean).map((part, index) => latestFragments.includes(part) ? <span className="notes-latest-fragment" key={`${part}-${index}`}>{part}</span> : <Fragment key={`${part}-${index}`}>{part}</Fragment>);
     };
-    // 新進案件的原始備註不是「後續修改」，第一次加入總表時一律維持黑字。
-    // 115/11/3 以前沒有追蹤標記的舊案件，才保留原本中人備註紅字相容顯示。
-    const reportDate = normalizeDateInput(String(r.reportDate || ""));
-    const legacyMiddleman = showPublishedHighlight && !r._latestNoteSegments && (!reportDate || reportDate < "2026-11-03");
-    return segments.length ? <span className="notes-display notes-segments">{segments.map((segment, index) => <span className={!latestFragments.length && latestSegments.includes(segment) || (legacyMiddleman && /(?:中人|介紹費|開發\s*%)/.test(segment)) ? "notes-middleman-note" : "notes-standard-note"} key={`${segment}-${index}`}>{highlightParts(segment)}</span>)}</span> : <>—</>;
+    return segments.length ? <span className="notes-display notes-segments">{segments.map((segment, index) => <span className={!latestFragments.length && latestSegments.includes(segment) ? "notes-middleman-note" : "notes-standard-note"} key={`${segment}-${index}`}>{highlightParts(segment)}</span>)}</span> : <>—</>;
   }
   return <>{cellValue(r, k) || "—"}</>;
 }
