@@ -46059,7 +46059,8 @@ ${String(ex)}`);
     const requestCloseEditing = () => {
       if (!editing) return;
       if (editingInitialRef.current && JSON.stringify(editing) !== editingInitialRef.current) {
-        if (!confirm("\u8CC7\u6599\u5C1A\u672A\u5132\u5B58\uFF0C\u78BA\u5B9A\u8981\u76F4\u63A5\u95DC\u9589\u8996\u7A97\u55CE\uFF1F")) return;
+        temporarilySaveRecord(true);
+        return;
       }
       setEditing(null);
     };
@@ -47220,7 +47221,7 @@ ${changedLabels}
       setEditing(null);
       flash(autoReopen ? "\u5DF2\u91CD\u65B0\u4E0A\u67B6\uFF0C\u4E26\u8A18\u9304\u5728\u6848\u540D\u5F8C\u65B9\u5099\u8A3B" : "\u7269\u4EF6\u5DF2\u5132\u5B58");
     };
-    const temporarilySaveRecord = () => {
+    const temporarilySaveRecord = (closeAfter = false) => {
       if (!editing) return;
       if (editing.zoningDocumentStatus === "\u9700\u7533\u8ACB" && !normalizeDateInput(editing.zoningApplicationDate || "")) return flash("\u8ACB\u586B\u5BEB\u4F7F\u7528\u5206\u5340\u7533\u8ACB\u65E5\u671F\u5F8C\u518D\u66AB\u5B58");
       if (editing.bookLocationType === "\u65C15" && !String(editing.bookLocationReason || "").trim()) return flash("\u8ACB\u586B\u5BEB\u65C15\u539F\u56E0\u5F8C\u518D\u66AB\u5B58");
@@ -47238,8 +47239,8 @@ ${changedLabels}
         setIntakeDrafts(savedDrafts);
         setTourItems((previous) => previous.map((item) => item.data._intakeDraftId === next._intakeDraftId ? { ...item, recordId: void 0, temporary: true, data: { ...item.data, ...next, reportDate: "", status: "\u5C1A\u672A\u9032\u6848", _notEntered: "1" } } : item));
         editingInitialRef.current = JSON.stringify(next);
-        setEditing(next);
-        flash("\u8349\u7A3F\u5DF2\u66AB\u5B58\uFF0C\u5C1A\u672A\u6B63\u5F0F\u9032\u6848");
+        setEditing(closeAfter ? null : next);
+        flash(closeAfter ? "\u5DF2\u81EA\u52D5\u66AB\u5B58\u4E26\u95DC\u9589" : "\u8349\u7A3F\u5DF2\u66AB\u5B58\uFF0C\u5C1A\u672A\u6B63\u5F0F\u9032\u6848");
         return;
       }
       const savedRecords = records.some((record) => record.id === next.id) ? records.map((record) => record.id === next.id ? { ...record, ...next } : record) : [next, ...records];
@@ -47247,8 +47248,8 @@ ${changedLabels}
       setRecords(savedRecords);
       setIntakeDrafts((previous) => previous.map((draft) => draft.linkedRecordId === next.id ? { ...draft, values: syncRecordToDraftValues(draft, next) } : draft));
       editingInitialRef.current = JSON.stringify(next);
-      setEditing(next);
-      flash("\u5DF2\u5132\u5B58\uFF0C\u53EF\u7E7C\u7E8C\u586B\u5BEB");
+      setEditing(closeAfter ? null : next);
+      flash(closeAfter ? "\u5DF2\u81EA\u52D5\u66AB\u5B58\u4E26\u95DC\u9589" : "\u5DF2\u5132\u5B58\uFF0C\u53EF\u7E7C\u7E8C\u586B\u5BEB");
     };
     const saveColorSheetIssue = (data) => {
       const existing = records.find((record) => record.id === data.id);
@@ -48700,7 +48701,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V534" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V535" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -49372,7 +49373,7 @@ ${changedLabels}
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "record-save-actions", children: [
             editing._intakeDraftId && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "draft-save-note", children: "\u5C1A\u672A\u9032\u6848\uFF5E\u9032\u6848\u8349\u7A3F\u4E2D" }),
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", onClick: temporarilySaveRecord, children: "\u66AB\u5B58" }),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", onClick: () => temporarilySaveRecord(), children: "\u66AB\u5B58" }),
             editing._intakeDraftId ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "primary", onClick: () => saveRecord(false), children: "\u540C\u6B65\u66F4\u65B0\u8349\u7A3F" }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: "daily-publish-secondary", onClick: () => saveRecord(true), children: "\u5132\u5B58\u4E26\u767C\u5E03\u6BCF\u65E5\u52D5\u614B" }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "primary save-only-primary", onClick: () => saveRecord(false), children: "\u50C5\u5132\u5B58" })

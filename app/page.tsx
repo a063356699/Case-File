@@ -1368,7 +1368,8 @@ export default function Home() {
   const requestCloseEditing = () => {
     if (!editing) return;
     if (editingInitialRef.current && JSON.stringify(editing) !== editingInitialRef.current) {
-      if (!confirm("資料尚未儲存，確定要直接關閉視窗嗎？")) return;
+      temporarilySaveRecord(true);
+      return;
     }
     setEditing(null);
   };
@@ -2238,7 +2239,7 @@ export default function Home() {
     setEditing(null);
     flash(autoReopen ? "已重新上架，並記錄在案名後方備註" : "物件已儲存");
   };
-  const temporarilySaveRecord = () => {
+  const temporarilySaveRecord = (closeAfter = false) => {
     if (!editing) return;
     if (editing.zoningDocumentStatus === "需申請" && !normalizeDateInput(editing.zoningApplicationDate || "")) return flash("請填寫使用分區申請日期後再暫存");
     if (editing.bookLocationType === "旁5" && !String(editing.bookLocationReason || "").trim()) return flash("請填寫旁5原因後再暫存");
@@ -2258,8 +2259,8 @@ export default function Home() {
       setIntakeDrafts(savedDrafts);
       setTourItems(previous => previous.map(item => item.data._intakeDraftId === next._intakeDraftId ? { ...item, recordId: undefined, temporary: true, data: { ...item.data, ...next, reportDate: "", status: "尚未進案", _notEntered: "1" } } : item));
       editingInitialRef.current = JSON.stringify(next);
-      setEditing(next);
-      flash("草稿已暫存，尚未正式進案");
+      setEditing(closeAfter ? null : next);
+      flash(closeAfter ? "已自動暫存並關閉" : "草稿已暫存，尚未正式進案");
       return;
     }
     // 暫存一律先寫回正式案件資料。過去有連結進案草稿的案件只更新草稿，
@@ -2273,8 +2274,8 @@ export default function Home() {
     // 暫存就是立即寫入本機，不必再按「僅儲存」，即使隨後關閉編輯畫面也保留。
     setIntakeDrafts(previous => previous.map(draft => draft.linkedRecordId === next.id ? { ...draft, values: syncRecordToDraftValues(draft, next) } : draft));
     editingInitialRef.current = JSON.stringify(next);
-    setEditing(next);
-    flash("已儲存，可繼續填寫");
+    setEditing(closeAfter ? null : next);
+    flash(closeAfter ? "已自動暫存並關閉" : "已儲存，可繼續填寫");
   };
 
   const saveColorSheetIssue = (data: RecordItem) => {
@@ -3342,7 +3343,7 @@ export default function Home() {
 
   return <main lang="zh-Hant-TW" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-        <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V534</small></h1></div>
+        <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V535</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{expiredUnarchived.length > 0 && <button className="expired-entrust-button" onClick={() => setExpiryReminderOpen(true)}>委託到期 {expiredUnarchived.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>
@@ -3407,7 +3408,7 @@ export default function Home() {
   const isBookRow = ["photoInfo", "bookLocationType", "salesBook"].includes(key);
   return <div className={`${recordEditClass(key)}${editing.bookLocationType !== "旁5" && isBookRow ? " book-row-no-reason" : ""}`} key={key}><Field fieldKey={key} label={label} record={editing} records={records} setRecord={updateEditingRecord}/></div>;
 })}</div>
-<div className="modal-foot"><div className="archive-in-editor">{records.some(r => r.id === editing.id) && (editing.archived || isExpired(editing) || editing.status !== "委託中") ? <><button type="button" className="restore-in-editor" onClick={() => { setRestoreChoiceRecord(editing); setEditing(null); }}>恢復</button>{editing.archived && <div className="archive-task-pills">{archiveCleanupTasks(editing).map(task => <button type="button" key={task.key} className={editing[task.key] ? "done" : ""} onClick={() => completeArchiveCleanup(editing, task.key)}>{editing[task.key] ? <><span>{task.label.replace(/下架$/, "")}</span><small>已完成</small></> : task.label}</button>)}</div>}</> : records.some(r => r.id === editing.id) && <select defaultValue="" onChange={e => { if (e.target.value) { requestArchive(editing, e.target.value); setEditing(null); } }}><option value="">封存案件…</option><option>售出下架</option><option>租出下架</option><option>成交下架</option><option>下架洽開發</option><option>到期下架</option></select>}</div><div className="record-bottom-actions">{records.some(r => r.id === editing.id) && !editing.archived && editing.status === "委託中" && <><button type="button" onClick={() => returnToIntake(editing)}>退回進案草稿</button><button type="button" className="danger" onClick={() => removeRecord(editing)}>刪除</button></>}</div><div className="record-save-actions">{editing._intakeDraftId && <span className="draft-save-note">尚未進案～進案草稿中</span>}<button type="button" onClick={temporarilySaveRecord}>暫存</button>{editing._intakeDraftId ? <button className="primary" onClick={() => saveRecord(false)}>同步更新草稿</button> : <><button type="button" className="daily-publish-secondary" onClick={() => saveRecord(true)}>儲存並發布每日動態</button><button className="primary save-only-primary" onClick={() => saveRecord(false)}>僅儲存</button></>}</div></div></div></div>}
+<div className="modal-foot"><div className="archive-in-editor">{records.some(r => r.id === editing.id) && (editing.archived || isExpired(editing) || editing.status !== "委託中") ? <><button type="button" className="restore-in-editor" onClick={() => { setRestoreChoiceRecord(editing); setEditing(null); }}>恢復</button>{editing.archived && <div className="archive-task-pills">{archiveCleanupTasks(editing).map(task => <button type="button" key={task.key} className={editing[task.key] ? "done" : ""} onClick={() => completeArchiveCleanup(editing, task.key)}>{editing[task.key] ? <><span>{task.label.replace(/下架$/, "")}</span><small>已完成</small></> : task.label}</button>)}</div>}</> : records.some(r => r.id === editing.id) && <select defaultValue="" onChange={e => { if (e.target.value) { requestArchive(editing, e.target.value); setEditing(null); } }}><option value="">封存案件…</option><option>售出下架</option><option>租出下架</option><option>成交下架</option><option>下架洽開發</option><option>到期下架</option></select>}</div><div className="record-bottom-actions">{records.some(r => r.id === editing.id) && !editing.archived && editing.status === "委託中" && <><button type="button" onClick={() => returnToIntake(editing)}>退回進案草稿</button><button type="button" className="danger" onClick={() => removeRecord(editing)}>刪除</button></>}</div><div className="record-save-actions">{editing._intakeDraftId && <span className="draft-save-note">尚未進案～進案草稿中</span>}<button type="button" onClick={() => temporarilySaveRecord()}>暫存</button>{editing._intakeDraftId ? <button className="primary" onClick={() => saveRecord(false)}>同步更新草稿</button> : <><button type="button" className="daily-publish-secondary" onClick={() => saveRecord(true)}>儲存並發布每日動態</button><button className="primary save-only-primary" onClick={() => saveRecord(false)}>僅儲存</button></>}</div></div></div></div>}
     {printEditor && <div className="modal-backdrop print-editor-backdrop"><div className="modal print-editor-modal compact">
       <div className="modal-head print-editor-head"><div><span>彩色銷售資料表</span><h2>下載彩色表 Excel</h2></div><button className="close" type="button" onClick={() => setPrintEditor(null)}>×</button></div>
       <div className="print-editor-body compact-body">
