@@ -48680,7 +48680,7 @@ ${changedLabels}
         }
         if (!response.ok) {
           const detail = await response.json().catch(() => null);
-          throw new Error(String(detail?.message || "report resolve sync failed"));
+          if (String(detail?.message || "").trim().toLowerCase() !== "report not found") throw new Error(String(detail?.message || "report resolve sync failed"));
         }
       } catch (error) {
         flash(`\u78BA\u8A8D\u672A\u80FD\u5BEB\u5165\u96F2\u7AEF\uFF1A${error instanceof Error && error.message !== "report resolve sync failed" ? error.message : "\u8ACB\u6AA2\u67E5\u7DB2\u8DEF\u5F8C\u518D\u6309\u4E00\u6B21"}`);
@@ -48728,7 +48728,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V538" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V539" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
