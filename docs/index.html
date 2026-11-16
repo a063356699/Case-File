@@ -1005,6 +1005,7 @@ button:hover,.file-button:hover{border-color:#9fbad0;box-shadow:0 2px 8px #7895a
 .archive-cleanup-case-cell .archive-cleanup-status{color:#e00000!important;font-size:10px!important;font-weight:400!important}
 .deal-completion-table .deal-completion-property-no{display:inline-block!important;margin-right:9px!important;color:#2870a8!important;font-size:12px!important;font-weight:700!important}.deal-completion-table .deal-completion-status{display:inline-block!important;color:#e00000!important;font-size:12px!important;font-weight:700!important}
 .archive-cleanup-case-link{display:block!important;width:auto!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;color:#111!important;font:inherit!important;font-size:14px!important;font-weight:700!important;line-height:1.35!important;text-align:left!important;box-shadow:none!important;cursor:pointer!important}.archive-cleanup-case-link:hover{text-decoration:underline!important;background:transparent!important;color:#111!important}
+.archive-cleanup-case-title{display:flex;align-items:center;gap:5px}.archive-cleanup-case-title .archive-cleanup-case-link{min-width:0}.archive-cleanup-table .archive-cleanup-copy-name{flex:none;min-width:25px!important;padding:2px 5px!important;border-color:#8ab9a8!important;border-radius:7px!important;background:#f2fbf7!important;color:#176044!important;font-size:11px!important;font-weight:800!important;line-height:1.25!important}.archive-cleanup-table .archive-cleanup-copy-name:hover{background:#dff3ea!important}.archive-cleanup-price-header,.archive-cleanup-price{min-width:62px!important;text-align:center!important}.archive-cleanup-price{color:#b52d26!important;font-size:13px!important;font-weight:800!important}
 .ppt-picker-body>.ppt-week-selector{margin-top:92px}.ppt-custom-period{position:fixed;z-index:96;top:calc(5vh + 105px);left:50%;transform:translateX(-50%);display:grid;grid-template-columns:1fr 1fr 1fr auto;align-items:end;gap:10px;width:min(1030px,90vw);padding:10px 14px;border:1px solid #c9d9d2;border-radius:10px;background:#f7faf8;box-shadow:0 5px 16px #18382b16}.ppt-custom-period label{display:flex;min-width:0;flex-direction:column;gap:4px}.ppt-custom-period label span{color:#53645e;font-size:11px;font-weight:700}.ppt-custom-period input{width:100%;height:38px;border:1px solid #b8c6c0;border-radius:8px;background:#fff;padding:7px 9px}.ppt-custom-period button{height:38px;white-space:nowrap}@media(max-width:800px){.ppt-custom-period{grid-template-columns:1fr 1fr}.ppt-picker-body>.ppt-week-selector{margin-top:180px}}
 .missing-data-reminder-modal{width:min(1180px,96vw)}.missing-data-table-wrap{max-height:58vh;overflow:auto;padding:12px 18px}.missing-data-table{width:max-content;min-width:100%;border-collapse:collapse;table-layout:auto;background:#fff}.missing-data-table th,.missing-data-table td{width:auto!important;border:1px solid #d9e1dd;padding:10px 12px;text-align:center;vertical-align:middle;color:#17242a;white-space:nowrap}.missing-data-table th{background:#e7efeb;font-size:15px}.missing-data-table th:first-child,.missing-data-table td:first-child,.missing-data-table th:last-child,.missing-data-table td:last-child{width:1%!important}.missing-data-case-link{border:0;background:transparent;padding:0;color:#17242a;font-size:15px;font-weight:700;text-align:center;cursor:pointer;white-space:nowrap}.missing-data-case-link:hover{color:#156b58;text-decoration:underline}.missing-data-table td:last-child{color:#d14763;font-weight:700}
 .add-property-stack{display:flex;flex-direction:column;align-items:center;gap:4px}.add-property-stack .primary{width:100%}.home-last-modified{color:#3f51b5;font-size:15px;font-weight:700;line-height:1.2;white-space:nowrap}
@@ -46571,6 +46572,22 @@ ${record.address || "\u672A\u586B\u5BEB\u5730\u5740"}`)].join("\n\n")).join("\n\
       }
       flash(`\u5DF2\u8907\u88FD ${pending.length} \u7B46\u7269\u4EF6\u672C\uFF0F\u65C15\u5C1A\u672A\u4E0B\u67B6\u6848\u4EF6`);
     };
+    const copyArchiveCaseName = async (record) => {
+      const caseName = stripRestoredDisplay(record.caseName) || "\u672A\u547D\u540D\u6848\u4EF6";
+      try {
+        await navigator.clipboard.writeText(caseName);
+      } catch {
+        const textarea = document.createElement("textarea");
+        textarea.value = caseName;
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        textarea.remove();
+      }
+      flash("\u5DF2\u8907\u88FD\u6848\u540D");
+    };
     const toggleArchiveCleanupSort = (key) => setArchiveCleanupSort((previous) => previous.key === key ? { key, direction: previous.direction === "asc" ? "desc" : "asc" } : { key, direction: "asc" });
     const sortedPendingArchiveCleanup = [...pendingArchiveCleanup].sort((a, b) => {
       if (!archiveCleanupSort.key) return 0;
@@ -48728,7 +48745,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V539" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V540" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -49206,6 +49223,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "archive-cleanup-table-wrap", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("table", { className: "archive-cleanup-table", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("thead", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { children: [
             archiveCleanupHeader("case", "\u6848\u4EF6"),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { className: "archive-cleanup-price-header", children: "\u7E3D\u50F9" }),
             archiveCleanupHeader("housingDownDate", "\u623F\u7BA1\u4E0B\u67B6"),
             archiveCleanupHeader("bookDownDate", "\u7269\u4EF6\u672C\uFF0F\u65C15\u4E0B\u67B6"),
             archiveCleanupHeader("salesBookDownDate", "\u92B7\u552E\u672C\u4E0B\u67B6"),
@@ -49221,10 +49239,13 @@ ${changedLabels}
             };
             return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("td", { className: "archive-cleanup-case-cell", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: "archive-cleanup-case-link", onClick: () => {
-                  setArchiveCleanupReminderOpen(false);
-                  setEditing(record);
-                }, children: stripRestoredDisplay(record.caseName) || "\u672A\u547D\u540D\u6848\u4EF6" }),
+                /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "archive-cleanup-case-title", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: "archive-cleanup-case-link", onClick: () => {
+                    setArchiveCleanupReminderOpen(false);
+                    setEditing(record);
+                  }, children: stripRestoredDisplay(record.caseName) || "\u672A\u547D\u540D\u6848\u4EF6" }),
+                  /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { type: "button", className: "archive-cleanup-copy-name", title: "\u8907\u88FD\u6848\u540D", onClick: () => void copyArchiveCaseName(record), children: "\u8907" })
+                ] }),
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "archive-cleanup-address", children: record.address || "\u672A\u586B\u5BEB\u5730\u5740" }),
                 /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { className: "archive-cleanup-status", children: [
                   record.propertyNo || "\u2014",
@@ -49232,6 +49253,10 @@ ${changedLabels}
                   displayRocDate(record.archived || ""),
                   record.status || "\u4E0B\u67B6"
                 ] })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("td", { className: "archive-cleanup-price", children: [
+                record.reducedPrice || record.price || "\u2014",
+                record.reducedPrice || record.price ? "\u842C" : ""
               ] }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: buttonFor("housingDownDate") }),
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { children: buttonFor("bookDownDate") }),
