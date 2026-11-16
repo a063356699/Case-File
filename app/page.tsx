@@ -3299,6 +3299,7 @@ export default function Home() {
   };
   const resolveMonthlyPropertyReport = async (record: RecordItem, reportKey: string, keepActive = false) => {
     const handledAt = new Date().toISOString();
+    const sameRecord = (item: RecordItem, targetId = record.id) => item.id === targetId || (!!record.propertyNo && String(item.propertyNo || "").trim().toUpperCase() === String(record.propertyNo).trim().toUpperCase());
     const markHandled = (item: RecordItem) => {
       const reports = monthlyReportsOf(item._monthlyReports);
       if (!reports[reportKey]) return item;
@@ -3306,20 +3307,44 @@ export default function Home() {
       return { ...item, _monthlyReports: JSON.stringify(reports), ...(keepActive ? { updateDate: today(), lastModifiedAt: handledAt } : {}) };
     };
     try {
-      const response = await fetch(`${CASE_FILE_SUPABASE_URL}/rest/v1/rpc/case_file_front_report_resolve`, {
+      const resolveCloudRecord = (recordId: string, key = reportKey) => fetch(`${CASE_FILE_SUPABASE_URL}/rest/v1/rpc/case_file_front_report_resolve`, {
         method: "POST",
         headers: { apikey: CASE_FILE_SUPABASE_PUBLISHABLE_KEY, "Content-Type": "application/json" },
-        body: JSON.stringify({ p_record_id: record.id, p_report_key: reportKey })
+        body: JSON.stringify({ p_record_id: recordId, p_report_key: key })
       });
-      if (!response.ok) throw new Error("report resolve sync failed");
-    } catch { flash("確認未能寫入雲端，請檢查網路後再按一次"); return; }
+      let response = await resolveCloudRecord(record.id);
+      // 案件曾恢復、重新匯入或重建時，待處理回報可能仍帶著舊 id。
+      // 第一次找不到時，以物件編號到目前雲端總表找回正式 id 後再確認。
+      if (!response.ok && record.propertyNo && cloudSession?.accessToken) {
+        const session = await refreshCloudSession();
+        if (session) {
+          const stateUrl = `${settings.supabaseUrl.replace(/\/$/, "")}/rest/v1/${settings.supabaseTable}?id=eq.${encodeURIComponent(settings.supabaseRecord)}&select=data`;
+          const stateResponse = await cloudFetchWithTimeout(stateUrl, { headers: cloudHeaders(session) });
+          const rows = await stateResponse.json();
+          const cloudRecord = stateResponse.ok && Array.isArray(rows?.[0]?.data?.records) ? (rows[0].data.records as RecordItem[]).find(item => sameRecord(item, "")) : undefined;
+          if (cloudRecord?.id) {
+            const sourceReport = monthlyReportsOf(record._monthlyReports)[reportKey];
+            const cloudReports = monthlyReportsOf(cloudRecord._monthlyReports);
+            const cloudReportKey = cloudReports[reportKey] ? reportKey : Object.keys(cloudReports).find(key => {
+              const candidate = cloudReports[key];
+              return candidate?.personId === sourceReport?.personId && candidate?.reportedAt === sourceReport?.reportedAt;
+            });
+            if (cloudReportKey) response = await resolveCloudRecord(cloudRecord.id, cloudReportKey);
+          }
+        }
+      }
+      if (!response.ok) {
+        const detail = await response.json().catch(() => null);
+        throw new Error(String(detail?.message || "report resolve sync failed"));
+      }
+    } catch (error) { flash(`確認未能寫入雲端：${error instanceof Error && error.message !== "report resolve sync failed" ? error.message : "請檢查網路後再按一次"}`); return; }
     setRecords(previous => previous.map(item => {
-      if (item.id !== record.id) return item;
+      if (!sameRecord(item)) return item;
       return markHandled(item);
     }));
     // The inbox renders the just-read cloud snapshot. Mirror the handling flag
     // there immediately so the resolved report disappears without a refresh.
-    setCloudConfirmationRecords(previous => previous ? previous.map(item => item.id === record.id ? markHandled(item) : item) : previous);
+    setCloudConfirmationRecords(previous => previous ? previous.map(item => sameRecord(item) ? markHandled(item) : item) : previous);
     flash(keepActive ? "已確認完成，已從待處理列表移除" : "已標示處理完成");
   };
   const changeMonthlyPropertyReport = (record: RecordItem, reportKey: string, status: string, reason = "") => {
@@ -3343,7 +3368,7 @@ export default function Home() {
 
   return <main lang="zh-Hant-TW" className={internalView ? `internal-public-app${publicAuthReady ? " public-auth-ready" : ""}` : ""}>
     {!internalView && <header className="topbar">
-        <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V537</small></h1></div>
+        <div className="topbar-row"><div className="brand"><h1>總表　管理模式 <small className="app-version">V538</small></h1></div>
       <div className="header-actions"><button className="action-monthly-progress" onClick={() => void openMonthlyProgress()}>45天確認進度</button>{pendingDealCompletion.length > 0 && <button className="deal-reminder-header-button" onClick={() => setDealCompletionReminderOpen(true)}>成交後續提醒 {pendingDealCompletion.length}</button>}{pendingArchiveCleanup.length > 0 && <button className="archive-reminder-header-button" onClick={() => setArchiveCleanupReminderOpen(true)}>下架提醒 {pendingArchiveCleanup.length}</button>}{expiredUnarchived.length > 0 && <button className="expired-entrust-button" onClick={() => setExpiryReminderOpen(true)}>委託到期 {expiredUnarchived.length}</button>}{bookReviewDueCount > 0 && <button className="book-review-header-button action-book-review" onClick={() => { setTab("active"); setBookReviewOpenRequest(value => value + 1); }}>物件本確認 {bookReviewDueCount}</button>}<button className="ppt-export-button action-ppt" onClick={() => { setPptShowExtras(false); setPptPickerOpen(true); }}>產生 PPT</button><button className="action-excel" onClick={exportExcel}>匯出 Excel</button><label className="file-button action-import-json">匯入 JSON<input type="file" accept=".json,application/json" onChange={importJson}/></label><button className="action-export-json" onClick={exportJson}>匯出 JSON</button><button className="key-tag action-keys" onClick={() => setTab("keys")}>🔑 鑰匙總表 <b>{controlledKeyCount}</b></button></div></div>
       <nav className="nav">
       <button className={tab === "active" ? "active" : ""} onClick={() => setTab("active")}>委託中 <span>{active.length}</span></button>

@@ -48646,6 +48646,7 @@ ${changedLabels}
     };
     const resolveMonthlyPropertyReport = async (record, reportKey, keepActive = false) => {
       const handledAt = (/* @__PURE__ */ new Date()).toISOString();
+      const sameRecord = (item, targetId = record.id) => item.id === targetId || !!record.propertyNo && String(item.propertyNo || "").trim().toUpperCase() === String(record.propertyNo).trim().toUpperCase();
       const markHandled = (item) => {
         const reports = monthlyReportsOf(item._monthlyReports);
         if (!reports[reportKey]) return item;
@@ -48653,21 +48654,43 @@ ${changedLabels}
         return { ...item, _monthlyReports: JSON.stringify(reports), ...keepActive ? { updateDate: today(), lastModifiedAt: handledAt } : {} };
       };
       try {
-        const response = await fetch(`${CASE_FILE_SUPABASE_URL}/rest/v1/rpc/case_file_front_report_resolve`, {
+        const resolveCloudRecord = (recordId, key = reportKey) => fetch(`${CASE_FILE_SUPABASE_URL}/rest/v1/rpc/case_file_front_report_resolve`, {
           method: "POST",
           headers: { apikey: CASE_FILE_SUPABASE_PUBLISHABLE_KEY, "Content-Type": "application/json" },
-          body: JSON.stringify({ p_record_id: record.id, p_report_key: reportKey })
+          body: JSON.stringify({ p_record_id: recordId, p_report_key: key })
         });
-        if (!response.ok) throw new Error("report resolve sync failed");
-      } catch {
-        flash("\u78BA\u8A8D\u672A\u80FD\u5BEB\u5165\u96F2\u7AEF\uFF0C\u8ACB\u6AA2\u67E5\u7DB2\u8DEF\u5F8C\u518D\u6309\u4E00\u6B21");
+        let response = await resolveCloudRecord(record.id);
+        if (!response.ok && record.propertyNo && cloudSession?.accessToken) {
+          const session = await refreshCloudSession();
+          if (session) {
+            const stateUrl = `${settings.supabaseUrl.replace(/\/$/, "")}/rest/v1/${settings.supabaseTable}?id=eq.${encodeURIComponent(settings.supabaseRecord)}&select=data`;
+            const stateResponse = await cloudFetchWithTimeout(stateUrl, { headers: cloudHeaders(session) });
+            const rows = await stateResponse.json();
+            const cloudRecord = stateResponse.ok && Array.isArray(rows?.[0]?.data?.records) ? rows[0].data.records.find((item) => sameRecord(item, "")) : void 0;
+            if (cloudRecord?.id) {
+              const sourceReport = monthlyReportsOf(record._monthlyReports)[reportKey];
+              const cloudReports = monthlyReportsOf(cloudRecord._monthlyReports);
+              const cloudReportKey = cloudReports[reportKey] ? reportKey : Object.keys(cloudReports).find((key) => {
+                const candidate = cloudReports[key];
+                return candidate?.personId === sourceReport?.personId && candidate?.reportedAt === sourceReport?.reportedAt;
+              });
+              if (cloudReportKey) response = await resolveCloudRecord(cloudRecord.id, cloudReportKey);
+            }
+          }
+        }
+        if (!response.ok) {
+          const detail = await response.json().catch(() => null);
+          throw new Error(String(detail?.message || "report resolve sync failed"));
+        }
+      } catch (error) {
+        flash(`\u78BA\u8A8D\u672A\u80FD\u5BEB\u5165\u96F2\u7AEF\uFF1A${error instanceof Error && error.message !== "report resolve sync failed" ? error.message : "\u8ACB\u6AA2\u67E5\u7DB2\u8DEF\u5F8C\u518D\u6309\u4E00\u6B21"}`);
         return;
       }
       setRecords((previous) => previous.map((item) => {
-        if (item.id !== record.id) return item;
+        if (!sameRecord(item)) return item;
         return markHandled(item);
       }));
-      setCloudConfirmationRecords((previous) => previous ? previous.map((item) => item.id === record.id ? markHandled(item) : item) : previous);
+      setCloudConfirmationRecords((previous) => previous ? previous.map((item) => sameRecord(item) ? markHandled(item) : item) : previous);
       flash(keepActive ? "\u5DF2\u78BA\u8A8D\u5B8C\u6210\uFF0C\u5DF2\u5F9E\u5F85\u8655\u7406\u5217\u8868\u79FB\u9664" : "\u5DF2\u6A19\u793A\u8655\u7406\u5B8C\u6210");
     };
     const changeMonthlyPropertyReport = (record, reportKey, status, reason = "") => {
@@ -48705,7 +48728,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V537" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V538" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
