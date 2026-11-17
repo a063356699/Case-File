@@ -48745,7 +48745,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V540" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V541" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -53113,7 +53113,7 @@ ${xrefOffset}
           !publicMode && records.some((r) => r.archived || isExpired(r) || r.status !== "\u59D4\u8A17\u4E2D") && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", { className: "actions-col", children: "\u64CD\u4F5C" })
         ] }) }),
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("tbody", { children: records.map((r, recordIndex) => {
-          const highlighted = (() => {
+          const highlighted = activeLead ? dailyUpdateFields(r, today()) : (() => {
             try {
               return JSON.parse(r._dailyHighlight || "[]");
             } catch {
@@ -53129,7 +53129,7 @@ ${xrefOffset}
                 setHoveredPublicCaseTop(event.currentTarget.offsetTop + 6);
               }
             }, onMouseLeave: () => publicMode && setHoveredPublicCase(""), children: [
-              columns.map((k, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { className: `${i < stickyCount ? `sticky sticky-${i}` : ""} col-${k} ${dateKeys.has(k) && k !== "groupViewDate" && !validDate(r[k]) ? "date-error" : ""} ${dailyMode && k !== "notes" && isHighlighted(k) ? "daily-updated-cell" : ""}`, children: k === "caseName" ? caseNameCell(r, k) : k === "status" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: `status ${displayStatus(r) === "\u59D4\u8A17\u4E2D" ? "live" : "off"}`, children: displayStatus(r) }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CellContent, { record: r, column: k, dailyMode, highlightNotes: isHighlighted("notes") }) }, k)),
+              columns.map((k, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { className: `${i < stickyCount ? `sticky sticky-${i}` : ""} col-${k} ${dateKeys.has(k) && k !== "groupViewDate" && !validDate(r[k]) ? "date-error" : ""} ${(dailyMode || activeLead) && k !== "notes" && isHighlighted(k) ? "daily-updated-cell" : ""}`, children: k === "caseName" ? caseNameCell(r, k) : k === "status" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: `status ${displayStatus(r) === "\u59D4\u8A17\u4E2D" ? "live" : "off"}`, children: displayStatus(r) }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CellContent, { record: r, column: k, dailyMode, highlightNotes: isHighlighted("notes") }) }, k)),
               showPpt && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { className: "ppt-col", children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "checkbox", checked: pptIncluded(r), onChange: (e) => onPptChange(r, { pptSelected: e.target.checked ? "1" : "0", pptCategory: r.pptCategory || (isCurrentPptWeek(r.reportDate) ? "\u672C\u9031\u9032\u6848" : "\u81E8\u6642\u65B0\u589E") }) }) }),
                 /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", { className: "ppt-type-col", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", { value: pptCategory(r), onChange: (e) => onPptChange(r, { pptCategory: e.target.value, pptSelected: "1" }), children: [
