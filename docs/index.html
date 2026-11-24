@@ -45084,12 +45084,14 @@ ${String(ex)}`);
     let hall = numberOf(/(\d+)\s*廳/);
     let bath = numberOf(/(\d+)\s*衛(?:浴)?/);
     let balcony = numberOf(/(\d+)\s*陽台/);
+    let showBalcony = Boolean(balcony || /陽台/.test(raw));
     if (!room && !hall && !bath && !balcony) {
       const parts = raw.match(/\d+/g) || [];
       [room, hall, bath, balcony] = [parts[0] || "", parts[1] || "", parts[2] || "", parts[3] || ""];
+      showBalcony = parts.length >= 4;
     }
     if (!room && !hall && !bath && !balcony) return raw;
-    return `${room || "0"}\u623F${hall || "0"}\u5EF3${bath || "0"}\u885B${balcony || "0"}\u967D\u53F0`;
+    return `${room || "0"}\u623F${hall || "0"}\u5EF3${bath || "0"}\u885B${showBalcony ? `${balcony || "0"}\u967D\u53F0` : ""}`;
   };
   var layoutForHouseWorkbook = (value = "", type = "") => {
     const full = layoutFull(value, type);
@@ -48745,7 +48747,7 @@ ${changedLabels}
         /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "topbar-row", children: [
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "brand", children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", { children: [
             "\u7E3D\u8868\u3000\u7BA1\u7406\u6A21\u5F0F ",
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V541" })
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { className: "app-version", children: "V542" })
           ] }) }),
           /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "header-actions", children: [
             /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", { className: "action-monthly-progress", onClick: () => void openMonthlyProgress(), children: "45\u5929\u78BA\u8A8D\u9032\u5EA6" }),
@@ -54800,7 +54802,7 @@ ${xrefOffset}
   }
   function Field({ fieldKey, label, record, records, setRecord }) {
     const value = record[fieldKey] || "";
-    const inputValue = fieldKey === "layout" ? typeShort(record.type) === "\u571F\u5730" ? "" : layoutFull(value, record.type) : value;
+    const inputValue = fieldKey === "layout" && typeShort(record.type) === "\u571F\u5730" ? "" : value;
     const set = (v) => setRecord(fieldKey === "propertyNo" ? { ...record, propertyNo: v, contractType: contractFromNo(v) } : fieldKey === "coverChangeNo" ? { ...record, coverChangeNo: v, coverNoChange: v.trim() ? "" : record.coverNoChange } : { ...record, [fieldKey]: v });
     const websiteInput = (key, siteLabel, expiryKey = "") => {
       const noneKey = `${key}None`;
@@ -55098,9 +55100,10 @@ ${differences.map((item) => `${item.label}\uFF1A\u539F\u672C ${item.before} \u57
     return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { className: "field", children: [
       /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
         label,
-        fieldKey === "propertyNo" || fieldKey === "caseName" ? " *" : ""
+        fieldKey === "propertyNo" || fieldKey === "caseName" ? " *" : "",
+        fieldKey === "layout" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "\u53EF\u8F38\u5165 1.0.1.0\u30011.0.1\u3001\u6587\u5B57" })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", inputMode: ["price", "reducedPrice", "builtYear", "indoorPing", "buildingPing", "landPing", "coverage", "far", "zoningCertificateCount", "authorizationCopyCount", "authorizationOriginalCount"].includes(fieldKey) ? "decimal" : void 0, value: inputValue, onChange: (e) => set(e.target.value) }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", { type: "text", inputMode: ["price", "reducedPrice", "builtYear", "indoorPing", "buildingPing", "landPing", "coverage", "far", "zoningCertificateCount", "authorizationCopyCount", "authorizationOriginalCount"].includes(fieldKey) ? "decimal" : void 0, value: inputValue, onChange: (e) => set(e.target.value), placeholder: fieldKey === "layout" ? "\u4F8B\u5982 1.0.1 \u6216 1.0.1.0" : void 0 }),
       fieldKey === "builtYear" && value && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { children: [
         "\u76EE\u524D\u63DB\u7B97\uFF1A",
         ageOf(record)
